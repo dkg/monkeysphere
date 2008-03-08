@@ -3,3 +3,5 @@ monkeysphere: main.c
 
 clean: 
 	rm monkeysphere
+
+.PHONY: clean
