@@ -1,0 +1,88 @@
+#!/bin/sh
+
+# rhesus: monkeysphere authorized_keys update script
+#
+# Written by
+# Jameson Rollins <jrollins@fifthhorseman.net>
+#
+# Copyright 2008, released under the GPL, version 3 or later
+
+##################################################
+# load conf file
+#. /etc/monkeysphere/monkeysphere.conf
+. ~/ms/monkeysphere.conf
+
+# user name of user to update
+USERNAME="$1"
+
+#AUTH_KEYS_DIR_BASE=/var/lib/monkeysphere/authorized_keys/
+AUTH_KEYS_DIR_BASE=~/ms/authorized_keys
+
+AUTH_KEYS_DIR="$AUTH_KEYS_DIR_BASE"/"$USERNAME"
+AUTH_KEYS_FILE="$AUTH_KEYS_DIR"/authorized_keys
+
+AUTH_USER_IDS="$AUTH_USER_IDS_DIR"/"$USERNAME"
+
+export GNUPGHOME
+##################################################
+
+### FUNCTIONS
+
+failure() {
+    echo "$1" >&2
+    exit ${2:-'1'}
+}
+
+meat() {
+    grep -v -e "^[[:space:]]*#" -e '^$' "$1"
+}
+
+cutline() {
+    head --line="$1" | tail -1
+}
+
+### MAIN
+
+# make sure the gnupg home exists with proper permissions
+mkdir -p "$GNUPGHOME"
+chmod 0700 "$GNUPGHOME"
+
+# find number of user ids in auth_user_ids file
+NLINES=$(meat "$AUTH_USER_IDS" | wc -l)
+
+# clean out keys file and remake keys directory
+rm -rf "$AUTH_KEYS_DIR"/keys
+mkdir -p "$AUTH_KEYS_DIR"/keys
+
+# loop through all user ids, and generate ssh keys
+for (( N=1; N<=$NLINES; N=N+1 )) ; do
+    # get user id
+    USERID=$(meat "$AUTH_USER_IDS" | head --line="$N" | tail -1)
+    USERID_HASH=$(echo "$USERID" | sha1sum | awk '{ print $1 }')
+
+    # get key id from user id
+    #KEYID=$(gpguser2key "$USERID")
+    KEYID="$USERID"
+
+    echo "Receiving keys for: $USERID ($KEYID)..."
+
+    # is primary key revoked && kill
+    # for all associated keys (primary and sub)
+    #  - type "A"
+    #  - not revoked
+    #  - signed by trusted user
+    #  output ssh key
+
+    # Receive keys into key ring
+    if gpg --recv-keys --keyserver "$KEYSERVER" "$KEYID" ; then
+	# convert pgp key to ssh key, and write to cache file
+	KEYFILE="$AUTH_KEYS_DIR"/keys/"$USERID_HASH"
+	gpgkey2ssh "$KEYID" | sed -e "s/COMMENT/$USERID/" > "$KEYFILE"
+    fi
+done
+
+echo "Writing authorized_keys file '$AUTH_KEYS_FILE'..."
+cat "$AUTH_KEYS_DIR"/keys/* > "$AUTH_KEYS_FILE" || > "$AUTH_KEYS_FILE"
+if [ -s ~"$USERNAME"/.ssh/authorized_keys ] ; then
+    cat ~"$USERNAME"/.ssh/authorized_keys >> "$AUTH_KEYS_FILE"
+fi
