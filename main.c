@@ -4,19 +4,50 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdarg.h>
 
-void err(const char* fmt, ...) {
-  static FILE* STDERR = NULL;
-  va_list ap;
+/* 
+   Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+   Date: Tue, 01 Apr 2008
+   License: GPL v3 or later
 
-  if (NULL == STDERR)
-    STDERR = fdopen(STDERR_FILENO, "a");
+   monkeysphere private key translator: execute this with an
+   ASCII-armored private RSA key on stdin (at the moment, only
+   passphraseless keys work).
+
+   It will spit out a PEM-encoded version of the key on stdout, which
+   can be fed into ssh-add like this:
+
+    gpg --export-secret-keys $KEYID | monkeysphere | ssh-add -c /dev/stdin
+
+   Requirements: I've only built this so far with GnuTLS v2.3.4 --
+   version 2.2.0 does not contain the appropriate pieces.
+
+   Notes: gpgkey2ssh doesn't seem to provide the same public
+   keys. Mighty weird!
+
+0 wt215@squeak:~/monkeysphere$ gpg --export-secret-keys 1DCDF89F | ~dkg/src/monkeysphere/monkeysphere  | ssh-add -c /dev/stdin
+gnutls version: 2.3.4
+OpenPGP RSA Key, with 1024 bits
+Identity added: /dev/stdin (/dev/stdin)
+The user has to confirm each use of the key
+0 wt215@squeak:~/monkeysphere$ ssh-add -L
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQC9gWQqfrnhQKDQnND/3eOexpddE64J+1zp9fcyCje7H5LKclb6DBV2HS6WgW32PJhIzvP+fYZM3dzXea3fpv14y1SicXiRBDgF9SnsNA1qWn2RyzkLcKy7PmM0PDYtU1oiLTcQj/xkWcqW2sLKHT/WW+vZP5XP7RMGN/yWNMfE2Q== /dev/stdin
+0 wt215@squeak:~/monkeysphere$ gpgkey2ssh 1DCDF89F
+ssh-rsa AAAAB3NzaC1yc2EAAACBAL2BZCp+ueFAoNCc0P/d457Gl10Trgn7XOn19zIKN7sfkspyVvoMFXYdLpaBbfY8mEjO8/59hkzd3Nd5rd+m/XjLVKJxeJEEOAX1Kew0DWpafZHLOQtwrLs+YzQ8Ni1TWiItNxCP/GRZypbawsodP9Zb69k/lc/tEwY3/JY0x8TZAAAAAwEAAQ== COMMENT
+0 wt215@squeak:~/monkeysphere$ 
+
+ */
+
+
+void err(const char* fmt, ...) {
+  va_list ap;
   va_start(ap, fmt);
-  vfprintf(STDERR, fmt, ap);
+  vfprintf(stderr, fmt, ap);
   va_end(ap);
 }
 
@@ -51,10 +82,11 @@ int set_datum_fd(gnutls_datum_t* d, int fd) {
   unsigned int bufsize = 1024;
   unsigned int len = 0;
 
-  FILE* f = NULL;
+  FILE* f = fdopen(fd, "r");
   if (bufsize > d->size) {
     bufsize = 1024;
-    if (gnutls_realloc(d->data, bufsize) == NULL) {
+    d->data = gnutls_realloc(d->data, bufsize);
+    if (d->data == NULL) {
       err("out of memory!\n");
       return -1;
     }
@@ -63,24 +95,31 @@ int set_datum_fd(gnutls_datum_t* d, int fd) {
     bufsize = d->size;
   }
   f = fdopen(fd, "r");
-  while (!feof(f) && !ferror(f)) {
+  if (NULL == f) {
+    err("could not fdopen FD %d\n", fd);
+  }
+  clearerr(f);
+  while (!feof(f) && !ferror(f)) { 
     if (len == bufsize) {
       /* allocate more space by doubling: */
       bufsize *= 2;
-      if (gnutls_realloc(d->data, bufsize) == NULL) {
+      d->data = gnutls_realloc(d->data, bufsize);
+      if (d->data == NULL) {
 	err("out of memory!\n"); 
 	return -1;
       };
       d->size = bufsize;
     }
     len += fread(d->data + len, 1, bufsize - len, f);
+    /*     err("read %d bytes\n", len); */
   }
   if (ferror(f)) {
-    err("Error reading from fd %d\n", fd);
+    err("Error reading from fd %d (error: %d) (error: %d '%s')\n", fd, ferror(f), errno, strerror(errno));
     return -1;
   }
+    
   /* touch up buffer size to match reality: */
-  gnutls_realloc(d->data, len);
+  d->data = gnutls_realloc(d->data, len);
   d->size = len;
   return 0;
 }
@@ -135,7 +174,7 @@ int main(int argc, char* argv[]) {
       gnutls_certificate_credentials_t pgp_creds;
   */
   gnutls_datum_t m, e, d, p, q, u;
-  gnutls_x509_crt_t crt;
+  /*  gnutls_x509_crt_t crt; */
 
   gnutls_openpgp_privkey_t pgp_privkey;
   gnutls_openpgp_crt_fmt_t pgp_format;
@@ -146,6 +185,12 @@ int main(int argc, char* argv[]) {
   size_t ods = sizeof(output_data);
 
   init_datum(&data);
+  init_datum(&m);
+  init_datum(&e);
+  init_datum(&d);
+  init_datum(&p);
+  init_datum(&q);
+  init_datum(&u);
 
   if (ret = gnutls_global_init(), ret) {
     err("Failed to do gnutls_global_init() (error: %d)\n", ret);
@@ -157,9 +202,9 @@ int main(int argc, char* argv[]) {
   version = gnutls_check_version(NULL);
 
   if (version) 
-    printf("gnutls version: %s\n", version);
+    err("gnutls version: %s\n", version);
   else {
-    printf("no version found!\n");
+    err("no version found!\n");
     return 1;
   }
 
@@ -173,19 +218,18 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  /* how do we initialize data? */
+  /* slurp in the private key from stdin */
+  if (ret = set_datum_fd(&data, 0), ret) {
+    err("didn't read file descriptor 0\n");
+    return 1;
+  }
 
-    /* reading from the file descriptor doesn't work right yet:
-      if (ret = set_datum_fd(&data, 0), ret) {
-      err("didn't read file descriptor 0\n");
-      return 1;
-      }
-    */
-
+  /* Or, instead, read in key from a file name: 
   if (ret = set_datum_file(&data, argv[1]), ret) {
     err("didn't read file '%s'\n", argv[1]);
     return 1;
   }
+*/
 
   /* treat the passed file as an X.509 private key, and extract its
      component values: */
@@ -224,16 +268,34 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   
-  printf("OpenPGP RSA Key, with %d bits\n", pgp_bits);
+  err("OpenPGP RSA Key, with %d bits\n", pgp_bits);
 
 
-  ret = gnutls_x509_privkey_export (pgp_privkey,
+  ret = gnutls_openpgp_privkey_export_rsa_raw(pgp_privkey, &m, &e, &d, &p, &q, &u);
+  if (GNUTLS_E_SUCCESS != ret) {
+    err ("failed to export RSA key parameters (error: %0x)\n", ret);
+    return 1;
+  }
+
+  ret = gnutls_x509_privkey_import_rsa_raw (x509_privkey, &m, &e, &d, &p, &q, &u); 
+  if (GNUTLS_E_SUCCESS != ret) {
+    err ("failed to import RSA key parameters (error: %d)\n", ret);
+    return 1;
+  }
+  /* const gnutls_datum_t * m, const gnutls_datum_t * e, const gnutls_datum_t * d, const gnutls_datum_t * p, const gnutls_datum_t * q, const gnutls_datum_t * u); */
+  
+  ret = gnutls_x509_privkey_fix(x509_privkey);
+  if (ret != 0) {
+    err("failed to fix up the private key in X.509 format (error: %d)\n", ret);
+    return 1; 
+  }
+  ret = gnutls_x509_privkey_export (x509_privkey,
 				    GNUTLS_X509_FMT_PEM,
 				    output_data,
 				    &ods);
   printf("ret: %u; ods: %u;\n", ret, ods);
   if (ret == 0) {
-    write(0, output_data, ods);
+    write(1, output_data, ods);
   }
 
 
