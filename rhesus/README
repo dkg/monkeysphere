@@ -1,0 +1,7 @@
+rhesus is the monkeysphere authorized_keys generator.
+
+It's goal is to take a user's auth_user_ids file, which contains gpg
+user ids (and possibly authorized_keys options), use gpg to fetch the
+keys of the specified users, do a monkeysphere policy check on each
+id, and generate authorized_keys lines for verified id.
+
