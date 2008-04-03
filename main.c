@@ -15,9 +15,9 @@
    Date: Tue, 01 Apr 2008
    License: GPL v3 or later
 
-   monkeysphere private key translator: execute this with an
-   ASCII-armored private RSA key on stdin (at the moment, only
-   passphraseless keys work).
+   monkeysphere private key translator: execute this with an GPG
+   secret key on stdin (at the moment, only passphraseless RSA keys
+   work).
 
    It will spit out a PEM-encoded version of the key on stdout, which
    can be fed into ssh-add like this:
@@ -44,6 +44,9 @@ ssh-rsa AAAAB3NzaC1yc2EAAACBAL2BZCp+ueFAoNCc0P/d457Gl10Trgn7XOn19zIKN7sfkspyVvoM
  */
 
 
+int loglevel = 0;
+
+
 void err(const char* fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
@@ -51,10 +54,29 @@ void err(const char* fmt, ...) {
   va_end(ap);
 }
 
+void logfunc(int level, const char* string) {
+  fprintf(stderr, "GnuTLS Logging (%d): %s\n", level, string);
+}
 
 void init_datum(gnutls_datum_t* d) {
   d->data = NULL;
   d->size = 0;
+}
+void copy_datum(gnutls_datum_t* dest, const gnutls_datum_t* src) {
+  dest->data = gnutls_realloc(dest->data, src->size);
+  dest->size = src->size;
+  memcpy(dest->data, src->data, src->size);
+}
+int compare_data(const gnutls_datum_t* a, const gnutls_datum_t* b) {
+  if (a->size > b->size) {
+    err("a is larger\n");
+    return 1;
+  }
+  if (a->size < b->size) {
+    err("b is larger\n");
+    return -1;
+  }
+  return memcmp(a->data, b->data, a->size);
 }
 void free_datum(gnutls_datum_t* d) {
   gnutls_free(d->data);
@@ -164,33 +186,39 @@ int set_datum_file(gnutls_datum_t* d, const char* fname) {
 
 int main(int argc, char* argv[]) {
   const char* version = NULL;
+  const char* debug_string = NULL;
 
   gnutls_x509_privkey_t x509_privkey;
-  gnutls_datum_t data;
+  gnutls_datum_t data, test, clean;
   int ret;
 
   /*  
       const char *certfile, *keyfile;
       gnutls_certificate_credentials_t pgp_creds;
   */
-  gnutls_datum_t m, e, d, p, q, u;
+  gnutls_datum_t m, e, d, p, q, u, g, y, x;
+
   /*  gnutls_x509_crt_t crt; */
 
   gnutls_openpgp_privkey_t pgp_privkey;
-  gnutls_openpgp_crt_fmt_t pgp_format;
   gnutls_pk_algorithm_t pgp_algo;
   unsigned int pgp_bits;
 
   char output_data[10240];
   size_t ods = sizeof(output_data);
-
+  
   init_datum(&data);
+  init_datum(&test);
+  init_datum(&clean);
   init_datum(&m);
   init_datum(&e);
   init_datum(&d);
   init_datum(&p);
   init_datum(&q);
   init_datum(&u);
+  init_datum(&g);
+  init_datum(&y);
+  init_datum(&x);
 
   if (ret = gnutls_global_init(), ret) {
     err("Failed to do gnutls_global_init() (error: %d)\n", ret);
@@ -206,6 +234,14 @@ int main(int argc, char* argv[]) {
   else {
     err("no version found!\n");
     return 1;
+  }
+
+  if (debug_string = getenv("MONKEYSPHERE_DEBUG"), debug_string) {
+    loglevel = atoi(debug_string);
+    gnutls_global_set_log_function(logfunc);
+    
+    gnutls_global_set_log_level(loglevel);
+    err("set log level to %d\n", loglevel);
   }
 
   if (ret = gnutls_x509_privkey_init(&x509_privkey), ret) {
@@ -250,38 +286,65 @@ int main(int argc, char* argv[]) {
 /*     write(0, output_data, ods); */
 /*   } */
 
+  copy_datum(&clean, &data);
+  copy_datum(&test, &data);
   
+  if (0 != compare_data(&data, &clean)) 
+    err("data do not match after initial copy\n");
   /* format could be either: GNUTLS_OPENPGP_FMT_RAW,
-     GNUTLS_OPENPGP_FMT_BASE64 */
-  pgp_format = GNUTLS_OPENPGP_FMT_RAW;
-  if (ret = gnutls_openpgp_privkey_import (pgp_privkey, &data, pgp_format, NULL, 0), ret) {
-    err("failed to import the OpenPGP private key (error: %d)\n", ret);
-    return 1;
-  }
+     GNUTLS_OPENPGP_FMT_BASE64; we'll try them both, raw first */
+
+
+
+/*   if (ret = gnutls_openpgp_privkey_import(pgp_privkey, &data, GNUTLS_OPENPGP_FMT_RAW, NULL, 0), ret) */
+/*     err("failed to import the OpenPGP private key in RAW format (error: %d)\n", ret); */
+/*   if (0 != compare_data(&data, &clean))  */
+/*     err("Datum changed after privkey  import in raw format!\n"); */
+
+
+  if (ret = gnutls_openpgp_privkey_import (pgp_privkey, &data, GNUTLS_OPENPGP_FMT_BASE64, NULL, 0), ret)
+    err("failed to import the OpenPGP private key in BASE64 format (error: %d)\n", ret);
+  if (0 != compare_data(&data, &clean))
+    err("Datum changed after privkey  import in base64 format!\n");
+
+
+
   pgp_algo = gnutls_openpgp_privkey_get_pk_algorithm(pgp_privkey, &pgp_bits);
   if (pgp_algo < 0) {
     err("failed to get OpenPGP key algorithm (error: %d)\n", pgp_algo);
     return 1;
   }
-  if (pgp_algo != GNUTLS_PK_RSA) {
-    err("OpenPGP Key was not RSA (actual algorithm was: %d)\n", pgp_algo);
+  if (pgp_algo == GNUTLS_PK_RSA) {
+    err("OpenPGP RSA Key, with %d bits\n", pgp_bits);
+    ret = gnutls_openpgp_privkey_export_rsa_raw(pgp_privkey, &m, &e, &d, &p, &q, &u);
+    if (GNUTLS_E_SUCCESS != ret) {
+      err ("failed to export RSA key parameters (error: %d)\n", ret);
+      return 1;
+    }
+
+    ret = gnutls_x509_privkey_import_rsa_raw (x509_privkey, &m, &e, &d, &p, &q, &u); 
+    if (GNUTLS_E_SUCCESS != ret) {
+      err ("failed to import RSA key parameters (error: %d)\n", ret);
+      return 1;
+    }
+  } else if (pgp_algo == GNUTLS_PK_DSA) {
+    err("OpenPGP DSA Key, with %d bits\n", pgp_bits);
+    ret = gnutls_openpgp_privkey_export_dsa_raw(pgp_privkey, &p, &q, &g, &y, &x);
+    if (GNUTLS_E_SUCCESS != ret) {
+      err ("failed to export DSA key parameters (error: %d)\n", ret);
+      return 1;
+    }
+
+    ret = gnutls_x509_privkey_import_dsa_raw (x509_privkey, &p, &q, &g, &y, &x); 
+    if (GNUTLS_E_SUCCESS != ret) {
+      err ("failed to import DSA key parameters (error: %d)\n", ret);
+      return 1;
+    }
+  } else {
+    err("OpenPGP Key was not RSA or DSA -- can't deal! (actual algorithm was: %d)\n", pgp_algo);
     return 1;
   }
   
-  err("OpenPGP RSA Key, with %d bits\n", pgp_bits);
-
-
-  ret = gnutls_openpgp_privkey_export_rsa_raw(pgp_privkey, &m, &e, &d, &p, &q, &u);
-  if (GNUTLS_E_SUCCESS != ret) {
-    err ("failed to export RSA key parameters (error: %0x)\n", ret);
-    return 1;
-  }
-
-  ret = gnutls_x509_privkey_import_rsa_raw (x509_privkey, &m, &e, &d, &p, &q, &u); 
-  if (GNUTLS_E_SUCCESS != ret) {
-    err ("failed to import RSA key parameters (error: %d)\n", ret);
-    return 1;
-  }
   /* const gnutls_datum_t * m, const gnutls_datum_t * e, const gnutls_datum_t * d, const gnutls_datum_t * p, const gnutls_datum_t * q, const gnutls_datum_t * u); */
   
   ret = gnutls_x509_privkey_fix(x509_privkey);
