@@ -286,28 +286,19 @@ int main(int argc, char* argv[]) {
 /*     write(0, output_data, ods); */
 /*   } */
 
-  copy_datum(&clean, &data);
-  copy_datum(&test, &data);
-  
-  if (0 != compare_data(&data, &clean)) 
-    err("data do not match after initial copy\n");
   /* format could be either: GNUTLS_OPENPGP_FMT_RAW,
-     GNUTLS_OPENPGP_FMT_BASE64; we'll try them both, raw first */
+     GNUTLS_OPENPGP_FMT_BASE64; if MONKEYSPHERE_RAW is set, use RAW,
+     otherwise, use BASE64: */
 
-
-
-/*   if (ret = gnutls_openpgp_privkey_import(pgp_privkey, &data, GNUTLS_OPENPGP_FMT_RAW, NULL, 0), ret) */
-/*     err("failed to import the OpenPGP private key in RAW format (error: %d)\n", ret); */
-/*   if (0 != compare_data(&data, &clean))  */
-/*     err("Datum changed after privkey  import in raw format!\n"); */
-
-
-  if (ret = gnutls_openpgp_privkey_import (pgp_privkey, &data, GNUTLS_OPENPGP_FMT_BASE64, NULL, 0), ret)
-    err("failed to import the OpenPGP private key in BASE64 format (error: %d)\n", ret);
-  if (0 != compare_data(&data, &clean))
-    err("Datum changed after privkey  import in base64 format!\n");
-
-
+  if (getenv("MONKEYSPHERE_RAW")) {
+    err("assuming RAW formatted private keys\n");
+    if (ret = gnutls_openpgp_privkey_import(pgp_privkey, &data, GNUTLS_OPENPGP_FMT_RAW, NULL, 0), ret)
+      err("failed to import the OpenPGP private key in RAW format (error: %d)\n", ret);
+  } else {
+    err("assuming BASE64 formatted private keys\n");
+    if (ret = gnutls_openpgp_privkey_import (pgp_privkey, &data, GNUTLS_OPENPGP_FMT_BASE64, NULL, 0), ret)
+      err("failed to import the OpenPGP private key in BASE64 format (error: %d)\n", ret);
+  }
 
   pgp_algo = gnutls_openpgp_privkey_get_pk_algorithm(pgp_privkey, &pgp_bits);
   if (pgp_algo < 0) {
