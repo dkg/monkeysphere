@@ -42,6 +42,13 @@ int main(int argc, char* argv[]) {
   char userid[10240];
   size_t uidsz = sizeof(userid);
 
+  const gnutls_datum_t* all[5];
+  int pipefd;
+  pid_t child_pid;
+  char* const args[] = {"/usr/bin/base64", "--wrap=0", NULL};
+  const char* algoname;
+  int mpicount;
+
   init_gnutls();
   
   init_datum(&data);
@@ -211,49 +218,54 @@ int main(int argc, char* argv[]) {
      externally through coreutils' /usr/bin/base64 */
 
   if (algo == GNUTLS_PK_RSA) {
-    const gnutls_datum_t* all[3];
-    int pipefd;
-    pid_t child_pid;
-    char* const args[] = {"/usr/bin/base64", "--wrap=0", NULL};
-    const char* algoname = "ssh-rsa";
+    algoname = "ssh-rsa";
+    mpicount = 3;
 
-    snprintf(output_data, sizeof(output_data), "%s %s ", userid, algoname);
-
-    write(1, output_data, strlen(output_data));
-
-    pipefd = create_writing_pipe(&child_pid, args[0], args);
-    if (pipefd < 0) {
-      err("failed to create a writing pipe (returned %d)\n", pipefd);
-      return pipefd;
-    }
-    
-    if (ret = datum_from_string(&algolabel, algoname), ret) {
-      err("couldn't label string (error: %d)\n", ret);
-      return ret;
-    }
     all[0] = &algolabel;
     all[1] = &e;
     all[2] = &m;
-
-    if (0 != write_data_fd_with_length(pipefd, all, 3)) {
-      err("was not able to write out RSA key data\n");
-      return 1;
-    }
-    close(pipefd);
-    if (child_pid != waitpid(child_pid, NULL, 0)) {
-      err("could not wait for child process to return for some reason.\n");
-      return 1;
-    }
-
-    write(1, "\n", 1);
-
   } else if (algo == GNUTLS_PK_DSA) {
-    err("Don't know how to export DSA ssh pubkeys yet.\n");
-    return 1;
+    algoname = "ssh-dss";
+    mpicount = 5;
+
+    all[0] = &algolabel;
+    all[1] = &p;
+    all[2] = &q;
+    all[3] = &g;
+    all[4] = &y;
   } else {
     err("no idea what this algorithm is: %d\n", algo);
     return 1;
   }
+
+  if (ret = datum_from_string(&algolabel, algoname), ret) {
+    err("couldn't label string (error: %d)\n", ret);
+    return ret;
+  }
+
+  snprintf(output_data, sizeof(output_data), "%s %s ", userid, algoname);
+
+  write(1, output_data, strlen(output_data));
+
+  pipefd = create_writing_pipe(&child_pid, args[0], args);
+  if (pipefd < 0) {
+    err("failed to create a writing pipe (returned %d)\n", pipefd);
+    return pipefd;
+  }
+    
+  if (0 != write_data_fd_with_length(pipefd, all, mpicount)) {
+    err("was not able to write out RSA key data\n");
+    return 1;
+  }
+  close(pipefd);
+  if (child_pid != waitpid(child_pid, NULL, 0)) {
+    err("could not wait for child process to return for some reason.\n");
+    return 1;
+  }
+
+  write(1, "\n", 1);
+
+
 
   gnutls_openpgp_crt_deinit(openpgp_crt);
   gnutls_global_deinit();
