@@ -210,10 +210,28 @@ int write_datum_fd(int fd, const gnutls_datum_t* d) {
 
 
 int write_datum_fd_with_length(int fd, const gnutls_datum_t* d) {
-  uint32_t len = htonl(d->size);
+  uint32_t len;
+  int looks_negative = (d->data[0] & 0x80);
+  unsigned char zero = 0;
+
+  /* if the first bit is 1, then the datum will appear negative in the
+     MPI encoding style used by OpenSSH.  In that case, we'll increase
+     the length by one, and dump out one more byte */
+
+  if (looks_negative) {
+    len = htonl(d->size + 1);
+  } else {
+    len = htonl(d->size);
+  }
   if (write(fd, &len, sizeof(len)) != sizeof(len)) {
     err("failed to write size of datum.\n");
     return -2;
+  }
+  if (looks_negative) {
+    if (write(fd, &zero, 1) != 1) {
+      err("failed to write padding byte for MPI.\n");
+      return -2;
+    }
   }
   return write_datum_fd(fd, d);
 }
