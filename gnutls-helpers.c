@@ -20,6 +20,7 @@ void err(const char* fmt, ...) {
   va_start(ap, fmt);
   vfprintf(stderr, fmt, ap);
   va_end(ap);
+  fflush(stderr);
 }
 
 void logfunc(int level, const char* string) {
@@ -286,6 +287,10 @@ int create_writing_pipe(pid_t* pid, const char* path, char* const argv[]) {
     }
     execv(path, argv);
     err("exec %s failed (error: %d \"%s\")\n", path, errno, strerror(errno));
+    /* close the open file descriptors */
+    close(p[0]);
+    close(0);
+
     exit(1);
   } else { /* this is the parent */
     close(p[0]); /* close unused read end */
