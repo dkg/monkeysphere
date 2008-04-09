@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
   char* const args[] = {"/usr/bin/base64", "--wrap=0", NULL};
   const char* algoname;
   int mpicount;
+  int pipestatus;
 
   init_gnutls();
   
@@ -258,22 +259,26 @@ int main(int argc, char* argv[]) {
 
   snprintf(output_data, sizeof(output_data), "%s %s ", userid, algoname);
 
-  write(1, output_data, strlen(output_data));
-
   pipefd = create_writing_pipe(&child_pid, args[0], args);
   if (pipefd < 0) {
     err("failed to create a writing pipe (returned %d)\n", pipefd);
     return pipefd;
   }
     
+  write(1, output_data, strlen(output_data));
+
   if (0 != write_data_fd_with_length(pipefd, all, mpicount)) {
     err("was not able to write out RSA key data\n");
     return 1;
   }
   close(pipefd);
-  if (child_pid != waitpid(child_pid, NULL, 0)) {
+  if (child_pid != waitpid(child_pid, &pipestatus, 0)) {
     err("could not wait for child process to return for some reason.\n");
     return 1;
+  }
+  if (pipestatus != 0) {
+    err("base64 pipe died with return code %d\n", pipestatus);
+    return pipestatus;
   }
 
   write(1, "\n", 1);
