@@ -3,6 +3,14 @@
 /* License: GPL v3 or later */
 
 #include "gnutls-helpers.h"
+/* for htonl() */
+#include <arpa/inet.h>
+
+/* for setlocale() */
+#include <locale.h>
+
+/* for isalnum() */
+#include <ctype.h>
 
 int loglevel = 0;
 
@@ -155,7 +163,7 @@ int set_datum_fd(gnutls_datum_t* d, int fd) {
   return 0;
 }
 
-/* read the file indicated (by na1me) in the fname parameter.  store
+/* read the file indicated (by name) in the fname parameter.  store
    its entire contents in a single datum. */
 int set_datum_file(gnutls_datum_t* d, const char* fname) {
   struct stat sbuf;
@@ -190,4 +198,127 @@ int set_datum_file(gnutls_datum_t* d, const char* fname) {
   }
   fclose(file);
   return 0;
+}
+
+int write_datum_fd(int fd, const gnutls_datum_t* d) {
+  if (d->size != write(fd, d->data, d->size)) {
+    err("failed to write body of datum.\n");
+    return -1;
+  }
+  return 0;
+}
+
+
+int write_datum_fd_with_length(int fd, const gnutls_datum_t* d) {
+  uint32_t len = htonl(d->size);
+  if (write(fd, &len, sizeof(len)) != sizeof(len)) {
+    err("failed to write size of datum.\n");
+    return -2;
+  }
+  return write_datum_fd(fd, d);
+}
+
+int write_data_fd_with_length(int fd, const gnutls_datum_t** d, unsigned int num) {
+  unsigned int i;
+  int ret;
+
+  for (i = 0; i < num; i++)
+    if (ret = write_datum_fd_with_length(fd, d[i]), ret != 0)
+      return ret;
+
+  return 0;
+}
+
+
+int datum_from_string(gnutls_datum_t* d, const char* str) {
+  d->size = strlen(str);
+  d->data = gnutls_realloc(d->data, d->size);
+  if (d->data == 0)
+    return ENOMEM;
+  memcpy(d->data, str, d->size);
+  return 0;
+}
+
+
+int create_writing_pipe(pid_t* pid, const char* path, char* const argv[]) {
+  int p[2];
+  int ret;
+
+  if (pid == NULL) {
+    err("bad pointer passed to create_writing_pipe()\n");
+    return -1;
+  }
+
+  if (ret = pipe(p), ret == -1) {
+    err("failed to create a pipe (error: %d \"%s\")\n", errno, strerror(errno));
+    return -1;
+  }
+
+  *pid = fork();
+  if (*pid == -1) {
+    err("Failed to fork (error: %d \"%s\")\n", errno, strerror(errno));
+    return -1;
+  }
+  if (*pid == 0) { /* this is the child */
+    close(p[1]); /* close unused write end */
+    
+    if (0 != dup2(p[0], 0)) { /* map the reading end into stdin */
+      err("Failed to transfer reading file descriptor to stdin (error: %d \"%s\")\n", errno, strerror(errno));
+      exit(1);
+    }
+    execv(path, argv);
+    err("exec %s failed (error: %d \"%s\")\n", path, errno, strerror(errno));
+    exit(1);
+  } else { /* this is the parent */
+    close(p[0]); /* close unused read end */
+    return p[1];
+  }
+}
+
+int validate_ssh_host_userid(const char* userid) {
+  char* oldlocale = setlocale(LC_ALL, "C");
+  
+  /* choke if userid does not match the expected format
+     ("ssh://fully.qualified.domain.name") */
+  if (strncmp("ssh://", userid, strlen("ssh://")) != 0) {
+    err("The user ID should start with ssh:// for a host key\n");
+    goto fail;
+  }
+  /* so that isalnum will work properly */
+  userid += strlen("ssh://");
+  while (0 != (*userid)) {
+    if (!isalnum(*userid)) {
+      err("label did not start with a letter or a digit! (%s)\n", userid);
+      goto fail;
+    }
+    userid++;
+    while (isalnum(*userid) || ('-' == (*userid)))
+      userid++;
+    if (('.' == (*userid)) || (0 == (*userid))) { /* clean end of label:
+						 check last char
+						 isalnum */
+      if (!isalnum(*(userid - 1))) {
+	err("label did not end with a letter or a digit!\n");
+	goto fail;
+      }
+      if ('.' == (*userid)) /* advance to the start of the next label */
+	userid++;
+    } else {
+      err("invalid character in domain name: %c\n", *userid);
+      goto fail;
+    }
+  }
+  /* ensure that the last character is valid: */
+  if (!isalnum(*(userid - 1))) {
+    err("hostname did not end with a letter or a digit!\n");
+    goto fail;
+  }
+  /* FIXME: fqdn's can be unicode now, thanks to RFC 3490 -- how do we
+     make sure that we've got an OK string? */
+
+  return 0;
+
+ fail:
+  setlocale(LC_ALL, oldlocale);
+  return 1;
 }

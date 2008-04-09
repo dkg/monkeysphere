@@ -32,6 +32,12 @@ void init_datum(gnutls_datum_t* d);
 void copy_datum(gnutls_datum_t* dest, const gnutls_datum_t* src);
 int compare_data(const gnutls_datum_t* a, const gnutls_datum_t* b);
 void free_datum(gnutls_datum_t* d);
+int write_datum_fd(int fd, const gnutls_datum_t* d);
+int write_datum_fd_with_length(int fd, const gnutls_datum_t* d);
+int write_data_fd_with_length(int fd, const gnutls_datum_t** d, unsigned int num);
+
+/* set up a datum from a null-terminated string */
+int datum_from_string(gnutls_datum_t* d, const char* str);
 
 /* keyid manipulations: */
 typedef unsigned char printable_keyid[16];
@@ -52,3 +58,9 @@ int set_datum_fd(gnutls_datum_t* d, int fd);
    its entire contents in a single datum. */
 int set_datum_file(gnutls_datum_t* d, const char* fname);
 
+/* set up file descriptor pipe for writing (child process pid gets
+   stored in pid, fd is returned)*/
+int create_writing_pipe(pid_t* pid, const char* path, char* const argv[]);
+
+/* return 0 if userid matches the monkeysphere spec for ssh host user IDs */
+int validate_ssh_host_userid(const char* userid);

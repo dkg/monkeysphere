@@ -3,9 +3,9 @@
 #include <gnutls/openpgp.h>
 #include <gnutls/x509.h>
 
-/* for htonl() */
-#include <arpa/inet.h>
-
+/* for waitpid() */
+#include <sys/types.h>
+#include <sys/wait.h>
 
 /* 
    Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
@@ -36,9 +36,11 @@ int main(int argc, char* argv[]) {
   gnutls_pk_algorithm_t algo;
 
   gnutls_datum_t m, e, p, q, g, y;
+  gnutls_datum_t algolabel;
 
   char output_data[10240];
-  size_t ods = sizeof(output_data);
+  char userid[10240];
+  size_t uidsz = sizeof(userid);
 
   init_gnutls();
   
@@ -50,6 +52,8 @@ int main(int argc, char* argv[]) {
   init_datum(&q);
   init_datum(&g);
   init_datum(&y);
+
+  init_datum(&algolabel);
 
   init_keyid(keyid);
 
@@ -178,10 +182,78 @@ int main(int argc, char* argv[]) {
     }
   } 
 
-  /* now we have algo, and the various MPI data set.  Can we export
-     them cleanly? */
+  /* make sure userid is NULL-terminated */
+  userid[sizeof(userid) - 1] = 0;
+  uidsz--;
 
+  /* FIXME: we're just choosing the first UserID from the certificate:
+     instead, we should be choosing the one that's adequately signed,
+     and matches the monkeysphere specification. */
+
+  if (ret = gnutls_openpgp_crt_get_name(openpgp_crt, 0, userid, &uidsz), ret) {
+    err("Failed to fetch the first UserID (error: %d)\n", ret);
+    return ret;
+  }
+
+  if (ret = validate_ssh_host_userid(userid), ret) {
+    err("bad userid: not a valid ssh host.\n");
+    return ret;
+  }
+
+  /* remove ssh:// from the beginning of userid */
+  memmove(userid, userid + strlen("ssh://"), 1 + strlen(userid) - strlen("ssh://"));
   
+
+  /* now we have algo, and the various MPI data are set.  Can we
+     export them cleanly? */
+
+  /* for the moment, we'll just dump the info raw, and pipe it
+     externally through coreutils' /usr/bin/base64 */
+
+  if (algo == GNUTLS_PK_RSA) {
+    const gnutls_datum_t* all[3];
+    int pipefd;
+    pid_t child_pid;
+    char* const args[] = {"/usr/bin/base64", "--wrap=0", NULL};
+    const char* algoname = "ssh-rsa";
+
+    snprintf(output_data, sizeof(output_data), "%s %s ", userid, algoname);
+
+    write(1, output_data, strlen(output_data));
+
+    pipefd = create_writing_pipe(&child_pid, args[0], args);
+    if (pipefd < 0) {
+      err("failed to create a writing pipe (returned %d)\n", pipefd);
+      return pipefd;
+    }
+    
+    if (ret = datum_from_string(&algolabel, algoname), ret) {
+      err("couldn't label string (error: %d)\n", ret);
+      return ret;
+    }
+    all[0] = &algolabel;
+    all[1] = &e;
+    all[2] = &m;
+
+    if (0 != write_data_fd_with_length(pipefd, all, 3)) {
+      err("was not able to write out RSA key data\n");
+      return 1;
+    }
+    close(pipefd);
+    if (child_pid != waitpid(child_pid, NULL, 0)) {
+      err("could not wait for child process to return for some reason.\n");
+      return 1;
+    }
+
+    write(1, "\n", 1);
+
+  } else if (algo == GNUTLS_PK_DSA) {
+    err("Don't know how to export DSA ssh pubkeys yet.\n");
+    return 1;
+  } else {
+    err("no idea what this algorithm is: %d\n", algo);
+    return 1;
+  }
 
   gnutls_openpgp_crt_deinit(openpgp_crt);
   gnutls_global_deinit();
