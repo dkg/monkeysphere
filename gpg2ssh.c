@@ -80,6 +80,9 @@ int main(int argc, char* argv[]) {
      GNUTLS_OPENPGP_FMT_BASE64; if MONKEYSPHERE_RAW is set, use RAW,
      otherwise, use BASE64: */
 
+  /* FIXME: we should be auto-detecting the input format, and
+     translating it as needed. */
+
   if (getenv("MONKEYSPHERE_RAW")) {
     err("assuming RAW formatted certificate\n");
     if (ret = gnutls_openpgp_crt_import(openpgp_crt, &data, GNUTLS_OPENPGP_FMT_RAW), ret) {
@@ -98,6 +101,15 @@ int main(int argc, char* argv[]) {
     err("the primary key was revoked!\n");
     return 1;
   }
+
+  /* FIXME: We're currently looking at the primary key or maybe the
+     first authentication-capable subkey.  
+
+     Instead, we should be iterating through the primary key and all
+     subkeys: for each one with the authentication usage flag set of a
+     algorithm we can handle, we should output matching UserIDs and
+     the SSH version of the key. */
+     
 
   if (ret = gnutls_openpgp_crt_get_key_usage(openpgp_crt, &usage), ret) {
     err("failed to get the usage flags for the primary key (error: %d)\n", ret);
@@ -194,8 +206,9 @@ int main(int argc, char* argv[]) {
   uidsz--;
 
   /* FIXME: we're just choosing the first UserID from the certificate:
-     instead, we should be choosing the one that's adequately signed,
-     and matches the monkeysphere specification. */
+     instead, we should be selecting every User ID that is adequately
+     signed and matches the spec, and aggregating them with commas for
+     known_hosts output */
 
   if (ret = gnutls_openpgp_crt_get_name(openpgp_crt, 0, userid, &uidsz), ret) {
     err("Failed to fetch the first UserID (error: %d)\n", ret);
