@@ -37,32 +37,13 @@ ssh-rsa AAAAB3NzaC1yc2EAAACBAL2BZCp+ueFAoNCc0P/d457Gl10Trgn7XOn19zIKN7sfkspyVvoM
  */
 
 
-
-int main(int argc, char* argv[]) {
-  gnutls_x509_privkey_t x509_privkey;
-  gnutls_datum_t data, test, clean;
-  int ret;
-
-  /*  
-      const char *certfile, *keyfile;
-      gnutls_certificate_credentials_t pgp_creds;
-  */
-  gnutls_datum_t m, e, d, p, q, u, g, y, x;
-
-  /*  gnutls_x509_crt_t crt; */
-
+int convert_pgp_to_x509(gnutls_x509_privkey_t* output, gnutls_datum_t* input) {
   gnutls_openpgp_privkey_t pgp_privkey;
+  gnutls_datum_t m, e, d, p, q, u, g, y, x;
   gnutls_pk_algorithm_t pgp_algo;
   unsigned int pgp_bits;
+  int ret;
 
-  char output_data[10240];
-  size_t ods = sizeof(output_data);
-
-  init_gnutls();
-  
-  init_datum(&data);
-  init_datum(&test);
-  init_datum(&clean);
   init_datum(&m);
   init_datum(&e);
   init_datum(&d);
@@ -73,22 +54,170 @@ int main(int argc, char* argv[]) {
   init_datum(&y);
   init_datum(&x);
 
-
-  if (ret = gnutls_x509_privkey_init(&x509_privkey), ret) {
-    err("Failed to initialize X.509 private key (error: %d)\n", ret);
-    return 1;
-  }
-
   if (ret = gnutls_openpgp_privkey_init(&pgp_privkey), ret) {
     err("Failed to initialized OpenPGP private key (error: %d)\n", ret);
     return 1;
   }
+
+
+  /* format could be either: GNUTLS_OPENPGP_FMT_RAW,
+     GNUTLS_OPENPGP_FMT_BASE64; if MONKEYSPHERE_RAW is set, use RAW,
+     otherwise, use BASE64: */
+
+  if (getenv("MONKEYSPHERE_RAW")) {
+    err("assuming RAW formatted private keys\n");
+    if (ret = gnutls_openpgp_privkey_import(pgp_privkey, input, GNUTLS_OPENPGP_FMT_RAW, NULL, 0), ret)
+      err("failed to import the OpenPGP private key in RAW format (error: %d)\n", ret);
+  } else {
+    err("assuming BASE64 formatted private keys\n");
+    if (ret = gnutls_openpgp_privkey_import (pgp_privkey, input, GNUTLS_OPENPGP_FMT_BASE64, NULL, 0), ret)
+      err("failed to import the OpenPGP private key in BASE64 format (error: %d)\n", ret);
+  }
+
+  pgp_algo = gnutls_openpgp_privkey_get_pk_algorithm(pgp_privkey, &pgp_bits);
+  if (pgp_algo < 0) {
+    err("failed to get OpenPGP key algorithm (error: %d)\n", pgp_algo);
+    return 1;
+  }
+  if (pgp_algo == GNUTLS_PK_RSA) {
+    err("OpenPGP RSA Key, with %d bits\n", pgp_bits);
+    ret = gnutls_openpgp_privkey_export_rsa_raw(pgp_privkey, &m, &e, &d, &p, &q, &u);
+    if (GNUTLS_E_SUCCESS != ret) {
+      err ("failed to export RSA key parameters (error: %d)\n", ret);
+      return 1;
+    }
+
+    ret = gnutls_x509_privkey_import_rsa_raw (*output, &m, &e, &d, &p, &q, &u); 
+    if (GNUTLS_E_SUCCESS != ret) {
+      err ("failed to import RSA key parameters (error: %d)\n", ret);
+      return 1;
+    }
+  } else if (pgp_algo == GNUTLS_PK_DSA) {
+    err("OpenPGP DSA Key, with %d bits\n", pgp_bits);
+    ret = gnutls_openpgp_privkey_export_dsa_raw(pgp_privkey, &p, &q, &g, &y, &x);
+    if (GNUTLS_E_SUCCESS != ret) {
+      err ("failed to export DSA key parameters (error: %d)\n", ret);
+      return 1;
+    }
+
+    ret = gnutls_x509_privkey_import_dsa_raw (*output, &p, &q, &g, &y, &x); 
+    if (GNUTLS_E_SUCCESS != ret) {
+      err ("failed to import DSA key parameters (error: %d)\n", ret);
+      return 1;
+    }
+  } else {
+    err("OpenPGP Key was not RSA or DSA -- can't deal! (actual algorithm was: %d)\n", pgp_algo);
+    return 1;
+  }
+  
+  ret = gnutls_x509_privkey_fix(*output);
+  if (ret != 0) {
+    err("failed to fix up the private key in X.509 format (error: %d)\n", ret);
+    return 1; 
+  }
+
+  gnutls_openpgp_privkey_deinit(pgp_privkey);
+  return 0;
+}
+
+int convert_x509_to_pgp(gnutls_openpgp_privkey_t* output, gnutls_datum_t* input) {
+  gnutls_x509_privkey_t x509_privkey;
+  gnutls_datum_t m, e, d, p, q, u, g, y, x;
+  gnutls_pk_algorithm_t x509_algo;
+  int ret;
+
+  init_datum(&m);
+  init_datum(&e);
+  init_datum(&d);
+  init_datum(&p);
+  init_datum(&q);
+  init_datum(&u);
+  init_datum(&g);
+  init_datum(&y);
+  init_datum(&x);
+
+  if (ret = gnutls_x509_privkey_init(&x509_privkey), ret) {
+    err("Failed to initialized X.509 private key (error: %d)\n", ret);
+    return 1;
+  }
+
+
+  /* format could be either:     GNUTLS_X509_FMT_DER,
+    GNUTLS_X509_FMT_PEM; if MONKEYSPHERE_DER is set, use DER,
+     otherwise, use PEM: */
+
+  if (getenv("MONKEYSPHERE_DER")) {
+    err("assuming DER formatted private keys\n");
+    if (ret = gnutls_x509_privkey_import(x509_privkey, input, GNUTLS_X509_FMT_DER), ret)
+      err("failed to import the X.509 private key in DER format (error: %d)\n", ret);
+  } else {
+    err("assuming PEM formatted private keys\n");
+    if (ret = gnutls_x509_privkey_import (x509_privkey, input, GNUTLS_X509_FMT_PEM), ret)
+      err("failed to import the X.509 private key in PEM format (error: %d)\n", ret);
+  }
+
+  x509_algo = gnutls_x509_privkey_get_pk_algorithm(x509_privkey);
+  if (x509_algo < 0) {
+    err("failed to get X.509 key algorithm (error: %d)\n", x509_algo);
+    return 1;
+  }
+  if (x509_algo == GNUTLS_PK_RSA) {
+    err("X.509 RSA Key\n");
+    ret = gnutls_x509_privkey_export_rsa_raw(x509_privkey, &m, &e, &d, &p, &q, &u);
+    if (GNUTLS_E_SUCCESS != ret) {
+      err ("failed to export RSA key parameters (error: %d)\n", ret);
+      return 1;
+    }
+
+    /*     ret = gnutls_openpgp_privkey_import_rsa_raw (*output, &m, &e, &d, &p, &q, &u);  */
+    ret = GNUTLS_E_UNIMPLEMENTED_FEATURE;
+    if (GNUTLS_E_SUCCESS != ret) {
+      err ("failed to import RSA key parameters (error: %d)\n", ret);
+      return 1;
+    }
+  } else if (x509_algo == GNUTLS_PK_DSA) {
+    err("X.509 DSA Key\n");
+    ret = gnutls_x509_privkey_export_dsa_raw(x509_privkey, &p, &q, &g, &y, &x);
+    if (GNUTLS_E_SUCCESS != ret) {
+      err ("failed to export DSA key parameters (error: %d)\n", ret);
+      return 1;
+    }
+
+    /*    ret = gnutls_openpgp_privkey_import_dsa_raw (*output, &p, &q, &g, &y, &x);  */
+    ret = GNUTLS_E_UNIMPLEMENTED_FEATURE;
+    if (GNUTLS_E_SUCCESS != ret) {
+      err ("failed to import DSA key parameters (error: %d)\n", ret);
+      return 1;
+    }
+  } else {
+    err("OpenPGP Key was not RSA or DSA -- can't deal! (actual algorithm was: %d)\n", x509_algo);
+    return 1;
+  }
+  
+  gnutls_x509_privkey_deinit(x509_privkey);
+  return 0;
+}
+
+
+int main(int argc, char* argv[]) {
+  gnutls_datum_t data;
+  int ret;
+  gnutls_x509_privkey_t x509_privkey;
+
+  char output_data[10240];
+  size_t ods = sizeof(output_data);
+
+  init_gnutls();
+  
+  init_datum(&data);
 
   /* slurp in the private key from stdin */
   if (ret = set_datum_fd(&data, 0), ret) {
     err("didn't read file descriptor 0\n");
     return 1;
   }
+
+
 
   /* Or, instead, read in key from a file name: 
   if (ret = set_datum_file(&data, argv[1]), ret) {
@@ -116,61 +245,16 @@ int main(int argc, char* argv[]) {
 /*     write(0, output_data, ods); */
 /*   } */
 
-  /* format could be either: GNUTLS_OPENPGP_FMT_RAW,
-     GNUTLS_OPENPGP_FMT_BASE64; if MONKEYSPHERE_RAW is set, use RAW,
-     otherwise, use BASE64: */
 
-  if (getenv("MONKEYSPHERE_RAW")) {
-    err("assuming RAW formatted private keys\n");
-    if (ret = gnutls_openpgp_privkey_import(pgp_privkey, &data, GNUTLS_OPENPGP_FMT_RAW, NULL, 0), ret)
-      err("failed to import the OpenPGP private key in RAW format (error: %d)\n", ret);
-  } else {
-    err("assuming BASE64 formatted private keys\n");
-    if (ret = gnutls_openpgp_privkey_import (pgp_privkey, &data, GNUTLS_OPENPGP_FMT_BASE64, NULL, 0), ret)
-      err("failed to import the OpenPGP private key in BASE64 format (error: %d)\n", ret);
-  }
-
-  pgp_algo = gnutls_openpgp_privkey_get_pk_algorithm(pgp_privkey, &pgp_bits);
-  if (pgp_algo < 0) {
-    err("failed to get OpenPGP key algorithm (error: %d)\n", pgp_algo);
+  if (ret = gnutls_x509_privkey_init(&x509_privkey), ret) {
+    err("Failed to initialize X.509 private key (error: %d)\n", ret);
     return 1;
   }
-  if (pgp_algo == GNUTLS_PK_RSA) {
-    err("OpenPGP RSA Key, with %d bits\n", pgp_bits);
-    ret = gnutls_openpgp_privkey_export_rsa_raw(pgp_privkey, &m, &e, &d, &p, &q, &u);
-    if (GNUTLS_E_SUCCESS != ret) {
-      err ("failed to export RSA key parameters (error: %d)\n", ret);
-      return 1;
-    }
 
-    ret = gnutls_x509_privkey_import_rsa_raw (x509_privkey, &m, &e, &d, &p, &q, &u); 
-    if (GNUTLS_E_SUCCESS != ret) {
-      err ("failed to import RSA key parameters (error: %d)\n", ret);
-      return 1;
-    }
-  } else if (pgp_algo == GNUTLS_PK_DSA) {
-    err("OpenPGP DSA Key, with %d bits\n", pgp_bits);
-    ret = gnutls_openpgp_privkey_export_dsa_raw(pgp_privkey, &p, &q, &g, &y, &x);
-    if (GNUTLS_E_SUCCESS != ret) {
-      err ("failed to export DSA key parameters (error: %d)\n", ret);
-      return 1;
-    }
+  if (ret = convert_pgp_to_x509(&x509_privkey, &data), ret) {
+    return ret;
+  }
 
-    ret = gnutls_x509_privkey_import_dsa_raw (x509_privkey, &p, &q, &g, &y, &x); 
-    if (GNUTLS_E_SUCCESS != ret) {
-      err ("failed to import DSA key parameters (error: %d)\n", ret);
-      return 1;
-    }
-  } else {
-    err("OpenPGP Key was not RSA or DSA -- can't deal! (actual algorithm was: %d)\n", pgp_algo);
-    return 1;
-  }
-  
-  ret = gnutls_x509_privkey_fix(x509_privkey);
-  if (ret != 0) {
-    err("failed to fix up the private key in X.509 format (error: %d)\n", ret);
-    return 1; 
-  }
   ret = gnutls_x509_privkey_export (x509_privkey,
 				    GNUTLS_X509_FMT_PEM,
 				    output_data,
@@ -182,7 +266,6 @@ int main(int argc, char* argv[]) {
 
 
   gnutls_x509_privkey_deinit(x509_privkey);
-  gnutls_openpgp_privkey_deinit(pgp_privkey);
   gnutls_global_deinit();
   return 0;
 }

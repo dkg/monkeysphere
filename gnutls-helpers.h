@@ -4,6 +4,7 @@
 
 
 #include <gnutls/gnutls.h>
+#include <gnutls/openpgp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +33,12 @@ void copy_datum(gnutls_datum_t* dest, const gnutls_datum_t* src);
 int compare_data(const gnutls_datum_t* a, const gnutls_datum_t* b);
 void free_datum(gnutls_datum_t* d);
 
+/* keyid manipulations: */
+typedef unsigned char printable_keyid[16];
+
+void init_keyid(gnutls_openpgp_keyid_t keyid);
+void make_keyid_printable(printable_keyid out, gnutls_openpgp_keyid_t keyid);
+
 /* functions to get data into datum objects: */
 
 /* read the passed-in string, store in a single datum */
@@ -44,3 +51,4 @@ int set_datum_fd(gnutls_datum_t* d, int fd);
 /* read the file indicated (by na1me) in the fname parameter.  store
    its entire contents in a single datum. */
 int set_datum_file(gnutls_datum_t* d, const char* fname);
+

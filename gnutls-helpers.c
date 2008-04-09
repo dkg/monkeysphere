@@ -18,6 +18,24 @@ void logfunc(int level, const char* string) {
   fprintf(stderr, "GnuTLS Logging (%d): %s\n", level, string);
 }
 
+void init_keyid(gnutls_openpgp_keyid_t keyid) {
+  memset(keyid, 'x', sizeof(gnutls_openpgp_keyid_t));
+}
+
+
+
+void make_keyid_printable(printable_keyid out, gnutls_openpgp_keyid_t keyid)
+{
+  static const char hex[16] = "0123456789ABCDEF";
+  unsigned int kix = 0, outix = 0;
+  
+  while (kix < sizeof(gnutls_openpgp_keyid_t)) {
+    out[outix] = hex[(keyid[kix] >> 4) & 0x0f];
+    out[outix + 1] = hex[keyid[kix] & 0x0f];
+    kix++;
+    outix += 2;
+  }
+}
 
 
 int init_gnutls() {
