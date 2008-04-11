@@ -12,21 +12,19 @@
 #. /etc/monkeysphere/monkeysphere.conf
 . ~/ms/monkeysphere.conf
 
-# user name of user to update
-USERNAME="$1"
-
 #AUTH_KEYS_DIR_BASE=/var/lib/monkeysphere/authorized_keys/
 AUTH_KEYS_DIR_BASE=~/ms/authorized_keys
-
-AUTH_KEYS_DIR="$AUTH_KEYS_DIR_BASE"/"$USERNAME"
-AUTH_KEYS_FILE="$AUTH_KEYS_DIR"/authorized_keys
-
-AUTH_USER_IDS="$AUTH_USER_IDS_DIR"/"$USERNAME"
 
 export GNUPGHOME
 ##################################################
 
-### FUNCTIONS
+CMD=$(basename $0)
+
+usage() {
+cat <<EOF
+usage: $CMD USERNAME
+EOF
+}
 
 failure() {
     echo "$1" >&2
@@ -43,6 +41,25 @@ cutline() {
 
 ### MAIN
 
+if [ -z "$1" ] ; then
+    usage
+    exit 1
+fi
+
+# user name of user to update
+USERNAME="$1"
+if ! id "$USERNAME" > /dev/null ; then
+    failure "User '$USERNAME' does not exist."
+fi
+
+AUTH_USER_IDS="$AUTH_USER_IDS_DIR"/"$USERNAME"
+if [ ! -e "$AUTH_USER_IDS" ] ; then
+    failure "No auth_user_ids file for user '$USERNAME'."
+fi
+
+AUTH_KEYS_DIR="$AUTH_KEYS_DIR_BASE"/"$USERNAME"/keys
+AUTH_KEYS_FILE="$AUTH_KEYS_DIR_BASE"/authorized_keys
+
 # make sure the gnupg home exists with proper permissions
 mkdir -p "$GNUPGHOME"
 chmod 0700 "$GNUPGHOME"
@@ -51,38 +68,72 @@ chmod 0700 "$GNUPGHOME"
 NLINES=$(meat "$AUTH_USER_IDS" | wc -l)
 
 # clean out keys file and remake keys directory
-rm -rf "$AUTH_KEYS_DIR"/keys
-mkdir -p "$AUTH_KEYS_DIR"/keys
+rm -rf "$AUTH_KEYS_DIR"
+mkdir -p "$AUTH_KEYS_DIR"
 
 # loop through all user ids, and generate ssh keys
 for (( N=1; N<=$NLINES; N=N+1 )) ; do
     # get user id
-    USERID=$(meat "$AUTH_USER_IDS" | head --line="$N" | tail -1)
+    USERID=$(meat "$AUTH_USER_IDS" | cutline "$N" )
     USERID_HASH=$(echo "$USERID" | sha1sum | awk '{ print $1 }')
 
-    # get key id from user id
-    #KEYID=$(gpguser2key "$USERID")
-    KEYID="$USERID"
+    KEYFILE="$AUTH_KEYS_DIR"/"$USERID_HASH"
 
-    echo "Receiving keys for: $USERID ($KEYID)..."
+    # search for key on keyserver
+    echo -n "ms: finding key for '$USERID'..."
+    RETURN=$(echo 1 | gpg --quiet --batch --command-fd 0 --with-colons --keyserver "$KEYSERVER" --search ="$USERID" 2> /dev/null)
 
-    # is primary key revoked && kill
-    # for all associated keys (primary and sub)
-    #  - type "A"
-    #  - not revoked
-    #  - signed by trusted user
-    #  output ssh key
+    # if the key was found...
+    if [ "$RETURN" ] ; then
+	echo " found."
 
-    # Receive keys into key ring
-    if gpg --recv-keys --keyserver "$KEYSERVER" "$KEYID" ; then
-	# convert pgp key to ssh key, and write to cache file
-	KEYFILE="$AUTH_KEYS_DIR"/keys/"$USERID_HASH"
-	gpgkey2ssh "$KEYID" | sed -e "s/COMMENT/$USERID/" > "$KEYFILE"
+	# checking key attributes
+	# see /usr/share/doc/gnupg/DETAILS.gz:
+
+	PUB_INFO=$(gpg --fixed-list-mode --with-colons --list-keys --with-fingerprint ="$USERID" | grep '^pub:')
+
+	echo -n "ms: "
+
+# 	# if not an authorization key exit
+#  	if echo "$PUB_INFO" | cut -d: -f12 | grep -v -q '[aA]' ; then
+#  	   echo "not an authorization key --> SKIPPING"
+#  	   continue
+# 	fi
+
+	# if key is not fully trusted exit
+        # (this includes not revoked or expired)
+	# determine trust
+	TRUST=$(echo "$PUB_INFO" | cut -d: -f2)
+	case "$TRUST" in
+	    'i')
+		echo -n "invalid" ;;
+	    'r')
+		echo -n "revoked" ;;
+	    'e')
+		echo -n "expired" ;;
+	    '-'|'q'|'n'|'m')
+		echo -n "unacceptable trust" ;;
+	    'f'|'u')
+		echo -n "fully trusted"
+                # convert pgp key to ssh key, and write to cache file
+		echo " -> generating ssh key..."
+		gpgkey2ssh "$KEYID" | sed -e "s/COMMENT/$USERID/" > "$KEYFILE"
+		continue
+	    ;;
+	    *)
+		echo -n "unknown trust" ;;
+	esac
+	echo " -> SKIPPING"
     fi
 done
 
-echo "Writing authorized_keys file '$AUTH_KEYS_FILE'..."
-cat "$AUTH_KEYS_DIR"/keys/* > "$AUTH_KEYS_FILE" || > "$AUTH_KEYS_FILE"
+if [ $(ls "$AUTH_KEYS_DIR") ]  ; then
+    echo "ms: writing ms authorized_keys file..."
+    cat "$AUTH_KEYS_DIR"/* > "$AUTH_KEYS_FILE"
+else
+    echo "ms: no gpg keys to add to authorized_keys file."
+fi
 if [ -s ~"$USERNAME"/.ssh/authorized_keys ] ; then
+    echo "ms: adding user authorized_keys..."
     cat ~"$USERNAME"/.ssh/authorized_keys >> "$AUTH_KEYS_FILE"
 fi
