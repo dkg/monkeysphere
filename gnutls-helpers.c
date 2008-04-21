@@ -345,3 +345,20 @@ int validate_ssh_host_userid(const char* userid) {
   setlocale(LC_ALL, oldlocale);
   return 1;
 }
+
+/* http://tools.ietf.org/html/rfc4880#section-5.5.2 */
+size_t get_openpgp_mpi_size(gnutls_datum_t* d) {
+  return 2 + d->size;
+}
+
+int write_openpgp_mpi_to_fd(int fd, gnutls_datum_t* d) {
+  uint16_t x;
+
+  x = d->size * 8;
+  x = htons(x);
+  
+  write(fd, &x, sizeof(x));
+  write(fd, d->data, d->size);
+  
+  return 0;
+}
