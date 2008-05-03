@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
   } else {
     err("primary key is only good for: 0x%08x.  Trying subkeys...\n", usage);
     
-    if (ret = gnutls_openpgp_crt_get_auth_subkey(openpgp_crt, keyid), ret) {
+    if (ret = gnutls_openpgp_crt_get_auth_subkey(openpgp_crt, keyid, 0), ret) {
       err("failed to find a subkey capable of authentication (error: %d)\n", ret);
       return ret;
     }

@@ -54,7 +54,7 @@ int set_datum_string(gnutls_datum_t* d, const char* s);
    datum */
 int set_datum_fd(gnutls_datum_t* d, int fd);
 
-/* read the file indicated (by na1me) in the fname parameter.  store
+/* read the file indicated (by name) in the fname parameter.  store
    its entire contents in a single datum. */
 int set_datum_file(gnutls_datum_t* d, const char* fname);
 
@@ -64,3 +64,9 @@ int create_writing_pipe(pid_t* pid, const char* path, char* const argv[]);
 
 /* return 0 if userid matches the monkeysphere spec for ssh host user IDs */
 int validate_ssh_host_userid(const char* userid);
+
+/* how many bytes will it take to write out this datum in OpenPGP MPI form? */
+size_t get_openpgp_mpi_size(gnutls_datum_t* d);
+
+/* write the MPI stored in gnutls_datum_t to file descriptor fd: */
+int write_openpgp_mpi_to_fd(int fd, gnutls_datum_t* d);
