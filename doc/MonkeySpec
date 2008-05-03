@@ -1,0 +1,105 @@
+THE MONKEYSPHERE
+================
+
+AGENDA
+======
+[x] clowning
+[ ] work
+[x] jrollins will talk and gesture - in progress
+
+COMPONENTS
+==========
+* client-side componants
+** "Marmoset": update known_hosts file with public key of server(s):
+*** be responsible for removing keys from the file as key revocation happens 
+*** be responsible for updating a key in the file where there is a key replacement 
+*** must result in a file that is parsable by the existing ssh client without errors
+*** manual management must be allowed without stomping on it
+*** provide a simple, intelligible, clear policy for key acceptance
+*** questions: should this query keyserver & update known host files? (we already 
+    have awesome tool that queries keyservers and updates a web of trust (gpg) 
+** "Howler": simple script that could be placed as a trigger function (in your .ssh/config)
+*** runs on connection to a certain host
+*** triggers update to known_hosts file then makes connection
+*** proxy-command | pre-hook script | wrapper script
+** "Langur": policy-editor for viewing/editing policies
+
+* server-side componants
+** "Rhesus" updates a per-user authorized_keys file, instead of updating a
+   known_hosts file from a public key by matching a specified user-id (for given
+   user: update authkeys file with public keys derived from authorized_uids
+   file)
+*** Needs to operate with the same principles that Marmoset client-side does 
+** "Tamarin" triggers Rhesus during an attempt to initiate a connection or a scheduler (or both)
+** "Barbary" - policy editor / viewer
+
+* common componants
+** Create a ssh keypair from a openpgp keypair
+
+from ssh_config(5):
+     LocalCommand
+             Specifies a command to execute on the local machine after suc‐
+             cessfully connecting to the server.  The command string extends
+             to the end of the line, and is executed with /bin/sh.  This
+             directive is ignored unless PermitLocalCommand has been enabled.
+
+
+NOTES
+=====
+* Daniel and Elliot lie. <check>
+* We will use a distributed VCS, each developer will create their own git repository and publish it publically for others to pull from, mail out
+* public project page doesn't perhaps make sense yet
+* approximate goal - using the web of trust to authenticate ppl for SSH
+* outline of various components of monkeysphere
+* M: what does it mean to be in the monkeysphere?  not necessarily a great coder.
+* J: interested in seeing project happen, not in actually doing it.  anybody can contribute as much as they want.
+* J: if we put the structure in place to work on monkeysphere then we don't have to do anything
+* D: we are not creating 
+* understand gpg's keyring better, understanding tools better, building scripts
+* Some debian packages allow automated configuration of config files.
+
+
+* GENERAL GOAL - use openpgp web-of-trust to authenticate ppl for SSH
+* SPECIFIC GOAL - allow openssh to tie into pgp web-of-trust without modifying either openpgp and openssh
+* DESIGN GOALS - authentication, use the existing generic OpenSSH client, the admin can make it default, although end-user should be decide to use monkeysphere or not
+* DESIGN GOAL - use of monkeysphere should not radically change connecting-to-server experience
+* GOAL - pick a monkey-related name for each component 
+
+Dramatis Personae: http://en.wikipedia.org/wiki/Alice_and_Bob
+Backstory: http://www.conceptlabs.co.uk/alicebob.html
+
+* Use Case: Bob wants to sign on to the computer "mangabey" via monkeysphere
+  framework. He doesn't have access to the machine, but he knows Alice, who is
+  the admin of magabey. Alice creates a user bob and puts bob's userid in the
+  auth_user_ids file for bob. Tamarin triggers which causes Rhesus to take all
+  the things in the auth_userids file, takes those users, look son a keyserver
+  finds the public keys for the users, converts the gpg public keys into ssh
+  public keys and inserts those into a user_authorized_keys file. Bob goes to
+  connect, bob's ssh client which is monkeysphere enbaled, howler is triggered
+  which triggers marmoset which looks out into the web of trust and find an
+  OpenPGP key that has a userid that matches the URI of magabey. Marmoset checks
+  to see if this key for mangabey has been signed by any keys that you trust
+  (based on your policy). Has this key been signed by somebody that you trust?
+  If yes, connect, if no: abort or fail-through or whatever. Alice has signed 
+  this uid, so Marmoset says "OK, this server has been verified" it then
+  converts the gpg public key into a ssh public key and then adds this gpg key
+  to the known_host file. ssh says, "you" are about to connect to magabey and
+  you know this is magabey because alice says so and you trust alice". The gpg
+  private key of bob has to be converted (somehow, via agent or something) into
+  a ssh private_key. SSH connection happens.
+
+Host identity piece of monkeysphere could be used without buying into the 
+authorization component.
+
+Monkeysphere is authentication layer that allows the sysadmin to perform 
+authorization on user identities instead of on keys, it additionally allows the 
+sysadmin also to authenticate the server to the end-user.
+
+git clone http://git.mlcastle.net/monkeysphere.git/ monkeysphere
+
+Fix gpgkey2ssh so that the entire key fingerprint will work, accept full fingerprint, or accept a pipe and do the conversion
+Write manpage for gpgkey2ssh
+gpg private key (start with passwordless) to PEM encoded private key: perl libraries, libopencdk / gnutls, gpgme 
+setup remote git repo
+think through / plan merging of known_hosts (& auth_keys?)
+think about policies and their representation
