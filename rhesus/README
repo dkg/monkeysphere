@@ -1,7 +1,30 @@
-rhesus is the monkeysphere authorized_keys generator.
+rhesus is the monkeysphere authorized_keys/known_hosts generator.
 
-It's goal is to take a user's auth_user_ids file, which contains gpg
-user ids (and possibly authorized_keys options), use gpg to fetch the
-keys of the specified users, do a monkeysphere policy check on each
-id, and generate authorized_keys lines for verified id.
+In authorized_keys mode, rhesus takes an auth_user_ids file, which
+contains gpg user ids, uses gpg to fetch the keys of the specified
+users, does a monkeysphere policy check on each id, and uses gpg2ssh
+to generate authorized_keys lines for each verified id.  The lines are
+then combined with a user's traditional authorized_keys file to create
+a new authorized_keys file.
 
+In known_hosts mode, rhesus takes an auth_host_ids file, which
+contains gpg user ids of the form ssh://URL, uses gpg to fetch the
+keys of the specified hosts, does a monkeysphere policy check on each
+id, and uses gpg2ssh to generate a known_hosts lines for each verified
+id.  The lines are then combined with a user's traditional known_hosts
+file to create a new known_hosts file.
+
+When run as a normal user, no special configuration is needed.
+
+When run as an administrator to update system-maintained
+authorized_keys files for each user, the following environment
+variables should be defined first:
+
+ MS_CONF=/etc/monkeysphere/monkeysphere.conf
+ USER=foo
+
+For example, the command might be run like this:
+
+ for USER in $(ls -1 /home) ; do
+   MS_CONF=/etc/monkeysphere/monkeysphere.conf rhesus --authorized_keys
+ done
