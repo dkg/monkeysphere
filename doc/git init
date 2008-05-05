@@ -98,10 +98,10 @@ $ git push post
 grunt's fingerprint: be:43:9c:03:9c:04:1a:97:7a:61:8a:fe:71:9d:6c:67
 (grunt is lair.fifthhorseman.net)
 
-for foo in $(git remote); do git fetch $foo; done
+git remote update
 
-
-
+what are the configurations below?
+---------------------
 set mainfont {Arial 12}
 set textfont { Courier 12}
 set uifont {Arial 10 bold}
@@ -129,4 +129,4 @@ set geometry(pwsash1) "903 1"
 set geometry(botwidth) 1001
 set geometry(botheight) 638
 set permviews {}
-
+---------------------
