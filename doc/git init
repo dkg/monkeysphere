@@ -57,6 +57,10 @@ local$ cd monkeysphere
 
 [remote "mjgoins"] SEE: dkg, jrollins, etc.
 
+[remote "jamie"]
+	url = http://current.workingdirectory.net/projects/monkeysphere.git
+	fetch = +refs/heads/*:refs/remotes/jamie/*
+
 [remote "micah"]
 	url = http://micah.riseup.net/git/monkeysphere.git
 	fetch = +refs/heads/*:refs/remotes/micah/*
