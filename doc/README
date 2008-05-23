@@ -1,5 +1,48 @@
-				Monkeysphere
-				------------
+Monkeysphere README
+-------------------
 
+Default file locations:
 
-This is the README!
+MS_HOME=~/.config/monkeysphere
+STAGING_AREA=$MS_HOME
+GNUPGHOME=~/.gnupg
+$MS_HOME/monkeysphere.conf
+$MS_HOME/auth_host_ids
+$MS_HOME/auth_user_ids
+$STAGING_AREA/host_keys/KEYHASH
+$STAGING_AREA/known_hosts
+$STAGING_AREA/user_keys/KEYHASH
+$STAGING_AREA/authorized_keys
+
+For a user to update their ms known_hosts file:
+
+$ rhesus --known_hosts
+
+For a user to update their ms authorized_keys file:
+
+$ rhesus --authorized_keys
+
+A system can maintain ms authorized_keys files for it's users.  Some
+different variables need to be defined to help manage this.  The way
+this is done is by first defining a new MS_HOME:
+
+MS_HOME=/etc/monkeysphere
+
+This directory would then have a monkeysphere.conf which defines the
+following variables:
+
+AUTH_USER_FILE="$MS_HOME"/auth_user_ids/"$USER"
+STAGING_AREA=/var/lib/monkeysphere/stage/$USER
+GNUPGHOME=$MS_HOME/gnupg
+
+To update the ms authorized_keys file for user "foo", the system would
+then run the following:
+
+# USER=foo MS_HOME=/etc/monkeysphere rhesus --authorized_keys
+
+To update the ms authorized_keys file for all users on the the system:
+
+MS_HOME=/etc/monkeysphere
+for USER in $(ls -1 /etc/monkeysphere/auth_user_ids) ; do
+    rhesus --authorized_keys
+done
