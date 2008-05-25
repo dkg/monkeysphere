@@ -7,7 +7,7 @@
 #
 # Copyright 2008, released under the GPL, version 3 or later
 
-CMD=$(basename $0)
+PGRM=$(basename $0)
 
 ########################################################################
 # FUNCTIONS
@@ -15,8 +15,8 @@ CMD=$(basename $0)
 
 usage() {
 cat <<EOF
-usage: $CMD k|known_hosts [userid...]
-       $CMD a|authorized_keys [userid...]
+usage: $PGRM k|known_hosts [userid...]
+       $PGRM a|authorized_keys [userid...]
 Monkeysphere update of known_hosts or authorized_keys file.
 If userids are specified, only specified userids will be processed
 (userids must be included in the appropriate auth_*_ids file).
@@ -228,7 +228,7 @@ fi
 # set user home directory
 HOME=$(getent passwd "$USER" | cut -d: -f6)
 
-# get ms home directory
+# set ms home directory
 MS_HOME=${MS_HOME:-"$HOME"/.config/monkeysphere}
 
 # load configuration file

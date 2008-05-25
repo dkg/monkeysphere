@@ -1,19 +1,22 @@
 Monkeysphere README
--------------------
+===================
 
-Default file locations:
+Default files locations (by variable):
 
 MS_HOME=~/.config/monkeysphere
-STAGING_AREA=$MS_HOME
+MS_CONF=$MS_HOME/monkeysphere.conf
+AUTH_HOST_FILE=$MS_HOME/auth_host_ids
+AUTH_USER_FILE=$MS_HOME/auth_user_ids
 GNUPGHOME=~/.gnupg
-$MS_HOME/monkeysphere.conf
-$MS_HOME/auth_host_ids
-$MS_HOME/auth_user_ids
+STAGING_AREA=$MS_HOME
+
 $STAGING_AREA/host_keys/KEYHASH
 $STAGING_AREA/known_hosts
 $STAGING_AREA/user_keys/KEYHASH
 $STAGING_AREA/authorized_keys
 
+user usage
+----------
 For a user to update their ms known_hosts file:
 
 $ rhesus --known_hosts
@@ -22,6 +25,23 @@ For a user to update their ms authorized_keys file:
 
 $ rhesus --authorized_keys
 
+server service publication
+--------------------------
+To publish a server host key use the "howler" component:
+
+# howler gen-key
+# howler publish-key
+
+This will generate the key for server with the service URI
+(ssh://server.hostname).  The server admin should now sign the server
+key so that people in the admin's web of trust can authenticate the
+server without manual host key checking:
+
+$ gpg --search ='ssh://server.hostname'
+$ gpg --sign-key 'ssh://server.hostname'
+
+server authorized_keys maintenance
+----------------------------------
 A system can maintain ms authorized_keys files for it's users.  Some
 different variables need to be defined to help manage this.  The way
 this is done is by first defining a new MS_HOME:
@@ -35,10 +55,24 @@ AUTH_USER_FILE="$MS_HOME"/auth_user_ids/"$USER"
 STAGING_AREA=/var/lib/monkeysphere/stage/$USER
 GNUPGHOME=$MS_HOME/gnupg
 
-To update the ms authorized_keys file for user "foo", the system would
+For each user account on the server, the userids of people authorized
+to log into that account would be placed in the AUTH_USER_FILE for
+that user.  However, in order for users to become authenticated, the
+server must determine that the user keys have "full" validity.  This
+means that the server must fully trust at least one person whose
+signature on the connecting users key would validate the user.  This
+would generally be the server admin.  If the server admin's userid is
+
+"Alice <alice@foo.com>"
+
+then the server would run:
+
+# howler trust-uids "Alice <alice@foo.com>"
+
+To update the ms authorized_keys file for user "bob", the system would
 then run the following:
 
-# USER=foo MS_HOME=/etc/monkeysphere rhesus --authorized_keys
+# USER=bob MS_HOME=/etc/monkeysphere rhesus --authorized_keys
 
 To update the ms authorized_keys file for all users on the the system:
 

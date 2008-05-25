@@ -1,78 +1,128 @@
 #!/bin/sh
 
-# howler: server gpg key generator/publisher
+# howler: monkeysphere server gpg generator/publisher/maintainer
 #
 # Written by
 # Jameson Rollins <jrollins@fifthhorseman.net>
 #
 # Copyright 2008, released under the GPL, version 3 or later
 
-CMD=$(basename $0)
+PGRM=$(basename $0)
 
 ########################################################################
 # FUNCTIONS
 ########################################################################
+
+usage() {
+cat <<EOF
+usage: $PGRM gen-key
+       $PGRM publish-key
+       $PGRM trust-uids USERID [USERID...]
+       $PGRM help
+EOF
+}
 
 failure() {
     echo "$1" >&2
     exit ${2:-'1'}
 }
 
-########################################################################
-# MAIN
-########################################################################
+# generate server gpg key
+gen_key() {
+    KEY_TYPE=${KEY_TYPE:-RSA}
+    KEY_LENGTH=${KEY_LENGTH:-2048}
+    KEY_USAGE=${KEY_USAGE:-encrypt,auth}
+    SERVICE=${SERVICE:-ssh}
+    HOSTNAME_FQDN=${HOSTNAME_FQDN:-$(hostname -f)}
 
-MS_HOME=${MS_HOME:-/etc/monkeysphere}
+    USERID=${USERID:-"$SERVICE"://"$HOSTNAME_FQDN"}
 
-. "$MS_HOME"/monkeysphere.conf
-
-export GNUPGHOME
-
-KEY_TYPE=${KEY_TYPE:-RSA}
-KEY_LENGTH=${KEY_LENGTH:-2048}
-KEY_USAGE=${KEY_USAGE:-encrypt,auth}
-SERVICE=${SERVICE:-ssh}
-HOSTNAME=${HOSTNAME:-$(hostname -f)}
-
-USERID=${USERID:-"$SERVICE"://"$HOSTNAME"}
-
-echo "key parameters:"
-cat <<EOF
+    echo "key parameters:"
+    cat <<EOF
 Key-Type: $KEY_TYPE
 Key-Length: $KEY_LENGTH
 Key-Usage: $KEY_USAGE
 Name-Real: $USERID
 EOF
 
-read -p "generate key? [Y|n]: " OK; OK=${OK:=Y}
-if [ ${OK/y/Y} != 'Y' ] ; then
-    failure "aborting."
-fi
+    read -p "generate key? [Y|n]: " OK; OK=${OK:=Y}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "aborting."
+    fi
 
-if gpg --list-key ="$USERID" > /dev/null 2>&1 ; then
-    failure "key for '$USERID' already exists"
-fi
+    if gpg --list-key ="$USERID" > /dev/null 2>&1 ; then
+	failure "key for '$USERID' already exists"
+    fi
 
-echo "generating server key..."
-gpg --batch --gen-key <<EOF
+    echo "generating server key..."
+    gpg --batch --gen-key <<EOF
 Key-Type: $KEY_TYPE
 Key-Length: $KEY_LENGTH
 Key-Usage: $KEY_USAGE
 Name-Real: $USERID
 %commit
 EOF
+}
 
-read -p "publish key to $KEY_SERVER? [Y|n]: " OK; OK=${OK:=Y}
-if [ ${OK/y/Y} != 'Y' ] ; then
-    failure "aborting."
-fi
+publish_key() {
+    read -p "publish key to $KEYSERVER? [Y|n]: " OK; OK=${OK:=Y}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "aborting."
+    fi
 
-echo "sending key to keyserver '$KEYSERVER'..."
-keyID=$(gpg --list-key --with-colons ="$USERID" 2> /dev/null | grep '^pub:' | cut -d: -f5)
+    keyID=$(gpg --list-key --with-colons ="$USERID" 2> /dev/null | grep '^pub:' | cut -d: -f5)
 
-# dummy command so as not to publish fakes keys during testing
-# eventually:
-#gpg --send-keys --keyserver "$KEYSERVER" "$keyID"
-echo "gpg --send-keys --keyserver $KEYSERVER $keyID"
+    # dummy command so as not to publish fakes keys during testing
+    # eventually:
+    #gpg --send-keys --keyserver "$KEYSERVER" "$keyID"
+    echo "gpg --send-keys --keyserver $KEYSERVER $keyID"
+}
 
-echo "done."
+# FIXME: need to figure out how to automate this, in a batch mode
+#  or something.
+trust_uids() {
+    for userID ; do
+	gpg --keyserver "$KEYSERVER" --search ="$userID"
+	gpg --edit-key "$userID"
+    done
+}
+
+########################################################################
+# MAIN
+########################################################################
+
+# set ms home directory
+MS_HOME=${MS_HOME:-/etc/monkeysphere}
+
+# load configuration file
+MS_CONF=${MS_CONF:-"$MS_HOME"/monkeysphere.conf}
+[ -e "$MS_CONF" ] && . "$MS_CONF"
+
+GNUPGHOME=${GNUPGHOME:-"$MS_HOME"/gnupg}
+export GNUPGHOME
+KEYSERVER=${KEYSERVER:-subkeys.pgp.net}
+export KEYSERVER
+
+COMMAND="$1"
+[ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
+shift 1
+
+case $COMMAND in
+    'gen-key')
+	gen_key
+	;;
+    'publish-key')
+	publish_key
+	;;
+    'trust-uids')
+	trust_uids "$@"
+	;;
+    'help')
+        usage
+	exit
+        ;;
+    *)
+        failure "Unknown command: '$COMMAND'
+Type '$PGRM help' for usage."
+        ;;
+esac

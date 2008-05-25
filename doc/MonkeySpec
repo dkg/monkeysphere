@@ -38,7 +38,10 @@ common components
 
 server-side components
 ----------------------
-* "howler": service gpg key generator/publisher
+* "howler": server gpg maintainer
+  - generates gpg keys for the server
+  - publishes server gpg keys
+  - used to specify userids to trust for user authentication
 
 * "tamarin": script to trigger rhesus during attempt to initiate
   connection from client
