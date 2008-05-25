@@ -7,99 +7,130 @@ AGENDA
 [ ] work
 [x] jrollins will talk and gesture - in progress
 
+MONKEYNAMES
+===========
+
+rhesus, marmoset, howler, langur, tamarin, barbary
+
 COMPONENTS
 ==========
-* client-side componants
-** "Marmoset": update known_hosts file with public key of server(s):
-*** be responsible for removing keys from the file as key revocation happens 
-*** be responsible for updating a key in the file where there is a key replacement 
-*** must result in a file that is parsable by the existing ssh client without errors
-*** manual management must be allowed without stomping on it
-*** provide a simple, intelligible, clear policy for key acceptance
-*** questions: should this query keyserver & update known host files? (we already 
-    have awesome tool that queries keyservers and updates a web of trust (gpg) 
-** "Howler": simple script that could be placed as a trigger function (in your .ssh/config)
-*** runs on connection to a certain host
-*** triggers update to known_hosts file then makes connection
-*** proxy-command | pre-hook script | wrapper script
-** "Langur": policy-editor for viewing/editing policies
 
-* server-side componants
-** "Rhesus" updates a per-user authorized_keys file, instead of updating a
-   known_hosts file from a public key by matching a specified user-id (for given
-   user: update authkeys file with public keys derived from authorized_uids
-   file)
-*** Needs to operate with the same principles that Marmoset client-side does 
-** "Tamarin" triggers Rhesus during an attempt to initiate a connection or a scheduler (or both)
-** "Barbary" - policy editor / viewer
+(names in "" are code names until we think of better ones.)
 
-* common componants
-** Create a ssh keypair from a openpgp keypair
+common components
+-----------------
+* "rhesus": update known_hosts/authorized_keys files:
+  - be responsible for removing keys from the file as key revocation
+    happens
+  - be responsible for updating a key in the file where there is a key
+    replacement
+  - must result in a file that is parsable by the existing ssh client
+    without errors
+  - manual management must be allowed without stomping on it
+  - provide a simple, intelligible, clear policy for key acceptance
 
-from ssh_config(5):
-     LocalCommand
-             Specifies a command to execute on the local machine after suc‐
-             cessfully connecting to the server.  The command string extends
-             to the end of the line, and is executed with /bin/sh.  This
-             directive is ignored unless PermitLocalCommand has been enabled.
+* "langur": policy-editor for viewing/editing policies
 
+* gpg2ssh: utility to convert gpg keys to ssh
+  known_hosts/authorized_keys lines
 
-NOTES
-=====
-* Daniel and Elliot lie. <check>
-* We will use a distributed VCS, each developer will create their own git repository and publish it publically for others to pull from, mail out
-* public project page doesn't perhaps make sense yet
-* approximate goal - using the web of trust to authenticate ppl for SSH
-* outline of various components of monkeysphere
-* M: what does it mean to be in the monkeysphere?  not necessarily a great coder.
-* J: interested in seeing project happen, not in actually doing it.  anybody can contribute as much as they want.
-* J: if we put the structure in place to work on monkeysphere then we don't have to do anything
-* D: we are not creating 
-* understand gpg's keyring better, understanding tools better, building scripts
-* Some debian packages allow automated configuration of config files.
+* ssh2gpg: create openpgp keypair from ssh keypair
 
+server-side components
+----------------------
+* "howler": service gpg key generator/publisher
 
-* GENERAL GOAL - use openpgp web-of-trust to authenticate ppl for SSH
-* SPECIFIC GOAL - allow openssh to tie into pgp web-of-trust without modifying either openpgp and openssh
-* DESIGN GOALS - authentication, use the existing generic OpenSSH client, the admin can make it default, although end-user should be decide to use monkeysphere or not
-* DESIGN GOAL - use of monkeysphere should not radically change connecting-to-server experience
-* GOAL - pick a monkey-related name for each component 
+* "tamarin": script to trigger rhesus during attempt to initiate
+  connection from client
+
+client-side components
+----------------------
+* "marmoset": script to trigger rhesus during attempt to initiate
+  connection to server
+  - runs on connection to a certain host
+  - triggers update to known_hosts file then makes connection
+  - proxy-command | pre-hook script | wrapper script
+  - (ssh_config "LocalCommand" is only run *after* connection)
+
+USE CASE
+========
 
 Dramatis Personae: http://en.wikipedia.org/wiki/Alice_and_Bob
 Backstory: http://www.conceptlabs.co.uk/alicebob.html
 
-* Use Case: Bob wants to sign on to the computer "mangabey" via monkeysphere
-  framework. He doesn't have access to the machine, but he knows Alice, who is
-  the admin of magabey. Alice creates a user bob and puts bob's userid in the
-  auth_user_ids file for bob. Tamarin triggers which causes Rhesus to take all
-  the things in the auth_userids file, takes those users, look son a keyserver
-  finds the public keys for the users, converts the gpg public keys into ssh
-  public keys and inserts those into a user_authorized_keys file. Bob goes to
-  connect, bob's ssh client which is monkeysphere enbaled, howler is triggered
-  which triggers marmoset which looks out into the web of trust and find an
-  OpenPGP key that has a userid that matches the URI of magabey. Marmoset checks
-  to see if this key for mangabey has been signed by any keys that you trust
-  (based on your policy). Has this key been signed by somebody that you trust?
-  If yes, connect, if no: abort or fail-through or whatever. Alice has signed 
-  this uid, so Marmoset says "OK, this server has been verified" it then
-  converts the gpg public key into a ssh public key and then adds this gpg key
-  to the known_host file. ssh says, "you" are about to connect to magabey and
-  you know this is magabey because alice says so and you trust alice". The gpg
-  private key of bob has to be converted (somehow, via agent or something) into
-  a ssh private_key. SSH connection happens.
+Bob wants to sign on to the computer "mangabey" via monkeysphere
+framework.  He doesn't yet have access to the machine, but he knows
+Alice, who is the admin of magabey.  Alice and Bob, being the
+contientious netizens that they are, have already published their
+personal gpg keys to the web of trust, and being good friends, have
+both signed each other's keys and marked each others keys with "full"
+trust.
 
-Host identity piece of monkeysphere could be used without buying into the 
-authorization component.
+Alice uses howler to publish a gpg key for magabey with the special
+"ssh://magabey" URI userid.  Alice signs magabey's gpg key and
+publishes her signature.  Alice then creates a user "bob" on magabey,
+and puts Bob's userid in the auth_user_ids file for user bob on
+magabey.  tamarin triggers on magabey, which triggers rhesus, which
+takes all userids in bob's auth_user_ids file, look on a keyserver to
+find the public keys for each user, converts the gpg public keys into
+ssh public keys if the key validity is acceptable, and finally insert
+those keys into an authorized_keys file for bob.
 
-Monkeysphere is authentication layer that allows the sysadmin to perform 
-authorization on user identities instead of on keys, it additionally allows the 
-sysadmin also to authenticate the server to the end-user.
+Bob now adds the "ssh://magabey" userid to the auth_host_ids file in
+his account on his localhost.  Bob now goes to connect to bob@magabey.
+Bob's ssh client, which is monkeysphere enabled, triggers marmoset,
+which triggers rhesus on Bob's computer, which takes all server
+userids in his auth_host_ids file, looks on a keyserver to find the
+public key for each server (based on the server's URI), converts the
+gpg public keys into ssh public keys if the key validity is
+acceptable, and finally insert those keys into Bob's known_hosts file.
+
+On Bob's side, since mangabey's key had "full" validity (since it was
+signed by Alice whom he fully trusts), Bob's ssh client deems magabey
+"known" and no further host key checking is required.
+
+On magabey's side, since Bob's key has "full" validity (since it had
+also been signed by Alice whom magabey fully trusts (since Alice told
+him to)), Bob is authenticated to log into bob@magabey.
+
+NOTES
+=====
+
+* Daniel and Elliot lie. <check>
+* We will use a distributed VCS, each developer will create their own
+  git repository and publish it publicly for others to pull from, mail
+  out 
+* public project page doesn't perhaps make sense yet
+* approximate goal - using the web of trust to authenticate ppl for
+  SSH 
+* outline of various components of monkeysphere
+* M: what does it mean to be in the monkeysphere?  not necessarily a
+  great coder.
+* J: interested in seeing project happen, not in actually doing it.
+  anybody can contribute as much as they want. 
+* J: if we put the structure in place to work on monkeysphere then we
+  don't have to do anything 
+* D: we are not creating 
+* understand gpg's keyring better, understanding tools better,
+  building scripts 
+* Some debian packages allow automated configuration of config files.
+
+* GENERAL GOAL - use openpgp web-of-trust to authenticate ppl for SSH
+* SPECIFIC GOAL - allow openssh to tie into pgp web-of-trust without
+  modifying either openpgp and openssh 
+* DESIGN GOALS - authentication, use the existing generic OpenSSH
+  client, the admin can make it default, although end-user should be
+  decide to use monkeysphere or not 
+* DESIGN GOAL - use of monkeysphere should not radically change
+  connecting-to-server experience 
+* GOAL - pick a monkey-related name for each component 
+
+Host identity piece of monkeysphere could be used without buying into
+the authorization component.
+
+Monkeysphere is authentication layer that allows the sysadmin to
+perform authorization on user identities instead of on keys, it
+additionally allows the sysadmin also to authenticate the server to
+the end-user.
 
 git clone http://git.mlcastle.net/monkeysphere.git/ monkeysphere
-
-Fix gpgkey2ssh so that the entire key fingerprint will work, accept full fingerprint, or accept a pipe and do the conversion
-Write manpage for gpgkey2ssh
-gpg private key (start with passwordless) to PEM encoded private key: perl libraries, libopencdk / gnutls, gpgme 
-setup remote git repo
-think through / plan merging of known_hosts (& auth_keys?)
-think about policies and their representation
