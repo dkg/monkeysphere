@@ -1,0 +1,78 @@
+#!/bin/sh
+
+# howler: server gpg key generator/publisher
+#
+# Written by
+# Jameson Rollins <jrollins@fifthhorseman.net>
+#
+# Copyright 2008, released under the GPL, version 3 or later
+
+CMD=$(basename $0)
+
+########################################################################
+# FUNCTIONS
+########################################################################
+
+failure() {
+    echo "$1" >&2
+    exit ${2:-'1'}
+}
+
+########################################################################
+# MAIN
+########################################################################
+
+MS_HOME=${MS_HOME:-/etc/monkeysphere}
+
+. "$MS_HOME"/monkeysphere.conf
+
+export GNUPGHOME
+
+KEY_TYPE=${KEY_TYPE:-RSA}
+KEY_LENGTH=${KEY_LENGTH:-2048}
+KEY_USAGE=${KEY_USAGE:-encrypt,auth}
+SERVICE=${SERVICE:-ssh}
+HOSTNAME=${HOSTNAME:-$(hostname -f)}
+
+USERID=${USERID:-"$SERVICE"://"$HOSTNAME"}
+
+echo "key parameters:"
+cat <<EOF
+Key-Type: $KEY_TYPE
+Key-Length: $KEY_LENGTH
+Key-Usage: $KEY_USAGE
+Name-Real: $USERID
+EOF
+
+read -p "generate key? [Y|n]: " OK; OK=${OK:=Y}
+if [ ${OK/y/Y} != 'Y' ] ; then
+    failure "aborting."
+fi
+
+if gpg --list-key ="$USERID" > /dev/null 2>&1 ; then
+    failure "key for '$USERID' already exists"
+fi
+
+echo "generating server key..."
+gpg --batch --gen-key <<EOF
+Key-Type: $KEY_TYPE
+Key-Length: $KEY_LENGTH
+Key-Usage: $KEY_USAGE
+Name-Real: $USERID
+%commit
+EOF
+
+read -p "publish key to $KEY_SERVER? [Y|n]: " OK; OK=${OK:=Y}
+if [ ${OK/y/Y} != 'Y' ] ; then
+    failure "aborting."
+fi
+
+echo "sending key to keyserver '$KEYSERVER'..."
+keyID=$(gpg --list-key --with-colons ="$USERID" 2> /dev/null | grep '^pub:' | cut -d: -f5)
+
+# dummy command so as not to publish fakes keys during testing
+# eventually:
+#gpg --send-keys --keyserver "$KEYSERVER" "$keyID"
+echo "gpg --send-keys --keyserver $KEYSERVER $keyID"
+
+echo "done."
