@@ -15,8 +15,11 @@ CMD=$(basename $0)
 
 usage() {
 cat <<EOF
-usage: $CMD -k|--known_hosts
-       $CMD -a|--authorized_keys
+usage: $CMD k|known_hosts [userid...]
+       $CMD a|authorized_keys [userid...]
+Monkeysphere update of known_hosts or authorized_keys file.
+If userids are specified, only specified userids will be processed
+(userids must be included in the appropriate auth_*_ids file).
 EOF
 }
 
@@ -68,9 +71,9 @@ gpg2ssh_tmp() {
     keyID="$2"
     userID="$3"
 
-    if [ "$mode" = '--authorized_keys' -o "$mode" = '-a' ] ; then
+    if [ "$mode" = 'authorized_keys' -o "$mode" = 'a' ] ; then
 	gpgkey2ssh "$keyID" | sed -e "s/COMMENT/$userID/"
-    elif [ "$mode" = '--known_hosts' -o "$mode" = '-k' ] ; then
+    elif [ "$mode" = 'known_hosts' -o "$mode" = 'k' ] ; then
 	echo -n "$userID "; gpgkey2ssh "$keyID" | sed -e 's/ COMMENT//'
     fi
 }
@@ -188,9 +191,6 @@ process_auth_file() {
     # find number of user ids in auth_user_ids file
     nLines=$(meat <"$authIDsFile" | wc -l)
 
-    # make sure gpg home exists with proper permissions
-    mkdir -p -m 0700 "$GNUPGHOME"
-
     # clean out keys file and remake keys directory
     rm -rf "$cacheDir"
     mkdir -p "$cacheDir"
@@ -206,7 +206,6 @@ process_auth_file() {
 	process_user_id "$userID" "$cacheDir"
     done
 }
-
 
 ########################################################################
 # MAIN
@@ -257,14 +256,16 @@ msKnownHosts="$STAGING_AREA"/known_hosts
 msAuthorizedKeys="$STAGING_AREA"/authorized_keys
 
 # set mode variables
-if [ "$mode" = '--known_hosts' -o "$mode" = '-k' ] ; then
+if [ "$mode" = 'known_hosts' -o "$mode" = 'k' ] ; then
     fileType=known_hosts
+    authFileType=auth_host_ids
     authIDsFile="$AUTH_HOST_FILE"
     outFile="$msKnownHosts"
     cacheDir="$hostKeysCacheDir"
     userFile="$USER_KNOWN_HOSTS"
-elif [ "$mode" = '--authorized_keys' -o "$mode" = '-a' ] ; then
+elif [ "$mode" = 'authorized_keys' -o "$mode" = 'a' ] ; then
     fileType=authorized_keys
+    authFileType=auth_user_ids
     authIDsFile="$AUTH_USER_FILE"
     outFile="$msAuthorizedKeys"
     cacheDir="$userKeysCacheDir"
@@ -275,14 +276,33 @@ fi
 
 # check auth ids file
 if [ ! -s "$authIDsFile" ] ; then
-    echo "'$authIDsFile' file is empty or does not exist."
+    echo "'$authFileType' file is empty or does not exist."
     exit
 fi
 
-log "user '$USER': monkeysphere $fileType generation..."
+log "user '$USER': monkeysphere $fileType generation"
 
-# process the auth file
-process_auth_file "$authIDsFile" "$cacheDir"
+# make sure gpg home exists with proper permissions
+mkdir -p -m 0700 "$GNUPGHOME"
+
+# if users are specified on the command line, process just
+# those users
+if [ "$1" ] ; then
+    # process userids given on the command line
+    for userID ; do
+	if ! grep -q "$userID" "$authIDsFile" ; then
+	    log "userid '$userID' not in $authFileType file."
+	    continue
+	fi
+	log "processing user id: '$userID'"
+	process_user_id "$userID" "$cacheDir"
+    done
+# otherwise if no users are specified, process the entire
+# auth_*_ids file
+else
+    # process the auth file
+    process_auth_file "$authIDsFile" "$cacheDir"
+fi
 
 # write output key file
 log "writing ms $fileType file... "
