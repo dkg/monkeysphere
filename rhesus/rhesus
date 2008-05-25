@@ -44,7 +44,8 @@ cutline() {
 # FIXME: need to figure out how to retrieve all matching keys
 # (not just first 5)
 gpg_fetch_keys() {
-    local id="$1"
+    local id
+    id="$1"
     echo 1,2,3,4,5 | \
 	gpg --quiet --batch --command-fd 0 --with-colons \
 	--keyserver "$KEYSERVER" \
@@ -274,7 +275,7 @@ fi
 
 # check auth ids file
 if [ ! -s "$authIDsFile" ] ; then
-    echo $(basename "$authIDsFile") "file is empty or does not exist."
+    echo "'$authIDsFile' file is empty or does not exist."
     exit
 fi
 
