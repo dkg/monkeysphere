@@ -61,13 +61,10 @@ that user.  However, in order for users to become authenticated, the
 server must determine that the user keys have "full" validity.  This
 means that the server must fully trust at least one person whose
 signature on the connecting users key would validate the user.  This
-would generally be the server admin.  If the server admin's userid is
+would generally be the server admin.  If the server admin's keyid is
+XXXXXXXX, then on the server run:
 
-"Alice <alice@foo.com>"
-
-then the server would run:
-
-# howler trust-uids "Alice <alice@foo.com>"
+# howler trust-key XXXXXXXX
 
 To update the ms authorized_keys file for user "bob", the system would
 then run the following:
