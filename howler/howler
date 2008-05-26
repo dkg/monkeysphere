@@ -17,7 +17,7 @@ usage() {
 cat <<EOF
 usage: $PGRM gen-key
        $PGRM publish-key
-       $PGRM trust-uids USERID [USERID...]
+       $PGRM trust-key KEYID [KEYID...]
        $PGRM help
 EOF
 }
@@ -78,12 +78,15 @@ publish_key() {
     echo "gpg --send-keys --keyserver $KEYSERVER $keyID"
 }
 
-# FIXME: need to figure out how to automate this, in a batch mode
-#  or something.
-trust_uids() {
-    for userID ; do
-	gpg --keyserver "$KEYSERVER" --search ="$userID"
-	gpg --edit-key "$userID"
+trust_key() {
+    for keyID ; do
+	# get the key from the key server
+	gpg --keyserver "$KEYSERVER" --recv-key "$keyID" || failure "could not retrieve key '$keyID'"
+
+	# edit the key to change trust
+	# FIXME: need to figure out how to automate this,
+	# in a batch mode or something.
+	gpg --edit-key "$keyID"
     done
 }
 
@@ -114,8 +117,11 @@ case $COMMAND in
     'publish-key')
 	publish_key
 	;;
-    'trust-uids')
-	trust_uids "$@"
+    'trust-key')
+	if [ -z "$1" ] ; then
+	    failure "you must specify at least one key to trust."
+	fi
+	trust_key "$@"
 	;;
     'help')
         usage
