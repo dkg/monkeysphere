@@ -61,40 +61,42 @@ USE CASE
 Dramatis Personae: http://en.wikipedia.org/wiki/Alice_and_Bob
 Backstory: http://www.conceptlabs.co.uk/alicebob.html
 
-Bob wants to sign on to the computer "mangabey" via monkeysphere
-framework.  He doesn't yet have access to the machine, but he knows
-Alice, who is the admin of magabey.  Alice and Bob, being the
-contientious netizens that they are, have already published their
+Bob wants to sign on to the computer "mangabey.example.org" via
+monkeysphere framework.  He doesn't yet have access to the machine,
+but he knows Alice, who is the admin of magabey.  Alice and Bob, being
+the conscientious netizens that they are, have already published their
 personal gpg keys to the web of trust, and being good friends, have
 both signed each other's keys and marked each others keys with "full"
 trust.
 
 Alice uses howler to publish a gpg key for magabey with the special
-"ssh://magabey" URI userid.  Alice signs magabey's gpg key and
-publishes her signature.  Alice then creates a user "bob" on magabey,
-and puts Bob's userid in the auth_user_ids file for user bob on
-magabey.  tamarin triggers on magabey, which triggers rhesus, which
-takes all userids in bob's auth_user_ids file, look on a keyserver to
-find the public keys for each user, converts the gpg public keys into
-ssh public keys if the key validity is acceptable, and finally insert
-those keys into an authorized_keys file for bob.
+userid of "ssh://mangabey.example.org".  Alice signs mangabey's gpg
+key and publishes this signature as a certification.  Alice then
+creates a user "bob" on mangabey, and puts Bob's userid in the
+auth_user_ids file for user bob on magabey.  tamarin triggers on
+mangabey, which invokes rhesus.  rhesus takes all userids in bob's
+auth_user_ids file, looks on a keyserver to find the public keys for
+each user, converts the gpg public keys into ssh public keys if the
+key validity is acceptable, and finally inserts those keys into an
+authorized_keys file for bob.
 
-Bob now adds the "ssh://magabey" userid to the auth_host_ids file in
-his account on his localhost.  Bob now goes to connect to bob@magabey.
-Bob's ssh client, which is monkeysphere enabled, triggers marmoset,
-which triggers rhesus on Bob's computer, which takes all server
-userids in his auth_host_ids file, looks on a keyserver to find the
-public key for each server (based on the server's URI), converts the
-gpg public keys into ssh public keys if the key validity is
-acceptable, and finally insert those keys into Bob's known_hosts file.
+Bob now adds the "ssh://mangabey.example.org" userid to the
+auth_host_ids file in his account on his localhost.  Bob now goes to
+connect to bob@mangabey.example.org.  Bob's monkeysphere-enabled ssh
+client triggers marmoset, which invokes rhesus on Bob's computer.
+rhesus takes all server userids in his auth_host_ids file, looks on a
+keyserver to find the public key for each server (based on the
+server's URI), converts the gpg public keys into ssh public keys if
+the key validity is acceptable, and finally insert those keys into
+Bob's known_hosts file.
 
 On Bob's side, since mangabey's key had "full" validity (since it was
-signed by Alice whom he fully trusts), Bob's ssh client deems magabey
+signed by Alice whom he fully trusts), Bob's ssh client deems mangabey
 "known" and no further host key checking is required.
 
-On magabey's side, since Bob's key has "full" validity (since it had
-also been signed by Alice whom magabey fully trusts (since Alice told
-him to)), Bob is authenticated to log into bob@magabey.
+On mangabey's side, since Bob's key has "full" validity (since it had
+also been signed by Alice, mangabey's trusted administrator), Bob is
+authenticated and authorized to log into bob@mangabey.
 
 NOTES
 =====
@@ -136,4 +138,5 @@ perform authorization on user identities instead of on keys, it
 additionally allows the sysadmin also to authenticate the server to
 the end-user.
 
-git clone http://git.mlcastle.net/monkeysphere.git/ monkeysphere
+see doc/git-init for more detail on how to pull from the distributed
+repositories.
