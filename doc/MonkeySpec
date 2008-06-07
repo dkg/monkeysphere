@@ -43,8 +43,8 @@ server-side components
   - publishes server gpg keys
   - used to specify userids to trust for user authentication
 
-* "tamarin": script to trigger rhesus during attempt to initiate
-  connection from client
+* "tamarin": script to trigger or schedule rhesus at admin defined 
+	points (e.g. via cron or during ssh connections).
 
 client-side components
 ----------------------
