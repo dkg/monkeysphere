@@ -116,8 +116,9 @@ int main(int argc, char* argv[]) {
     err("failed to get the usage flags for the primary key (error: %d)\n", ret);
     return ret;
   }
-  if (usage & GNUTLS_KEY_KEY_AGREEMENT) {
-    err("the primary key can be used for authentication\n");
+  if (usage & GNUTLS_KEY_KEY_AGREEMENT &&
+      usage & GNUTLS_KEY_KEY_ENCIPHERMENT) {
+    err("the primary key can be used for authentication and communication encryption!\n");
 
     algo = gnutls_openpgp_crt_get_pk_algorithm(openpgp_crt, &bits);
     if (algo < 0) {
@@ -144,10 +145,10 @@ int main(int argc, char* argv[]) {
     }
     
   } else {
-    err("primary key is only good for: 0x%08x.  Trying subkeys...\n", usage);
+    err("primary key is not good for authentication and communication encryption.  Trying subkeys...\n");
     
     if (ret = gnutls_openpgp_crt_get_auth_subkey(openpgp_crt, keyid, 0), ret) {
-      err("failed to find a subkey capable of authentication (error: %d)\n", ret);
+      err("failed to find a subkey capable of authentication and communication encryption (error: %d)\n", ret);
       return ret;
     }
     make_keyid_printable(p_keyid, keyid);
@@ -169,8 +170,9 @@ int main(int argc, char* argv[]) {
       err("could not figure out usage of subkey %.16s (error: %d)\n", p_keyid, ret);
       return ret;
     }
-    if ((usage & GNUTLS_KEY_KEY_AGREEMENT) == 0) {
-      err("could not find a subkey with authentication privileges.\n");
+    if ((usage & GNUTLS_KEY_KEY_AGREEMENT) == 0 &&
+	usage & GNUTLS_KEY_KEY_ENCIPHERMENT) {
+      err("could not find a subkey with authentication and communication encryption.\n");
       return 1;
     }
 
