@@ -41,7 +41,7 @@ server-side components
 * "howler": server gpg maintainer
   - generates gpg keys for the server
   - publishes server gpg keys
-  - used to specify userids to trust for user authentication
+  - used to specify keys to trust for user authentication
 
 * "tamarin": script to trigger rhesus during attempt to initiate
   connection from client
