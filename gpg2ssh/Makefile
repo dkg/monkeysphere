@@ -1,3 +1,5 @@
+all: monkeysphere gpg2ssh
+
 monkeysphere: main.c gnutls-helpers.o
 	gcc -g -Wall --pedantic -o monkeysphere main.c `libgnutls-config --libs --cflags` -lgnutls-extra gnutls-helpers.o
 
@@ -11,6 +13,6 @@ ssh2gpg: ssh2gpg.c gnutls-helpers.o
 	gcc -g -Wall --pedantic -o $@ -c $<
 
 clean: 
-	rm -f monkeysphere *.o
+	rm -f monkeysphere gpg2ssh *.o
 
-.PHONY: clean
+.PHONY: clean all
