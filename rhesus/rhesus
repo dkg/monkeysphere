@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 # rhesus: monkeysphere authorized_keys/known_hosts generating script
 #
@@ -7,7 +7,16 @@
 #
 # Copyright 2008, released under the GPL, version 3 or later
 
+# all caps variables are meant to be user supplied (ie. from config
+# file) and are considered global
+
 PGRM=$(basename $0)
+
+# date in UTF format if needed
+DATE=$(date -u '+%FT%T')
+
+# unset some environment variables that could screw things up
+GREP_OPTIONS=
 
 ########################################################################
 # FUNCTIONS
@@ -15,11 +24,10 @@ PGRM=$(basename $0)
 
 usage() {
 cat <<EOF
-usage: $PGRM k|known_hosts [userid...]
+usage: $PGRM k|known_hosts [host...]
        $PGRM a|authorized_keys [userid...]
 Monkeysphere update of known_hosts or authorized_keys file.
-If userids are specified, only specified userids will be processed
-(userids must be included in the appropriate auth_*_ids file).
+If hosts/userids are specified, only those specified will be processed
 EOF
 }
 
@@ -28,9 +36,16 @@ failure() {
     exit ${2:-'1'}
 }
 
+# write output to stdout
 log() {
     echo -n "ms: "
     echo "$@"
+}
+
+# write output to stderr
+loge() {
+    echo -n "ms: " 1>&2
+    echo "$@" 1>&2
 }
 
 # cut out all comments(#) and blank lines from standard input
@@ -55,6 +70,24 @@ gpg_fetch_keys() {
 	--search ="$id" >/dev/null 2>&1
 }
 
+# check that characters are in a string (in an AND fashion).
+# used for checking key capability
+# check_capability capability a [b...]
+check_capability() {
+    local capability
+    local capcheck
+
+    capability="$1"
+    shift 1
+
+    for capcheck ; do
+	if echo "$capability" | grep -q -v "$capcheck" ; then
+	    return 1
+	fi
+    done
+    return 0
+}
+
 # convert escaped characters from gpg output back into original
 # character
 # FIXME: undo all escape character translation in with-colons gpg output
@@ -66,87 +99,120 @@ unescape() {
 gpg2ssh_tmp() {
     local mode
     local keyID
+    local userID
+    local host
 
     mode="$1"
     keyID="$2"
     userID="$3"
 
-    if [ "$mode" = 'authorized_keys' -o "$mode" = 'a' ] ; then
-	gpgkey2ssh "$keyID" | sed -e "s/COMMENT/$userID/"
-    elif [ "$mode" = 'known_hosts' -o "$mode" = 'k' ] ; then
-	echo -n "$userID "; gpgkey2ssh "$keyID" | sed -e 's/ COMMENT//'
+    if [ "$mode" = 'authorized_keys' ] ; then
+	gpgkey2ssh "$keyID" | sed -e "s/COMMENT/${userID}/"
+
+    # NOTE: it seems that ssh-keygen -R removes all comment fields from
+    # all lines in the known_hosts file.  why?
+    # NOTE: just in case, the COMMENT can be matched with the
+    # following regexp:
+    # '^MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2}$'
+    elif [ "$mode" = 'known_hosts' ] ; then
+	host=$(echo "$userID" | sed -e "s|ssh://||")
+	echo -n "$host "; gpgkey2ssh "$keyID" | sed -e "s/COMMENT/MonkeySphere${DATE}/"
     fi
 }
 
 # userid and key policy checking
 # the following checks policy on the returned keys
 # - checks that full key has appropriate valididy (u|f)
-# - checks key has appropriate capability (E|A)
+# - checks key has specified capability (REQUIRED_KEY_CAPABILITY)
 # - checks that particular desired user id has appropriate validity
 # see /usr/share/doc/gnupg/DETAILS.gz
-# FIXME: add some more status output
 # expects global variable: "mode"
 process_user_id() {
     local userID
     local cacheDir
+    local requiredPubCapability
+    local gpgOut
+    local line
+    local type
+    local validity
+    local keyid
+    local uidfpr
+    local capability
     local keyOK
-    local keyCapability
-    local keyFingerprint
+    local pubKeyID
+    local uidOK
+    local keyIDs
     local userIDHash
+    local keyID
 
     userID="$1"
     cacheDir="$2"
 
-    # fetch all keys from keyserver
-    # if none found, break
-    if ! gpg_fetch_keys "$userID" ; then
-	echo "    no keys found."
-	return
+    requiredPubCapability=$(echo "$REQUIRED_KEY_CAPABILITY" | tr "[:lower:]" "[:upper:]")
+
+    # fetch keys from keyserver, return 1 if none found
+    gpg_fetch_keys "$userID" || return 1
+
+    # output gpg info for (exact) userid and store
+    gpgOut=$(gpg --fixed-list-mode --list-key --with-colons \
+	="$userID" 2> /dev/null)
+
+    # return 1 if there only "tru" lines are output from gpg
+    if [ -z "$(echo "$gpgOut" | grep -v '^tru:')" ] ; then
+	return 1
     fi
 
-    # some crazy piping here that takes the output of gpg and
-    # pipes it into a "while read" loop that reads each line
-    # of standard input one-by-one.
-    gpg --fixed-list-mode --list-key --with-colons \
-	--with-fingerprint ="$userID" 2> /dev/null | \
-    cut -d : -f 1,2,5,10,12 | \
-    while IFS=: read -r type validity keyid uidfpr capability ; do
+    # loop over all lines in the gpg output and process.
+    # need to do it this way (as opposed to "while read...") so that
+    # variables set in loop will be visible outside of loop
+    for line in $(seq 1 $(echo "$gpgOut" | wc -l)) ; do
+
+	# read the contents of the line
+	type=$(echo "$gpgOut" | cutline "$line" | cut -d: -f1)
+	validity=$(echo "$gpgOut" | cutline "$line" | cut -d: -f2)
+	keyid=$(echo "$gpgOut" | cutline "$line" | cut -d: -f5)
+	uidfpr=$(echo "$gpgOut" | cutline "$line" | cut -d: -f10)
+	capability=$(echo "$gpgOut" | cutline "$line" | cut -d: -f12)
+
 	# process based on record type
 	case $type in
-	    'pub')
+	    'pub') # primary keys
 		# new key, wipe the slate
 		keyOK=
-		keyCapability=
-		keyFingerprint=
+		pubKeyID=
+		uidOK=
+		keyIDs=
+
+		pubKeyID="$keyid"
+
 		# check primary key validity
 		if [ "$validity" != 'u' -a "$validity" != 'f' ] ; then
+		    loge "  unacceptable primary key validity ($validity)."
 		    continue
 		fi
 		# check capability is not Disabled...
-		if echo "$capability" | grep -q 'D' ; then
+		if check_capability "$capability" 'D' ; then
+		    loge "  key disabled."
 		    continue
 		fi
-		# check capability is Encryption and Authentication
-		# FIXME: make more flexible capability specification
-		# (ie. in conf file)
-		if echo "$capability" | grep -q -v 'E' ; then
-		    if echo "$capability" | grep -q -v 'A' ; then
-			continue
-		    fi
+		# check overall key capability
+		# must be Encryption and Authentication
+		if ! check_capability "$capability" $requiredPubCapability ; then
+		    loge "  unacceptable primary key capability ($capability)."
+		    continue
 		fi
-		keyCapability="$capability"
+
+		# mark if primary key is acceptable
 		keyOK=true
-		keyID="$keyid"
-		;;
-	    'fpr')
-		# if key ok, get fingerprint
-		if [ "$keyOK" ] ; then
-		    keyFingerprint="$uidfpr"
+
+		# add primary key ID to key list if it has required capability
+		if check_capability "$capability" $REQUIRED_KEY_CAPABILITY ; then
+		    keyIDs[${#keyIDs[*]}]="$keyid"
 		fi
 		;;
-	    'uid')
+	    'uid') # user ids
 		# check key ok and we have key fingerprint
-		if [ -z "$keyOK" -o  -z "$keyFingerprint" ] ; then
+		if [ -z "$keyOK" ] ; then
 		    continue
 		fi
 		# check key validity
@@ -157,53 +223,111 @@ process_user_id() {
 		if [ "$(unescape "$uidfpr")" != "$userID" ] ; then
 		    continue
 		fi
-		# convert the key
-		# FIXME: needs to apply extra options if specified
-		echo -n "    valid key found; generating ssh key(s)... "
-		userIDHash=$(echo "$userID" | sha1sum | awk '{ print $1 }')
-		# export the key with gpg2ssh
-		#gpg --export "$keyFingerprint" | gpg2ssh "$mode" > "$cacheDir"/"$userIDHash"."$keyFingerprint"
-		# stand in until we get dkg's gpg2ssh program
-		gpg2ssh_tmp "$mode" "$keyID" "$userID" > "$cacheDir"/"$userIDHash"."$keyFingerprint"
-		if [ "$?" = 0 ] ; then
-		    echo "done."
-		else
-		    echo "error."
+
+		# mark if uid acceptable
+		uidOK=true
+		;;
+	    'sub') # sub keys
+		# add sub key ID to key list if it has required capability
+		if check_capability "$capability" $REQUIRED_KEY_CAPABILITY ; then
+		    keyIDs[${#keyIDs[*]}]="$keyid"
 		fi
 		;;
 	esac
     done
+
+    # hash userid for cache file name
+    userIDHash=$(echo "$userID" | sha1sum | awk '{ print $1 }')
+
+    # touch/clear key cache file
+    # (will be left empty if there are noacceptable keys)
+    > "$cacheDir"/"$userIDHash"."$pubKeyID"
+
+    # for each acceptable key, write an ssh key line to the
+    # key cache file
+    if [ "$keyOK" -a "$uidOK" -a "${keyIDs[*]}" ] ; then
+	for keyID in ${keyIDs[@]} ; do
+	    # export the key with gpg2ssh
+            # FIXME: needs to apply extra options for authorized_keys
+	    # lines if specified
+	    gpg2ssh_tmp "$mode" "$keyID" "$userID" >> "$cacheDir"/"$userIDHash"."$pubKeyID"
+
+	    # hash the cache file if specified
+	    if [ "$mode" = 'known_hosts' -a "$HASH_KNOWN_HOSTS" ] ; then
+		ssh-keygen -H -f "$cacheDir"/"$userIDHash"."$pubKeyID" > /dev/null 2>&1
+		rm "$cacheDir"/"$userIDHash"."$pubKeyID".old
+	    fi
+	done
+    fi
+
+    # echo the path to the key cache file
+    echo "$cacheDir"/"$userIDHash"."$pubKeyID"
 }
 
-# process the auth_*_ids file
-# go through line-by-line, extracting and processing each user id
-# expects global variable: "mode"
-process_auth_file() {
-    local authIDsFile
+# process a host for addition to a known_host file
+process_host() {
+    local host
     local cacheDir
-    local nLines
-    local line
-    local userID
+    local hostKeyCachePath
 
-    authIDsFile="$1"
+    host="$1"
     cacheDir="$2"
 
-    # find number of user ids in auth_user_ids file
-    nLines=$(meat <"$authIDsFile" | wc -l)
+    log "processing host: '$host'"
+
+    hostKeyCachePath=$(process_user_id "ssh://${host}" "$cacheDir")
+    if [ $? = 0 ] ; then
+	ssh-keygen -R "$host" -f "$USER_KNOWN_HOSTS"
+	cat "$hostKeyCachePath" >> "$USER_KNOWN_HOSTS"
+    fi
+}
+
+# process known_hosts file
+# go through line-by-line, extract each host, and process with the
+# host processing function
+process_known_hosts() {
+    local cacheDir
+    local userID
+
+    cacheDir="$1"
+
+    # take all the hosts from the known_hosts file (first field),
+    # grep out all the hashed hosts (lines starting with '|')
+    cut -d ' ' -f 1 "$USER_KNOWN_HOSTS" | \
+    grep -v '^|.*$' | \
+    while IFS=, read -r -a hosts ; do
+	# process each host
+	for host in ${hosts[*]} ; do
+	    process_host "$host" "$cacheDir"
+	done
+    done
+}
+
+# process an authorized_*_ids file
+# go through line-by-line, extract each userid, and process
+process_authorized_ids() {
+    local authorizedIDsFile
+    local cacheDir
+    local userID
+    local userKeyCachePath
+
+    authorizedIDsFile="$1"
+    cacheDir="$2"
 
     # clean out keys file and remake keys directory
     rm -rf "$cacheDir"
     mkdir -p "$cacheDir"
 
-    # loop through all user ids
-    for line in $(seq 1 $nLines) ; do
-        # get user id
-	# FIXME: needs to handle extra options if necessary
-	userID=$(meat <"$authIDsFile" | cutline "$line" )
-
-	# process the user id and extract keys
-	log "processing user id: '$userID'"
-	process_user_id "$userID" "$cacheDir"
+    # loop through all user ids in file
+    # FIXME: needs to handle extra options if necessary
+    cat "$authorizedIDsFile" | meat | \
+    while read -r userID ; do
+	# process the userid
+	log "processing userid: '$userID'"
+	userKeyCachePath=$(process_user_id "$userID" "$cacheDir")
+	if [ -s "$userKeyCachePath" ] ; then
+	    loge "  acceptable key/uid found."
+	fi
     done
 }
 
@@ -216,7 +340,7 @@ if [ -z "$1" ] ; then
     exit 1
 fi
 
-# check mode
+# mode given in first variable
 mode="$1"
 shift 1
 
@@ -237,13 +361,13 @@ MS_CONF=${MS_CONF:-"$MS_HOME"/monkeysphere.conf}
 
 # set config variable defaults
 STAGING_AREA=${STAGING_AREA:-"$MS_HOME"}
-AUTH_HOST_FILE=${AUTH_HOST_FILE:-"$MS_HOME"/auth_host_ids}
-AUTH_USER_FILE=${AUTH_USER_FILE:-"$MS_HOME"/auth_user_ids}
+AUTHORIZED_USER_IDS=${AUTHORIZED_USER_IDS:-"$MS_HOME"/authorized_user_ids}
 GNUPGHOME=${GNUPGHOME:-"$HOME"/.gnupg}
 KEYSERVER=${KEYSERVER:-subkeys.pgp.net}
-
-USER_KNOW_HOSTS="$HOME"/.ssh/known_hosts
-USER_AUTHORIZED_KEYS="$HOME"/.ssh/authorized_keys
+REQUIRED_KEY_CAPABILITY=${REQUIRED_KEY_CAPABILITY:-"e a"}
+USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-"$HOME"/.ssh/authorized_keys}
+USER_KNOWN_HOSTS=${USER_KNOWN_HOSTS:-"$HOME"/.ssh/known_hosts}
+HASH_KNOWN_HOSTS=${HASH_KNOWN_HOSTS:-}
 
 # export USER and GNUPGHOME variables, since they are used by gpg
 export USER
@@ -255,69 +379,88 @@ userKeysCacheDir="$STAGING_AREA"/user_keys
 msKnownHosts="$STAGING_AREA"/known_hosts
 msAuthorizedKeys="$STAGING_AREA"/authorized_keys
 
-# set mode variables
-if [ "$mode" = 'known_hosts' -o "$mode" = 'k' ] ; then
-    fileType=known_hosts
-    authFileType=auth_host_ids
-    authIDsFile="$AUTH_HOST_FILE"
-    outFile="$msKnownHosts"
-    cacheDir="$hostKeysCacheDir"
-    userFile="$USER_KNOWN_HOSTS"
-elif [ "$mode" = 'authorized_keys' -o "$mode" = 'a' ] ; then
-    fileType=authorized_keys
-    authFileType=auth_user_ids
-    authIDsFile="$AUTH_USER_FILE"
-    outFile="$msAuthorizedKeys"
-    cacheDir="$userKeysCacheDir"
-    userFile="$USER_AUTHORIZED_KEYS"
-else
-    failure "unknown command '$mode'."
-fi
-
-# check auth ids file
-if [ ! -s "$authIDsFile" ] ; then
-    echo "'$authFileType' file is empty or does not exist."
-    exit
-fi
-
-log "user '$USER': monkeysphere $fileType generation"
-
 # make sure gpg home exists with proper permissions
 mkdir -p -m 0700 "$GNUPGHOME"
 
-# if users are specified on the command line, process just
-# those users
-if [ "$1" ] ; then
-    # process userids given on the command line
-    for userID ; do
-	if ! grep -q "$userID" "$authIDsFile" ; then
-	    log "userid '$userID' not in $authFileType file."
-	    continue
-	fi
-	log "processing user id: '$userID'"
-	process_user_id "$userID" "$cacheDir"
-    done
-# otherwise if no users are specified, process the entire
-# auth_*_ids file
-else
-    # process the auth file
-    process_auth_file "$authIDsFile" "$cacheDir"
-fi
+## KNOWN_HOST MODE
+if [ "$mode" = 'known_hosts' -o "$mode" = 'k' ] ; then
+    mode='known_hosts'
 
-# write output key file
-log "writing ms $fileType file... "
-> "$outFile"
-if [ "$(ls "$cacheDir")" ] ; then
-    log -n "adding gpg keys... "
-    cat "$cacheDir"/* > "$outFile"
-    echo "done."
+    cacheDir="$hostKeysCacheDir"
+
+    log "user '$USER': monkeysphere known_hosts processing"
+
+    # touch the known_hosts file to make sure it exists
+    touch "$USER_KNOWN_HOSTS"
+
+    # if hosts are specified on the command line, process just
+    # those hosts
+    if [ "$1" ] ; then
+        for host ; do
+	    process_host "$host" "$cacheDir"
+	done
+
+    # otherwise, if no hosts are specified, process the user
+    # known_hosts file
+    else
+	if [ ! -s "$USER_KNOWN_HOSTS" ] ; then
+	    failure "known_hosts file '$USER_KNOWN_HOSTS' is empty."
+	fi
+	process_known_hosts "$cacheDir"
+    fi
+
+## AUTHORIZED_KEYS MODE
+elif [ "$mode" = 'authorized_keys' -o "$mode" = 'a' ] ; then
+    mode='authorized_keys'
+
+    cacheDir="$userKeysCacheDir"
+
+    # check auth ids file
+    if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
+	log "authorized_user_ids file is empty or does not exist."
+	exit
+    fi
+
+    log "user '$USER': monkeysphere authorized_keys processing"
+
+    # if userids are specified on the command line, process just
+    # those userids
+    if [ "$1" ] ; then
+	for userID ; do
+	    if ! grep -q "$userID" "$AUTHORIZED_USER_IDS" ; then
+		log "userid '$userID' not in authorized_user_ids file."
+		continue
+	    fi
+	    log "processing user id: '$userID'"
+	    process_user_id "$userID" "$cacheDir" > /dev/null
+	done
+
+    # otherwise, if no userids are specified, process the entire
+    # authorized_user_ids file
+    else
+	process_authorized_ids "$AUTHORIZED_USER_IDS" "$cacheDir"
+    fi
+
+    # write output key file
+    log "writing monkeysphere authorized_keys file... "
+    touch "$msAuthorizedKeys"
+    if [ "$(ls "$cacheDir")" ] ; then
+	log -n "adding gpg keys... "
+	cat "$cacheDir"/* > "$msAuthorizedKeys"
+	echo "done."
+    else
+	log "no gpg keys to add."
+    fi
+    if [ "$USER_CONTROLLED_AUTHORIZED_KEYS" ] ; then
+	if [ -s "$USER_CONTROLLED_AUTHORIZED_KEYS" ] ; then
+	    log -n "adding user authorized_keys file... "
+	    cat "$USER_CONTROLLED_AUTHORIZED_KEYS" >> "$msAuthorizedKeys"
+	    echo "done."
+	fi
+    fi
+    log "monkeysphere authorized_keys file generated:"
+    log "$msAuthorizedKeys"
+
 else
-    log "no gpg keys to add."
+    failure "unknown command '$mode'."
 fi
-if [ -s "$userFile" ] ; then
-    log -n "adding user $fileType file... "
-    cat "$userFile" >> "$outFile"
-    echo "done."
-fi
-log "ms $fileType file generated:"
-log "$outFile"
