@@ -39,9 +39,9 @@ common components
 server-side components
 ----------------------
 * "howler": server gpg maintainer
-  - generates gpg keys for the server
-  - publishes server gpg keys
-  - used to specify keys to trust for user authentication
+  - generate gpg keys for the server
+  - publish server gpg keys
+  - give owner trust to keys for user authentication
 
 * "tamarin": concept - how to trigger or schedule rhesus at admin defined 
 	points (e.g. via cron or during ssh connections).
