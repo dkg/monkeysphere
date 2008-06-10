@@ -351,3 +351,43 @@ process_authorized_ids() {
 	process_user_id "$userID" "$cacheDir" > /dev/null
     done
 }
+
+# update the cache for userid, and prompt to add file to
+# authorized_user_ids file if the userid is found in gpg
+# and not already in file.
+update_userid() {
+    local userID
+    local cacheDir
+    local userIDKeyCache
+
+    userID="$1"
+    cacheDir="$2"
+
+    log "processing userid: '$userID'"
+    userIDKeyCache=$(process_user_id "$userID" "$cacheDir")
+    if [ -z "$userIDKeyCache" ] ; then
+	return 1
+    fi
+    if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
+	echo "the following userid is not in the authorized_user_ids file:"
+	echo "  $userID"
+	read -p "would you like to add? [Y|n]: " OK; OK=${OK:=Y}
+	if [ ${OK/y/Y} = 'Y' ] ; then
+	    log -n "  adding userid to authorized_user_ids file... "
+	    echo "$userID" >> "$AUTHORIZED_USER_IDS"
+	    echo "done."
+	fi
+    fi
+}
+
+# retrieve key from web of trust, and set owner trust to "full"
+# if key is found.
+trust_key() {
+    # get the key from the key server
+    gpg --keyserver "$KEYSERVER" --recv-key "$keyID" || failure "could not retrieve key '$keyID'"
+
+    # edit the key to change trust
+    # FIXME: need to figure out how to automate this,
+    # in a batch mode or something.
+    gpg --edit-key "$keyID"
+}

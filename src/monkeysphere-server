@@ -1,5 +1,13 @@
 #!/bin/sh
 
+# monkeysphere-server: MonkeySphere server admin tool
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
 ########################################################################
 PGRM=$(basename $0)
 
@@ -23,12 +31,12 @@ usage: $PGRM <subcommand> [args]
 Monkeysphere server admin tool.
 
 subcommands:
-  update-users (s) [USER]...                update authorized_keys file
-  gen-key (g)                               generate gpg key for the host
-  publish-key (p)                           publish host gpg to keyserver
-  trust-key (t) KEYID [KEYID]...            mark keyid as trusted
-  update-user-userid (u) USER UID [UID]...  add/update userid for user
-  help (h,?)                                this help
+  update-users (s) [USER]...                 update user authorized_keys file
+  gen-key (g)                                generate gpg key for the server
+  publish-key (p)                            publish server gpg to keyserver
+  trust-key (t) KEYID [KEYID]...             mark keyid as trusted
+  update-user-userids (u) USER UID [UID]...  add/update userid for user
+  help (h,?)                                 this help
 
 EOF
 }
@@ -83,19 +91,6 @@ publish_key() {
     # eventually:
     #gpg --send-keys --keyserver "$KEYSERVER" "$keyID"
     echo "gpg --send-keys --keyserver $KEYSERVER $keyID"
-}
-
-# trust key
-trust_key() {
-    for keyID ; do
-	# get the key from the key server
-	gpg --keyserver "$KEYSERVER" --recv-key "$keyID" || failure "could not retrieve key '$keyID'"
-
-	# edit the key to change trust
-	# FIXME: need to figure out how to automate this,
-	# in a batch mode or something.
-	gpg --edit-key "$keyID"
-    done
 }
 
 ########################################################################
@@ -185,10 +180,12 @@ case $COMMAND in
 	if [ -z "$1" ] ; then
 	    failure "you must specify at least one key to trust."
 	fi
-	trust_key "$@"
+	for keyID ; do
+	    trust_key "$keyID"
+	done
 	;;
 
-    'update-user-userid'|'u')
+    'update-user-userids'|'u')
 	uname="$1"
 	shift
 	if [ -z "$uname" ] ; then
@@ -197,14 +194,10 @@ case $COMMAND in
 	if [ -z "$1" ] ; then
 	    failure "you must specify at least one userid."
 	fi
+	AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
+	userKeysCacheDir="$STAGING_AREA"/"$uname"/user_keys
 	for userID ; do
-	    AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
-	    if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
-		log "userid '$userID' not in authorized_user_ids file."
-		continue
-	    fi
-	    log "processing user id: '$userID'"
-	    process_user_id "$userID" "$userKeysCacheDir" > /dev/null
+	    update_userid "$userID" "$userKeysCacheDir"
 	done
 	;;
 

@@ -1,5 +1,13 @@
 #!/bin/sh
 
+# monkeysphere: MonkeySphere client tool
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
 ########################################################################
 PGRM=$(basename $0)
 
@@ -26,11 +34,11 @@ usage: $PGRM <subcommand> [args]
 Monkeysphere client tool.
 
 subcommands:
-  update-known-hosts (k) [HOST]...           update known_hosts file
-  update-authorized-keys (a)                 update authorized_keys file
-  update-userid (u) [USERID]...              add/update userid to
-                                               authorized_user_ids
-  help (h,?)                                 this help
+  update-known-hosts (k) [HOST]...  update known_hosts file
+  update-authorized-keys (a)        update authorized_keys file
+  update-userids (u) [USERID]...    add/update userid
+  gen-ae-subkey (g)                 generate an 'ae' capable subkey
+  help (h,?)                        this help
 
 EOF
 }
@@ -129,18 +137,17 @@ case $COMMAND in
 	log "$msAuthorizedKeys"
 	;;
 
-    'update-userid'|'u')
+    'update-userids'|'u')
 	if [ -z "$1" ] ; then
 	    failure "you must specify at least one userid."
 	fi
 	for userID ; do
-	    if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
-		log "userid '$userID' not in authorized_user_ids file."
-		continue
-	    fi
-	    log "processing user id: '$userID'"
-	    process_user_id "$userID" "$userKeysCacheDir" > /dev/null
+	    update_userid "$userID" "$userKeysCacheDir"
 	done
+	;;
+
+    'gen-ae-subkey'|)
+	failure "function not implemented yet."
 	;;
 
     'help'|'h'|'?')
