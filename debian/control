@@ -1,0 +1,13 @@
+Source: monkeysphere
+Section: net
+Priority: extra
+Maintainer: Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>
+Uploaders: Jameson Rollins <jrollins@fifthhorseman.net>
+Build-Depends: debhelper (>= 5.0)
+Standards-Version: 3.7.3
+XS-Dm-Upload-Allowed: yes
+
+Package: monkeysphere
+Architecture: all
+Depends: ssh, gnupg, gnupg2
+Description: use GNUPG for ssh connections
