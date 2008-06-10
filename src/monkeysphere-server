@@ -1,0 +1,219 @@
+#!/bin/sh
+
+########################################################################
+PGRM=$(basename $0)
+
+SHAREDIR=${SHAREDIR:-"/usr/share/monkeysphere"}
+export SHAREDIR
+. "${SHAREDIR}/common"
+
+# date in UTF format if needed
+DATE=$(date -u '+%FT%T')
+
+# unset some environment variables that could screw things up
+GREP_OPTIONS=
+
+########################################################################
+# FUNCTIONS
+########################################################################
+
+usage() {
+cat <<EOF
+usage: $PGRM <subcommand> [args]
+Monkeysphere server admin tool.
+
+subcommands:
+  update-users (s) [USER]...                update authorized_keys file
+  gen-key (g)                               generate gpg key for the host
+  publish-key (p)                           publish host gpg to keyserver
+  trust-key (t) KEYID [KEYID]...            mark keyid as trusted
+  update-user-userid (u) USER UID [UID]...  add/update userid for user
+  help (h,?)                                this help
+
+EOF
+}
+
+# generate server gpg key
+gen_key() {
+    KEY_TYPE=${KEY_TYPE:-RSA}
+    KEY_LENGTH=${KEY_LENGTH:-2048}
+    KEY_USAGE=${KEY_USAGE:-encrypt,auth}
+    SERVICE=${SERVICE:-ssh}
+    HOSTNAME_FQDN=${HOSTNAME_FQDN:-$(hostname -f)}
+
+    USERID=${USERID:-"$SERVICE"://"$HOSTNAME_FQDN"}
+
+    echo "key parameters:"
+    cat <<EOF
+Key-Type: $KEY_TYPE
+Key-Length: $KEY_LENGTH
+Key-Usage: $KEY_USAGE
+Name-Real: $USERID
+EOF
+
+    read -p "generate key? [Y|n]: " OK; OK=${OK:=Y}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "aborting."
+    fi
+
+    if gpg --list-key ="$USERID" > /dev/null 2>&1 ; then
+	failure "key for '$USERID' already exists"
+    fi
+
+    echo "generating server key..."
+    gpg --batch --gen-key <<EOF
+Key-Type: $KEY_TYPE
+Key-Length: $KEY_LENGTH
+Key-Usage: $KEY_USAGE
+Name-Real: $USERID
+%commit
+EOF
+}
+
+# publish server key to keyserver
+publish_key() {
+    read -p "publish key to $KEYSERVER? [Y|n]: " OK; OK=${OK:=Y}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "aborting."
+    fi
+
+    keyID=$(gpg --list-key --with-colons ="$USERID" 2> /dev/null | grep '^pub:' | cut -d: -f5)
+
+    # dummy command so as not to publish fakes keys during testing
+    # eventually:
+    #gpg --send-keys --keyserver "$KEYSERVER" "$keyID"
+    echo "gpg --send-keys --keyserver $KEYSERVER $keyID"
+}
+
+# trust key
+trust_key() {
+    for keyID ; do
+	# get the key from the key server
+	gpg --keyserver "$KEYSERVER" --recv-key "$keyID" || failure "could not retrieve key '$keyID'"
+
+	# edit the key to change trust
+	# FIXME: need to figure out how to automate this,
+	# in a batch mode or something.
+	gpg --edit-key "$keyID"
+    done
+}
+
+########################################################################
+# MAIN
+########################################################################
+
+COMMAND="$1"
+[ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
+shift
+
+# set ms home directory
+MS_HOME=${MS_HOME:-"$ETC"}
+
+# load configuration file
+MS_CONF=${MS_CONF:-"$MS_HOME"/monkeysphere-server.conf}
+[ -e "$MS_CONF" ] && . "$MS_CONF"
+
+# set empty config variable with defaults
+GNUPGHOME=${GNUPGHOME:-"$MS_HOME"/gnupg}
+KEYSERVER=${KEYSERVER:-subkeys.pgp.net}
+REQUIRED_KEY_CAPABILITY=${REQUIRED_KEY_CAPABILITY:-"e a"}
+USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-%h/.ssh/authorized_keys}
+STAGING_AREA=${STAGING_AREA:-"$LIB"/stage}
+
+export GNUPGHOME
+
+# make sure gpg home exists with proper permissions
+mkdir -p -m 0700 "$GNUPGHOME"
+
+case $COMMAND in
+    'update-users'|'s')
+	if [ "$1" ] ; then
+	    unames="$@"
+	else
+	    unames=$(ls -1 "$MS_HOME"/authorized_user_ids)
+	fi
+
+	for uname in $unames ; do
+	    MODE="authorized_keys"
+	    authorizedUserIDs="$MS_HOME"/authorized_user_ids/"$uname"
+	    cacheDir="$STAGING_AREA"/"$uname"/user_keys
+	    msAuthorizedKeys="$STAGING_AREA"/"$uname"/authorized_keys
+
+            # make sure authorized_user_ids file exists
+	    if [ ! -s "$authorizedUserIDs" ] ; then
+		log "authorized_user_ids file for '$uname' is empty or does not exist."
+		continue
+	    fi
+
+	    log "processing authorized_keys for user '$uname'..."
+
+	    process_authorized_ids "$authorizedUserIDs" "$cacheDir"
+
+            # write output key file
+	    log "writing monkeysphere authorized_keys file... "
+	    touch "$msAuthorizedKeys"
+	    if [ "$(ls "$cacheDir")" ] ; then
+		log -n "adding gpg keys... "
+		cat "$cacheDir"/* > "$msAuthorizedKeys"
+		echo "done."
+	    else
+		log "no gpg keys to add."
+	    fi
+	    if [ "$USER_CONTROLLED_AUTHORIZED_KEYS" ] ; then
+		userHome=$(getent passwd "$uname" | cut -d: -f6)
+		userAuthorizedKeys=${USER_CONTROLLED_AUTHORIZED_KEYS/\%h/"$userHome"}
+		if [ -s "$userAuthorizedKeys" ] ; then
+		    log -n "adding user authorized_keys file... "
+		    cat "$userAuthorizedKeys" >> "$msAuthorizedKeys"
+		    echo "done."
+		fi
+	    fi
+	    log "monkeysphere authorized_keys file generated:"
+	    log "$msAuthorizedKeys"
+	done
+	;;
+
+    'gen-key'|'g')
+	gen_key
+	;;
+
+    'publish-key'|'p')
+	publish_key
+	;;
+
+    'trust-key'|'t')
+	if [ -z "$1" ] ; then
+	    failure "you must specify at least one key to trust."
+	fi
+	trust_key "$@"
+	;;
+
+    'update-user-userid'|'u')
+	uname="$1"
+	shift
+	if [ -z "$uname" ] ; then
+	    failure "you must specify user."
+	fi
+	if [ -z "$1" ] ; then
+	    failure "you must specify at least one userid."
+	fi
+	for userID ; do
+	    AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
+	    if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
+		log "userid '$userID' not in authorized_user_ids file."
+		continue
+	    fi
+	    log "processing user id: '$userID'"
+	    process_user_id "$userID" "$userKeysCacheDir" > /dev/null
+	done
+	;;
+
+    'help'|'h'|'?')
+        usage
+        ;;
+
+    *)
+        failure "Unknown command: '$COMMAND'
+Type 'cereal-admin help' for usage."
+        ;;
+esac

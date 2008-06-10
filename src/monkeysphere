@@ -1,0 +1,154 @@
+#!/bin/sh
+
+########################################################################
+PGRM=$(basename $0)
+
+SHAREDIR=${SHAREDIR:-"/usr/share/monkeysphere"}
+export SHAREDIR
+. "${SHAREDIR}/common"
+
+GLOBAL_CONFIG=${GLOBAL_CONFIG:-"${ETC}"/monkeysphere.conf}
+[ -r "$GLOBAL_CONFIG" ] && . "$GLOBAL_CONFIG"
+
+# date in UTF format if needed
+DATE=$(date -u '+%FT%T')
+
+# unset some environment variables that could screw things up
+GREP_OPTIONS=
+
+########################################################################
+# FUNCTIONS
+########################################################################
+
+usage() {
+cat <<EOF
+usage: $PGRM <subcommand> [args]
+Monkeysphere client tool.
+
+subcommands:
+  update-known-hosts (k) [HOST]...           update known_hosts file
+  update-authorized-keys (a)                 update authorized_keys file
+  update-userid (u) [USERID]...              add/update userid to
+                                               authorized_user_ids
+  help (h,?)                                 this help
+
+EOF
+}
+
+########################################################################
+# MAIN
+########################################################################
+
+COMMAND="$1"
+[ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
+shift
+
+# set ms home directory
+MS_HOME=${MS_HOME:-"$HOME"/.config/monkeysphere}
+
+# load configuration file
+MS_CONF=${MS_CONF:-"$MS_HOME"/monkeysphere.conf}
+[ -e "$MS_CONF" ] && . "$MS_CONF"
+
+# set empty config variable with defaults
+AUTHORIZED_USER_IDS=${AUTHORIZED_USER_IDS:-"$MS_HOME"/authorized_user_ids}
+GNUPGHOME=${GNUPGHOME:-"$HOME"/.gnupg}
+KEYSERVER=${KEYSERVER:-subkeys.pgp.net}
+REQUIRED_KEY_CAPABILITY=${REQUIRED_KEY_CAPABILITY:-"e a"}
+USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-%h/.ssh/authorized_keys}
+USER_KNOWN_HOSTS=${USER_KNOWN_HOSTS:-"$HOME"/.ssh/known_hosts}
+HASH_KNOWN_HOSTS=${HASH_KNOWN_HOSTS:-}
+
+export GNUPGHOME
+
+# stagging locations
+hostKeysCacheDir="$MS_HOME"/host_keys
+userKeysCacheDir="$MS_HOME"/user_keys
+msAuthorizedKeys="$MS_HOME"/authorized_keys
+
+# make sure gpg home exists with proper permissions
+mkdir -p -m 0700 "$GNUPGHOME"
+
+case $COMMAND in
+    'update-known-hosts'|'k')
+	MODE='known_hosts'
+
+        # touch the known_hosts file to make sure it exists
+	touch "$USER_KNOWN_HOSTS"
+
+        # if hosts are specified on the command line, process just
+        # those hosts
+	if [ "$1" ] ; then
+            for host ; do
+		process_host "$host" "$hostKeysCacheDir"
+	    done
+
+        # otherwise, if no hosts are specified, process the user
+        # known_hosts file
+	else
+	    if [ ! -s "$USER_KNOWN_HOSTS" ] ; then
+		failure "known_hosts file '$USER_KNOWN_HOSTS' is empty."
+	    fi
+	    log "processing known_hosts file..."
+	    process_known_hosts "$USER_KNOWN_HOSTS" "$hostKeysCacheDir"
+	fi
+	;;
+
+    'update-authorized-keys'|'a')
+	MODE='authorized_keys'
+
+	log "processing authorized_user_ids file..."
+
+        # make sure authorized_user_ids file exists
+	if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
+	    log "authorized_user_ids file is empty or does not exist."
+	    exit
+	fi
+
+	process_authorized_ids "$AUTHORIZED_USER_IDS" "$userKeysCacheDir"
+
+        # write output key file
+	log "writing monkeysphere authorized_keys file... "
+	touch "$msAuthorizedKeys"
+	if [ "$(ls "$userKeysCacheDir")" ] ; then
+	    log -n "adding gpg keys... "
+	    cat "$userKeysCacheDir"/* > "$msAuthorizedKeys"
+	    echo "done."
+	else
+	log "no gpg keys to add."
+	fi
+	if [ "$USER_CONTROLLED_AUTHORIZED_KEYS" ] ; then
+	    userAuthorizedKeys=${USER_CONTROLLED_AUTHORIZED_KEYS/\%h/"$HOME"}
+	    if [ -s "$userAuthorizedKeys" ] ; then
+		log -n "adding user authorized_keys file... "
+		cat "$userAuthorizedKeys" >> "$msAuthorizedKeys"
+		echo "done."
+	    fi
+	fi
+	log "monkeysphere authorized_keys file generated:"
+	log "$msAuthorizedKeys"
+	;;
+
+    'update-userid'|'u')
+	if [ -z "$1" ] ; then
+	    failure "you must specify at least one userid."
+	fi
+	for userID ; do
+	    if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
+		log "userid '$userID' not in authorized_user_ids file."
+		continue
+	    fi
+	    log "processing user id: '$userID'"
+	    process_user_id "$userID" "$userKeysCacheDir" > /dev/null
+	done
+	;;
+
+    'help'|'h'|'?')
+        usage
+        ;;
+
+    *)
+        failure "Unknown command: '$COMMAND'
+Type 'cereal-admin help' for usage."
+        ;;
+esac
