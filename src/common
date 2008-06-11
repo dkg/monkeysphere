@@ -88,11 +88,11 @@ gpg2ssh_tmp() {
     local userID
     local host
 
-    keyID="$2"
-    userID="$3"
+    keyID="$1"
+    userID="$2"
 
-    if [ "$mode" = 'authorized_keys' ] ; then
-	gpgkey2ssh "$keyID" | sed -e "s/COMMENT/${userID}/"
+    if [ "$MODE" = 'authorized_keys' ] ; then
+	gpgkey2ssh "$keyID" | sed -e "s/COMMENT/MonkeySphere userID: ${userID}/"
 
     # NOTE: it seems that ssh-keygen -R removes all comment fields from
     # all lines in the known_hosts file.  why?
@@ -294,10 +294,65 @@ process_known_hosts() {
     done
 }
 
-# process authorized_keys file
+# update an authorized_keys file after first processing the 
+# authorized_user_ids file
+update_authorized_keys() {
+    local cacheDir
+    local msAuthorizedKeys
+    local userAuthorizedKeys
+
+    cacheDir="$1"
+    msAuthorizedKeys="$2"
+    userAuthorizedKeys="$3"
+
+    process_authorized_ids "$AUTHORIZED_USER_IDS" "$cacheDir"
+
+    # write output key file
+    log "writing monkeysphere authorized_keys file... "
+    touch "$msAuthorizedKeys"
+    if [ "$(ls "$cacheDir")" ] ; then
+	log -n "adding gpg keys... "
+	cat "$cacheDir"/* > "$msAuthorizedKeys"
+	echo "done."
+    else
+	log "no gpg keys to add."
+    fi
+    if [ "$userAuthorizedKeys" -a -s "$userAuthorizedKeys" ] ; then
+	log -n "adding user authorized_keys file... "
+	cat "$userAuthorizedKeys" >> "$msAuthorizedKeys"
+	echo "done."
+    fi
+    log "monkeysphere authorized_keys file generated: $msAuthorizedKeys"
+}
+
+# process an authorized_*_ids file
+# go through line-by-line, extract each userid, and process
+process_authorized_ids() {
+    local authorizedIDs
+    local cacheDir
+    local userID
+
+    authorizedIDs="$1"
+    cacheDir="$2"
+
+    # clean out keys file and remake keys directory
+    rm -rf "$cacheDir"
+    mkdir -p "$cacheDir"
+
+    # loop through all user ids in file
+    # FIXME: needs to handle authorized_keys options
+    cat "$authorizedIDs" | meat | \
+    while read -r userID ; do
+	# process the userid
+	log "processing userid: '$userID'"
+	process_user_id "$userID" "$cacheDir" > /dev/null
+    done
+}
+
+# EXPERIMENTAL (unused) process userids found in authorized_keys file
 # go through line-by-line, extract monkeysphere userids from comment
 # fields, and process each userid
-process_authorized_keys() {
+process_userids_from_authorized_keys() {
     local authorizedKeys
     local cacheDir
     local userID
@@ -322,30 +377,6 @@ process_authorized_keys() {
 	if [ -z "$userID" ] ; then
 	    continue
 	fi
-	# process the userid
-	log "processing userid: '$userID'"
-	process_user_id "$userID" "$cacheDir" > /dev/null
-    done
-}
-
-# process an authorized_*_ids file
-# go through line-by-line, extract each userid, and process
-process_authorized_ids() {
-    local authorizedIDs
-    local cacheDir
-    local userID
-
-    authorizedIDs="$1"
-    cacheDir="$2"
-
-    # clean out keys file and remake keys directory
-    rm -rf "$cacheDir"
-    mkdir -p "$cacheDir"
-
-    # loop through all user ids in file
-    # FIXME: needs to handle authorized_keys options
-    cat "$authorizedIDs" | meat | \
-    while read -r userID ; do
 	# process the userid
 	log "processing userid: '$userID'"
 	process_user_id "$userID" "$cacheDir" > /dev/null

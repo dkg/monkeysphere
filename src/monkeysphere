@@ -34,13 +34,68 @@ usage: $PGRM <subcommand> [args]
 Monkeysphere client tool.
 
 subcommands:
-  update-known-hosts (k) [HOST]...  update known_hosts file
-  update-authorized-keys (a)        update authorized_keys file
+  update-known_hosts (k) [HOST]...  update known_hosts file
+  update-authorized_keys (a)        update authorized_keys file
   update-userids (u) [USERID]...    add/update userid
-  gen-ae-subkey (g)                 generate an 'ae' capable subkey
+  gen-ae-subkey (g) KEYID           generate an 'ae' capable subkey
   help (h,?)                        this help
 
 EOF
+}
+
+# generate a subkey with the 'a' and 'e' usage flags set
+gen_ae_subkey(){
+    local keyID
+    local gpgOut
+    local userID
+
+    log "warning: this function is still not working."
+
+    keyID="$1"
+
+    # set subkey defaults
+    SUBKEY_TYPE=${KEY_TYPE:-RSA}
+    SUBKEY_LENGTH=${KEY_LENGTH:-1024}
+    SUBKEY_USAGE=${KEY_USAGE:-encrypt,auth}
+
+    gpgOut=$(gpg --fixed-list-mode --list-keys --with-colons \
+	"$keyID" 2> /dev/null)
+
+    # return 1 if there only "tru" lines are output from gpg
+    if [ -z "$(echo "$gpgOut" | grep -v '^tru:')" ] ; then
+	loge "  key not found."
+	return 1
+    fi
+
+    userID=$(echo "$gpgOut" | grep "^uid:" | cut -d: -f10)
+
+    # set key parameters
+    keyParameters=$(cat <<EOF
+Subkey-Type: $SUBKEY_TYPE
+Subkey-Length: $SUBKEY_LENGTH
+Subkey-Usage: $SUBKEY_USAGE
+Name-Real: $userID
+EOF
+)
+
+    log "The following key parameters will be used:"
+    echo "$keyParameters"
+
+    read -p "generate key? [Y|n]: " OK; OK=${OK:=Y}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "aborting."
+    fi
+
+    # add commit command
+    keyParameters="${keyParameters}"$(cat <<EOF
+
+%commit
+%echo done
+EOF
+)
+
+    echo "generating subkey..."
+    echo "$keyParameters" | gpg --batch --gen-key
 }
 
 ########################################################################
@@ -78,7 +133,7 @@ msAuthorizedKeys="$MS_HOME"/authorized_keys
 mkdir -p -m 0700 "$GNUPGHOME"
 
 case $COMMAND in
-    'update-known-hosts'|'k')
+    'update-known_hosts'|'update-known-hosts'|'k')
 	MODE='known_hosts'
 
         # touch the known_hosts file to make sure it exists
@@ -102,10 +157,8 @@ case $COMMAND in
 	fi
 	;;
 
-    'update-authorized-keys'|'a')
+    'update-authorized_keys'|'update-authorized-keys'|'a')
 	MODE='authorized_keys'
-
-	log "processing authorized_user_ids file..."
 
         # make sure authorized_user_ids file exists
 	if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
@@ -113,28 +166,11 @@ case $COMMAND in
 	    exit
 	fi
 
-	process_authorized_ids "$AUTHORIZED_USER_IDS" "$userKeysCacheDir"
+	# set user-controlled authorized_keys file path
+	userAuthorizedKeys=${USER_CONTROLLED_AUTHORIZED_KEYS/\%h/"$HOME"}
 
-        # write output key file
-	log "writing monkeysphere authorized_keys file... "
-	touch "$msAuthorizedKeys"
-	if [ "$(ls "$userKeysCacheDir")" ] ; then
-	    log -n "adding gpg keys... "
-	    cat "$userKeysCacheDir"/* > "$msAuthorizedKeys"
-	    echo "done."
-	else
-	log "no gpg keys to add."
-	fi
-	if [ "$USER_CONTROLLED_AUTHORIZED_KEYS" ] ; then
-	    userAuthorizedKeys=${USER_CONTROLLED_AUTHORIZED_KEYS/\%h/"$HOME"}
-	    if [ -s "$userAuthorizedKeys" ] ; then
-		log -n "adding user authorized_keys file... "
-		cat "$userAuthorizedKeys" >> "$msAuthorizedKeys"
-		echo "done."
-	    fi
-	fi
-	log "monkeysphere authorized_keys file generated:"
-	log "$msAuthorizedKeys"
+	# update authorized_keys
+	update_authorized_keys "$userKeysCacheDir" "$msAuthorizedKeys" "$userAuthorizedKeys"
 	;;
 
     'update-userids'|'u')
@@ -146,8 +182,12 @@ case $COMMAND in
 	done
 	;;
 
-    'gen-ae-subkey'|)
-	failure "function not implemented yet."
+    'gen-ae-subkey'|'g')
+	keyID="$1"
+	if [ -z "$keyID" ] ; then
+	    failure "you must specify keyid of primary key."
+	fi
+	gen_ae_subkey "$keyID"
 	;;
 
     'help'|'h'|'?')

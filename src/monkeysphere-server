@@ -31,18 +31,19 @@ usage: $PGRM <subcommand> [args]
 Monkeysphere server admin tool.
 
 subcommands:
-  update-users (s) [USER]...                 update user authorized_keys file
-  gen-key (g)                                generate gpg key for the server
-  publish-key (p)                            publish server gpg to keyserver
-  trust-key (t) KEYID [KEYID]...             mark keyid as trusted
-  update-user-userids (u) USER UID [UID]...  add/update userid for user
-  help (h,?)                                 this help
+  update-users (s) [USER]...            update users authorized_keys files
+  gen-key (g)                           generate gpg key for the server
+  publish-key (p)                       publish server key to keyserver
+  trust-keys (t) KEYID...               mark keyids as trusted
+  update-user-userids (u) USER UID...   add/update userids for a user
+  help (h,?)                            this help
 
 EOF
 }
 
 # generate server gpg key
 gen_key() {
+    # set key defaults
     KEY_TYPE=${KEY_TYPE:-RSA}
     KEY_LENGTH=${KEY_LENGTH:-2048}
     KEY_USAGE=${KEY_USAGE:-encrypt,auth}
@@ -51,13 +52,26 @@ gen_key() {
 
     USERID=${USERID:-"$SERVICE"://"$HOSTNAME_FQDN"}
 
-    echo "key parameters:"
-    cat <<EOF
+    # set key parameters
+    keyParameters=$(cat <<EOF
 Key-Type: $KEY_TYPE
 Key-Length: $KEY_LENGTH
 Key-Usage: $KEY_USAGE
 Name-Real: $USERID
 EOF
+)
+
+    # add the revoker field if requested
+    if [ "$REVOKER" ] ; then
+	keyParameters="${keyParameters}"$(cat <<EOF
+
+Revoker: 1:$REVOKER sensitive
+EOF
+)
+    fi
+
+    log "The following key parameters will be used:"
+    echo "$keyParameters"
 
     read -p "generate key? [Y|n]: " OK; OK=${OK:=Y}
     if [ ${OK/y/Y} != 'Y' ] ; then
@@ -68,14 +82,16 @@ EOF
 	failure "key for '$USERID' already exists"
     fi
 
-    echo "generating server key..."
-    gpg --batch --gen-key <<EOF
-Key-Type: $KEY_TYPE
-Key-Length: $KEY_LENGTH
-Key-Usage: $KEY_USAGE
-Name-Real: $USERID
+    # add commit command
+    keyParameters="${keyParameters}"$(cat <<EOF
+
 %commit
+%echo done
 EOF
+)
+
+    echo "generating server key..."
+    echo "$keyParameters" | gpg --batch --gen-key
 }
 
 # publish server key to keyserver
@@ -90,7 +106,7 @@ publish_key() {
     # dummy command so as not to publish fakes keys during testing
     # eventually:
     #gpg --send-keys --keyserver "$KEYSERVER" "$keyID"
-    echo "gpg --send-keys --keyserver $KEYSERVER $keyID"
+    echo "NOT PUBLISHED: gpg --send-keys --keyserver $KEYSERVER $keyID"
 }
 
 ########################################################################
@@ -129,43 +145,29 @@ case $COMMAND in
 	fi
 
 	for uname in $unames ; do
+	    log "----- user: $uname -----"
+
 	    MODE="authorized_keys"
-	    authorizedUserIDs="$MS_HOME"/authorized_user_ids/"$uname"
+	    AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
 	    cacheDir="$STAGING_AREA"/"$uname"/user_keys
 	    msAuthorizedKeys="$STAGING_AREA"/"$uname"/authorized_keys
 
             # make sure authorized_user_ids file exists
-	    if [ ! -s "$authorizedUserIDs" ] ; then
+	    if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
 		log "authorized_user_ids file for '$uname' is empty or does not exist."
 		continue
 	    fi
 
-	    log "processing authorized_keys for user '$uname'..."
-
-	    process_authorized_ids "$authorizedUserIDs" "$cacheDir"
-
-            # write output key file
-	    log "writing monkeysphere authorized_keys file... "
-	    touch "$msAuthorizedKeys"
-	    if [ "$(ls "$cacheDir")" ] ; then
-		log -n "adding gpg keys... "
-		cat "$cacheDir"/* > "$msAuthorizedKeys"
-		echo "done."
-	    else
-		log "no gpg keys to add."
-	    fi
+	    # set user-controlled authorized_keys file path
 	    if [ "$USER_CONTROLLED_AUTHORIZED_KEYS" ] ; then
 		userHome=$(getent passwd "$uname" | cut -d: -f6)
 		userAuthorizedKeys=${USER_CONTROLLED_AUTHORIZED_KEYS/\%h/"$userHome"}
-		if [ -s "$userAuthorizedKeys" ] ; then
-		    log -n "adding user authorized_keys file... "
-		    cat "$userAuthorizedKeys" >> "$msAuthorizedKeys"
-		    echo "done."
-		fi
 	    fi
-	    log "monkeysphere authorized_keys file generated:"
-	    log "$msAuthorizedKeys"
+
+	    # update authorized_keys
+	    update_authorized_keys "$cacheDir" "$msAuthorizedKeys" "$userAuthorizedKeys"
 	done
+	log "----- done. -----"
 	;;
 
     'gen-key'|'g')
@@ -176,7 +178,7 @@ case $COMMAND in
 	publish_key
 	;;
 
-    'trust-key'|'t')
+    'trust-keys'|'t')
 	if [ -z "$1" ] ; then
 	    failure "you must specify at least one key to trust."
 	fi
