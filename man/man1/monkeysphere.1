@@ -15,9 +15,10 @@ Update the known_hosts file.  For every host listed, search for a gpg
 key for the host in the Web of Trust.  If a key is found, any ssh keys
 for the host are removed from the known_hosts file.  If the found key
 is acceptable (see KEY ACCEPTABILITY), then the gpg key is converted
-to an ssh key and added to the known_hosts file.  If now gpg key is
+to an ssh key and added to the known_hosts file.  If no gpg key is
 found for the host, then nothing is done.  If no hosts are specified,
 all hosts listed in the known_hosts file will be processed.  If they
+
 `k' may be used in place of `update-known_hosts'.
 .TP
 .B update-authorized_keys
