@@ -31,7 +31,7 @@ insertion into known_hosts files and authorized_keys files.
 If the input contains an OpenPGP RSA or DSA secret key, it will be
 converted to the equivalent PEM-encoded private key.
 
-Note that the output keys from this process are stripped of all
+Note that the keys output from this process are stripped of all
 identifying information, including certifications, self-signatures,
 etc.
 
@@ -61,5 +61,6 @@ Secret key output is currently not passphrase-protected.
 This program is not yet implemented, and this man page currently only
 describes expected functionality.
 .Sh SEE ALSO
-.Xr monkeysphere 1 , 
-.Xr monkeysphere-admin 8
+.Xr monkeysphere 1 ,
+.Xr ssh 1 ,
+.Xr monkeysphere-server 8
