@@ -1,0 +1,65 @@
+.\"  -*- nroff -*-
+.Dd $Mdocdate: June 11, 2008 $
+.Dt OPENPGP2SSH 1
+.Os
+.Sh NAME
+openpgp2ssh
+.Nd translate OpenPGP keys to SSH keys
+.Sh SYNOPSIS
+.Nm openpgp2ssh < mykey.gpg 
+
+.Nm gpg --export $KEYID | openpgp2ssh $KEYID
+
+.Nm gpg --export-secret-key $KEYID | openpgp2ssh $KEYID
+.Sh DESCRIPTION
+openpgp2ssh takes OpenPGP-formatted RSA and DSA keys on standard
+input, and spits out the requested equivalent SSH-style key on
+standard output.
+
+If the data on standard input contains only a single key, you can
+invoke openpgp2ssh without arguments.  If the data on standard input
+contains multiple keys (e.g. a primary key and associated subkeys),
+you must specify a specific OpenPGP keyid (e.g. CCD2ED94D21739E9) or
+fingerprint as the first argument to indicate which key to export.
+The keyid must be at least 8 hex characters.
+
+If the input contains an OpenPGP RSA or DSA public key, it will be
+converted to the OpenSSH-style single-line keystring, prefixed with
+the key type.  This format is suitable (with minor alterations) for
+insertion into known_hosts files and authorized_keys files.
+
+If the input contains an OpenPGP RSA or DSA secret key, it will be
+converted to the equivalent PEM-encoded private key.
+
+Note that the output keys from this process are stripped of all
+identifying information, including certifications, self-signatures,
+etc.
+
+openpgp2ssh is part of the
+.Xr monkeysphere 1
+framework for providing a PKI for SSH.
+.Sh EXAMPLES
+.Nm gpg --export-secret-key $KEYID | openpgp2ssh $KEYID | ssh-add -c /dev/stdin
+
+This pushes the secret key into the active
+.Xr ssh-agent 1 . 
+Tools (such as 
+.Xr ssh 1 )
+which know how to talk to the 
+.Xr ssh-agent 1
+can now rely on the key.
+.Sh AUTHOR
+openpgp2ssh and this man page were written by Daniel Kahn Gillmor
+<dkg@fifthhorseman.net>.
+.Sh BUGS
+openpgp2ssh currently only exports into formats used by the OpenSSH.
+It should support other key output formats, such as those used by
+lsh(1) and putty(1).
+
+Secret key output is currently not passphrase-protected.
+
+This program is not yet implemented, and this man page currently only
+describes expected functionality.
+.Sh SEE ALSO
+.Xr monkeysphere 1 , 
+.Xr monkeysphere-admin 8
