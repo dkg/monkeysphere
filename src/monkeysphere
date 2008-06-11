@@ -54,9 +54,9 @@ gen_ae_subkey(){
     keyID="$1"
 
     # set subkey defaults
-    SUBKEY_TYPE=${KEY_TYPE:-RSA}
-    SUBKEY_LENGTH=${KEY_LENGTH:-1024}
-    SUBKEY_USAGE=${KEY_USAGE:-encrypt,auth}
+    SUBKEY_TYPE=${KEY_TYPE:-"RSA"}
+    SUBKEY_LENGTH=${KEY_LENGTH:-"1024"}
+    SUBKEY_USAGE=${KEY_USAGE:-"encrypt,auth"}
 
     gpgOut=$(gpg --fixed-list-mode --list-keys --with-colons \
 	"$keyID" 2> /dev/null)
