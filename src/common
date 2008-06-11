@@ -82,27 +82,36 @@ unescape() {
     echo "$1" | sed 's/\\x3a/:/'
 }
 
-# stand in until we get dkg's gpg2ssh program
-gpg2ssh_tmp() {
+# convert key from gpg to ssh known_hosts format
+gpg2known_hosts() {
     local keyID
-    local userID
     local host
 
     keyID="$1"
-    userID="$2"
-
-    if [ "$MODE" = 'authorized_keys' ] ; then
-	gpgkey2ssh "$keyID" | sed -e "s/COMMENT/MonkeySphere userID: ${userID}/"
+    host=$(echo "$2" | sed -e "s|ssh://||")
 
     # NOTE: it seems that ssh-keygen -R removes all comment fields from
     # all lines in the known_hosts file.  why?
     # NOTE: just in case, the COMMENT can be matched with the
     # following regexp:
     # '^MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2}$'
-    elif [ "$MODE" = 'known_hosts' ] ; then
-	host=$(echo "$userID" | sed -e "s|ssh://||")
-	echo -n "$host "; gpgkey2ssh "$keyID" | sed -e "s/COMMENT/MonkeySphere${DATE}/"
-    fi
+    echo -n "$host "
+    gpg --export "$keyID" | \
+	openpgp2ssh "$keyID" | tr -d '\n'
+    echo "MonkeySphere${DATE}"
+}
+
+# convert key from gpg to ssh authorized_keys format
+gpg2authorized_keys() {
+    local keyID
+    local userID
+
+    keyID="$1"
+    userID="$2"
+
+    echo -n "MonkeySphere${DATE}:${userID}"
+    gpg --export "$keyID" | \
+	openpgp2ssh "$keyID"
 }
 
 # userid and key policy checking
@@ -235,15 +244,21 @@ process_user_id() {
 	for keyID in ${keyIDs[@]} ; do
 	    loge "  acceptable key/uid found."
 
-	    # export the key with gpg2ssh
-            # FIXME: needs to apply extra options for authorized_keys
-	    # lines if specified
-	    gpg2ssh_tmp "$keyID" "$userID" >> "$cacheDir"/"$userIDHash"."$pubKeyID"
-
-	    # hash the cache file if specified
-	    if [ "$MODE" = 'known_hosts' -a "$HASH_KNOWN_HOSTS" ] ; then
-		ssh-keygen -H -f "$cacheDir"/"$userIDHash"."$pubKeyID" > /dev/null 2>&1
-		rm "$cacheDir"/"$userIDHash"."$pubKeyID".old
+	    if [ "$MODE" = 'known_hosts' ] ; then
+		# export the key
+		gpg2known_hosts "$keyID" "$userID" >> \
+		    "$cacheDir"/"$userIDHash"."$pubKeyID"
+		# hash the cache file if specified
+		if [ "$HASH_KNOWN_HOSTS" ] ; then
+		    ssh-keygen -H -f "$cacheDir"/"$userIDHash"."$pubKeyID" > /dev/null 2>&1
+		    rm "$cacheDir"/"$userIDHash"."$pubKeyID".old
+		fi
+	    elif [ "$MODE" = 'authorized_keys' ] ; then
+		# export the key
+                # FIXME: needs to apply extra options for authorized_keys
+	        # lines if specified
+		gpg2authorized_keys "$keyID" "$userID" >> \
+		    "$cacheDir"/"$userIDHash"."$pubKeyID"
 	    fi
 	done
     fi

@@ -145,9 +145,10 @@ case $COMMAND in
 	fi
 
 	for uname in $unames ; do
+	    MODE="authorized_keys"
+
 	    log "----- user: $uname -----"
 
-	    MODE="authorized_keys"
 	    AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
 	    cacheDir="$STAGING_AREA"/"$uname"/user_keys
 	    msAuthorizedKeys="$STAGING_AREA"/"$uname"/authorized_keys
@@ -167,6 +168,7 @@ case $COMMAND in
 	    # update authorized_keys
 	    update_authorized_keys "$cacheDir" "$msAuthorizedKeys" "$userAuthorizedKeys"
 	done
+
 	log "----- done. -----"
 	;;
 
