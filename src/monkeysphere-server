@@ -44,10 +44,10 @@ EOF
 # generate server gpg key
 gen_key() {
     # set key defaults
-    KEY_TYPE=${KEY_TYPE:-RSA}
-    KEY_LENGTH=${KEY_LENGTH:-2048}
-    KEY_USAGE=${KEY_USAGE:-encrypt,auth}
-    SERVICE=${SERVICE:-ssh}
+    KEY_TYPE=${KEY_TYPE:-"RSA"}
+    KEY_LENGTH=${KEY_LENGTH:-"2048"}
+    KEY_USAGE=${KEY_USAGE:-"encrypt,auth"}
+    SERVICE=${SERVICE:-"ssh"}
     HOSTNAME_FQDN=${HOSTNAME_FQDN:-$(hostname -f)}
 
     USERID=${USERID:-"$SERVICE"://"$HOSTNAME_FQDN"}
