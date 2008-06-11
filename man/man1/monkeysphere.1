@@ -4,3 +4,79 @@ monkeysphere \- monkeysphere client user interface
 .SH SYNOPSIS
 .B monkeysphere \fIcommand\fP [\fIargs\fP]
 .SH DESCRIPTION
+.PP
+\fBmonkeysphere\fP is the client monkeysphere tool.
+.SH SUBCOMMANDS
+\fBmonkeysphere\fP takes various subcommands:
+.PD
+.TP
+.B update-known_hosts [HOST]...
+Update the known_hosts file.  For every host listed, search for a gpg
+key for the host in the Web of Trust.  If a key is found, any ssh keys
+for the host are removed from the known_hosts file.  If the found key
+is acceptable (see KEY ACCEPTABILITY), then the gpg key is converted
+to an ssh key and added to the known_hosts file.  If now gpg key is
+found for the host, then nothing is done.  If no hosts are specified,
+all hosts listed in the known_hosts file will be processed.  If they
+`k' may be used in place of `update-known_hosts'.
+.TP
+.B update-authorized_keys
+Update the authorized_keys file.
+.TP
+.B update-userids [USERID]...
+Update userid
+.TP
+.B gen-ae-subkey KEYID
+Generate an `ae` capable subkey
+.TP
+.B help
+Output a brief usage summary.  `h' or `?' may be used in place of
+`help'.
+.PD
+.SH KEY ACCEPTABILITY
+GPG keys are considered acceptable if the following criteria are met:
+.PD
+.TP
+.B capability
+The key must have both the "authentication" and "encrypt" capability
+flags.
+.TP
+.B validity
+The key must be "fully" valid, and must not be expired or revoked.
+.PD
+.SH FILES
+.PD 1
+.TP
+~/.config/monkeysphere/monkeysphere.conf
+User monkeysphere config file.
+.TP
+/etc/monkeysphere/monkeysphere.conf
+System-wide monkeysphere config file.
+.TP
+~/.config/monkeysphere/authorized_user_ids
+GPG user IDs to validate for addition to the authorized_keys file.
+.TP
+~/.config/monkeysphere/authorized_keys
+Monkeysphere generated authorized_keys file.
+.TP
+~/.config/monkeysphere/user_keys
+User keys cache directory.
+.TP
+~/.config/monkeysphere/host_keys
+Host keys cache directory.
+.PD
+.SH AUTHOR
+Written by Jameson Rollins
+.SH "REPORTING BUGS"
+Report bugs to <???@???>.
+.SH COPYRIGHT
+Copyright \(co 2008 Jameson Graef Rollins and Daniel Kahn Gillmor
+.br
+This is free software.  You may redistribute copies of it under the
+terms of the GNU General Public License
+<http://www.gnu.org/licenses/gpl.html>.  There is NO WARRANTY, to the
+extent permitted by law.
+.SH "SEE ALSO"
+.BR ssh (1),
+.BR gpg (1),
+.BR monkeysphere-server (8)

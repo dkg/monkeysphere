@@ -4,3 +4,57 @@ monkeysphere-server \- monkeysphere server admin user interface
 .SH SYNOPSIS
 .B monkeysphere-server \fIcommand\fP [\fIargs\fP]
 .SH DESCRIPTION
+.PP
+\fBmonkeysphere-server\fP is the server admin monkeysphere tool.
+.SH SUBCOMMANDS
+\fBmonkeysphere-server\fP takes various subcommands:
+.PD
+.TP
+.B update-users [HOST]...
+.TP
+.B gen-key
+.TP
+.B publish-key
+.TP
+.B trust-keys KEYID...
+.TP
+.B update-user-userids USER USERID...
+.TP
+.B help
+Output a brief usage summary.  `h' or `?' may be used in place of
+`help'.
+.PD
+.SH FILES
+.PD 1
+.TP
+/etc/monkeysphere/monkeysphere-server.conf
+System monkeysphere-server config file.
+.TP
+/etc/monkeysphere/monkeysphere.conf
+System-wide monkeysphere config file.
+.TP
+/etc/monkeysphere/gnupg
+Monkeysphere GNUPG home directory.
+.TP
+/etc/monkeysphere/authorized_user_ids/USER
+Server maintained authorized_user_ids files for users.
+.TP
+/var/lib/monkeysphere/stage/USER
+Staging directory for user key caches.
+.PD
+.SH AUTHOR
+Written by Jameson Rollins
+.SH "REPORTING BUGS"
+Report bugs to <???@???>.
+.SH COPYRIGHT
+Copyright \(co 2008 Jameson Graef Rollins and Daniel Kahn Gillmor
+.br
+This is free software.  You may redistribute copies of it under the
+terms of the GNU General Public License
+<http://www.gnu.org/licenses/gpl.html>.  There is NO WARRANTY, to the
+extent permitted by law.
+.SH "SEE ALSO"
+.BR monkeysphere (1),
+.BR gpg (1),
+.BR ssh (1)
+
