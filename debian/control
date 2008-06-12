@@ -3,11 +3,13 @@ Section: net
 Priority: extra
 Maintainer: Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>
 Uploaders: Jameson Rollins <jrollins@fifthhorseman.net>
-Build-Depends: debhelper (>= 5.0)
-Standards-Version: 3.7.3
-XS-Dm-Upload-Allowed: yes
+Build-Depends: debhelper (>= 7.0), libgnutls-dev (>= 2.3.14)
+Standards-Version: 3.8.0.1
+Homepage: http://cmrg.fifthhorseman.net/wiki/OpenPGPandSSH
+Enhances: openssh-client, openssh-server
+Dm-Upload-Allowed: yes
 
 Package: monkeysphere
 Architecture: all
-Depends: ssh, gnupg, gnupg2
-Description: use GNUPG for ssh connections
+Depends: openssh-client, gnupg | gnupg2, coreutils (>= 6)
+Description: use the OpenPGP web of trust to verify ssh connections
