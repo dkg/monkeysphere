@@ -12,6 +12,9 @@
 /* for isalnum() */
 #include <ctype.h>
 
+/* for exit() */
+#include <unistd.h>
+
 int loglevel = 0;
 
 
@@ -45,6 +48,71 @@ void make_keyid_printable(printable_keyid out, gnutls_openpgp_keyid_t keyid)
     outix += 2;
   }
 }
+
+unsigned char hex2bin(unsigned char x) {
+  if ((x >= '0') && (x <= '9')) 
+    return x - '0';
+  if ((x >= 'A') && (x <= 'F')) 
+    return 10 + x - 'A';
+  if ((x >= 'a') && (x <= 'f')) 
+    return 10 + x - 'a';
+  return 0xff;
+}
+
+void collapse_printable_keyid(gnutls_openpgp_keyid_t out, printable_keyid in) {
+  unsigned int pkix = 0, outkix = 0;
+  
+  while (pkix < sizeof(printable_keyid)) {
+    unsigned hi = hex2bin(in[pkix]);
+    unsigned lo = hex2bin(in[pkix + 1]);
+    if (hi == 0xff) {
+      err("character '%c' is not a hex char\n", in[pkix]);
+      exit(1);
+    }
+    if (lo == 0xff) {
+      err("character '%c' is not a hex char\n", in[pkix + 1]);
+      exit(1);
+    }
+    out[outkix] = lo | (hi << 4);
+
+    pkix += 2;
+    outkix++;
+  }
+}
+
+int convert_string_to_keyid(gnutls_openpgp_keyid_t out, const char* str) {
+  printable_keyid p;
+  int ret;
+
+  ret = convert_string_to_printable_keyid(p, str);
+  if (ret == 0) 
+    collapse_printable_keyid(out, p);
+  return ret;
+}
+int convert_string_to_printable_keyid(printable_keyid pkeyid, const char* str) {
+  int arglen, x;
+  arglen = 0;
+  x = 0;
+  while ((arglen <= sizeof(printable_keyid)) &&
+	 (str[x] != '\0')) {
+    if (isxdigit(str[x])) {
+      if (arglen == sizeof(printable_keyid)) {
+	err("There are more than %d hex digits in the keyid '%s'\n", sizeof(printable_keyid), str);
+	return 1;
+      }
+      pkeyid[arglen] = str[x];
+      arglen++;
+    }
+    x++;
+  }
+  
+  if (arglen != sizeof(printable_keyid)) {
+    err("keyid '%s' is not %d hex digits in length\n", str, sizeof(printable_keyid));
+    return 1;
+  }
+  return 0;
+}
+
 
 
 int init_gnutls() {

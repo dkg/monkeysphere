@@ -44,6 +44,10 @@ typedef unsigned char printable_keyid[16];
 
 void init_keyid(gnutls_openpgp_keyid_t keyid);
 void make_keyid_printable(printable_keyid out, gnutls_openpgp_keyid_t keyid);
+void collapse_printable_keyid(gnutls_openpgp_keyid_t out, printable_keyid in);
+int convert_string_to_keyid(gnutls_openpgp_keyid_t out, const char* str);
+int convert_string_to_printable_keyid(printable_keyid out, const char* str);
+
 
 /* functions to get data into datum objects: */
 
