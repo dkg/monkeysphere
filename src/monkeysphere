@@ -35,8 +35,8 @@ Monkeysphere client tool.
 
 subcommands:
   update-known_hosts (k) [HOST]...  update known_hosts file
-  update-authorized_keys (a)        update authorized_keys file
   update-userids (u) [USERID]...    add/update userid
+  update-authorized_keys (a)        update authorized_keys file
   gen-ae-subkey (g) KEYID           generate an 'ae' capable subkey
   help (h,?)                        this help
 
@@ -170,7 +170,7 @@ case $COMMAND in
 	userAuthorizedKeys=${USER_CONTROLLED_AUTHORIZED_KEYS/\%h/"$HOME"}
 
 	# update authorized_keys
-	update_authorized_keys "$userKeysCacheDir" "$msAuthorizedKeys" "$userAuthorizedKeys"
+	update_authorized_keys "$msAuthorizedKeys" "$userAuthorizedKeys" "$userKeysCacheDir"
 	;;
 
     'update-userids'|'u')

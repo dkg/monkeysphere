@@ -129,7 +129,6 @@ GNUPGHOME=${GNUPGHOME:-"$MS_HOME"/gnupg}
 KEYSERVER=${KEYSERVER:-subkeys.pgp.net}
 REQUIRED_KEY_CAPABILITY=${REQUIRED_KEY_CAPABILITY:-"e a"}
 USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-%h/.ssh/authorized_keys}
-STAGING_AREA=${STAGING_AREA:-"$LIB"/stage}
 
 export GNUPGHOME
 
@@ -150,8 +149,8 @@ case $COMMAND in
 	    log "----- user: $uname -----"
 
 	    AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
-	    cacheDir="$STAGING_AREA"/"$uname"/user_keys
-	    msAuthorizedKeys="$STAGING_AREA"/"$uname"/authorized_keys
+	    msAuthorizedKeys="$CACHE"/"$uname"/authorized_keys
+	    cacheDir="$CACHE"/"$uname"/user_keys
 
             # make sure authorized_user_ids file exists
 	    if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
@@ -166,7 +165,7 @@ case $COMMAND in
 	    fi
 
 	    # update authorized_keys
-	    update_authorized_keys "$cacheDir" "$msAuthorizedKeys" "$userAuthorizedKeys"
+	    update_authorized_keys "$msAuthorizedKeys" "$userAuthorizedKeys" "$cacheDir"
 	done
 
 	log "----- done. -----"
@@ -199,9 +198,9 @@ case $COMMAND in
 	    failure "you must specify at least one userid."
 	fi
 	AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
-	userKeysCacheDir="$STAGING_AREA"/"$uname"/user_keys
+	cacheDir="$CACHE"/"$uname"/user_keys
 	for userID ; do
-	    update_userid "$userID" "$userKeysCacheDir"
+	    update_userid "$userID" "$cacheDir"
 	done
 	;;
 
