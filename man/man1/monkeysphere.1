@@ -1,34 +1,53 @@
 .TH MONKEYSPHERE "1" "June 2008" "monkeysphere 0.1" "User Commands"
 .SH NAME
-monkeysphere \- monkeysphere client user interface
+monkeysphere \- MonkeySphere client user interface
 .SH SYNOPSIS
 .B monkeysphere \fIcommand\fP [\fIargs\fP]
 .SH DESCRIPTION
 .PP
-\fBmonkeysphere\fP is the client monkeysphere tool.
+MonkeySphere is a system to leverage the OpenPGP Web of Trust for ssh
+authentication and encryption.  OpenPGP keys are tracked via GnuPG,
+and added to the ssh authorized_keys and known_hosts files to be used
+for authentication and encryption of ssh connection.
+
+\fBmonkeysphere\fP is the MonkeySphere client utility.
+.PD
 .SH SUBCOMMANDS
 \fBmonkeysphere\fP takes various subcommands:
-.PD
 .TP
 .B update-known_hosts [HOST]...
-Update the known_hosts file.  For every host listed, search for a gpg
-key for the host in the Web of Trust.  If a key is found, any ssh keys
-for the host are removed from the known_hosts file.  If the found key
-is acceptable (see KEY ACCEPTABILITY), then the gpg key is converted
-to an ssh key and added to the known_hosts file.  If no gpg key is
-found for the host, then nothing is done.  If no hosts are specified,
-all hosts listed in the known_hosts file will be processed.  If they
-
-`k' may be used in place of `update-known_hosts'.
-.TP
-.B update-authorized_keys
-Update the authorized_keys file.
+Update the known_hosts file.  For each specified host, gpg will be
+queried for a key associated with the host URI (see HOST URIs),
+querying a keyserver if none is found in the user's keychain. search
+for a gpg key for the host in the Web of Trust.  If a key is found, it
+will be added to the host_keys cache (see KEY CACHES) and any ssh keys
+for the host will be removed from the user's known_hosts file.  If the
+found key is acceptable (see KEY ACCEPTABILITY), then the host's gpg
+key will be added to the known_hosts file.  If no gpg key is found for
+the host, then nothing is done.  If no hosts are specified, all hosts
+listed in the known_hosts file will be processed.  `k' may be used in
+place of `update-known_hosts'.
 .TP
 .B update-userids [USERID]...
-Update userid
+Add/update a userid in the authorized_user_ids file.  The user IDs
+specified should be exact matches to OpenPGP user IDs.  For each
+specified user ID, gpg will be queried for a key associated with that
+user ID, querying a keyserver if none is found in the user's keychain.
+If a key is found, it will be added to the user_keys cache (see KEY
+CACHES) and the user ID will be added to the user's
+authorized_user_ids file (if it wasn't already present).
+.TP
+.B update-authorized_keys
+Update the monkeysphere authorized_keys file.  The monkeysphere
+authorized_keys file will be regenerated from the valid keys in the
+user_key cache, and the user's independently controlled
+authorized_keys file (usually ~/.ssh/authorized_keys).
 .TP
 .B gen-ae-subkey KEYID
-Generate an `ae` capable subkey
+Generate an `ae` capable subkey.  For the primary key with the
+specified key ID, generate a subkey with "authentication" and
+"encryption" capability that can be used for MonkeySphere
+transactions.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
@@ -45,6 +64,20 @@ flags.
 .B validity
 The key must be "fully" valid, and must not be expired or revoked.
 .PD
+.SH KEY CACHES
+Monkeysphere keeps track of keys in key cache directories.  The files
+in the cache are named with the format "USERID_HASH.PUB_KEY_ID", where
+USERID_HASH is a hash of the exact OpenPGP user ID, and PUB_KEY_ID is
+the key ID of the primary key.  If the user/key ID combo exists in the
+Web of Trust but is not acceptable, then the file is empty.  If the
+primary key has at least one acceptable sub key, then an ssh-style
+key, converted from the OpenPGP key, of all acceptable subkeys will be
+stored in the cache file, one per line.  known_hosts style key lines
+will be stored in the host_keys cache files, and authorized_keys style
+key lines will be stored in the user_keys cache files.  OpenPGP keys
+are converted to ssh-style keys with the openpgp2ssh utility (see `man
+openpgp2ssh').
+.PD
 .SH FILES
 .PD 1
 .TP
@@ -55,7 +88,8 @@ User monkeysphere config file.
 System-wide monkeysphere config file.
 .TP
 ~/.config/monkeysphere/authorized_user_ids
-GPG user IDs to validate for addition to the authorized_keys file.
+GPG user IDs associated with keys that will be checked for addition to
+the authorized_keys file. 
 .TP
 ~/.config/monkeysphere/authorized_keys
 Monkeysphere generated authorized_keys file.
@@ -67,17 +101,8 @@ User keys cache directory.
 Host keys cache directory.
 .PD
 .SH AUTHOR
-Written by Jameson Rollins
-.SH "REPORTING BUGS"
-Report bugs to <???@???>.
-.SH COPYRIGHT
-Copyright \(co 2008 Jameson Graef Rollins and Daniel Kahn Gillmor
-.br
-This is free software.  You may redistribute copies of it under the
-terms of the GNU General Public License
-<http://www.gnu.org/licenses/gpl.html>.  There is NO WARRANTY, to the
-extent permitted by law.
-.SH "SEE ALSO"
+Written by Jameson Rollins <jrollins@fifthhorseman.net>
+.SH SEE ALSO
 .BR ssh (1),
 .BR gpg (1),
 .BR monkeysphere-server (8)

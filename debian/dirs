@@ -1,5 +1,4 @@
-var/lib/monkeysphere
-var/lib/monkeysphere/stage
+var/cache/monkeysphere
 usr/bin
 usr/sbin
 usr/share

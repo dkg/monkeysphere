@@ -5,20 +5,32 @@ monkeysphere-server \- monkeysphere server admin user interface
 .B monkeysphere-server \fIcommand\fP [\fIargs\fP]
 .SH DESCRIPTION
 .PP
-\fBmonkeysphere-server\fP is the server admin monkeysphere tool.
+\fBMonkeySphere\fP is a system to leverage the OpenPGP Web of Trust
+for ssh authentication and encryption.  OpenPGP keys are tracked via
+GnuPG, and added to the ssh authorized_keys and known_hosts files to
+be used for authentication and encryption of ssh connection.
+
+\fBmonkeysphere-server\fP is the MonkeySphere server admin utility.
+.PD
 .SH SUBCOMMANDS
 \fBmonkeysphere-server\fP takes various subcommands:
-.PD
 .TP
-.B update-users [HOST]...
+.B update-users [USER]...
+Update the admin-controlled authorized_keys files for user.  For each
+user specified, update the user's authorized_keys file in
+/var/cache/monkeysphere/USER.  See `man monkeysphere' for more info.
 .TP
 .B gen-key
+Generate a gpg key for the host.
 .TP
 .B publish-key
+Publish the host's gpg key to a keyserver.
 .TP
 .B trust-keys KEYID...
+Mark key specified with KEYID with full owner trust.
 .TP
 .B update-user-userids USER USERID...
+Add/update a userid in the authorized_user_ids file for USER.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
@@ -39,21 +51,12 @@ Monkeysphere GNUPG home directory.
 /etc/monkeysphere/authorized_user_ids/USER
 Server maintained authorized_user_ids files for users.
 .TP
-/var/lib/monkeysphere/stage/USER
-Staging directory for user key caches.
+/var/cachemonkeysphere/USER
+User keys cache directories.
 .PD
 .SH AUTHOR
-Written by Jameson Rollins
-.SH "REPORTING BUGS"
-Report bugs to <???@???>.
-.SH COPYRIGHT
-Copyright \(co 2008 Jameson Graef Rollins and Daniel Kahn Gillmor
-.br
-This is free software.  You may redistribute copies of it under the
-terms of the GNU General Public License
-<http://www.gnu.org/licenses/gpl.html>.  There is NO WARRANTY, to the
-extent permitted by law.
-.SH "SEE ALSO"
+Written by Jameson Rollins <jrollins@fifthhorseman.net>
+.SH SEE ALSO
 .BR monkeysphere (1),
 .BR gpg (1),
 .BR ssh (1)

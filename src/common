@@ -14,8 +14,8 @@
 # managed directories
 ETC="/etc/monkeysphere"
 export ETC
-LIB="/var/lib/monkeysphere"
-export LIB 
+CACHE="/var/cache/monkeysphere"
+export CACHE
 ########################################################################
 
 failure() {
@@ -312,13 +312,13 @@ process_known_hosts() {
 # update an authorized_keys file after first processing the 
 # authorized_user_ids file
 update_authorized_keys() {
-    local cacheDir
     local msAuthorizedKeys
     local userAuthorizedKeys
+    local cacheDir
 
-    cacheDir="$1"
-    msAuthorizedKeys="$2"
-    userAuthorizedKeys="$3"
+    msAuthorizedKeys="$1"
+    userAuthorizedKeys="$2"
+    cacheDir="$3"
 
     process_authorized_ids "$AUTHORIZED_USER_IDS" "$cacheDir"
 
