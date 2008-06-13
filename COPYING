@@ -1,13 +1,13 @@
 MonkeySphere is a system to use the OpenPGP web-of-trust to
 authenticate and encrypt ssh connections.
 
-It is free software, written by:
+It is free software, developed by:
   Jameson Rollins <jrollins@fifthhorseman.net>
-  Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>
-with much help from:
+  Daniel Kahn Gillmor <dkg@fifthhorseman.net>
   Jamie McClelland <jamie@mayfirst.org>
   Micah Anderson <micah@riseup.net>
   Matthew Goins <mjgoins@openflows.com>
+  Mike Castleman <mlcastle@mlcastle.net>
 
 MonkeySphere is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of

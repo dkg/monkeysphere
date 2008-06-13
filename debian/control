@@ -1,18 +1,18 @@
 Source: monkeysphere
 Section: net
 Priority: extra
-Maintainer: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Maintainer: Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>
 Uploaders: Jameson Rollins <jrollins@fifthhorseman.net>
 Build-Depends: debhelper (>= 7.0), libgnutls-dev (>= 2.3.14)
 Standards-Version: 3.8.0.1
 Homepage: http://cmrg.fifthhorseman.net/wiki/OpenPGPandSSH
-Enhances: openssh-client, openssh-server
 Dm-Upload-Allowed: yes
 
 Package: monkeysphere
 Architecture: any
-Depends: openssh-client, gnupg | gnupg2, coreutils (>= 6)
+Depends: openssh-client, gnupg | gnupg2, coreutils (>= 6), ${shlibs:Depends}
 Recommends: netcat
+Enhances: openssh-client, openssh-server
 Description: use the OpenPGP web of trust to verify ssh connections
  SSH key-based authentication is tried-and-true, but it lacks a true
  Public Key Infrastructure for key certification, revocation and
