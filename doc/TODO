@@ -1,0 +1,39 @@
+Next-Steps Monkeysphere Projects:
+---------------------------------
+
+Provide a friendly interactive UI for marginal or failing client-side
+   hostkey verifications.  Handle the common cases smoothly, and
+   provide good debugging info for the unusual cases.
+
+Make sure onak properly escapes user IDs with colons in them.
+
+Build a decent, presentable web site for documentation, evangelism,
+   etc.  Include a mention of how to report trouble or concerns.
+
+Create ssh2openpgp or convert to full-fledged keytrans.
+
+Resolve the bugs listed in openpgp2ssh(1):BUGS.
+
+Understand and document alternate trustdb models.
+
+Understand and document the output of gpg --check-trustdb:
+ gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+ gpg: depth: 0  valid:   2  signed:  20  trust: 0-, 0q, 0n, 0m, 0f, 2u
+ gpg: depth: 1  valid:  20  signed:  67  trust: 15-, 0q, 1n, 3m, 1f, 0u
+ gpg: next trustdb check due at 2008-10-09
+
+Understand and document the numeric values between sig! and the keyid
+   in "gpg --check-sigs $KEYID" .  Compare with the details found from
+   "gpg --with-colons --check-sigs $KEYID".  This has to do with trust
+   signatures.
+
+Fix gpg's documentation to clarify the difference between validity and
+   ownertrust.  Include better documentation for trust signatures.
+
+Make it easier to do domain-relative ssh host trust signatures with
+   gnupg. (e.g. "i trust Jamie McClelland (keyID 76CC057D) to properly
+   identify ssh servers in the mayfirst.org domain") See:
+   http://tools.ietf.org/html/rfc4880#section-5.2.3.21 and grep for
+   "tsign" in gpg(1).
+
+Fix the order of questions when user does a tsign in gpg or gpg2.
