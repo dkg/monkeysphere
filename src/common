@@ -240,6 +240,9 @@ process_user_id() {
     # hash userid for cache file name
     userIDHash=$(echo "$userID" | sha1sum | awk '{ print $1 }')
 
+    # make sure the cache directory exists
+    mkdir -p "$cacheDir"
+
     # touch/clear key cache file
     # (will be left empty if there are noacceptable keys)
     > "$cacheDir"/"$userIDHash"."$pubKeyID"
@@ -285,22 +288,40 @@ update_userid() {
     cacheDir="$2"
 
     log "processing userid: '$userID'"
+
     userIDKeyCache=$(process_user_id "$userID" "$cacheDir")
+
     if [ -z "$userIDKeyCache" ] ; then
 	return 1
     fi
     if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
-	echo "the following userid is not in the authorized_user_ids file:"
-	echo "  $userID"
-	read -p "would you like to add it? [Y|n]: " OK; OK=${OK:=Y}
+	read -p "user ID not currently authorized.  authorize? [Y|n]: " OK; OK=${OK:=Y}
 	if [ ${OK/y/Y} = 'Y' ] ; then
-	    log -n "adding userid to authorized_user_ids file... "
+	    log -n "adding user ID to authorized_user_ids file... "
 	    echo "$userID" >> "$AUTHORIZED_USER_IDS"
 	    echo "done."
 	else
 	    log "authorized_user_ids file untouched."
 	fi
     fi
+}
+
+# remove a userid from the authorized_user_ids file
+remove_userid() {
+    local userID
+
+    userID="$1"
+
+    log "processing userid: '$userID'"
+
+    if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
+	log "user ID not currently authorized."
+	return 1
+    fi
+
+    log -n "removing user ID '$userID'... "
+    grep -v "$userID" "$AUTHORIZED_USER_IDS" | sponge "$AUTHORIZED_USER_IDS"
+    echo "done."
 }
 
 # process a host for addition to a known_host file
@@ -373,7 +394,8 @@ update_authorized_keys() {
 	cat "$userAuthorizedKeys" >> "$msAuthorizedKeys"
 	echo "done."
     fi
-    log "monkeysphere authorized_keys file generated: $msAuthorizedKeys"
+    log "monkeysphere authorized_keys file generated:"
+    log "$msAuthorizedKeys"
 }
 
 # process an authorized_*_ids file

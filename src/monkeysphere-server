@@ -35,7 +35,8 @@ subcommands:
   gen-key (g)                           generate gpg key for the server
   publish-key (p)                       publish server key to keyserver
   trust-keys (t) KEYID...               mark keyids as trusted
-  update-user-userids (u) USER UID...   add/update userids for a user
+  update-user-userids (u) USER UID...   add/update user IDs for a user
+  remove-user-userids (r) USER UID...   remove user IDs for a user
   help (h,?)                            this help
 
 EOF
@@ -179,7 +180,7 @@ case $COMMAND in
 	done
 	;;
 
-    'update-user-userids'|'u')
+    'update-user-userids'|'update-user-userid'|'u')
 	uname="$1"
 	shift
 	if [ -z "$uname" ] ; then
@@ -200,6 +201,34 @@ case $COMMAND in
 	for userID ; do
 	    update_userid "$userID" "$cacheDir"
 	done
+
+	log "run the following to update user's authorized_keys file:"
+	log "$PGRM update-users $uname"
+	;;
+
+    'remove-user-userids'|'remove-user-userid'|'r')
+	uname="$1"
+	shift
+	if [ -z "$uname" ] ; then
+	    failure "you must specify user."
+	fi
+	if [ -z "$1" ] ; then
+	    failure "you must specify at least one userid."
+	fi
+
+	# set variables for the user
+	AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
+
+        # make sure user's authorized_user_ids file exists
+	touch "$AUTHORIZED_USER_IDS"
+
+	# process the user IDs
+	for userID ; do
+	    remove_userid "$userID"
+	done
+
+	log "run the following to update user's authorized_keys file:"
+	log "$PGRM update-users $uname"
 	;;
 
     'help'|'h'|'?')

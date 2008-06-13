@@ -31,25 +31,32 @@ listed in the known_hosts file will be processed.  `k' may be used in
 place of `update-known_hosts'.
 .TP
 .B update-userids [USERID]...
-Add/update a userid in the authorized_user_ids file.  The user IDs
+Add/update a user ID to the authorized_user_ids file.  The user IDs
 specified should be exact matches to OpenPGP user IDs.  For each
 specified user ID, gpg will be queried for a key associated with that
 user ID, querying a keyserver if none is found in the user's keychain.
 If a key is found, it will be added to the user_keys cache (see KEY
 CACHES) and the user ID will be added to the user's
-authorized_user_ids file (if it wasn't already present).
+authorized_user_ids file (if it wasn't already present).  `u' may be
+used in place of `update-userids'.
+.TP
+.B remove-userids [USERID]...
+Remove a user ID from the authorized_user_ids file.  The user IDs
+specified should be exact matches to OpenPGP user IDs.  `r' may be
+used in place of `remove-userids'.
 .TP
 .B update-authorized_keys
 Update the monkeysphere authorized_keys file.  The monkeysphere
 authorized_keys file will be regenerated from the valid keys in the
 user_key cache, and the user's independently controlled
-authorized_keys file (usually ~/.ssh/authorized_keys).
+authorized_keys file (usually ~/.ssh/authorized_keys).  `a' may be
+used in place of `update-authorized_keys'.
 .TP
 .B gen-ae-subkey KEYID
 Generate an `ae` capable subkey.  For the primary key with the
 specified key ID, generate a subkey with "authentication" and
 "encryption" capability that can be used for MonkeySphere
-transactions.
+transactions.  `g' may be used in place of `gen-ae-subkey'.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of

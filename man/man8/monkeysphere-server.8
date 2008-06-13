@@ -19,18 +19,27 @@ be used for authentication and encryption of ssh connection.
 Update the admin-controlled authorized_keys files for user.  For each
 user specified, update the user's authorized_keys file in
 /var/cache/monkeysphere/USER.  See `man monkeysphere' for more info.
+`k' may be used in place of `update-known_hosts'.
 .TP
 .B gen-key
-Generate a gpg key for the host.
+Generate a gpg key for the host.  `g' may be used in place of
+`gen-key'.
 .TP
 .B publish-key
-Publish the host's gpg key to a keyserver.
+Publish the host's gpg key to a keyserver.  `p' may be used in place
+of `publish-key'
 .TP
 .B trust-keys KEYID...
-Mark key specified with KEYID with full owner trust.
+Mark key specified with KEYID with full owner trust.  `t' may be used
+in place of `trust-keys'.
 .TP
 .B update-user-userids USER USERID...
-Add/update a userid in the authorized_user_ids file for USER.
+Add/update a user ID to the authorized_user_ids file for USER.  `u' may
+be used in place of `update-user-userids'.
+.TP
+.B remove-user-userids USER USERID...
+Remove a user ID from the authorized_user_ids file for USER.  `r' may
+be used in place of `remove-user-userids'.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
