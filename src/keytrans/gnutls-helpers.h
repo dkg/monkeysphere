@@ -23,7 +23,7 @@ int init_gnutls();
 
 /* logging and output functions: */
 
-void err(const char* fmt, ...);
+void err(int level, const char* fmt, ...);
 void logfunc(int level, const char* string);
 
 /* basic datum manipulations: */
