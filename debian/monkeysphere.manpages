@@ -1,3 +1,4 @@
 man/man1/monkeysphere.1
 man/man1/openpgp2ssh.1
+man/man1/monkeysphere-ssh-proxycommand.1
 man/man8/monkeysphere-server.8

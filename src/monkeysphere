@@ -132,6 +132,11 @@ msAuthorizedKeys="$MS_HOME"/authorized_keys
 # make sure gpg home exists with proper permissions
 mkdir -p -m 0700 "$GNUPGHOME"
 
+# make sure the user monkeysphere home directory exists
+mkdir -p -m 0700 "$MS_HOME"
+mkdir -p "$hostKeysCacheDir"
+mkdir -p "$userKeysCacheDir"
+
 case $COMMAND in
     'update-known_hosts'|'update-known-hosts'|'k')
 	MODE='known_hosts'
