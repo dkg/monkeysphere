@@ -273,7 +273,6 @@ int emit_public_openssh_from_pgp(const gnutls_openpgp_crt_t* pgp_crt, gnutls_ope
   }
 
   write(1, "\n", 1);
-
   
   return 0;
 }
