@@ -15,11 +15,13 @@
 /* for exit() */
 #include <unistd.h>
 
+/* higher levels allow more frivolous error messages through. 
+   this is set with the MONKEYSPHERE_DEBUG variable */
 static int loglevel = 0;
 
 void err(int level, const char* fmt, ...) {
   va_list ap;
-  if (level < loglevel)
+  if (level > loglevel)
     return;
   va_start(ap, fmt);
   vfprintf(stderr, fmt, ap);
