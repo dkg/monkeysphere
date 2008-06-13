@@ -3,3 +3,5 @@ src/monkeysphere usr/bin
 src/monkeysphere-server usr/sbin
 src/monkeysphere-ssh-proxycommand usr/bin
 src/common usr/share/monkeysphere
+etc/monkeysphere.conf etc/monkeysphere
+etc/monkeysphere-server.conf etc/monkeysphere
