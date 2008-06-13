@@ -15,7 +15,7 @@ SHAREDIR=${SHAREDIR:-"/usr/share/monkeysphere"}
 export SHAREDIR
 . "${SHAREDIR}/common"
 
-GLOBAL_CONFIG=${GLOBAL_CONFIG:-"${ETC}"/monkeysphere.conf}
+GLOBAL_CONFIG=${GLOBAL_CONFIG:-"${ETC}/monkeysphere.conf"}
 [ -r "$GLOBAL_CONFIG" ] && . "$GLOBAL_CONFIG"
 
 # date in UTF format if needed
@@ -63,7 +63,7 @@ gen_ae_subkey(){
 
     # return 1 if there only "tru" lines are output from gpg
     if [ -z "$(echo "$gpgOut" | grep -v '^tru:')" ] ; then
-	loge "  key not found."
+	log "  key not found."
 	return 1
     fi
 
@@ -78,7 +78,7 @@ Name-Real: $userID
 EOF
 )
 
-    log "The following key parameters will be used:"
+    echo "The following key parameters will be used:"
     echo "$keyParameters"
 
     read -p "generate key? [Y|n]: " OK; OK=${OK:=Y}
@@ -107,27 +107,27 @@ COMMAND="$1"
 shift
 
 # set ms home directory
-MS_HOME=${MS_HOME:-"$HOME"/.config/monkeysphere}
+MS_HOME=${MS_HOME:-"${HOME}/.config/monkeysphere"}
 
 # load configuration file
-MS_CONF=${MS_CONF:-"$MS_HOME"/monkeysphere.conf}
+MS_CONF=${MS_CONF:-"${MS_HOME}/monkeysphere.conf"}
 [ -e "$MS_CONF" ] && . "$MS_CONF"
 
 # set empty config variable with defaults
-AUTHORIZED_USER_IDS=${AUTHORIZED_USER_IDS:-"$MS_HOME"/authorized_user_ids}
-GNUPGHOME=${GNUPGHOME:-"$HOME"/.gnupg}
-KEYSERVER=${KEYSERVER:-subkeys.pgp.net}
+AUTHORIZED_USER_IDS=${AUTHORIZED_USER_IDS:-"${MS_HOME}/authorized_user_ids"}
+GNUPGHOME=${GNUPGHOME:-"${HOME}/.gnupg"}
+KEYSERVER=${KEYSERVER:-"subkeys.pgp.net"}
 REQUIRED_KEY_CAPABILITY=${REQUIRED_KEY_CAPABILITY:-"e a"}
-USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-%h/.ssh/authorized_keys}
-USER_KNOWN_HOSTS=${USER_KNOWN_HOSTS:-"$HOME"/.ssh/known_hosts}
-HASH_KNOWN_HOSTS=${HASH_KNOWN_HOSTS:-}
+USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-"%h/.ssh/authorized_keys"}
+USER_KNOWN_HOSTS=${USER_KNOWN_HOSTS:-"${HOME}/.ssh/known_hosts"}
+HASH_KNOWN_HOSTS=${HASH_KNOWN_HOSTS:-"true"}
 
 export GNUPGHOME
 
 # stagging locations
-hostKeysCacheDir="$MS_HOME"/host_keys
-userKeysCacheDir="$MS_HOME"/user_keys
-msAuthorizedKeys="$MS_HOME"/authorized_keys
+hostKeysCacheDir="${MS_HOME}/host_keys"
+userKeysCacheDir="${MS_HOME}/user_keys"
+msAuthorizedKeys="${MS_HOME}/authorized_keys"
 
 # make sure gpg home exists with proper permissions
 mkdir -p -m 0700 "$GNUPGHOME"
@@ -142,6 +142,7 @@ case $COMMAND in
 	MODE='known_hosts'
 
         # touch the known_hosts file to make sure it exists
+	# ssh-keygen complains if it doesn't exist
 	touch "$USER_KNOWN_HOSTS"
 
         # if hosts are specified on the command line, process just
@@ -151,8 +152,8 @@ case $COMMAND in
 		process_host "$host" "$hostKeysCacheDir"
 	    done
 
-        # otherwise, if no hosts are specified, process the user
-        # known_hosts file
+        # otherwise, if no hosts are specified, process every user
+        # in the user's known_hosts file
 	else
 	    if [ ! -s "$USER_KNOWN_HOSTS" ] ; then
 		failure "known_hosts file '$USER_KNOWN_HOSTS' is empty."
@@ -167,8 +168,7 @@ case $COMMAND in
 
         # make sure authorized_user_ids file exists
 	if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
-	    log "authorized_user_ids file is empty or does not exist."
-	    exit
+	    failure "authorized_user_ids file is empty or does not exist."
 	fi
 
 	# set user-controlled authorized_keys file path

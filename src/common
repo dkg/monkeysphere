@@ -23,14 +23,8 @@ failure() {
     exit ${2:-'1'}
 }
 
-# write output to stdout
-log() {
-    echo -n "ms: "
-    echo "$@"
-}
-
 # write output to stderr
-loge() {
+log() {
     echo -n "ms: " 1>&2
     echo "$@" 1>&2
 }
@@ -153,7 +147,7 @@ process_user_id() {
 
     # return 1 if there only "tru" lines are output from gpg
     if [ -z "$(echo "$gpgOut" | grep -v '^tru:')" ] ; then
-	loge "  key not found."
+	log "  key not found."
 	return 1
     fi
 
@@ -182,18 +176,18 @@ process_user_id() {
 
 		# check primary key validity
 		if [ "$validity" != 'u' -a "$validity" != 'f' ] ; then
-		    loge "  unacceptable primary key validity ($validity)."
+		    log "  unacceptable primary key validity ($validity)."
 		    continue
 		fi
 		# check capability is not Disabled...
 		if check_capability "$capability" 'D' ; then
-		    loge "  key disabled."
+		    log "  key disabled."
 		    continue
 		fi
 		# check overall key capability
 		# must be Encryption and Authentication
 		if ! check_capability "$capability" $requiredPubCapability ; then
-		    loge "  unacceptable primary key capability ($capability)."
+		    log "  unacceptable primary key capability ($capability)."
 		    continue
 		fi
 
@@ -242,7 +236,7 @@ process_user_id() {
     # key cache file
     if [ "$keyOK" -a "$uidOK" -a "${keyIDs[*]}" ] ; then
 	for keyID in ${keyIDs[@]} ; do
-	    loge "  acceptable key/uid found."
+	    log "  acceptable key/uid found."
 
 	    if [ "$MODE" = 'known_hosts' ] ; then
 		# export the key
@@ -298,11 +292,11 @@ process_known_hosts() {
     cacheDir="$2"
 
     # take all the hosts from the known_hosts file (first field),
-    # grep out all the hashed hosts (lines starting with '|')
+    # grep out all the hashed hosts (lines starting with '|')...
     cut -d ' ' -f 1 "$knownHosts" | \
     grep -v '^|.*$' | \
     while IFS=, read -r -a hosts ; do
-	# process each host
+	# ...and process each host
 	for host in ${hosts[*]} ; do
 	    process_host "$host" "$cacheDir"
 	done

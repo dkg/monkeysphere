@@ -70,7 +70,7 @@ EOF
 )
     fi
 
-    log "The following key parameters will be used:"
+    echo "The following key parameters will be used:"
     echo "$keyParameters"
 
     read -p "generate key? [Y|n]: " OK; OK=${OK:=Y}
@@ -90,7 +90,7 @@ EOF
 EOF
 )
 
-    echo "generating server key..."
+    log "generating server key..."
     echo "$keyParameters" | gpg --batch --gen-key
 }
 
