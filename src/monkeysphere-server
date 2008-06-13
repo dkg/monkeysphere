@@ -94,21 +94,6 @@ EOF
     echo "$keyParameters" | gpg --batch --gen-key
 }
 
-# publish server key to keyserver
-publish_key() {
-    read -p "publish key to $KEYSERVER? [Y|n]: " OK; OK=${OK:=Y}
-    if [ ${OK/y/Y} != 'Y' ] ; then
-	failure "aborting."
-    fi
-
-    keyID=$(gpg --list-key --with-colons ="$USERID" 2> /dev/null | grep '^pub:' | cut -d: -f5)
-
-    # dummy command so as not to publish fakes keys during testing
-    # eventually:
-    #gpg --send-keys --keyserver "$KEYSERVER" "$keyID"
-    echo "NOT PUBLISHED: gpg --send-keys --keyserver $KEYSERVER $keyID"
-}
-
 ########################################################################
 # MAIN
 ########################################################################
@@ -176,7 +161,7 @@ case $COMMAND in
 	;;
 
     'publish-key'|'p')
-	publish_key
+	publish_server_key
 	;;
 
     'trust-keys'|'t')
@@ -210,6 +195,6 @@ case $COMMAND in
 
     *)
         failure "Unknown command: '$COMMAND'
-Type 'cereal-admin help' for usage."
+Type '$PGRM help' for usage."
         ;;
 esac

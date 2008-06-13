@@ -136,6 +136,7 @@ mkdir -p -m 0700 "$GNUPGHOME"
 mkdir -p -m 0700 "$MS_HOME"
 mkdir -p "$hostKeysCacheDir"
 mkdir -p "$userKeysCacheDir"
+touch "$AUTHORIZED_USER_IDS"
 
 case $COMMAND in
     'update-known_hosts'|'update-known-hosts'|'k')
@@ -163,21 +164,6 @@ case $COMMAND in
 	fi
 	;;
 
-    'update-authorized_keys'|'update-authorized-keys'|'a')
-	MODE='authorized_keys'
-
-        # make sure authorized_user_ids file exists
-	if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
-	    failure "authorized_user_ids file is empty or does not exist."
-	fi
-
-	# set user-controlled authorized_keys file path
-	userAuthorizedKeys=${USER_CONTROLLED_AUTHORIZED_KEYS/\%h/"$HOME"}
-
-	# update authorized_keys
-	update_authorized_keys "$msAuthorizedKeys" "$userAuthorizedKeys" "$userKeysCacheDir"
-	;;
-
     'update-userids'|'u')
 	if [ -z "$1" ] ; then
 	    failure "you must specify at least one userid."
@@ -185,6 +171,21 @@ case $COMMAND in
 	for userID ; do
 	    update_userid "$userID" "$userKeysCacheDir"
 	done
+	;;
+
+    'update-authorized_keys'|'update-authorized-keys'|'a')
+	MODE='authorized_keys'
+
+        # make sure authorized_user_ids file exists
+	if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
+	    failure "$AUTHORIZED_USER_IDS is empty."
+	fi
+
+	# set user-controlled authorized_keys file path
+	userAuthorizedKeys=${USER_CONTROLLED_AUTHORIZED_KEYS/\%h/"$HOME"}
+
+	# update authorized_keys
+	update_authorized_keys "$msAuthorizedKeys" "$userAuthorizedKeys" "$userKeysCacheDir"
 	;;
 
     'gen-ae-subkey'|'g')
@@ -201,6 +202,6 @@ case $COMMAND in
 
     *)
         failure "Unknown command: '$COMMAND'
-Type 'cereal-admin help' for usage."
+Type '$PGRM help' for usage."
         ;;
 esac

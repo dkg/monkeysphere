@@ -42,7 +42,7 @@ cutline() {
 # retrieve all keys with given user id from keyserver
 # FIXME: need to figure out how to retrieve all matching keys
 # (not just first 5)
-gpg_fetch_keys() {
+gpg_fetch_userid() {
     local id
     id="$1"
     echo 1,2,3,4,5 | \
@@ -68,6 +68,18 @@ check_capability() {
     done
     return 0
 }
+
+# get the full fingerprint of a key ID
+get_key_fingerprint() {
+    local keyID
+
+    keyID="$1"
+
+    gpg --list-key --with-colons --fixed-list-mode \
+	--with-fingerprint "$keyID" | grep "$keyID" | \
+	grep '^fpr:' | cut -d: -f10
+}
+
 
 # convert escaped characters from gpg output back into original
 # character
@@ -139,7 +151,7 @@ process_user_id() {
     requiredPubCapability=$(echo "$REQUIRED_KEY_CAPABILITY" | tr "[:lower:]" "[:upper:]")
 
     # fetch keys from keyserver, return 1 if none found
-    gpg_fetch_keys "$userID" || return 1
+    gpg_fetch_userid "$userID" || return 1
 
     # output gpg info for (exact) userid and store
     gpgOut=$(gpg --fixed-list-mode --list-key --with-colons \
@@ -259,6 +271,36 @@ process_user_id() {
 
     # echo the path to the key cache file
     echo "$cacheDir"/"$userIDHash"."$pubKeyID"
+}
+
+# update the cache for userid, and prompt to add file to
+# authorized_user_ids file if the userid is found in gpg
+# and not already in file.
+update_userid() {
+    local userID
+    local cacheDir
+    local userIDKeyCache
+
+    userID="$1"
+    cacheDir="$2"
+
+    log "processing userid: '$userID'"
+    userIDKeyCache=$(process_user_id "$userID" "$cacheDir")
+    if [ -z "$userIDKeyCache" ] ; then
+	return 1
+    fi
+    if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
+	echo "the following userid is not in the authorized_user_ids file:"
+	echo "  $userID"
+	read -p "would you like to add it? [Y|n]: " OK; OK=${OK:=Y}
+	if [ ${OK/y/Y} = 'Y' ] ; then
+	    log -n "adding userid to authorized_user_ids file... "
+	    echo "$userID" >> "$AUTHORIZED_USER_IDS"
+	    echo "done."
+	else
+	    log "authorized_user_ids file untouched."
+	fi
+    fi
 }
 
 # process a host for addition to a known_host file
@@ -392,42 +434,38 @@ process_userids_from_authorized_keys() {
     done
 }
 
-# update the cache for userid, and prompt to add file to
-# authorized_user_ids file if the userid is found in gpg
-# and not already in file.
-update_userid() {
-    local userID
-    local cacheDir
-    local userIDKeyCache
-
-    userID="$1"
-    cacheDir="$2"
-
-    log "processing userid: '$userID'"
-    userIDKeyCache=$(process_user_id "$userID" "$cacheDir")
-    if [ -z "$userIDKeyCache" ] ; then
-	return 1
-    fi
-    if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
-	echo "the following userid is not in the authorized_user_ids file:"
-	echo "  $userID"
-	read -p "would you like to add? [Y|n]: " OK; OK=${OK:=Y}
-	if [ ${OK/y/Y} = 'Y' ] ; then
-	    log -n "  adding userid to authorized_user_ids file... "
-	    echo "$userID" >> "$AUTHORIZED_USER_IDS"
-	    echo "done."
-	fi
-    fi
-}
-
 # retrieve key from web of trust, and set owner trust to "full"
 # if key is found.
 trust_key() {
     # get the key from the key server
-    gpg --keyserver "$KEYSERVER" --recv-key "$keyID" || failure "could not retrieve key '$keyID'"
+    if ! gpg --keyserver "$KEYSERVER" --recv-key "$keyID" ; then
+	log "could not retrieve key '$keyID'"
+	return 1
+    fi
 
-    # edit the key to change trust
-    # FIXME: need to figure out how to automate this,
-    # in a batch mode or something.
-    gpg --edit-key "$keyID"
+    # get key fingerprint
+    fingerprint=$(get_key_fingerprint "$keyID")
+
+    # import "full" trust for fingerprint into gpg
+    echo ${fingerprint}:5: | gpg --import-ownertrust
+    if [ $? = 0 ] ; then
+	log "owner trust updated."
+    else
+	failure "there was a problem changing owner trust."
+    fi	
+}
+
+# publish server key to keyserver
+publish_server_key() {
+    read -p "really publish key to $KEYSERVER? [y|N]: " OK; OK=${OK:=N}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "aborting."
+    fi
+
+    # publish host key
+    # FIXME: need to figure out better way to identify host key
+    # dummy command so as not to publish fakes keys during testing
+    # eventually:
+    #gpg --send-keys --keyserver "$KEYSERVER" $(hostname -f)
+    echo "NOT PUBLISHED: gpg --send-keys --keyserver $KEYSERVER $(hostname -f)"
 }

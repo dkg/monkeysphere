@@ -2,19 +2,32 @@
 .SH NAME
 monkeysphere-ssh-proxycommand \- MonkeySphere ssh ProxyCommand script
 .PD
-.SH SYNOPSIS
-.B ssh -o ProxyCommand="monkeysphere-ssh-proxycommand %h %p" ...
-.PD
 .SH DESCRIPTION
 .PP
-MonkeySphere is a system to leverage the OpenPGP Web of Trust for ssh
-authentication and encryption.  OpenPGP keys are tracked via GnuPG,
-and added to the ssh authorized_keys and known_hosts files to be used
-for authentication and encryption of ssh connection.
-
 \fBmonkeysphere-ssh-proxy\fP is an ssh proxy command that can be used
 to trigger a monkeysphere update of the known_hosts file for the hosts
-that are being connected to.
+that are being connected to.  It is meant to be run as an ssh
+ProxyCommand.  This can either be done by specifying the proxy command
+on the command line:
+
+.B ssh -o ProxyCommand="monkeysphere-ssh-proxycommand %h %p" ...
+
+or by adding the following line to your ~/.ssh/config script:
+
+.B ProxyCommand monkeysphere-ssh-proxycommand %h %p
+
+The script is very simple, and can easily be incorporated into other
+ProxyCommand scripts.  All it does is first runs
+
+.B monkeysphere update-known-hosts HOST
+
+and then
+
+.B exec nc HOST PORT
+
+Run the following command for more info:
+
+.B less $(which monkeysphere-ssh-proxycommand)
 .PD
 .SH AUTHOR
 Written by Jameson Rollins <jrollins@fifthhorseman.net>
