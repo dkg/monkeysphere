@@ -1,7 +1,7 @@
 Source: monkeysphere
 Section: net
 Priority: extra
-Maintainer: Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>
+Maintainer: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 Uploaders: Jameson Rollins <jrollins@fifthhorseman.net>
 Build-Depends: debhelper (>= 7.0), libgnutls-dev (>= 2.3.14)
 Standards-Version: 3.8.0.1
@@ -10,6 +10,13 @@ Enhances: openssh-client, openssh-server
 Dm-Upload-Allowed: yes
 
 Package: monkeysphere
-Architecture: all
+Architecture: any
 Depends: openssh-client, gnupg | gnupg2, coreutils (>= 6)
+Recommends: netcat
 Description: use the OpenPGP web of trust to verify ssh connections
+ SSH key-based authentication is tried-and-true, but it lacks a true
+ Public Key Infrastructure for key certification, revocation and
+ expiration.  MonkeySphere is a framework that uses the OpenPGP web of
+ trust for these PKI functions.  It can be used in both directions:
+ for users to get validated host keys, and for hosts to manage user
+ permissions.
