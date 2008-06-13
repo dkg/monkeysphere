@@ -98,7 +98,7 @@ gpg2known_hosts() {
     echo -n "$host "
     gpg --export "$keyID" | \
 	openpgp2ssh "$keyID" | tr -d '\n'
-    echo "MonkeySphere${DATE}"
+    echo " MonkeySphere${DATE}"
 }
 
 # convert key from gpg to ssh authorized_keys format
@@ -109,9 +109,9 @@ gpg2authorized_keys() {
     keyID="$1"
     userID="$2"
 
-    echo -n "MonkeySphere${DATE}:${userID}"
     gpg --export "$keyID" | \
-	openpgp2ssh "$keyID"
+	openpgp2ssh "$keyID" | tr -d '\n'
+    echo " MonkeySphere${DATE}:${userID}"
 }
 
 # userid and key policy checking
