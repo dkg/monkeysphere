@@ -1,3 +1,4 @@
 usr/share/monkeysphere
 var/cache/monkeysphere
 etc/monkeysphere
+etc/monkeysphere/authorized_user_ids

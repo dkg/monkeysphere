@@ -28,7 +28,7 @@ GREP_OPTIONS=
 usage() {
 cat <<EOF
 usage: $PGRM <subcommand> [args]
-Monkeysphere server admin tool.
+MonkeySphere server admin tool.
 
 subcommands:
   update-users (s) [USER]...            update users authorized_keys files
@@ -121,7 +121,7 @@ export GNUPGHOME
 mkdir -p -m 0700 "$GNUPGHOME"
 
 case $COMMAND in
-    'update-users'|'s')
+    'update-users'|'update-user'|'s')
 	if [ "$1" ] ; then
 	    unames="$@"
 	else
@@ -133,13 +133,17 @@ case $COMMAND in
 
 	    log "----- user: $uname -----"
 
+	    # set variables for the user
 	    AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
 	    msAuthorizedKeys="$CACHE"/"$uname"/authorized_keys
 	    cacheDir="$CACHE"/"$uname"/user_keys
 
-            # make sure authorized_user_ids file exists
+            # make sure user's authorized_user_ids file exists
+	    touch "$AUTHORIZED_USER_IDS"
+
+	    # skip if the user's authorized_user_ids file is empty
 	    if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
-		log "authorized_user_ids file for '$uname' is empty or does not exist."
+		log "authorized_user_ids file for '$uname' is empty."
 		continue
 	    fi
 
@@ -164,10 +168,12 @@ case $COMMAND in
 	publish_server_key
 	;;
 
-    'trust-keys'|'t')
+    'trust-keys'|'trust-key'|'t')
 	if [ -z "$1" ] ; then
 	    failure "you must specify at least one key to trust."
 	fi
+
+	# process key IDs
 	for keyID ; do
 	    trust_key "$keyID"
 	done
@@ -182,8 +188,15 @@ case $COMMAND in
 	if [ -z "$1" ] ; then
 	    failure "you must specify at least one userid."
 	fi
+
+	# set variables for the user
 	AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
 	cacheDir="$CACHE"/"$uname"/user_keys
+
+        # make sure user's authorized_user_ids file exists
+	touch "$AUTHORIZED_USER_IDS"
+
+	# process the user IDs
 	for userID ; do
 	    update_userid "$userID" "$cacheDir"
 	done

@@ -31,7 +31,7 @@ GREP_OPTIONS=
 usage() {
 cat <<EOF
 usage: $PGRM <subcommand> [args]
-Monkeysphere client tool.
+MonkeySphere client tool.
 
 subcommands:
   update-known_hosts (k) [HOST]...  update known_hosts file
@@ -176,7 +176,7 @@ case $COMMAND in
     'update-authorized_keys'|'update-authorized-keys'|'a')
 	MODE='authorized_keys'
 
-        # make sure authorized_user_ids file exists
+        # fail if the authorized_user_ids file is empty
 	if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
 	    failure "$AUTHORIZED_USER_IDS is empty."
 	fi
