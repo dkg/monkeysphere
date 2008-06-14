@@ -1,20 +1,24 @@
 .TH MONKEYSPHERE "1" "June 2008" "monkeysphere 0.1" "User Commands"
+
 .SH NAME
+
 monkeysphere \- MonkeySphere client user interface
-.PD
+
 .SH SYNOPSIS
+
 .B monkeysphere \fIcommand\fP [\fIargs\fP]
-.PD
+
 .SH DESCRIPTION
-.PP
+
 MonkeySphere is a system to leverage the OpenPGP Web of Trust for ssh
 authentication and encryption.  OpenPGP keys are tracked via GnuPG,
 and added to the ssh authorized_keys and known_hosts files to be used
 for authentication and encryption of ssh connection.
 
 \fBmonkeysphere\fP is the MonkeySphere client utility.
-.PD
+
 .SH SUBCOMMANDS
+
 \fBmonkeysphere\fP takes various subcommands:
 .TP
 .B update-known_hosts [HOST]...
@@ -61,10 +65,15 @@ transactions.  `g' may be used in place of `gen-ae-subkey'.
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
 `help'.
-.PD
+
+.SH HOST URIs
+
+Host OpenPGP keys have associated user IDs that use the ssh URI
+specification for the host, ie. "ssh://host.full.domain".
+
 .SH KEY ACCEPTABILITY
+
 GPG keys are considered acceptable if the following criteria are met:
-.PD
 .TP
 .B capability
 The key must have both the "authentication" and "encrypt" capability
@@ -72,8 +81,9 @@ flags.
 .TP
 .B validity
 The key must be "fully" valid, and must not be expired or revoked.
-.PD
+
 .SH KEY CACHES
+
 Monkeysphere keeps track of keys in key cache directories.  The files
 in the cache are named with the format "USERID_HASH.PUB_KEY_ID", where
 USERID_HASH is a hash of the exact OpenPGP user ID, and PUB_KEY_ID is
@@ -86,9 +96,9 @@ will be stored in the host_keys cache files, and authorized_keys style
 key lines will be stored in the user_keys cache files.  OpenPGP keys
 are converted to ssh-style keys with the openpgp2ssh utility (see `man
 openpgp2ssh').
-.PD
+
 .SH FILES
-.PD 1
+
 .TP
 ~/.config/monkeysphere/monkeysphere.conf
 User monkeysphere config file.
@@ -97,8 +107,8 @@ User monkeysphere config file.
 System-wide monkeysphere config file.
 .TP
 ~/.config/monkeysphere/authorized_user_ids
-GPG user IDs associated with keys that will be checked for addition to
-the authorized_keys file. 
+OpenPGP user IDs associated with keys that will be checked for
+addition to the authorized_keys file.
 .TP
 ~/.config/monkeysphere/authorized_keys
 Monkeysphere generated authorized_keys file.
@@ -108,12 +118,14 @@ User keys cache directory.
 .TP
 ~/.config/monkeysphere/host_keys
 Host keys cache directory.
-.PD
+
 .SH AUTHOR
+
 Written by Jameson Rollins <jrollins@fifthhorseman.net>
-.PD
+
 .SH SEE ALSO
-.BR ssh (1),
+
 .BR monkeysphere-ssh-proxycommand (1),
-.BR gpg (1),
-.BR monkeysphere-server (8)
+.BR monkeysphere-server (8),
+.BR ssh (1),
+.BR gpg (1)
