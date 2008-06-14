@@ -468,6 +468,11 @@ trust_key() {
     # get key fingerprint
     fingerprint=$(get_key_fingerprint "$keyID")
 
+    # attach a "non-exportable" signature to the key
+    # this is required for the key to have any validity at all
+    # the 'y's on stdin indicates "yes, i really want to sign"
+    echo -e 'y\ny' | gpg --lsign-key --command-fd 0 "$fingerprint"
+
     # import "full" trust for fingerprint into gpg
     echo ${fingerprint}:5: | gpg --import-ownertrust
     if [ $? = 0 ] ; then
