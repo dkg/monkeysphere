@@ -45,13 +45,11 @@ EOF
 }
 
 # generate a subkey with the 'a' usage flags set
-# FIXME: not working yet.
+# FIXME: this needs some tweaking to clean it up
 gen_subkey(){
     local keyID
     local gpgOut
     local userID
-
-    log "warning: this function is still not working."
 
     keyID="$1"
 
@@ -60,8 +58,7 @@ gen_subkey(){
 
     # return 1 if there only "tru" lines are output from gpg
     if [ -z "$(echo "$gpgOut" | grep -v '^tru:')" ] ; then
-	log "  key not found."
-	return 1
+	failure "Key ID '$keyID' not found."
     fi
 
     # set subkey defaults
@@ -171,7 +168,7 @@ case $COMMAND in
 	for userID ; do
 	    update_userid "$userID" "$userKeysCacheDir"
 	done
-	log "run the following to update your monkeysphere authorized_keys file:"
+	log "Run the following to update your monkeysphere authorized_keys file:"
 	log "$PGRM update-authorized_keys"
 	;;
 
@@ -182,7 +179,7 @@ case $COMMAND in
 	for userID ; do
 	    remove_userid "$userID"
 	done
-	log "run the following to update your monkeysphere authorized_keys file:"
+	log "Run the following to update your monkeysphere authorized_keys file:"
 	log "$PGRM update-authorized_keys"
 	;;
 
@@ -204,7 +201,7 @@ case $COMMAND in
     'gen-subkey'|'g')
 	keyID="$1"
 	if [ -z "$keyID" ] ; then
-	    failure "you must specify keyid of primary key."
+	    failure "You must specify the key ID of your primary key."
 	fi
 	gen_subkey "$keyID"
 	;;

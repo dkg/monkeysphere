@@ -171,7 +171,7 @@ case $COMMAND in
 
     'trust-keys'|'trust-key'|'t')
 	if [ -z "$1" ] ; then
-	    failure "you must specify at least one key to trust."
+	    failure "You must specify at least one key to trust."
 	fi
 
 	# process key IDs
@@ -184,10 +184,10 @@ case $COMMAND in
 	uname="$1"
 	shift
 	if [ -z "$uname" ] ; then
-	    failure "you must specify user."
+	    failure "You must specify user."
 	fi
 	if [ -z "$1" ] ; then
-	    failure "you must specify at least one userid."
+	    failure "You must specify at least one user ID."
 	fi
 
 	# set variables for the user
@@ -202,7 +202,7 @@ case $COMMAND in
 	    update_userid "$userID" "$cacheDir"
 	done
 
-	log "run the following to update user's authorized_keys file:"
+	log "Run the following to update user's authorized_keys file:"
 	log "$PGRM update-users $uname"
 	;;
 
@@ -210,10 +210,10 @@ case $COMMAND in
 	uname="$1"
 	shift
 	if [ -z "$uname" ] ; then
-	    failure "you must specify user."
+	    failure "You must specify user."
 	fi
 	if [ -z "$1" ] ; then
-	    failure "you must specify at least one userid."
+	    failure "You must specify at least one user ID."
 	fi
 
 	# set variables for the user
@@ -227,7 +227,7 @@ case $COMMAND in
 	    remove_userid "$userID"
 	done
 
-	log "run the following to update user's authorized_keys file:"
+	log "Run the following to update user's authorized_keys file:"
 	log "$PGRM update-users $uname"
 	;;
 
