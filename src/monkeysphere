@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # monkeysphere: MonkeySphere client tool
 #
@@ -38,14 +38,15 @@ subcommands:
   update-userids (u) [USERID]...    add/update user IDs
   remove-userids (r) [USERID]...    remove user IDs
   update-authorized_keys (a)        update authorized_keys file
-  gen-ae-subkey (g) KEYID           generate an 'ae' capable subkey
+  gen-subkey (g) KEYID              generate an 'a' capable subkey
   help (h,?)                        this help
 
 EOF
 }
 
-# generate a subkey with the 'a' and 'e' usage flags set
-gen_ae_subkey(){
+# generate a subkey with the 'a' usage flags set
+# FIXME: not working yet.
+gen_subkey(){
     local keyID
     local gpgOut
     local userID
@@ -53,11 +54,6 @@ gen_ae_subkey(){
     log "warning: this function is still not working."
 
     keyID="$1"
-
-    # set subkey defaults
-    SUBKEY_TYPE=${KEY_TYPE:-"RSA"}
-    SUBKEY_LENGTH=${KEY_LENGTH:-"1024"}
-    SUBKEY_USAGE=${KEY_USAGE:-"encrypt,auth"}
 
     gpgOut=$(gpg --fixed-list-mode --list-keys --with-colons \
 	"$keyID" 2> /dev/null)
@@ -68,35 +64,37 @@ gen_ae_subkey(){
 	return 1
     fi
 
-    userID=$(echo "$gpgOut" | grep "^uid:" | cut -d: -f10)
-
-    # set key parameters
-    keyParameters=$(cat <<EOF
-Subkey-Type: $SUBKEY_TYPE
-Subkey-Length: $SUBKEY_LENGTH
-Subkey-Usage: $SUBKEY_USAGE
-Name-Real: $userID
+    # set subkey defaults
+    SUBKEY_TYPE=${SUBKEY_TYPE:-"RSA"}
+    #SUBKEY_LENGTH=${SUBKEY_LENGTH:-"2048"}
+    SUBKEY_USAGE=${SUBKEY_USAGE:-"auth"}
+    SUBKEY_EXPIRE=${SUBKEY_EXPIRE:-"0"}
+    cat <<EOF
+Please specify how long the key should be valid.
+         0 = key does not expire
+      <n>  = key expires in n days
+      <n>w = key expires in n weeks
+      <n>m = key expires in n months
+      <n>y = key expires in n years
 EOF
-)
+    read -p "Key is valid for? ($SUBKEY_EXPIRE) " SUBKEY_EXPIRE; SUBKEY_EXPIRE=${SUBKEY_EXPIRE:-"0"}
 
-    echo "The following key parameters will be used:"
-    echo "$keyParameters"
-
-    read -p "generate key? [Y|n]: " OK; OK=${OK:=Y}
-    if [ ${OK/y/Y} != 'Y' ] ; then
-	failure "aborting."
-    fi
-
-    # add commit command
-    keyParameters="${keyParameters}"$(cat <<EOF
-
-%commit
-%echo done
+    # generate the list of commands that will be passed to edit-key
+    editCommands=$(cat <<EOF
+addkey
+7
+S
+E
+A
+Q
+$SUBKEY_LENGTH
+$SUBKEY_EXPIRE
+save
 EOF
 )
 
     echo "generating subkey..."
-    echo "$keyParameters" | gpg --batch --gen-key
+    echo "$editCommands" | gpg --expert --command-fd 0 --edit-key "$keyID"
 }
 
 ########################################################################
@@ -203,12 +201,12 @@ case $COMMAND in
 	update_authorized_keys "$msAuthorizedKeys" "$userAuthorizedKeys" "$userKeysCacheDir"
 	;;
 
-    'gen-ae-subkey'|'g')
+    'gen-subkey'|'g')
 	keyID="$1"
 	if [ -z "$keyID" ] ; then
 	    failure "you must specify keyid of primary key."
 	fi
-	gen_ae_subkey "$keyID"
+	gen_subkey "$keyID"
 	;;
 
     'help'|'h'|'?')
