@@ -1,13 +1,13 @@
 # -*-shell-script-*-
 
-# Shared bash functions for the monkeysphere
+# Shared sh functions for the monkeysphere
 #
 # Written by
 # Jameson Rollins <jrollins@fifthhorseman.net>
 #
 # Copyright 2008, released under the GPL, version 3 or later
 
-# all caps variables are meant to be user supplied (ie. from config
+# all-caps variables are meant to be user supplied (ie. from config
 # file) and are considered global
 
 ########################################################################
@@ -123,13 +123,14 @@ gpg2authorized_keys() {
 # userid and key policy checking
 # the following checks policy on the returned keys
 # - checks that full key has appropriate valididy (u|f)
-# - checks key has specified capability (REQUIRED_KEY_CAPABILITY)
+# - checks key has specified capability (REQUIRED_*_KEY_CAPABILITY)
 # - checks that particular desired user id has appropriate validity
 # see /usr/share/doc/gnupg/DETAILS.gz
 # expects global variable: "MODE"
 process_user_id() {
     local userID
     local cacheDir
+    local requiredCapability
     local requiredPubCapability
     local gpgOut
     local line
@@ -148,7 +149,13 @@ process_user_id() {
     userID="$1"
     cacheDir="$2"
 
-    requiredPubCapability=$(echo "$REQUIRED_KEY_CAPABILITY" | tr "[:lower:]" "[:upper:]")
+    # set the required key capability based on the mode
+    if [ "$MODE" = 'known_hosts' ] ; then
+	requiredCapability="$REQUIRED_HOST_KEY_CAPABILITY"
+    elif [ "$MODE" = 'authorized_keys' ] ; then
+	requiredCapability="$REQUIRED_USER_KEY_CAPABILITY"	
+    fi
+    requiredPubCapability=$(echo "$requiredCapability" | tr "[:lower:]" "[:upper:]")
 
     # fetch keys from keyserver, return 1 if none found
     gpg_fetch_userid "$userID" || return 1
@@ -207,7 +214,7 @@ process_user_id() {
 		keyOK=true
 
 		# add primary key ID to key list if it has required capability
-		if check_capability "$capability" $REQUIRED_KEY_CAPABILITY ; then
+		if check_capability "$capability" $requiredCapability ; then
 		    keyIDs[${#keyIDs[*]}]="$keyid"
 		fi
 		;;
@@ -230,7 +237,7 @@ process_user_id() {
 		;;
 	    'sub') # sub keys
 		# add sub key ID to key list if it has required capability
-		if check_capability "$capability" $REQUIRED_KEY_CAPABILITY ; then
+		if check_capability "$capability" $requiredCapability ; then
 		    keyIDs[${#keyIDs[*]}]="$keyid"
 		fi
 		;;
@@ -282,16 +289,16 @@ process_user_id() {
 update_userid() {
     local userID
     local cacheDir
-    local userIDKeyCache
+    local keyCache
 
     userID="$1"
     cacheDir="$2"
 
     log "processing userid: '$userID'"
 
-    userIDKeyCache=$(process_user_id "$userID" "$cacheDir")
+    keyCachePath=$(process_user_id "$userID" "$cacheDir")
 
-    if [ -z "$userIDKeyCache" ] ; then
+    if [ -z "$keyCachePath" ] ; then
 	return 1
     fi
     if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
@@ -328,17 +335,17 @@ remove_userid() {
 process_host() {
     local host
     local cacheDir
-    local hostKeyCachePath
+    local keyCachePath
 
     host="$1"
     cacheDir="$2"
 
     log "processing host: '$host'"
 
-    hostKeyCachePath=$(process_user_id "ssh://${host}" "$cacheDir")
+    keyCachePath=$(process_user_id "ssh://${host}" "$cacheDir")
     if [ $? = 0 ] ; then
 	ssh-keygen -R "$host" -f "$USER_KNOWN_HOSTS"
-	cat "$hostKeyCachePath" >> "$USER_KNOWN_HOSTS"
+	cat "$keyCachePath" >> "$USER_KNOWN_HOSTS"
     fi
 }
 
@@ -425,7 +432,7 @@ process_authorized_ids() {
 # EXPERIMENTAL (unused) process userids found in authorized_keys file
 # go through line-by-line, extract monkeysphere userids from comment
 # fields, and process each userid
-process_userids_from_authorized_keys() {
+process_authorized_keys() {
     local authorizedKeys
     local cacheDir
     local userID
