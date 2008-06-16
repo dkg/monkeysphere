@@ -47,17 +47,17 @@ gpg_fetch_userid() {
 
     userID="$1"
 
-    # if CHECK_KEYSERVER variable set, check the keyserver
-    # for the user ID
-    if [ "CHECK_KEYSERVER" ] ; then
-	echo 1,2,3,4,5 | \
-	    gpg --quiet --batch --command-fd 0 --with-colons \
-	    --keyserver "$KEYSERVER" \
-	    --search ="$userID" >/dev/null 2>&1
-
-    # otherwise just return true
+    log "checking keyserver $KEYSERVER..."
+    echo 1,2,3,4,5 | \
+	gpg --quiet --batch --command-fd 0 --with-colons \
+	--keyserver "$KEYSERVER" \
+	--search ="$userID" >/dev/null 2>&1
+    if [ "$?" = 0 ] ; then
+	log "  user ID found on keyserver."
+	return 0
     else
-	return
+	log "  user ID not found on keyserver."
+	return 1
     fi
 }
 
@@ -167,8 +167,11 @@ process_user_id() {
     fi
     requiredPubCapability=$(echo "$requiredCapability" | tr "[:lower:]" "[:upper:]")
 
-    # fetch keys from keyserver, return 1 if none found
-    gpg_fetch_userid "$userID" || return 1
+    # if CHECK_KEYSERVER variable set, check the keyserver
+    # for the user ID
+    if [ "$CHECK_KEYSERVER" = "true" ] ; then
+	gpg_fetch_userid "$userID"
+    fi
 
     # output gpg info for (exact) userid and store
     gpgOut=$(gpg --fixed-list-mode --list-key --with-colons \
@@ -176,7 +179,7 @@ process_user_id() {
 
     # return 1 if there only "tru" lines are output from gpg
     if [ -z "$(echo "$gpgOut" | grep -v '^tru:')" ] ; then
-	log "  key not found."
+	log "  key not found in keychain."
 	return 1
     fi
 
@@ -268,7 +271,7 @@ process_user_id() {
     # key cache file
     if [ "$keyOK" -a "$uidOK" -a "${keyIDs[*]}" ] ; then
 	for keyID in ${keyIDs[@]} ; do
-	    log "  acceptable key/uid found."
+	    log "  acceptable key/userID found."
 
 	    if [ "$MODE" = 'known_hosts' ] ; then
 		# export the key
