@@ -15,6 +15,8 @@
 /* for exit() */
 #include <unistd.h>
 
+#include <assert.h>
+
 /* higher levels allow more frivolous error messages through. 
    this is set with the MONKEYSPHERE_DEBUG variable */
 static int loglevel = 0;
@@ -41,13 +43,20 @@ void init_keyid(gnutls_openpgp_keyid_t keyid) {
 
 void make_keyid_printable(printable_keyid out, gnutls_openpgp_keyid_t keyid)
 {
+  assert(sizeof(out) >= 2*sizeof(keyid));
+  hex_print_data((char*)out, (const char*)keyid, sizeof(keyid));
+}
+
+/* you must have twice as many bytes in the out buffer as in the in buffer */
+void hex_print_data(char* out, const char* in, size_t incount)
+{
   static const char hex[16] = "0123456789ABCDEF";
-  unsigned int kix = 0, outix = 0;
+  unsigned int inix = 0, outix = 0;
   
-  while (kix < sizeof(gnutls_openpgp_keyid_t)) {
-    out[outix] = hex[(keyid[kix] >> 4) & 0x0f];
-    out[outix + 1] = hex[keyid[kix] & 0x0f];
-    kix++;
+  while (inix < incount) {
+    out[outix] = hex[(in[inix] >> 4) & 0x0f];
+    out[outix + 1] = hex[in[inix] & 0x0f];
+    inix++;
     outix += 2;
   }
 }

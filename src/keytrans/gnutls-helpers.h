@@ -48,6 +48,8 @@ void collapse_printable_keyid(gnutls_openpgp_keyid_t out, printable_keyid in);
 int convert_string_to_keyid(gnutls_openpgp_keyid_t out, const char* str);
 int convert_string_to_printable_keyid(printable_keyid out, const char* str);
 
+/* you must have twice as many bytes in the out buffer as in the in buffer */
+void hex_print_data(char* out, const char* in, size_t incount);
 
 /* functions to get data into datum objects: */
 
