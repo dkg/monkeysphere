@@ -45,9 +45,6 @@ int convert_private_pgp_to_x509(gnutls_x509_privkey_t* output, const gnutls_open
   int subkeycount;
   int found = 0;
 
-/* FIXME: actually respect keyid argument.  At the moment, we just
-   emit the primary key.  */
-
   init_datum(&m);
   init_datum(&e);
   init_datum(&d);
@@ -57,7 +54,6 @@ int convert_private_pgp_to_x509(gnutls_x509_privkey_t* output, const gnutls_open
   init_datum(&g);
   init_datum(&y);
   init_datum(&x);
-
 
   subkeycount = gnutls_openpgp_privkey_get_subkey_count(*pgp_privkey);
   if (subkeycount < 0) {
@@ -435,9 +431,6 @@ int main(int argc, char* argv[]) {
       return 1;
     }
   }
-
-
-
 
   gnutls_global_deinit();
   return 0;
