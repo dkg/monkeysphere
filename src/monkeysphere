@@ -157,7 +157,7 @@ case $COMMAND in
 		failure "known_hosts file '$USER_KNOWN_HOSTS' is empty."
 	    fi
 	    log "processing known_hosts file..."
-	    process_known_hosts "$USER_KNOWN_HOSTS" "$hostKeysCacheDir"
+	    process_known_hosts "$hostKeysCacheDir"
 	fi
 	;;
 
