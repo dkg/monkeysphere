@@ -32,7 +32,7 @@ MonkeySphere server admin tool.
 
 subcommands:
   update-users (s) [USER]...            update users authorized_keys files
-  gen-key (g)                           generate gpg key for the server
+  gen-key (g) [HOSTNAME]                generate gpg key for the server
   publish-key (p)                       publish server key to keyserver
   trust-keys (t) KEYID...               mark keyids as trusted
   update-user-userids (u) USER UID...   add/update user IDs for a user
@@ -44,14 +44,26 @@ EOF
 
 # generate server gpg key
 gen_key() {
+    local hostName
+
+    hostName=${1:-$(hostname --fqdn)}
+
     # set key defaults
     KEY_TYPE=${KEY_TYPE:-"RSA"}
     KEY_LENGTH=${KEY_LENGTH:-"2048"}
     KEY_USAGE=${KEY_USAGE:-"auth,encrypt"}
-    SERVICE=${SERVICE:-"ssh"}
-    HOSTNAME_FQDN=${HOSTNAME_FQDN:-$(hostname -f)}
+    cat <<EOF
+Please specify how long the key should be valid.
+         0 = key does not expire
+      <n>  = key expires in n days
+      <n>w = key expires in n weeks
+      <n>m = key expires in n months
+      <n>y = key expires in n years
+EOF
+    read -p "Key is valid for? ($EXPIRE) " EXPIRE; EXPIRE=${EXPIRE:-"0"}
 
-    USERID=${USERID:-"$SERVICE"://"$HOSTNAME_FQDN"}
+    SERVICE=${SERVICE:-"ssh"}
+    USERID=${USERID:-"$SERVICE"://"$hostName"}
 
     # set key parameters
     keyParameters=$(cat <<EOF
@@ -59,6 +71,7 @@ Key-Type: $KEY_TYPE
 Key-Length: $KEY_LENGTH
 Key-Usage: $KEY_USAGE
 Name-Real: $USERID
+Expire-Date: $EXPIRE
 EOF
 )
 
@@ -91,8 +104,9 @@ EOF
 EOF
 )
 
-    log "generating server key..."
+    log -n "generating server key... "
     echo "$keyParameters" | gpg --batch --gen-key
+    echo "done."
 }
 
 ########################################################################
@@ -162,7 +176,7 @@ case $COMMAND in
 	;;
 
     'gen-key'|'g')
-	gen_key
+	gen_key "$1"
 	;;
 
     'publish-key'|'p')
