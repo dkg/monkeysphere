@@ -40,6 +40,10 @@ int convert_private_pgp_to_x509(gnutls_x509_privkey_t* output, const gnutls_open
   gnutls_pk_algorithm_t pgp_algo;
   unsigned int pgp_bits;
   int ret;
+  gnutls_openpgp_keyid_t curkeyid;
+  int subkeyidx;
+  int subkeycount;
+  int found = 0;
 
 /* FIXME: actually respect keyid argument.  At the moment, we just
    emit the primary key.  */
@@ -54,32 +58,104 @@ int convert_private_pgp_to_x509(gnutls_x509_privkey_t* output, const gnutls_open
   init_datum(&y);
   init_datum(&x);
 
-  pgp_algo = gnutls_openpgp_privkey_get_pk_algorithm(*pgp_privkey, &pgp_bits);
-  if (pgp_algo < 0) {
-    err(0, "failed to get OpenPGP key algorithm (error: %d)\n", pgp_algo);
+
+  subkeycount = gnutls_openpgp_privkey_get_subkey_count(*pgp_privkey);
+  if (subkeycount < 0) {
+    err(0,"Could not determine subkey count (got value %d)\n", subkeycount);
     return 1;
   }
-  if (pgp_algo == GNUTLS_PK_RSA) {
-    err(0,"OpenPGP RSA Key, with %d bits\n", pgp_bits);
-    ret = gnutls_openpgp_privkey_export_rsa_raw(*pgp_privkey, &m, &e, &d, &p, &q, &u);
-    if (GNUTLS_E_SUCCESS != ret) {
-      err(1, "failed to export RSA key parameters (error: %d)\n", ret);
+
+  if ((keyid == NULL) && 
+      (subkeycount > 0)) {
+    err(0,"No keyid passed in, but there were %d keys to choose from\n", subkeycount + 1);
+    return 1;
+  }
+
+  if (keyid != NULL) {
+    ret = gnutls_openpgp_privkey_get_key_id(*pgp_privkey, curkeyid);
+    if (ret) {
+      err(0,"Could not get keyid (error: %d)\n", ret);
       return 1;
     }
+  }
+  if ((keyid == NULL) || (memcmp(*keyid, curkeyid, sizeof(gnutls_openpgp_keyid_t)) == 0)) {
+    /* we want to export the primary key: */
+    err(0,"exporting primary key\n");
 
+    /* FIXME: this is almost identical to the block below for subkeys.
+       This clumsiness seems inherent in the gnutls OpenPGP API,
+       though.  ugh. */
+    pgp_algo = gnutls_openpgp_privkey_get_pk_algorithm(*pgp_privkey, &pgp_bits);
+    if (pgp_algo < 0) {
+      err(0, "failed to get OpenPGP key algorithm (error: %d)\n", pgp_algo);
+      return 1;
+    }
+    if (pgp_algo == GNUTLS_PK_RSA) {
+      err(0,"OpenPGP RSA Key, with %d bits\n", pgp_bits);
+      ret = gnutls_openpgp_privkey_export_rsa_raw(*pgp_privkey, &m, &e, &d, &p, &q, &u);
+      if (GNUTLS_E_SUCCESS != ret) {
+	err(0, "failed to export RSA key parameters (error: %d)\n", ret);
+	return 1;
+      }
+      
+    } else if (pgp_algo == GNUTLS_PK_DSA) {
+      err(0,"OpenPGP DSA Key, with %d bits\n", pgp_bits);
+      ret = gnutls_openpgp_privkey_export_dsa_raw(*pgp_privkey, &p, &q, &g, &y, &x);
+      if (GNUTLS_E_SUCCESS != ret) {
+	err(0,"failed to export DSA key parameters (error: %d)\n", ret);
+	return 1;
+      }
+    }
+    found = 1;
+  } else {
+    /* lets trawl through the subkeys until we find the one we want: */
+    for (subkeyidx = 0; (subkeyidx < subkeycount) && !found; subkeyidx++) {
+      ret = gnutls_openpgp_privkey_get_subkey_id(*pgp_privkey, subkeyidx, curkeyid);
+      if (ret) {
+	err(0,"Could not get keyid of subkey with index %d (error: %d)\n", subkeyidx, ret);
+	return 1;
+      }
+      if (memcmp(*keyid, curkeyid, sizeof(gnutls_openpgp_keyid_t)) == 0) {
+	err(0,"exporting subkey index %d\n", subkeyidx);
+
+	/* FIXME: this is almost identical to the block above for the
+	   primary key. */
+	pgp_algo = gnutls_openpgp_privkey_get_subkey_pk_algorithm(*pgp_privkey, subkeyidx, &pgp_bits);
+	if (pgp_algo < 0) {
+	  err(0,"failed to get the algorithm of the OpenPGP public key (error: %d)\n", pgp_algo);
+	  return pgp_algo;
+	} else if (pgp_algo == GNUTLS_PK_RSA) {
+	  err(0,"OpenPGP RSA key, with %d bits\n", pgp_bits);
+	  ret = gnutls_openpgp_privkey_export_subkey_rsa_raw(*pgp_privkey, subkeyidx, &m, &e, &d, &p, &q, &u);
+	  if (GNUTLS_E_SUCCESS != ret) {
+	    err(0,"failed to export RSA key parameters (error: %d)\n", ret);
+	    return 1;
+	  }
+	} else if (pgp_algo == GNUTLS_PK_DSA) {
+	  err(0,"OpenPGP DSA Key, with %d bits\n", pgp_bits);
+	  ret = gnutls_openpgp_privkey_export_subkey_dsa_raw(*pgp_privkey, subkeyidx, &p, &q, &g, &y, &x);
+	  if (GNUTLS_E_SUCCESS != ret) {
+	    err(0,"failed to export DSA key parameters (error: %d)\n", ret);
+	    return 1;
+	  }
+	}
+	found = 1;
+      }
+    }
+  }
+
+  if (!found) {
+    err(0,"Could not find key in input\n");
+    return 1;
+  }
+
+  if (pgp_algo == GNUTLS_PK_RSA) {
     ret = gnutls_x509_privkey_import_rsa_raw (*output, &m, &e, &d, &p, &q, &u); 
     if (GNUTLS_E_SUCCESS != ret) {
-      err(1, "failed to import RSA key parameters (error: %d)\n", ret);
+      err(0, "failed to import RSA key parameters (error: %d)\n", ret);
       return 1;
     }
   } else if (pgp_algo == GNUTLS_PK_DSA) {
-    err(0,"OpenPGP DSA Key, with %d bits\n", pgp_bits);
-    ret = gnutls_openpgp_privkey_export_dsa_raw(*pgp_privkey, &p, &q, &g, &y, &x);
-    if (GNUTLS_E_SUCCESS != ret) {
-      err(0,"failed to export DSA key parameters (error: %d)\n", ret);
-      return 1;
-    }
-
     ret = gnutls_x509_privkey_import_dsa_raw (*output, &p, &q, &g, &y, &x); 
     if (GNUTLS_E_SUCCESS != ret) {
       err(0,"failed to import DSA key parameters (error: %d)\n", ret);
@@ -164,14 +240,14 @@ int emit_public_openssh_from_pgp(const gnutls_openpgp_crt_t* pgp_crt, gnutls_ope
       err(0,"OpenPGP RSA certificate, with %d bits\n", bits);
       ret = gnutls_openpgp_crt_get_pk_rsa_raw(*pgp_crt, &m, &e);
       if (GNUTLS_E_SUCCESS != ret) {
-	err(0,"failed to export RSA key parameters (error: %d)\n", ret);
+	err(0,"failed to export RSA certificate parameters (error: %d)\n", ret);
 	return 1;
       }
     } else if (algo == GNUTLS_PK_DSA) {
-      err(0,"OpenPGP DSA Key, with %d bits\n", bits);
+      err(0,"OpenPGP DSA certificate, with %d bits\n", bits);
       ret = gnutls_openpgp_crt_get_pk_dsa_raw(*pgp_crt, &p, &q, &g, &y);
       if (GNUTLS_E_SUCCESS != ret) {
-	err(0,"failed to export DSA key parameters (error: %d)\n", ret);
+	err(0,"failed to export DSA certificate parameters (error: %d)\n", ret);
 	return 1;
       }
     }
@@ -198,14 +274,14 @@ int emit_public_openssh_from_pgp(const gnutls_openpgp_crt_t* pgp_crt, gnutls_ope
 	  err(0,"OpenPGP RSA certificate, with %d bits\n", bits);
 	  ret = gnutls_openpgp_crt_get_subkey_pk_rsa_raw(*pgp_crt, subkeyidx, &m, &e);
 	  if (GNUTLS_E_SUCCESS != ret) {
-	    err(0,"failed to export RSA key parameters (error: %d)\n", ret);
+	    err(0,"failed to export RSA certificate parameters (error: %d)\n", ret);
 	    return 1;
 	  }
 	} else if (algo == GNUTLS_PK_DSA) {
-	  err(0,"OpenPGP DSA Key, with %d bits\n", bits);
+	  err(0,"OpenPGP DSA certificate, with %d bits\n", bits);
 	  ret = gnutls_openpgp_crt_get_subkey_pk_dsa_raw(*pgp_crt, subkeyidx, &p, &q, &g, &y);
 	  if (GNUTLS_E_SUCCESS != ret) {
-	    err(0,"failed to export DSA key parameters (error: %d)\n", ret);
+	    err(0,"failed to export DSA certificate parameters (error: %d)\n", ret);
 	    return 1;
 	  }
 	}
