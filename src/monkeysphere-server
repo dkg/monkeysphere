@@ -111,10 +111,10 @@ MS_CONF=${MS_CONF:-"$MS_HOME"/monkeysphere-server.conf}
 [ -e "$MS_CONF" ] && . "$MS_CONF"
 
 # set empty config variable with defaults
-GNUPGHOME=${GNUPGHOME:-"$MS_HOME"/gnupg}
-KEYSERVER=${KEYSERVER:-subkeys.pgp.net}
+GNUPGHOME=${GNUPGHOME:-"${MS_HOME}/gnupg"}
+KEYSERVER=${KEYSERVER:-"subkeys.pgp.net"}
 REQUIRED_USER_KEY_CAPABILITY=${REQUIRED_USER_KEY_CAPABILITY:-"a"}
-USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-%h/.ssh/authorized_keys}
+USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-"%h/.ssh/authorized_keys"}
 
 export GNUPGHOME
 

@@ -275,7 +275,7 @@ process_user_id() {
 		gpg2known_hosts "$keyID" "$userID" >> \
 		    "$cacheDir"/"$userIDHash"."$pubKeyID"
 		# hash the cache file if specified
-		if [ "$HASH_KNOWN_HOSTS" ] ; then
+		if [ "$HASH_KNOWN_HOSTS" = "true" ] ; then
 		    ssh-keygen -H -f "$cacheDir"/"$userIDHash"."$pubKeyID" > /dev/null 2>&1
 		    rm "$cacheDir"/"$userIDHash"."$pubKeyID".old
 		fi
@@ -408,7 +408,7 @@ update_authorized_keys() {
     else
 	log "no gpg keys to add."
     fi
-    if [ "$userAuthorizedKeys" -a -s "$userAuthorizedKeys" ] ; then
+    if [ "$userAuthorizedKeys" != "-" -a -s "$userAuthorizedKeys" ] ; then
 	log -n "adding user authorized_keys file... "
 	cat "$userAuthorizedKeys" >> "$msAuthorizedKeys"
 	echo "done."
