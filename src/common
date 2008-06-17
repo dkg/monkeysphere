@@ -43,12 +43,22 @@ cutline() {
 # FIXME: need to figure out how to retrieve all matching keys
 # (not just first 5)
 gpg_fetch_userid() {
-    local id
-    id="$1"
+    local userID
+
+    userID="$1"
+
+    log "checking keyserver $KEYSERVER..."
     echo 1,2,3,4,5 | \
 	gpg --quiet --batch --command-fd 0 --with-colons \
 	--keyserver "$KEYSERVER" \
-	--search ="$id" >/dev/null 2>&1
+	--search ="$userID" >/dev/null 2>&1
+    if [ "$?" = 0 ] ; then
+	log "  user ID found on keyserver."
+	return 0
+    else
+	log "  user ID not found on keyserver."
+	return 1
+    fi
 }
 
 # check that characters are in a string (in an AND fashion).
@@ -117,7 +127,7 @@ gpg2authorized_keys() {
 
     gpg --export "$keyID" | \
 	openpgp2ssh "$keyID" | tr -d '\n'
-    echo " MonkeySphere${DATE}:${userID}"
+    echo " MonkeySphere${DATE}: ${userID}"
 }
 
 # userid and key policy checking
@@ -157,8 +167,11 @@ process_user_id() {
     fi
     requiredPubCapability=$(echo "$requiredCapability" | tr "[:lower:]" "[:upper:]")
 
-    # fetch keys from keyserver, return 1 if none found
-    gpg_fetch_userid "$userID" || return 1
+    # if CHECK_KEYSERVER variable set, check the keyserver
+    # for the user ID
+    if [ "$CHECK_KEYSERVER" = "true" ] ; then
+	gpg_fetch_userid "$userID"
+    fi
 
     # output gpg info for (exact) userid and store
     gpgOut=$(gpg --fixed-list-mode --list-key --with-colons \
@@ -166,7 +179,7 @@ process_user_id() {
 
     # return 1 if there only "tru" lines are output from gpg
     if [ -z "$(echo "$gpgOut" | grep -v '^tru:')" ] ; then
-	log "  key not found."
+	log "  key not found in keychain."
 	return 1
     fi
 
@@ -258,14 +271,14 @@ process_user_id() {
     # key cache file
     if [ "$keyOK" -a "$uidOK" -a "${keyIDs[*]}" ] ; then
 	for keyID in ${keyIDs[@]} ; do
-	    log "  acceptable key/uid found."
+	    log "  acceptable key/userID found."
 
 	    if [ "$MODE" = 'known_hosts' ] ; then
 		# export the key
 		gpg2known_hosts "$keyID" "$userID" >> \
 		    "$cacheDir"/"$userIDHash"."$pubKeyID"
 		# hash the cache file if specified
-		if [ "$HASH_KNOWN_HOSTS" ] ; then
+		if [ "$HASH_KNOWN_HOSTS" = "true" ] ; then
 		    ssh-keygen -H -f "$cacheDir"/"$userIDHash"."$pubKeyID" > /dev/null 2>&1
 		    rm "$cacheDir"/"$userIDHash"."$pubKeyID".old
 		fi
@@ -296,18 +309,23 @@ update_userid() {
 
     log "processing userid: '$userID'"
 
+    # return 1 if there is no output of the user ID processing
+    # ie. no key was found
     keyCachePath=$(process_user_id "$userID" "$cacheDir")
-
     if [ -z "$keyCachePath" ] ; then
 	return 1
     fi
+
+    # check if user ID is in the authorized_user_ids file
     if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
 	read -p "user ID not currently authorized.  authorize? [Y|n]: " OK; OK=${OK:=Y}
 	if [ ${OK/y/Y} = 'Y' ] ; then
+	    # add if specified
 	    log -n "adding user ID to authorized_user_ids file... "
 	    echo "$userID" >> "$AUTHORIZED_USER_IDS"
 	    echo "done."
 	else
+	    # else do nothing
 	    log "authorized_user_ids file untouched."
 	fi
     fi
@@ -340,7 +358,7 @@ process_host() {
     host="$1"
     cacheDir="$2"
 
-    log "processing host: '$host'"
+    log "processing host: $host"
 
     keyCachePath=$(process_user_id "ssh://${host}" "$cacheDir")
     if [ $? = 0 ] ; then
@@ -353,18 +371,15 @@ process_host() {
 # go through line-by-line, extract each host, and process with the
 # host processing function
 process_known_hosts() {
-    local knownHosts
     local cacheDir
     local hosts
     local host
 
-    knownHosts="$1"
-    cacheDir="$2"
+    cacheDir="$1"
 
     # take all the hosts from the known_hosts file (first field),
     # grep out all the hashed hosts (lines starting with '|')...
-    cut -d ' ' -f 1 "$knownHosts" | \
-    grep -v '^|.*$' | \
+    meat "$USER_KNOWN_HOSTS" | cut -d ' ' -f 1 | grep -v '^|.*$' | \
     while IFS=, read -r -a hosts ; do
 	# ...and process each host
 	for host in ${hosts[*]} ; do
@@ -396,7 +411,7 @@ update_authorized_keys() {
     else
 	log "no gpg keys to add."
     fi
-    if [ "$userAuthorizedKeys" -a -s "$userAuthorizedKeys" ] ; then
+    if [ "$userAuthorizedKeys" != "-" -a -s "$userAuthorizedKeys" ] ; then
 	log -n "adding user authorized_keys file... "
 	cat "$userAuthorizedKeys" >> "$msAuthorizedKeys"
 	echo "done."

@@ -113,9 +113,10 @@ MS_CONF=${MS_CONF:-"${MS_HOME}/monkeysphere.conf"}
 AUTHORIZED_USER_IDS=${AUTHORIZED_USER_IDS:-"${MS_HOME}/authorized_user_ids"}
 GNUPGHOME=${GNUPGHOME:-"${HOME}/.gnupg"}
 KEYSERVER=${KEYSERVER:-"subkeys.pgp.net"}
+CHECK_KEYSERVER=${CHECK_KEYSERVER:="true"}
 REQUIRED_HOST_KEY_CAPABILITY=${REQUIRED_HOST_KEY_CAPABILITY:-"e a"}
 REQUIRED_USER_KEY_CAPABILITY=${REQUIRED_USER_KEY_CAPABILITY:-"a"}
-USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-"%h/.ssh/authorized_keys"}
+USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-"${HOME}/.ssh/authorized_keys"}
 USER_KNOWN_HOSTS=${USER_KNOWN_HOSTS:-"${HOME}/.ssh/known_hosts"}
 HASH_KNOWN_HOSTS=${HASH_KNOWN_HOSTS:-"true"}
 
@@ -157,7 +158,7 @@ case $COMMAND in
 		failure "known_hosts file '$USER_KNOWN_HOSTS' is empty."
 	    fi
 	    log "processing known_hosts file..."
-	    process_known_hosts "$USER_KNOWN_HOSTS" "$hostKeysCacheDir"
+	    process_known_hosts "$hostKeysCacheDir"
 	fi
 	;;
 
@@ -191,11 +192,8 @@ case $COMMAND in
 	    failure "$AUTHORIZED_USER_IDS is empty."
 	fi
 
-	# set user-controlled authorized_keys file path
-	userAuthorizedKeys=${USER_CONTROLLED_AUTHORIZED_KEYS/\%h/"$HOME"}
-
 	# update authorized_keys
-	update_authorized_keys "$msAuthorizedKeys" "$userAuthorizedKeys" "$userKeysCacheDir"
+	update_authorized_keys "$msAuthorizedKeys" "$USER_CONTROLLED_AUTHORIZED_KEYS" "$userKeysCacheDir"
 	;;
 
     'gen-subkey'|'g')

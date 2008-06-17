@@ -16,6 +16,37 @@
 HOST="$1"
 PORT="$2"
 
+usage() {
+cat <<EOF >&2
+usage: ssh -o ProxyCommand="$(basename $0) %h %p" ...
+EOF
+}
+
+log() {
+    echo "$@" >&2
+}
+
+if [ -z "$HOST" ] ; then
+    log "host must be specified."
+    usage
+    exit 1
+fi
+if [ -z "$PORT" ] ; then
+    log "port must be specified."
+    usage
+    exit 1
+fi
+
+# check for the host key in the known_hosts file
+hostKey=$(ssh-keygen -F "$HOST")
+
+# if the host key is found in the known_hosts file,
+# don't check the keyserver
+if [ "$hostKey" ] ; then
+    CHECK_KEYSERVER="false"
+fi
+export CHECK_KEYSERVER
+
 # update the known_hosts file for the host
 monkeysphere update-known-hosts "$HOST"
 
