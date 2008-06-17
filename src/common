@@ -44,19 +44,20 @@ cutline() {
 # (not just first 5)
 gpg_fetch_userid() {
     local userID
+
     userID="$1"
 
-    # if CHECK_KEYSERVER variable set, check the keyserver
-    # for the user ID
-    if [ "CHECK_KEYSERVER" ] ; then
-	echo 1,2,3,4,5 | \
-	    gpg --quiet --batch --command-fd 0 --with-colons \
-	    --keyserver "$KEYSERVER" \
-	    --search ="$userID" >/dev/null 2>&1
-
-    # otherwise just return true
+    log "checking keyserver $KEYSERVER..."
+    echo 1,2,3,4,5 | \
+	gpg --quiet --batch --command-fd 0 --with-colons \
+	--keyserver "$KEYSERVER" \
+	--search ="$userID" >/dev/null 2>&1
+    if [ "$?" = 0 ] ; then
+	log "  user ID found on keyserver."
+	return 0
     else
-	return
+	log "  user ID not found on keyserver."
+	return 1
     fi
 }
 
@@ -167,8 +168,11 @@ process_user_id() {
     fi
     requiredPubCapability=$(echo "$requiredCapability" | tr "[:lower:]" "[:upper:]")
 
-    # fetch keys from keyserver, return 1 if none found
-    gpg_fetch_userid "$userID" || return 1
+    # if CHECK_KEYSERVER variable set, check the keyserver
+    # for the user ID
+    if [ "$CHECK_KEYSERVER" = "true" ] ; then
+	gpg_fetch_userid "$userID"
+    fi
 
     # output gpg info for (exact) userid and store
     gpgOut=$(gpg --list-key --fixed-list-mode --with-colon \
@@ -428,7 +432,7 @@ update_authorized_keys() {
     else
 	log "no gpg keys to add."
     fi
-    if [ "$userAuthorizedKeys" -a -s "$userAuthorizedKeys" ] ; then
+    if [ "$userAuthorizedKeys" != "-" -a -s "$userAuthorizedKeys" ] ; then
 	log -n "adding user authorized_keys file... "
 	cat "$userAuthorizedKeys" >> "$msAuthorizedKeys"
 	echo "done."

@@ -40,11 +40,14 @@ fi
 # check for the host key in the known_hosts file
 hostKey=$(ssh-keygen -F "$HOST")
 
-# if the host key is not found in the known_hosts file,
-# check the keyserver
-if [ -z "$hostKey" ] ; then
+# if the host key is found in the known_hosts file,
+# don't check the keyserver
+if [ "$hostKey" ] ; then
+    CHECK_KEYSERVER="false"
+else
     CHECK_KEYSERVER="true"
 fi
+export CHECK_KEYSERVER
 
 # update the known_hosts file for the host
 monkeysphere update-known-hosts "$HOST"
