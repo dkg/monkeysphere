@@ -24,25 +24,23 @@ for authentication and encryption of ssh connection.
 .B update-known_hosts [HOST]...
 Update the known_hosts file.  For each specified host, gpg will be
 queried for a key associated with the host URI (see HOST URIs),
-querying a keyserver if none is found in the user's keychain. search
-for a gpg key for the host in the Web of Trust.  If a key is found, it
-will be added to the host_keys cache (see KEY CACHES) and any ssh keys
-for the host will be removed from the user's known_hosts file.  If the
-found key is acceptable (see KEY ACCEPTABILITY), then the host's gpg
-key will be added to the known_hosts file.  If no gpg key is found for
-the host, then nothing is done.  If no hosts are specified, all hosts
-listed in the known_hosts file will be processed.  `k' may be used in
-place of `update-known_hosts'.
+querying a keyserver if specified.  If a key is found, it will be
+converted to an ssh key, and any matching ssh keys will be removed
+from the user's known_hosts file.  If the found key is acceptable (see
+KEY ACCEPTABILITY), then the key will be updated and re-added to the
+known_hosts file.  If no gpg key is found for the host, then nothing
+is done.  If no hosts are specified, all hosts listed in the
+known_hosts file will be processed.  `k' may be used in place of
+`update-known_hosts'.
 .TP
 .B update-userids [USERID]...
 Add/update a user ID to the authorized_user_ids file.  The user IDs
 specified should be exact matches to OpenPGP user IDs.  For each
 specified user ID, gpg will be queried for a key associated with that
-user ID, querying a keyserver if none is found in the user's keychain.
-If a key is found, it will be added to the user_keys cache (see KEY
-CACHES) and the user ID will be added to the user's
-authorized_user_ids file (if it wasn't already present).  `u' may be
-used in place of `update-userids'.
+user ID, querying a keyserver if specified.  If a key is found, the
+user ID will be added to the user's authorized_user_ids file (if it
+wasn't already present).  `u' may be used in place of
+`update-userids'.
 .TP
 .B remove-userids [USERID]...
 Remove a user ID from the authorized_user_ids file.  The user IDs
@@ -50,11 +48,15 @@ specified should be exact matches to OpenPGP user IDs.  `r' may be
 used in place of `remove-userids'.
 .TP
 .B update-authorized_keys
-Update the monkeysphere authorized_keys file.  The monkeysphere
-authorized_keys file will be regenerated from the valid keys in the
-user_key cache, and the user's independently controlled
-authorized_keys file (usually ~/.ssh/authorized_keys).  `a' may be
-used in place of `update-authorized_keys'.
+Update the monkeysphere authorized_keys file.  For each user ID in the
+user's authorized_user_ids file, gpg will be queried for keys
+associated with that user ID, querying a keyserver if specified.  If a
+key is found, it will be converted to an ssh key, and any matching ssh
+keys will be removed from the user's authorized_keys file.  If the
+found key is acceptable (see KEY ACCEPTABILITY), then the key will be
+updated and re-added to the authorized_keys file.  If no gpg key is
+found for the user ID, then nothing is done.  `a' may be used in place
+of `update-authorized_keys'.
 .TP
 .B gen-subkey KEYID
 Generate an `a` capable subkey.  For the primary key with the
@@ -83,21 +85,6 @@ the "authentication" ("a") capability flag.
 .B validity
 The key must be "fully" valid, and must not be expired or revoked.
 
-.SH KEY CACHES
-
-Monkeysphere keeps track of keys in key cache directories.  The files
-in the cache are named with the format "USERID_HASH.PUB_KEY_ID", where
-USERID_HASH is a hash of the exact OpenPGP user ID, and PUB_KEY_ID is
-the key ID of the primary key.  If the user/key ID combo exists in the
-Web of Trust but is not acceptable, then the file is empty.  If the
-primary key has at least one acceptable sub key, then an ssh-style
-key, converted from the OpenPGP key, of all acceptable subkeys will be
-stored in the cache file, one per line.  known_hosts style key lines
-will be stored in the host_keys cache files, and authorized_keys style
-key lines will be stored in the user_keys cache files.  OpenPGP keys
-are converted to ssh-style keys with the openpgp2ssh utility (see `man
-openpgp2ssh').
-
 .SH FILES
 
 .TP
@@ -114,11 +101,6 @@ addition to the authorized_keys file.
 ~/.config/monkeysphere/authorized_keys
 Monkeysphere generated authorized_keys file.
 .TP
-~/.config/monkeysphere/user_keys
-User keys cache directory.
-.TP
-~/.config/monkeysphere/host_keys
-Host keys cache directory.
 
 .SH AUTHOR
 

@@ -1,6 +1,18 @@
 Next-Steps Monkeysphere Projects:
 ---------------------------------
 
+Handle unknown hosts in such a way that they're not always removed
+   from known_hosts file.  Ask user to lsign the host key?
+
+Handle multiple multiple hostnames (multiple user IDs?) when
+   generating host keys with gen-key.
+
+Make sure alternate ports are handled for known_hosts.
+
+Add environment variables sections to man pages.
+
+Script to import private key into ssh agent.
+
 Provide a friendly interactive UI for marginal or failing client-side
    hostkey verifications.  Handle the common cases smoothly, and
    provide good debugging info for the unusual cases.
