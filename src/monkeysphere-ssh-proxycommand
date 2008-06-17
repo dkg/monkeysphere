@@ -44,6 +44,8 @@ hostKey=$(ssh-keygen -F "$HOST")
 # don't check the keyserver
 if [ "$hostKey" ] ; then
     CHECK_KEYSERVER="false"
+else
+    CHECK_KEYSERVER="true"
 fi
 export CHECK_KEYSERVER
 

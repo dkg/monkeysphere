@@ -1,4 +1,5 @@
 var/cache/monkeysphere
+var/cache/monkeysphere/authorized_keys
 usr/bin
 usr/sbin
 usr/share

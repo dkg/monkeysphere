@@ -24,8 +24,11 @@ be used for authentication and encryption of ssh connection.
 .B update-users [USER]...
 Update the admin-controlled authorized_keys files for user.  For each
 user specified, update the user's authorized_keys file in
-/var/cache/monkeysphere/USER.  See `man monkeysphere' for more info.
-`k' may be used in place of `update-known_hosts'.
+/var/cache/monkeysphere/authorized_keys/USER.  See `man monkeysphere'
+for more info.  If the USER_CONTROLLED_AUTHORIZED_KEYS variable is
+set, then a user-controlled authorized_keys file (usually
+~USER/.ssh/authorized_keys) is added to the authorized_keys file.  `k'
+may be used in place of `update-known_hosts'.
 .TP
 .B gen-key
 Generate a gpg key for the host.  `g' may be used in place of
@@ -66,8 +69,8 @@ Monkeysphere GNUPG home directory.
 /etc/monkeysphere/authorized_user_ids/USER
 Server maintained authorized_user_ids files for users.
 .TP
-/var/cache/monkeysphere/USER
-User keys cache directories.
+/var/cache/monkeysphere/authorized_keys/USER
+User authorized_keys file.
 
 .SH AUTHOR
 

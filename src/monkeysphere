@@ -53,7 +53,7 @@ gen_subkey(){
 
     keyID="$1"
 
-    gpgOut=$(gpg --fixed-list-mode --list-keys --with-colons \
+    gpgOut=$(gpg --quiet --fixed-list-mode --list-keys --with-colons \
 	"$keyID" 2> /dev/null)
 
     # return 1 if there only "tru" lines are output from gpg
@@ -90,8 +90,9 @@ save
 EOF
 )
 
-    echo "generating subkey..."
+    log "generating subkey..."
     echo "$editCommands" | gpg --expert --command-fd 0 --edit-key "$keyID"
+    log "done."
 }
 
 ########################################################################
@@ -116,25 +117,19 @@ KEYSERVER=${KEYSERVER:-"subkeys.pgp.net"}
 CHECK_KEYSERVER=${CHECK_KEYSERVER:="true"}
 REQUIRED_HOST_KEY_CAPABILITY=${REQUIRED_HOST_KEY_CAPABILITY:-"e a"}
 REQUIRED_USER_KEY_CAPABILITY=${REQUIRED_USER_KEY_CAPABILITY:-"a"}
-USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-"${HOME}/.ssh/authorized_keys"}
-USER_KNOWN_HOSTS=${USER_KNOWN_HOSTS:-"${HOME}/.ssh/known_hosts"}
+KNOWN_HOSTS=${KNOWN_HOSTS:-"${HOME}/.ssh/known_hosts"}
+AUTHORIZED_KEYS=${AUTHORIZED_KEYS:-"${HOME}/.ssh/authorized_keys"}
 HASH_KNOWN_HOSTS=${HASH_KNOWN_HOSTS:-"true"}
 
 export GNUPGHOME
-
-# stagging locations
-hostKeysCacheDir="${MS_HOME}/host_keys"
-userKeysCacheDir="${MS_HOME}/user_keys"
-msAuthorizedKeys="${MS_HOME}/authorized_keys"
 
 # make sure gpg home exists with proper permissions
 mkdir -p -m 0700 "$GNUPGHOME"
 
 # make sure the user monkeysphere home directory exists
 mkdir -p -m 0700 "$MS_HOME"
-mkdir -p "$hostKeysCacheDir"
-mkdir -p "$userKeysCacheDir"
 touch "$AUTHORIZED_USER_IDS"
+touch "$AUTHORIZED_KEYS"
 
 case $COMMAND in
     'update-known_hosts'|'update-known-hosts'|'k')
@@ -142,23 +137,25 @@ case $COMMAND in
 
         # touch the known_hosts file to make sure it exists
 	# ssh-keygen complains if it doesn't exist
-	touch "$USER_KNOWN_HOSTS"
+	touch "$KNOWN_HOSTS"
 
         # if hosts are specified on the command line, process just
         # those hosts
 	if [ "$1" ] ; then
             for host ; do
-		process_host "$host" "$hostKeysCacheDir"
+		process_host_known_hosts "$host"
 	    done
+	    log "known_hosts file updated."
 
         # otherwise, if no hosts are specified, process every user
         # in the user's known_hosts file
 	else
-	    if [ ! -s "$USER_KNOWN_HOSTS" ] ; then
-		failure "known_hosts file '$USER_KNOWN_HOSTS' is empty."
+	    if [ ! -s "$KNOWN_HOSTS" ] ; then
+		failure "known_hosts file '$KNOWN_HOSTS' is empty."
 	    fi
 	    log "processing known_hosts file..."
-	    process_known_hosts "$hostKeysCacheDir"
+	    process_known_hosts
+	    log "known_hosts file updated."
 	fi
 	;;
 
@@ -167,7 +164,7 @@ case $COMMAND in
 	    failure "you must specify at least one userid."
 	fi
 	for userID ; do
-	    update_userid "$userID" "$userKeysCacheDir"
+	    update_userid "$userID"
 	done
 	log "Run the following to update your monkeysphere authorized_keys file:"
 	log "$PGRM update-authorized_keys"
@@ -192,8 +189,10 @@ case $COMMAND in
 	    failure "$AUTHORIZED_USER_IDS is empty."
 	fi
 
-	# update authorized_keys
-	update_authorized_keys "$msAuthorizedKeys" "$USER_CONTROLLED_AUTHORIZED_KEYS" "$userKeysCacheDir"
+	# process authorized_user_ids file
+	log "processing authorized_user_ids file..."
+	process_authorized_user_ids
+	log "authorized_keys file updated."
 	;;
 
     'gen-subkey'|'g')

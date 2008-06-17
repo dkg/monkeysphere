@@ -19,13 +19,12 @@ or by adding the following line to your ~/.ssh/config script:
 .B ProxyCommand monkeysphere-ssh-proxycommand %h %p
 
 The script is very simple, and can easily be incorporated into other
-ProxyCommand scripts.  All it does is first runs
-
-.B monkeysphere update-known-hosts HOST
-
-and then
-
-.B exec nc HOST PORT
+ProxyCommand scripts.  It first tests to see if the host is in the
+known_hosts file.  If it's not, the CHECK_KEYSERVER variable is set to
+true and "update-known_hosts" is run for the host to check for a host
+key for that host.  If the host is found in the known_hosts file,
+CHECK_KEYSERVER is set to false and "update-known_hosts" is run to
+update from the local keychain.
 
 Run the following command for more info:
 
