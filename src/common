@@ -120,7 +120,7 @@ ssh2authorized_keys() {
     key="$2"
 
     echo -n "$key" | tr -d '\n'
-    echo " MonkeySphere${DATE}: ${userID}"
+    echo " MonkeySphere${DATE} ${userID}"
 }
 
 # convert key from gpg to ssh known_hosts format
@@ -153,7 +153,7 @@ gpg2authorized_keys() {
     # following regexp:
     # '^MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2}$'
     gpg2ssh "$keyID" | tr -d '\n'
-    echo " MonkeySphere${DATE}: ${userID}"
+    echo " MonkeySphere${DATE} ${userID}"
 }
 
 ### GPG UTILITIES
@@ -507,7 +507,7 @@ process_authorized_keys() {
 	    comment="$key"
 	fi
 
-	if echo "$comment" | egrep -v -q '^MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2}:' ; then
+	if echo "$comment" | egrep -v -q '^MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2}' ; then
 	    continue
 	fi
 	userID=$(echo "$comment" | awk "{ print $2 }")
