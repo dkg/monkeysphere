@@ -106,7 +106,7 @@ EOF
 
     log -n "generating server key... "
     echo "$keyParameters" | gpg --batch --gen-key
-    echo "done."
+    loge "done."
 }
 
 ########################################################################
@@ -127,20 +127,25 @@ MS_CONF=${MS_CONF:-"$MS_HOME"/monkeysphere-server.conf}
 # set empty config variable with defaults
 GNUPGHOME=${GNUPGHOME:-"${MS_HOME}/gnupg"}
 KEYSERVER=${KEYSERVER:-"subkeys.pgp.net"}
+CHECK_KEYSERVER=${CHECK_KEYSERVER:="true"}
 REQUIRED_USER_KEY_CAPABILITY=${REQUIRED_USER_KEY_CAPABILITY:-"a"}
 USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-"%h/.ssh/authorized_keys"}
 
 export GNUPGHOME
 
+# make sure the monkeysphere home directory exists
+mkdir -p "${MS_HOME}/authorized_user_ids"
 # make sure gpg home exists with proper permissions
 mkdir -p -m 0700 "$GNUPGHOME"
+# make sure the authorized_keys directory exists
+mkdir -p "${CACHE}/authorized_keys"
 
 case $COMMAND in
     'update-users'|'update-user'|'s')
 	if [ "$1" ] ; then
 	    unames="$@"
 	else
-	    unames=$(ls -1 "$MS_HOME"/authorized_user_ids)
+	    unames=$(ls -1 "${MS_HOME}/authorized_user_ids")
 	fi
 
 	for uname in $unames ; do
@@ -149,12 +154,14 @@ case $COMMAND in
 	    log "----- user: $uname -----"
 
 	    # set variables for the user
-	    AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
-	    msAuthorizedKeys="$CACHE"/"$uname"/authorized_keys
-	    cacheDir="$CACHE"/"$uname"/user_keys
+	    AUTHORIZED_USER_IDS="${MS_HOME}/authorized_user_ids/${uname}"
+	    # temporary authorized_keys file
+	    AUTHORIZED_KEYS="${CACHE}/authorized_keys/${uname}.tmp"
 
             # make sure user's authorized_user_ids file exists
 	    touch "$AUTHORIZED_USER_IDS"
+	    # make sure the authorized_keys file exists and is clear
+	    > "$AUTHORIZED_KEYS"
 
 	    # skip if the user's authorized_user_ids file is empty
 	    if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
@@ -162,14 +169,23 @@ case $COMMAND in
 		continue
 	    fi
 
-	    # set user-controlled authorized_keys file path
-	    if [ "$USER_CONTROLLED_AUTHORIZED_KEYS" ] ; then
+	    # process authorized_user_ids file
+	    log "processing authorized_user_ids file..."
+	    process_authorized_user_ids
+
+	    # add user-controlled authorized_keys file path if specified
+	    if [ "$USER_CONTROLLED_AUTHORIZED_KEYS" != '-' ] ; then
 		userHome=$(getent passwd "$uname" | cut -d: -f6)
 		userAuthorizedKeys=${USER_CONTROLLED_AUTHORIZED_KEYS/\%h/"$userHome"}
+		log -n "adding user's authorized_keys file... "
+		cat "$userAuthorizedKeys" >> "$AUTHORIZED_KEYS"
+		loge "done."
 	    fi
 
-	    # update authorized_keys
-	    update_authorized_keys "$msAuthorizedKeys" "$userAuthorizedKeys" "$cacheDir"
+	    # move the temp authorized_keys file into place
+	    mv -f "${CACHE}/authorized_keys/${uname}.tmp" "${CACHE}/authorized_keys/${uname}"
+
+	    log "authorized_keys file updated."
 	done
 
 	log "----- done. -----"
@@ -206,14 +222,13 @@ case $COMMAND in
 
 	# set variables for the user
 	AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
-	cacheDir="$CACHE"/"$uname"/user_keys
 
         # make sure user's authorized_user_ids file exists
 	touch "$AUTHORIZED_USER_IDS"
 
 	# process the user IDs
 	for userID ; do
-	    update_userid "$userID" "$cacheDir"
+	    update_userid "$userID"
 	done
 
 	log "Run the following to update user's authorized_keys file:"
