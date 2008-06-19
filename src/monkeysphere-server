@@ -51,7 +51,7 @@ gen_key() {
     # set key defaults
     KEY_TYPE=${KEY_TYPE:-"RSA"}
     KEY_LENGTH=${KEY_LENGTH:-"2048"}
-    KEY_USAGE=${KEY_USAGE:-"auth,encrypt"}
+    KEY_USAGE=${KEY_USAGE:-"auth"}
     cat <<EOF
 Please specify how long the key should be valid.
          0 = key does not expire
