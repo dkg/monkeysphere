@@ -7,6 +7,9 @@
 *  changes to this system 					             *
 ******************************************************************************
 
+2008-06-18 - jrollins
+	* installed less, emacs;
+	* aptitude update && aptitude dist-upgrade
 
 2008-06-18 - micah
 	* debootstrap'd debian etch install
