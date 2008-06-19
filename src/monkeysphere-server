@@ -163,7 +163,7 @@ case $COMMAND in
 	    MODE="authorized_keys"
 
 	    # check all specified users exist
-	    if ! getent passwd | cut -d: -f1 | grep -q "^${uname}$" ; then
+	    if ! getent passwd "$uname" >/dev/null ; then
 		error "----- unknown user '$uname' -----"
 		continue
 	    fi
