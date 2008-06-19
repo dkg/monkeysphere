@@ -1,11 +1,11 @@
 monkeysphere (0.2-1) UNRELEASED; urgency=low
 
-  * NOT YET RELEASED
+  * NOT YET RELEASED (switch to "experimental" when ready to release)
   * 
 
  -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Thu, 19 Jun 2008 04:03:45 -0400
 
-monkeysphere (0.1-1) unstable; urgency=low
+monkeysphere (0.1-1) experimental; urgency=low
 
   * First release of debian package for monkeysphere.
   * This is experimental -- please report bugs!
