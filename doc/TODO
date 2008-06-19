@@ -26,36 +26,21 @@ Streamline host key generation, publication, verification.  See
    doc/george/host-key-publication for what dkg went through on
    2008-06-19
 
-Streamline authorized_user_ids setup (including question of where
-   authorized_user_ids files should go).  See
-   doc/george/user-id-configuration for what dkg went through on
-   2008-06-19
-
 Ensure that authorized_user_ids are under as tight control as ssh
    expects from authorized_keys: we don't want monkeysphere to be a
    weak link in the filesystem.
-
-What happens when there are no entries in the authorized_user_ids file
-   for a user?  /var/cache/monkeysphere/authorized_keys/$USER.tmp
-   seems like it gets created and then left there.
 
 What happens when a user account has no corresponding
    /etc/monkeysphere/authorized_user_ids/$USER file?  What gets placed
    in /var/cache/monkeysphere/authorized_keys/$USER?  It looks
    currently untouched, which could mean bad things for such a user.
+   - if authorized_user_ids is empty, then the user's authorized_keys
+     file will be also, unless the user-controlled authorized_keys file
+     is added.  I believe this is expected, correct behavior.
 
 Consider the default permissions for
    /var/cache/monkeysphere/authorized_keys/* (and indeed the whole
    directory path leading up to that)
-
-What should happen when an admin does 
-   "monkeysphere-server update-users not_an_existent_user"?
-   currently, it adds
-   /etc/monkeysphere/authorized_user_ids/not_an_existent_user, which
-   seems rather wrong.
-
-is /var/cache/monkeysphere/authorized_keys/$USER.tmp guaranteed to
-   avoid collisions?  Why not use a real mktemp file?
 
 As an administrator, how do i reverse the effect of a
    "monkeysphere-server trust-keys" that i later decide i should not

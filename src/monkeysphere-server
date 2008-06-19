@@ -162,6 +162,12 @@ case $COMMAND in
 	for uname in $unames ; do
 	    MODE="authorized_keys"
 
+	    # check all specified users exist
+	    if ! getent passwd | cut -d: -f1 | grep -q "^${uname}$" ; then
+		error "----- unknown user '$uname' -----"
+		continue
+	    fi
+
 	    # set authorized_user_ids variable,
 	    # translate ssh-style path variables
 	    authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
@@ -201,8 +207,6 @@ case $COMMAND in
 
 	    log "authorized_keys file updated."
 	done
-
-	log "----- done. -----"
 	;;
 
     'gen-key'|'g')
@@ -237,3 +241,5 @@ case $COMMAND in
 Type '$PGRM help' for usage."
         ;;
 esac
+
+exit "$ERR"
