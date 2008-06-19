@@ -13,6 +13,11 @@
 	* configured mathopd to listen on port 80, serving /srv/www as /
 	and /srv/apt as /debian.  We've got nothing in /srv/www at the
 	moment, though.
+
+	* installed lsof and psmisc as sysadmin utilities.  sorry for the
+	bloat!
+
+	* installed strace to try to figure out why onak is segfaulting.
 	
 2008-06-19 - dkg
 	* removed etch sources, switched "testing" to "lenny", added
