@@ -53,4 +53,4 @@ system would then run the following:
 To update the monkeysphere authorized_keys file for all users on the
 the system, run the same command with no arguments:
 
-# monkeysphere-server update-users bob
+# monkeysphere-server update-users
