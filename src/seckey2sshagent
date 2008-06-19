@@ -1,5 +1,20 @@
 #!/bin/sh
 
+# seckey2sshagent: this is a hack of a script to cope with the fact
+# that openpgp2ssh currently cannot support encrypted secret keys.
+
+# the basic operating principal is: 
+
+# export the secret key in encrypted format to a new keyring
+
+# remove the passphrase in that keyring
+
+# use that keyring with openpgp2ssh
+
+# Authors: Daniel Kahn Gillmor <dkg@fifthhorseman.net>,
+#          Jameson Rollins <jrollins@fifthhorseman.net>
+
+
 cleanup() {
     echo -n "removing temp gpg home... "
     rm -rf $FOO
