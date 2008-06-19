@@ -1,6 +1,13 @@
 Next-Steps Monkeysphere Projects:
 ---------------------------------
 
+Detail advantages of monkeysphere: detail the race conditions in ssh,
+   and how the monkeysphere can help you reduce these threat vectors:
+   threat model reduction diagrams 
+
+Determine how openssh handles multiple processes writing to
+   known_hosts file (atomic appends?)
+
 Handle unknown hosts in such a way that they're not always removed
    from known_hosts file.  Ask user to lsign the host key?
 
