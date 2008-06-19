@@ -1,0 +1,21 @@
+2008-06-19 03:00:58-0400
+------------------------
+
+setting up authorized_user_id configuration on george was also more
+cumbersome than it needs to be.  Here's what i (dkg) did:
+
+ GNUPGHOME=/etc/monkeysphere/gnupg gpg --keyserver subkeys.pgp.net --search dkg@fifthhorseman.net
+ GNUPGHOME=/etc/monkeysphere/gnupg gpg --fingerprint dkg@fifthhorseman.net
+
+set up the authorized_user_ids (why are these in /etc/ and not in
+people's home directories?)
+
+echo 'Daniel Kahn Gillmor <dkg@fifthhorseman.net>' > /etc/monkeysphere/authorized_user_ids/dkg
+echo 'Jameson Rollins <jrollins@fifthhorseman.net>' > /etc/monkeysphere/authorized_user_ids/jrollins
+echo 'Micah Anderson <micah@riseup.net>' > /etc/monkeysphere/authorized_user_ids/micah
+echo 'Matthew Goins <mjgoins@openflows.com>' > /etc/monkeysphere/authorized_user_ids/mjgoins
+echo 'Ross Glover <ross@ross.mayfirst.org>' > /etc/monkeysphere/authorized_user_ids/ross
+echo 'Jamie McClelland <jamie@mayfirst.org>' > /etc/monkeysphere/authorized_user_ids/jamie
+echo 'mike castleman <m@mlcastle.net>' > /etc/monkeysphere/authorized_user_ids/mlcastle
+echo 'Elliot Winard <enw@caveteen.com>' > /etc/monkeysphere/authorized_user_ids/enw
+echo 'Greg Lyle <greg@stealthisemail.com>' > /etc/monkeysphere/authorized_user_ids/greg

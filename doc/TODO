@@ -8,11 +8,32 @@ Detail advantages of monkeysphere: detail the race conditions in ssh,
 Determine how openssh handles multiple processes writing to
    known_hosts/authorized_keys files (lockfile, atomic appends?)
 
-Handle unknown hosts in such a way that they're not always removed
-   from known_hosts file.  Ask user to lsign the host key?
+Handle unverified monkeysphere hosts in such a way that they're not
+   always removed from known_hosts file.  Ask user to lsign the host
+   key?
 
 Handle multiple hostnames (multiple user IDs?) when generating host
    keys with gen-key.
+
+Work out the details (and describe a full use case) for assigning a
+   REVOKER during monkeysphere-server gen_key -- how is this set?  How
+   do we export it so it's available when a second-party revocation is
+   needed?
+
+Actually enable server hostkey publication.
+
+Streamline host key generation, publication, verification.  See
+   doc/george/host-key-publication for what dkg went through on
+   2008-06-19
+
+Streamline authorized_user_ids setup (including question of where
+   authorized_user_ids files should go).  See
+   doc/george/user-id-configuration for what dkg went through on
+   2008-06-19
+
+Ensure that authorized_user_ids are under as tight control as ssh
+   expects from authorized_keys: we don't want monkeysphere to be a
+   weak link in the filesystem.
 
 Make sure alternate ports are handled for known_hosts.
 

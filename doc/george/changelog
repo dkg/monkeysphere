@@ -20,8 +20,18 @@
 	Installed syslog-ng in their stead, which still gives errors
 	related to /proc/kmsg unreadability, but the install completes :/
 	
-	* added experimental, juggled pinning: 
-	experimental: 1, unstable: 2	
+	* added experimental
+	* juggled pinning: experimental: 1, unstable: 2	
+	* added mathopd onak, tweaked /etc/mathopd.conf and /etc/onak.conf
+	
+	* installed monkeysphere v0.1-1, changed host key, published
+	them via the local keyserver (see host-key-publication)
+
+	* added local unprivileged user accounts for everyone listed in
+	/usr/share/doc/monkeysphere/copyright
+
+	* configured authorized_user_ids for every user account based on
+	my best guess at their OpenPGP User ID.
 	
 2008-06-18 - jrollins
 	* installed less, emacs;
