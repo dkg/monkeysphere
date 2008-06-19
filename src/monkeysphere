@@ -164,7 +164,7 @@ case $COMMAND in
 	    failure "you must specify at least one userid."
 	fi
 	for userID ; do
-	    update_userid "$userID"
+	    update_userid "$userID" "$AUTHORIZED_USER_IDS"
 	done
 	log "Run the following to update your monkeysphere authorized_keys file:"
 	log "$PGRM update-authorized_keys"
@@ -175,7 +175,7 @@ case $COMMAND in
 	    failure "you must specify at least one userid."
 	fi
 	for userID ; do
-	    remove_userid "$userID"
+	    remove_userid "$userID" "$AUTHORIZED_USER_IDS"
 	done
 	log "Run the following to update your monkeysphere authorized_keys file:"
 	log "$PGRM update-authorized_keys"
@@ -191,7 +191,7 @@ case $COMMAND in
 
 	# process authorized_user_ids file
 	log "processing authorized_user_ids file..."
-	process_authorized_user_ids
+	process_authorized_user_ids "$AUTHORIZED_USER_IDS"
 	log "authorized_keys file updated."
 	;;
 

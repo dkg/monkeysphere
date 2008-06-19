@@ -1,9 +1,14 @@
 monkeysphere (0.2-1) UNRELEASED; urgency=low
 
+  [ Daniel Kahn Gillmor ]
   * NOT YET RELEASED (switch to "experimental" when ready to release)
-  * 
 
- -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Thu, 19 Jun 2008 04:03:45 -0400
+  [ Jameson Graef Rollins ]
+  * Add AUTHORIZED_USER_IDS config variable for server, which defaults to
+    %h/.config/monkeysphere/authorized_user_ids, instead of
+    /etc/monkeysphere/authorized_user_ids.
+
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Thu, 19 Jun 2008 15:22:05 -0400
 
 monkeysphere (0.1-1) experimental; urgency=low
 

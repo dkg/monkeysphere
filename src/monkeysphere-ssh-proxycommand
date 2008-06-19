@@ -49,7 +49,7 @@ if [ "$PORT" != '22' ] ; then
 fi
 
 # if the host is in the gpg keyring...
-if gpg --list-key ="${URI}" >/dev/null ; then
+if gpg --list-key ="${URI}" 2>&1 >/dev/null ; then
     # do not check the keyserver
     CHECK_KEYSERVER="false"
 # if the host is NOT in the keyring...

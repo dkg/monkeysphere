@@ -85,6 +85,24 @@ remove_line() {
     fi
 }
 
+# translate ssh-style path variables %h and %u
+translate_ssh_variables() {
+    local uname
+    local home
+
+    uname="$1"
+    path="$2"
+
+    # get the user's home directory
+    userHome=$(getent passwd "$uname" | cut -d: -f6)
+
+    # translate ssh-style path variables
+    path=${path/\%u/"$uname"}
+    path=${path/\%h/"$userHome"}
+
+    echo "$path"
+}
+
 ### CONVERTION UTILITIES
 
 # output the ssh key for a given key ID
@@ -358,6 +376,7 @@ update_userid() {
     local userID
 
     userID="$1"
+    authorizedUserIDs="$2"
 
     log "processing userid: '$userID'"
 
@@ -365,12 +384,12 @@ update_userid() {
     process_user_id "$userID" | grep -q "^0 "
 
     # check if user ID is in the authorized_user_ids file
-    if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
+    if ! grep -q "^${userID}\$" "$authorizedUserIDs" ; then
 	read -p "user ID not currently authorized.  authorize? [Y|n]: " OK; OK=${OK:=Y}
 	if [ ${OK/y/Y} = 'Y' ] ; then
 	    # add if specified
 	    log -n " adding user ID to authorized_user_ids file... "
-	    echo "$userID" >> "$AUTHORIZED_USER_IDS"
+	    echo "$userID" >> "$authorizedUserIDs"
 	    loge "done."
 	else
 	    # else do nothing
@@ -384,18 +403,19 @@ remove_userid() {
     local userID
 
     userID="$1"
+    authorizedUserIDs="$2"
 
     log "processing userid: '$userID'"
 
     # check if user ID is in the authorized_user_ids file
-    if ! grep -q "^${userID}\$" "$AUTHORIZED_USER_IDS" ; then
+    if ! grep -q "^${userID}\$" "$authorizedUserIDs" ; then
 	log " user ID not currently authorized."
 	return 1
     fi
 
     # remove user ID from file
     log -n " removing user ID '$userID'... "
-    remove_line "$AUTHORIZED_USER_IDS" "^${userID}$"
+    remove_line "$authorizedUserIDs" "^${userID}$"
     loge "done."
 }
 
@@ -480,7 +500,9 @@ process_known_hosts() {
 process_authorized_user_ids() {
     local userid
 
-    cat "$AUTHORIZED_USER_IDS" | meat | \
+    authorizedUserIDs="$1"
+
+    cat "$authorizedUserIDs" | meat | \
     while read -r userid ; do
 	process_uid_authorized_keys "$userid"
     done

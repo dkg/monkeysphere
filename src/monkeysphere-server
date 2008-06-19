@@ -139,6 +139,7 @@ GNUPGHOME=${GNUPGHOME:-"${MS_HOME}/gnupg"}
 KEYSERVER=${KEYSERVER:-"subkeys.pgp.net"}
 CHECK_KEYSERVER=${CHECK_KEYSERVER:="true"}
 REQUIRED_USER_KEY_CAPABILITY=${REQUIRED_USER_KEY_CAPABILITY:-"a"}
+AUTHORIZED_USER_IDS=${AUTHORIZED_USER_IDS:-"%h/.config/monkeysphere/authorized_user_ids"}
 USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-"%h/.ssh/authorized_keys"}
 
 export GNUPGHOME
@@ -153,40 +154,44 @@ mkdir -p "${CACHE}/authorized_keys"
 case $COMMAND in
     'update-users'|'update-user'|'s')
 	if [ "$1" ] ; then
+	    # get users from command line
 	    unames="$@"
 	else
-	    unames=$(ls -1 "${MS_HOME}/authorized_user_ids")
+	    # or just look at all users if none specified
+	    unames=$(getent passwd | cut -d: -f1)
 	fi
 
+	# loop over users
 	for uname in $unames ; do
 	    MODE="authorized_keys"
 
+	    # set authorized_user_ids variable,
+	    # translate ssh-style path variables
+	    authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
+
+	    # skip user if authorized_user_ids file does not exist
+	    if [ ! -f "$authorizedUserIDs" ] ; then
+		continue
+	    fi
+
 	    log "----- user: $uname -----"
 
-	    # set variables for the user
-	    AUTHORIZED_USER_IDS="${MS_HOME}/authorized_user_ids/${uname}"
 	    # temporary authorized_keys file
-	    AUTHORIZED_KEYS="${CACHE}/authorized_keys/${uname}.tmp"
-
-            # make sure user's authorized_user_ids file exists
-	    touch "$AUTHORIZED_USER_IDS"
-	    # make sure the authorized_keys file exists and is clear
-	    > "$AUTHORIZED_KEYS"
+	    AUTHORIZED_KEYS=$(mktemp)
 
 	    # skip if the user's authorized_user_ids file is empty
-	    if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
-		log "authorized_user_ids file for '$uname' is empty."
+	    if [ ! -s "$authorizedUserIDs" ] ; then
+		log "authorized_user_ids file '$authorizedUserIDs' is empty."
 		continue
 	    fi
 
 	    # process authorized_user_ids file
 	    log "processing authorized_user_ids file..."
-	    process_authorized_user_ids
+	    process_authorized_user_ids "$authorizedUserIDs"
 
 	    # add user-controlled authorized_keys file path if specified
 	    if [ "$USER_CONTROLLED_AUTHORIZED_KEYS" != '-' ] ; then
-		userHome=$(getent passwd "$uname" | cut -d: -f6)
-		userAuthorizedKeys=${USER_CONTROLLED_AUTHORIZED_KEYS/\%h/"$userHome"}
+		userAuthorizedKeys=$(translate_ssh_variables "$uname" "$USER_CONTROLLED_AUTHORIZED_KEYS")
 		if [ -f "$userAuthorizedKeys" ] ; then
 		    log -n "adding user's authorized_keys file... "
 		    cat "$userAuthorizedKeys" >> "$AUTHORIZED_KEYS"
@@ -195,7 +200,7 @@ case $COMMAND in
 	    fi
 
 	    # move the temp authorized_keys file into place
-	    mv -f "${CACHE}/authorized_keys/${uname}.tmp" "${CACHE}/authorized_keys/${uname}"
+	    mv -f "$AUTHORIZED_KEYS" "${CACHE}/authorized_keys/${uname}"
 
 	    log "authorized_keys file updated."
 	done
@@ -236,15 +241,16 @@ case $COMMAND in
 	    failure "You must specify at least one user ID."
 	fi
 
-	# set variables for the user
-	AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
+	# set authorized_user_ids variable,
+	# translate ssh-style path variables
+	authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
 
         # make sure user's authorized_user_ids file exists
-	touch "$AUTHORIZED_USER_IDS"
+	touch "$authorizedUserIDs"
 
 	# process the user IDs
 	for userID ; do
-	    update_userid "$userID"
+	    update_userid "$userID" "$authorizedUserIDs"
 	done
 
 	log "Run the following to update user's authorized_keys file:"
@@ -261,15 +267,18 @@ case $COMMAND in
 	    failure "You must specify at least one user ID."
 	fi
 
-	# set variables for the user
-	AUTHORIZED_USER_IDS="$MS_HOME"/authorized_user_ids/"$uname"
+	# set authorized_user_ids variable,
+	# translate ssh-style path variables
+	authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
 
         # make sure user's authorized_user_ids file exists
-	touch "$AUTHORIZED_USER_IDS"
+	if [ ! -f "$authorizedUserIDs" ] ; then
+	    failure "authorized_user_ids file '$authorizedUserIDs' does not exist."
+	fi
 
 	# process the user IDs
 	for userID ; do
-	    remove_userid "$userID"
+	    remove_userid "$userID" "$authorizedUserIDs"
 	done
 
 	log "Run the following to update user's authorized_keys file:"
