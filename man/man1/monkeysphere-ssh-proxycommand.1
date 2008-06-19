@@ -18,17 +18,29 @@ or by adding the following line to your ~/.ssh/config script:
 
 .B ProxyCommand monkeysphere-ssh-proxycommand %h %p
 
-The script is very simple, and can easily be incorporated into other
-ProxyCommand scripts.  It first tests to see if the host is in the
-known_hosts file.  If it's not, the CHECK_KEYSERVER variable is set to
-true and "update-known_hosts" is run for the host to check for a host
-key for that host.  If the host is found in the known_hosts file,
-CHECK_KEYSERVER is set to false and "update-known_hosts" is run to
-update from the local keychain.
+The script can easily be incorporated into other ProxyCommand scripts
+by calling it with the "--no-connect" option, ie:
 
-Run the following command for more info:
+.B monkeysphere-ssh-proxycommand --no-connect "$HOST" "$PORT"
 
-.B less $(which monkeysphere-ssh-proxycommand)
+This will run everything but will not exec netcat to make the tcp
+connection to the host.
+
+.SH KEYSERVER CHECKING
+
+The proxy command has a fairly nuanced policy for when keyservers are
+queried when processing host.  If the host userID is not found in
+either the user's keyring or in the known_hosts file, then the
+keyserver is queried for the host userID.  If the host userID is found
+in the user's keyring, then the keyserver is not checked.  This is
+because...  If the host userID is not found in the user's keyring, but
+the host is listed in the known_hosts file, then defered check is
+scheduled.
+
+.SH ENVIRONMENT VARIABLES
+
+.TP
+KEYSERVER The keyserver to query.
 
 .SH AUTHOR
 

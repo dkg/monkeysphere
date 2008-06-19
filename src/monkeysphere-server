@@ -31,14 +31,11 @@ usage: $PGRM <subcommand> [args]
 MonkeySphere server admin tool.
 
 subcommands:
+  update-users (s) [USER]...            update users authorized_keys files
   gen-key (g) [HOSTNAME]                generate gpg key for the server
   show-fingerprint (f)                  show server's host key fingerprint
   publish-key (p)                       publish server key to keyserver
   trust-keys (t) KEYID...               mark keyids as trusted
-
-  update-users (s) [USER]...            update users authorized_keys files
-  update-user-userids (u) USER UID...   add/update user IDs for a user
-  remove-user-userids (r) USER UID...   remove user IDs for a user
   help (h,?)                            this help
 
 EOF
@@ -229,60 +226,6 @@ case $COMMAND in
 	for keyID ; do
 	    trust_key "$keyID"
 	done
-	;;
-
-    'update-user-userids'|'update-user-userid'|'u')
-	uname="$1"
-	shift
-	if [ -z "$uname" ] ; then
-	    failure "You must specify user."
-	fi
-	if [ -z "$1" ] ; then
-	    failure "You must specify at least one user ID."
-	fi
-
-	# set authorized_user_ids variable,
-	# translate ssh-style path variables
-	authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
-
-        # make sure user's authorized_user_ids file exists
-	touch "$authorizedUserIDs"
-
-	# process the user IDs
-	for userID ; do
-	    update_userid "$userID" "$authorizedUserIDs"
-	done
-
-	log "Run the following to update user's authorized_keys file:"
-	log "$PGRM update-users $uname"
-	;;
-
-    'remove-user-userids'|'remove-user-userid'|'r')
-	uname="$1"
-	shift
-	if [ -z "$uname" ] ; then
-	    failure "You must specify user."
-	fi
-	if [ -z "$1" ] ; then
-	    failure "You must specify at least one user ID."
-	fi
-
-	# set authorized_user_ids variable,
-	# translate ssh-style path variables
-	authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
-
-        # make sure user's authorized_user_ids file exists
-	if [ ! -f "$authorizedUserIDs" ] ; then
-	    failure "authorized_user_ids file '$authorizedUserIDs' does not exist."
-	fi
-
-	# process the user IDs
-	for userID ; do
-	    remove_userid "$userID" "$authorizedUserIDs"
-	done
-
-	log "Run the following to update user's authorized_keys file:"
-	log "$PGRM update-users $uname"
 	;;
 
     'help'|'h'|'?')

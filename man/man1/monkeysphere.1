@@ -33,20 +33,6 @@ is done.  If no hosts are specified, all hosts listed in the
 known_hosts file will be processed.  `k' may be used in place of
 `update-known_hosts'.
 .TP
-.B update-userids [USERID]...
-Add/update a user ID to the authorized_user_ids file.  The user IDs
-specified should be exact matches to OpenPGP user IDs.  For each
-specified user ID, gpg will be queried for a key associated with that
-user ID, querying a keyserver if specified.  If a key is found, the
-user ID will be added to the user's authorized_user_ids file (if it
-wasn't already present).  `u' may be used in place of
-`update-userids'.
-.TP
-.B remove-userids [USERID]...
-Remove a user ID from the authorized_user_ids file.  The user IDs
-specified should be exact matches to OpenPGP user IDs.  `r' may be
-used in place of `remove-userids'.
-.TP
 .B update-authorized_keys
 Update the monkeysphere authorized_keys file.  For each user ID in the
 user's authorized_user_ids file, gpg will be queried for keys
@@ -78,9 +64,7 @@ specification for the host, ie. "ssh://host.full.domain".
 GPG keys are considered acceptable if the following criteria are met:
 .TP
 .B capability
-For host keys, the key must have both the "authentication" ("a") and
-"encrypt" ("e") capability flags.  For user keys, the key must have
-the "authentication" ("a") capability flag.
+The key must have the "authentication" ("a") usage flag set.
 .TP
 .B validity
 The key must be "fully" valid, and must not be expired or revoked.
@@ -97,9 +81,6 @@ System-wide monkeysphere config file.
 ~/.config/monkeysphere/authorized_user_ids
 OpenPGP user IDs associated with keys that will be checked for
 addition to the authorized_keys file.
-.TP
-~/.config/monkeysphere/authorized_keys
-Monkeysphere generated authorized_keys file.
 
 .SH AUTHOR
 

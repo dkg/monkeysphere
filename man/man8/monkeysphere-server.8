@@ -23,7 +23,8 @@ be used for authentication of ssh connections.
 .TP
 .B update-users [USER]...
 Update the admin-controlled authorized_keys files for user.  For each
-user specified, update the user's authorized_keys file in
+user specified, user ID's listed in the user's authorized_user_ids
+file are processed, and the user's authorized_keys file in
 /var/cache/monkeysphere/authorized_keys/USER.  See `man monkeysphere'
 for more info.  If the USER_CONTROLLED_AUTHORIZED_KEYS variable is
 set, then a user-controlled authorized_keys file (usually
@@ -45,14 +46,6 @@ of `publish-key'.
 .B trust-keys KEYID...
 Mark key specified with key IDs with full owner trust.  `t' may be used
 in place of `trust-keys'.
-.TP
-.B update-user-userids USER USERID...
-Add/update a user ID to the authorized_user_ids file for USER.  `u' may
-be used in place of `update-user-userids'.
-.TP
-.B remove-user-userids USER USERID...
-Remove a user ID from the authorized_user_ids file for USER.  `r' may
-be used in place of `remove-user-userids'.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
