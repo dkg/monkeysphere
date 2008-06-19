@@ -76,6 +76,9 @@ EOF
 )
 
     # add the revoker field if requested
+# FIXME: the 1: below assumes that $REVOKER's key is an RSA key.  why?
+# FIXME: why is this marked "sensitive"?  how will this signature ever
+# be transmitted to the expected revoker?
     if [ "$REVOKER" ] ; then
 	keyParameters="${keyParameters}"$(cat <<EOF
 
@@ -106,7 +109,12 @@ EOF
 
     log -n "generating server key... "
     echo "$keyParameters" | gpg --batch --gen-key
-    loge "done."
+    log "done."
+    fingerprint_server_key
+}
+
+fingerprint_server_key() {
+    gpg --fingerprint --list-secret-keys =ssh://$(hostname --fqdn)
 }
 
 ########################################################################
@@ -193,6 +201,10 @@ case $COMMAND in
 
     'gen-key'|'g')
 	gen_key "$1"
+	;;
+
+    'show-fingerprint'|'f')
+	fingerprint_server_key
 	;;
 
     'publish-key'|'p')
