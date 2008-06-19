@@ -33,13 +33,6 @@ and then modified /etc/ssh/sshd_config with:
 
 Some outstanding questions:
 
- * why are the authorized_user_ids stored in /etc/ and not in people's
-   home directories?
-
- * why are authorized_user_ids managed with a special sub-command of
-   monkeysphere-server, instead of just being hand-managed files, the
-   way that authorized_keys are in stock openssh?
-
  * Should we ship a scheduled monkeysphere-server update-users cron
    job automatically?
 

@@ -18,9 +18,16 @@ ETC="/etc/monkeysphere"
 export ETC
 CACHE="/var/cache/monkeysphere"
 export CACHE
+ERR=0
+export ERR
 
 ########################################################################
 ### UTILITY FUNCTIONS
+
+error() {
+    log "$1"
+    ERR=${2:-'1'}
+}
 
 failure() {
     echo "$1" >&2
@@ -29,12 +36,12 @@ failure() {
 
 # write output to stderr
 log() {
-    echo -n "ms: " 1>&2
-    echo "$@" 1>&2
+    echo -n "ms: " >&2
+    echo "$@" >&2
 }
 
 loge() {
-    echo "$@" 1>&2
+    echo "$@" >&2
 }
 
 # cut out all comments(#) and blank lines from standard input
