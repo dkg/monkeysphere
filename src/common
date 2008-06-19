@@ -561,6 +561,8 @@ publish_server_key() {
     # FIXME: need to figure out better way to identify host key
     # dummy command so as not to publish fakes keys during testing
     # eventually:
-    #gpg --send-keys --keyserver "$KEYSERVER" $(hostname -f)
-    echo "NOT PUBLISHED: gpg --send-keys --keyserver $KEYSERVER $(hostname -f)"
+    #gpg --keyserver "$KEYSERVER" --send-keys $(hostname -f)
+    echo "NOT PUBLISHED (to avoid permanent publication errors during monkeysphere development).
+To publish manually, do: gpg --keyserver $KEYSERVER --send-keys $(hostname -f)"
+    return 1
 }
