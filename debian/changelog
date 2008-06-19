@@ -7,8 +7,10 @@ monkeysphere (0.2-1) UNRELEASED; urgency=low
   * Add AUTHORIZED_USER_IDS config variable for server, which defaults to
     %h/.config/monkeysphere/authorized_user_ids, instead of
     /etc/monkeysphere/authorized_user_ids.
+  * Remove {update,remove}-userids functions, since we decided they
+    weren't useful enough to be worth maintaining.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Thu, 19 Jun 2008 15:22:05 -0400
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Thu, 19 Jun 2008 16:56:32 -0400
 
 monkeysphere (0.1-1) experimental; urgency=low
 

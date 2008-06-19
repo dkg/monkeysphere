@@ -369,56 +369,6 @@ process_user_id() {
     done
 }
 
-# update the cache for userid, and prompt to add file to
-# authorized_user_ids file if the userid is found in gpg
-# and not already in file.
-update_userid() {
-    local userID
-
-    userID="$1"
-    authorizedUserIDs="$2"
-
-    log "processing userid: '$userID'"
-
-    # process the user ID to pull it from keyserver
-    process_user_id "$userID" | grep -q "^0 "
-
-    # check if user ID is in the authorized_user_ids file
-    if ! grep -q "^${userID}\$" "$authorizedUserIDs" ; then
-	read -p "user ID not currently authorized.  authorize? [Y|n]: " OK; OK=${OK:=Y}
-	if [ ${OK/y/Y} = 'Y' ] ; then
-	    # add if specified
-	    log -n " adding user ID to authorized_user_ids file... "
-	    echo "$userID" >> "$authorizedUserIDs"
-	    loge "done."
-	else
-	    # else do nothing
-	    log " authorized_user_ids file untouched."
-	fi
-    fi
-}
-
-# remove a userid from the authorized_user_ids file
-remove_userid() {
-    local userID
-
-    userID="$1"
-    authorizedUserIDs="$2"
-
-    log "processing userid: '$userID'"
-
-    # check if user ID is in the authorized_user_ids file
-    if ! grep -q "^${userID}\$" "$authorizedUserIDs" ; then
-	log " user ID not currently authorized."
-	return 1
-    fi
-
-    # remove user ID from file
-    log -n " removing user ID '$userID'... "
-    remove_line "$authorizedUserIDs" "^${userID}$"
-    loge "done."
-}
-
 # process a host in known_host file
 process_host_known_hosts() {
     local host

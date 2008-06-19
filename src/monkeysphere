@@ -35,8 +35,6 @@ MonkeySphere client tool.
 
 subcommands:
   update-known_hosts (k) [HOST]...  update known_hosts file
-  update-userids (u) [USERID]...    add/update user IDs
-  remove-userids (r) [USERID]...    remove user IDs
   update-authorized_keys (a)        update authorized_keys file
   gen-subkey (g) KEYID              generate an 'a' capable subkey
   help (h,?)                        this help
@@ -157,28 +155,6 @@ case $COMMAND in
 	    process_known_hosts
 	    log "known_hosts file updated."
 	fi
-	;;
-
-    'update-userids'|'update-userid'|'u')
-	if [ -z "$1" ] ; then
-	    failure "you must specify at least one userid."
-	fi
-	for userID ; do
-	    update_userid "$userID" "$AUTHORIZED_USER_IDS"
-	done
-	log "Run the following to update your monkeysphere authorized_keys file:"
-	log "$PGRM update-authorized_keys"
-	;;
-
-    'remove-userids'|'remove-userid'|'r')
-	if [ -z "$1" ] ; then
-	    failure "you must specify at least one userid."
-	fi
-	for userID ; do
-	    remove_userid "$userID" "$AUTHORIZED_USER_IDS"
-	done
-	log "Run the following to update your monkeysphere authorized_keys file:"
-	log "$PGRM update-authorized_keys"
 	;;
 
     'update-authorized_keys'|'update-authorized-keys'|'a')
