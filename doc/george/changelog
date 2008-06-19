@@ -7,6 +7,22 @@
 *  changes to this system 					             *
 ******************************************************************************
 
+2008-06-19 - dkg
+	* removed etch sources, switched "testing" to "lenny", added
+	lenny/updates, removed all contrib and non-free.
+	
+	* removed testing pin in /etc/apt/preferences
+	* ran the upgrade
+	
+	* reset emacs22 to emacs22-nox (avoiding dependencies)
+	
+	* removed sysklog and klogd because of errors restarting klogd.
+	Installed syslog-ng in their stead, which still gives errors
+	related to /proc/kmsg unreadability, but the install completes :/
+	
+	* added experimental, juggled pinning: 
+	experimental: 1, unstable: 2	
+	
 2008-06-18 - jrollins
 	* installed less, emacs;
 	* aptitude update && aptitude dist-upgrade

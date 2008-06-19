@@ -24,6 +24,7 @@ version numbers so we know what we're running.
 We will try to keep the installation as minimal as possible while
 still allowing for comfortable day-to-day administration.
 
+We will use aptitude for package management where possible.
 
 Outstanding questions:
 
