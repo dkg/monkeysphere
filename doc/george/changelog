@@ -31,7 +31,11 @@
 	/usr/share/doc/monkeysphere/copyright
 
 	* configured authorized_user_ids for every user account based on
-	my best guess at their OpenPGP User ID.
+	my best guess at their OpenPGP User ID (see
+	user-id-configuration).
+
+	* set up a cronjob (in /etc/crontab) to run "monkeysphere-server
+	update-users" at 26 minutes past the hour.
 	
 2008-06-18 - jrollins
 	* installed less, emacs;
