@@ -34,7 +34,7 @@ users.
 For each user account on the server, the userids of people authorized
 to log into that account would be placed in:
 
-/etc/monkeysphere/authorized_user_file/USER
+/etc/monkeysphere/authorized_user_ids/USER
 
 However, in order for users to become authenticated, the server must
 determine that the user keys have "full" validity.  This means that
