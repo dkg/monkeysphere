@@ -4,12 +4,10 @@ Next-Steps Monkeysphere Projects:
 Handle unknown hosts in such a way that they're not always removed
    from known_hosts file.  Ask user to lsign the host key?
 
-Handle multiple multiple hostnames (multiple user IDs?) when
-   generating host keys with gen-key.
+Handle multiple hostnames (multiple user IDs?) when generating host
+   keys with gen-key.
 
 Make sure alternate ports are handled for known_hosts.
-
-Add environment variables sections to man pages.
 
 Script to import private key into ssh agent.
 
@@ -49,3 +47,28 @@ Make it easier to do domain-relative ssh host trust signatures with
    "tsign" in gpg(1).
 
 Fix the order of questions when user does a tsign in gpg or gpg2.
+
+File bug against ssh-keygen about how "-R" option removes comments
+   from known_hosts file.
+
+File bug against ssh-keygen to see if we can get it to write to hash a
+   known_hosts file to/from stdout/stdin.
+
+Note all threat model reductions (with diagrams).
+
+Add environment variables sections to man pages.
+
+Environment variable scoping.
+
+Move environment variable precedence before conf file.
+
+Handle lockfiles when modifying known_hosts or authorized_keys.
+
+When using ssh-proxycommand, if only host keys found are expired or
+   revoked, then output loud warning with prompt, or fail hard.
+
+Update monkeysphere-ssh-proxycommand man page with new keyserver
+   checking policy info.
+
+Update monkeysphere-ssh-proxycommand man page with info about
+   no-connect option.

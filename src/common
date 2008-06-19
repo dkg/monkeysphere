@@ -73,7 +73,7 @@ unescape() {
 }
 
 # remove all lines with specified string from specified file
-remove_file_line() {
+remove_line() {
     local file
     local string
 
@@ -395,7 +395,7 @@ remove_userid() {
 
     # remove user ID from file
     log -n " removing user ID '$userID'... "
-    remove_file_line "$AUTHORIZED_USER_IDS" "^${userID}$"
+    remove_line "$AUTHORIZED_USER_IDS" "^${userID}$"
     loge "done."
 }
 
@@ -416,7 +416,7 @@ process_host_known_hosts() {
     while read -r ok keyid ; do
 	sshKey=$(gpg2ssh "$keyid")
 	# remove the old host key line
-	remove_file_line "$KNOWN_HOSTS" "$sshKey"
+	remove_line "$KNOWN_HOSTS" "$sshKey"
 	# if key OK, add new host line
 	if [ "$ok" -eq '0' ] ; then
 	    # hash if specified
@@ -449,7 +449,7 @@ process_uid_authorized_keys() {
     while read -r ok keyid ; do
 	sshKey=$(gpg2ssh "$keyid")
 	# remove the old host key line
-	remove_file_line "$AUTHORIZED_KEYS" "$sshKey"
+	remove_line "$AUTHORIZED_KEYS" "$sshKey"
 	# if key OK, add new host line
 	if [ "$ok" -eq '0' ] ; then
 	    ssh2authorized_keys "$userID" "$sshKey" >> "$AUTHORIZED_KEYS"
