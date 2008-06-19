@@ -1,0 +1,113 @@
+.TH MONKEYSPHERE "1" "June 2008" "monkeysphere 0.1" "User Commands"
+
+.SH NAME
+
+monkeysphere \- MonkeySphere client user interface
+
+.SH SYNOPSIS
+
+.B monkeysphere \fIcommand\fP [\fIargs\fP]
+
+.SH DESCRIPTION
+
+MonkeySphere is a system to leverage the OpenPGP Web of Trust for ssh
+authentication and encryption.  OpenPGP keys are tracked via GnuPG,
+and added to the ssh authorized_keys and known_hosts files to be used
+for authentication and encryption of ssh connection.
+
+\fBmonkeysphere\fP is the MonkeySphere client utility.
+
+.SH SUBCOMMANDS
+
+\fBmonkeysphere\fP takes various subcommands:
+.TP
+.B update-known_hosts [HOST]...
+Update the known_hosts file.  For each specified host, gpg will be
+queried for a key associated with the host URI (see HOST URIs),
+querying a keyserver if specified.  If a key is found, it will be
+converted to an ssh key, and any matching ssh keys will be removed
+from the user's known_hosts file.  If the found key is acceptable (see
+KEY ACCEPTABILITY), then the key will be updated and re-added to the
+known_hosts file.  If no gpg key is found for the host, then nothing
+is done.  If no hosts are specified, all hosts listed in the
+known_hosts file will be processed.  `k' may be used in place of
+`update-known_hosts'.
+.TP
+.B update-userids [USERID]...
+Add/update a user ID to the authorized_user_ids file.  The user IDs
+specified should be exact matches to OpenPGP user IDs.  For each
+specified user ID, gpg will be queried for a key associated with that
+user ID, querying a keyserver if specified.  If a key is found, the
+user ID will be added to the user's authorized_user_ids file (if it
+wasn't already present).  `u' may be used in place of
+`update-userids'.
+.TP
+.B remove-userids [USERID]...
+Remove a user ID from the authorized_user_ids file.  The user IDs
+specified should be exact matches to OpenPGP user IDs.  `r' may be
+used in place of `remove-userids'.
+.TP
+.B update-authorized_keys
+Update the monkeysphere authorized_keys file.  For each user ID in the
+user's authorized_user_ids file, gpg will be queried for keys
+associated with that user ID, querying a keyserver if specified.  If a
+key is found, it will be converted to an ssh key, and any matching ssh
+keys will be removed from the user's authorized_keys file.  If the
+found key is acceptable (see KEY ACCEPTABILITY), then the key will be
+updated and re-added to the authorized_keys file.  If no gpg key is
+found for the user ID, then nothing is done.  `a' may be used in place
+of `update-authorized_keys'.
+.TP
+.B gen-subkey KEYID
+Generate an `a` capable subkey.  For the primary key with the
+specified key ID, generate a subkey with "authentication" capability
+that can be used for MonkeySphere transactions.  `g' may be used in
+place of `gen-subkey'.
+.TP
+.B help
+Output a brief usage summary.  `h' or `?' may be used in place of
+`help'.
+
+.SH HOST URIs
+
+Host OpenPGP keys have associated user IDs that use the ssh URI
+specification for the host, ie. "ssh://host.full.domain".
+
+.SH KEY ACCEPTABILITY
+
+GPG keys are considered acceptable if the following criteria are met:
+.TP
+.B capability
+For host keys, the key must have both the "authentication" ("a") and
+"encrypt" ("e") capability flags.  For user keys, the key must have
+the "authentication" ("a") capability flag.
+.TP
+.B validity
+The key must be "fully" valid, and must not be expired or revoked.
+
+.SH FILES
+
+.TP
+~/.config/monkeysphere/monkeysphere.conf
+User monkeysphere config file.
+.TP
+/etc/monkeysphere/monkeysphere.conf
+System-wide monkeysphere config file.
+.TP
+~/.config/monkeysphere/authorized_user_ids
+OpenPGP user IDs associated with keys that will be checked for
+addition to the authorized_keys file.
+.TP
+~/.config/monkeysphere/authorized_keys
+Monkeysphere generated authorized_keys file.
+
+.SH AUTHOR
+
+Written by Jameson Rollins <jrollins@fifthhorseman.net>
+
+.SH SEE ALSO
+
+.BR monkeysphere-ssh-proxycommand (1),
+.BR monkeysphere-server (8),
+.BR ssh (1),
+.BR gpg (1)

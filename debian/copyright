@@ -1,0 +1,23 @@
+Format-Specification: http://wiki.debian.org/Proposals/CopyrightFormat
+Debianized-By: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Debianized-Date: Fri Jun 13 10:19:16 EDT 2008
+Original-Source: http://lair.fifthhorseman.net/~dkg/git/monkeysphere.git/
+
+Files: *
+Copyright: 2008 Jameson Rollins <jrollins@fifthhorseman.net>, 
+ Daniel Kahn Gillmor <dkg@fifthhorseman.net>,
+ Jamie McClelland <jamie@mayfirst.org>,
+ Micah Anderson <micah@riseup.net>,
+ Matthew Goins <mjgoins@openflows.com>,
+ Mike Castleman <mlcastle@mlcastle.net>,
+ Elliot Winard <enw@caveteen.com>,
+ Greg Lyle <greg@stealthisemail.com>
+
+License: GPL-3+
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 3 of the License, or
+ (at your option) any later version.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ can be found in file "/usr/share/common-licenses/GPL".

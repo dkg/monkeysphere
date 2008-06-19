@@ -1,0 +1,41 @@
+.TH MONKEYSPHERE-SSH-PROXYCOMMAND "1" "June 2008" "monkeysphere 0.1" "User Commands"
+
+.SH NAME
+
+monkeysphere-ssh-proxycommand \- MonkeySphere ssh ProxyCommand script
+
+.SH DESCRIPTION
+
+\fBmonkeysphere-ssh-proxy\fP is an ssh proxy command that can be used
+to trigger a monkeysphere update of the known_hosts file for the hosts
+that are being connected to.  It is meant to be run as an ssh
+ProxyCommand.  This can either be done by specifying the proxy command
+on the command line:
+
+.B ssh -o ProxyCommand="monkeysphere-ssh-proxycommand %h %p" ...
+
+or by adding the following line to your ~/.ssh/config script:
+
+.B ProxyCommand monkeysphere-ssh-proxycommand %h %p
+
+The script is very simple, and can easily be incorporated into other
+ProxyCommand scripts.  It first tests to see if the host is in the
+known_hosts file.  If it's not, the CHECK_KEYSERVER variable is set to
+true and "update-known_hosts" is run for the host to check for a host
+key for that host.  If the host is found in the known_hosts file,
+CHECK_KEYSERVER is set to false and "update-known_hosts" is run to
+update from the local keychain.
+
+Run the following command for more info:
+
+.B less $(which monkeysphere-ssh-proxycommand)
+
+.SH AUTHOR
+
+Written by Jameson Rollins <jrollins@fifthhorseman.net>
+
+.SH SEE ALSO
+
+.BR monkeypshere (1),
+.BR ssh (1),
+.BR gpg (1)

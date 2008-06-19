@@ -1,0 +1,83 @@
+.TH MONKEYSPHERE-SERVER "1" "June 2008" "monkeysphere 0.1" "User Commands"
+
+.SH NAME
+
+monkeysphere-server \- monkeysphere server admin user interface
+
+.SH SYNOPSIS
+
+.B monkeysphere-server \fIcommand\fP [\fIargs\fP]
+
+.SH DESCRIPTION
+
+\fBMonkeySphere\fP is a system to leverage the OpenPGP Web of Trust
+for ssh authentication and encryption.  OpenPGP keys are tracked via
+GnuPG, and added to the ssh authorized_keys and known_hosts files to
+be used for authentication and encryption of ssh connection.
+
+\fBmonkeysphere-server\fP is the MonkeySphere server admin utility.
+
+.SH SUBCOMMANDS
+
+\fBmonkeysphere-server\fP takes various subcommands:
+.TP
+.B update-users [USER]...
+Update the admin-controlled authorized_keys files for user.  For each
+user specified, update the user's authorized_keys file in
+/var/cache/monkeysphere/authorized_keys/USER.  See `man monkeysphere'
+for more info.  If the USER_CONTROLLED_AUTHORIZED_KEYS variable is
+set, then a user-controlled authorized_keys file (usually
+~USER/.ssh/authorized_keys) is added to the authorized_keys file.  `k'
+may be used in place of `update-known_hosts'.
+.TP
+.B gen-key
+Generate a gpg key for the host.  `g' may be used in place of
+`gen-key'.
+.TP
+.B publish-key
+Publish the host's gpg key to the keyserver.  `p' may be used in place
+of `publish-key'
+.TP
+.B trust-keys KEYID...
+Mark key specified with key IDs with full owner trust.  `t' may be used
+in place of `trust-keys'.
+.TP
+.B update-user-userids USER USERID...
+Add/update a user ID to the authorized_user_ids file for USER.  `u' may
+be used in place of `update-user-userids'.
+.TP
+.B remove-user-userids USER USERID...
+Remove a user ID from the authorized_user_ids file for USER.  `r' may
+be used in place of `remove-user-userids'.
+.TP
+.B help
+Output a brief usage summary.  `h' or `?' may be used in place of
+`help'.
+
+.SH FILES
+
+.TP
+/etc/monkeysphere/monkeysphere-server.conf
+System monkeysphere-server config file.
+.TP
+/etc/monkeysphere/monkeysphere.conf
+System-wide monkeysphere config file.
+.TP
+/etc/monkeysphere/gnupg
+Monkeysphere GNUPG home directory.
+.TP
+/etc/monkeysphere/authorized_user_ids/USER
+Server maintained authorized_user_ids files for users.
+.TP
+/var/cache/monkeysphere/authorized_keys/USER
+User authorized_keys file.
+
+.SH AUTHOR
+
+Written by Jameson Rollins <jrollins@fifthhorseman.net>
+
+.SH SEE ALSO
+
+.BR monkeysphere (1),
+.BR gpg (1),
+.BR ssh (1)

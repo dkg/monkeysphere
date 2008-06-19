@@ -1,0 +1,25 @@
+#!/bin/sh
+
+cleanup() {
+    echo -n "removing temp gpg home... "
+    rm -rf $FOO
+    echo "done."
+}
+
+trap cleanup EXIT
+
+GPGID="$1"
+
+idchars=$(echo $GPGID | wc -m)
+if [ "$idchars" -ne 17 ] ; then
+    echo "GPGID is not 16 characters ($idchars)."
+    exit 1
+fi
+
+FOO=$(mktemp -d)
+
+gpg --export-secret-key --export-options export-reset-subkey-passwd $GPGID | GNUPGHOME=$FOO gpg --import
+
+GNUPGHOME=$FOO gpg --edit-key $GPGID
+
+GNUPGHOME=$FOO gpg --export-secret-key $GPGID | openpgp2ssh $GPGID | ssh-add -c /dev/stdin

@@ -1,0 +1,7 @@
+monkeysphere (0.1-1) unstable; urgency=low
+
+  * First release of debian package for monkeysphere.
+  * This is experimental -- please report bugs!
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Fri, 13 Jun 2008 10:53:43 -0400
+
