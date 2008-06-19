@@ -1,0 +1,19 @@
+******************************************************************************
+*                                                                            *
+*               	george system log		                     *
+*                                                                            *
+******************************************************************************
+*  Please add new entries in reverse chronological order whenever you make   *
+*  changes to this system 					             *
+******************************************************************************
+
+
+2008-06-18 - micah
+	* debootstrap'd debian etch install
+	* installed /etc/apt/sources.list with local proxy sources for etch,
+	  testing, unstable, backports and volatile
+	* configured /etc/apt/preferences and apt.conf.d/local-conf to
+	  pin etch, but make testing, sid and backports available
+	* added backports.org apt-key
+	* installed openssh-server and openssh-client packages
+	* added dkg, jrollins, mjgoins ssh public_keys to /root/.ssh/authorized_keys
