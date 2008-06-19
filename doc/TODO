@@ -3,10 +3,10 @@ Next-Steps Monkeysphere Projects:
 
 Detail advantages of monkeysphere: detail the race conditions in ssh,
    and how the monkeysphere can help you reduce these threat vectors:
-   threat model reduction diagrams 
+   threat model reduction diagrams.
 
 Determine how openssh handles multiple processes writing to
-   known_hosts file (atomic appends?)
+   known_hosts/authorized_keys files (lockfile, atomic appends?)
 
 Handle unknown hosts in such a way that they're not always removed
    from known_hosts file.  Ask user to lsign the host key?
@@ -61,15 +61,11 @@ File bug against ssh-keygen about how "-R" option removes comments
 File bug against ssh-keygen to see if we can get it to write to hash a
    known_hosts file to/from stdout/stdin.
 
-Note all threat model reductions (with diagrams).
-
 Add environment variables sections to man pages.
 
 Environment variable scoping.
 
 Move environment variable precedence before conf file.
-
-Handle lockfiles when modifying known_hosts or authorized_keys.
 
 When using ssh-proxycommand, if only host keys found are expired or
    revoked, then output loud warning with prompt, or fail hard.
