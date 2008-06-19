@@ -1,0 +1,32 @@
+Policy for maintaining george.riseup.net
+----------------------------------------
+
+Riseup graciously provided the MonkeySphere project with a vserver for
+testing and public documentation.  This is known as george.riseup.net,
+for those who are curious about the MonkeySphere.
+
+george will be maintained as a debian lenny machine, with minimal
+packages from experimental as needed for installing and running what
+we build elsewhere.
+
+george will host 3 public-facing services: an ssh daemon on port 22,
+an http service on port 80, and an OpenPGP keyserver (the HKP
+protocol) on port 11371.
+
+Administration of george is a shared responsibility across the core
+members of the MonkeySphere development team.  Administrators will log
+changes in their git repositories, in doc/george/changelog (a peer of
+this policy file).
+
+monkeysphere packages installed on george will use unique, tagged
+version numbers so we know what we're running.
+
+We will try to keep the installation as minimal as possible while
+still allowing for comfortable day-to-day administration.
+
+
+Outstanding questions:
+
+Who should have superuser access?
+
+Who should get regular user accounts?
