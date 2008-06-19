@@ -4,18 +4,44 @@
 setting up authorized_user_id configuration on george was also more
 cumbersome than it needs to be.  Here's what i (dkg) did:
 
- GNUPGHOME=/etc/monkeysphere/gnupg gpg --keyserver subkeys.pgp.net --search dkg@fifthhorseman.net
- GNUPGHOME=/etc/monkeysphere/gnupg gpg --fingerprint dkg@fifthhorseman.net
+monkeysphere-server trust-keys 0EE5BE979282D80B9F7540F1CCD2ED94D21739E9
 
-set up the authorized_user_ids (why are these in /etc/ and not in
-people's home directories?)
+monkeysphere-server update-user-userids dkg 'Daniel Kahn Gillmor <dkg@fifthhorseman.net>'
+monkeysphere-server update-user-userids jrollins 'Jameson Rollins <jrollins@fifthhorseman.net>'
+monkeysphere-server update-user-userids micah 'Micah Anderson <micah@riseup.net>' 
+monkeysphere-server update-user-userids mjgoins 'Matthew Goins <mjgoins@openflows.com>'
+monkeysphere-server update-user-userids ross 'Ross Glover <ross@ross.mayfirst.org>'
+monkeysphere-server update-user-userids jamie 'Jamie McClelland <jamie@mayfirst.org>'
+monkeysphere-server update-user-userids mlcastle 'mike castleman <m@mlcastle.net>'
+monkeysphere-server update-user-userids enw 'Elliot Winard <enw@caveteen.com>'
+monkeysphere-server update-user-userids greg 'Greg Lyle <greg@stealthisemail.com>' 
 
-echo 'Daniel Kahn Gillmor <dkg@fifthhorseman.net>' > /etc/monkeysphere/authorized_user_ids/dkg
-echo 'Jameson Rollins <jrollins@fifthhorseman.net>' > /etc/monkeysphere/authorized_user_ids/jrollins
-echo 'Micah Anderson <micah@riseup.net>' > /etc/monkeysphere/authorized_user_ids/micah
-echo 'Matthew Goins <mjgoins@openflows.com>' > /etc/monkeysphere/authorized_user_ids/mjgoins
-echo 'Ross Glover <ross@ross.mayfirst.org>' > /etc/monkeysphere/authorized_user_ids/ross
-echo 'Jamie McClelland <jamie@mayfirst.org>' > /etc/monkeysphere/authorized_user_ids/jamie
-echo 'mike castleman <m@mlcastle.net>' > /etc/monkeysphere/authorized_user_ids/mlcastle
-echo 'Elliot Winard <enw@caveteen.com>' > /etc/monkeysphere/authorized_user_ids/enw
-echo 'Greg Lyle <greg@stealthisemail.com>' > /etc/monkeysphere/authorized_user_ids/greg
+
+then i added a scheduled:
+
+  monkeysphere-server update-users
+
+to run hourly via /etc/crontab
+
+and made sure that root's keys were working with a temporary symlink
+(see TODO about that business)
+
+and then modified /etc/ssh/sshd_config with:
+
+ AuthorizedKeysFile      /var/cache/monkeysphere/authorized_keys/%u
+
+
+Some outstanding questions:
+
+ * why are the authorized_user_ids stored in /etc/ and not in people's
+   home directories?
+
+ * why are authorized_user_ids managed with a special sub-command of
+   monkeysphere-server, instead of just being hand-managed files, the
+   way that authorized_keys are in stock openssh?
+
+ * Should we ship a scheduled monkeysphere-server update-users cron
+   job automatically?
+
+ * why was i not prompted to confirm the trust-keys line, which seems
+   like the most delicate/sensitive line of all of them?
