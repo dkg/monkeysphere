@@ -111,7 +111,7 @@ EOF
 
     log -n "generating server key... "
     echo "$keyParameters" | gpg --batch --gen-key
-    log "done."
+    loge "done."
     fingerprint_server_key
 }
 
@@ -187,9 +187,11 @@ case $COMMAND in
 	    if [ "$USER_CONTROLLED_AUTHORIZED_KEYS" != '-' ] ; then
 		userHome=$(getent passwd "$uname" | cut -d: -f6)
 		userAuthorizedKeys=${USER_CONTROLLED_AUTHORIZED_KEYS/\%h/"$userHome"}
-		log -n "adding user's authorized_keys file... "
-		cat "$userAuthorizedKeys" >> "$AUTHORIZED_KEYS"
-		loge "done."
+		if [ -f "$userAuthorizedKeys" ] ; then
+		    log -n "adding user's authorized_keys file... "
+		    cat "$userAuthorizedKeys" >> "$AUTHORIZED_KEYS"
+		    loge "done."
+		fi
 	    fi
 
 	    # move the temp authorized_keys file into place
