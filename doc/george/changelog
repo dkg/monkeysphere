@@ -7,6 +7,10 @@
 *  changes to this system 					             *
 ******************************************************************************
 
+2008-06-20 - dkg
+	* touched /etc/environment to get rid of some spurious auth.log
+	entries.
+	
 2008-06-19 - dkg
 	* installed rsync (for maintaining a public apt repo)
 	
