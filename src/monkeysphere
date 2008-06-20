@@ -140,12 +140,9 @@ case $COMMAND in
         # if hosts are specified on the command line, process just
         # those hosts
 	if [ "$1" ] ; then
-            for host ; do
-		process_host_known_hosts "$host"
-	    done
-	    log "known_hosts file updated."
+	    process_hosts_known_hosts "$@"
 
-        # otherwise, if no hosts are specified, process every user
+        # otherwise, if no hosts are specified, process every host
         # in the user's known_hosts file
 	else
 	    if [ ! -s "$KNOWN_HOSTS" ] ; then
@@ -153,8 +150,9 @@ case $COMMAND in
 	    fi
 	    log "processing known_hosts file..."
 	    process_known_hosts
-	    log "known_hosts file updated."
 	fi
+
+	log "known_hosts file updated."
 	;;
 
     'update-authorized_keys'|'update-authorized-keys'|'a')
