@@ -1,0 +1,11 @@
+var/cache/monkeysphere
+var/cache/monkeysphere/authorized_keys
+usr/bin
+usr/sbin
+usr/share
+usr/share/monkeysphere
+usr/share/man
+usr/share/man1
+usr/share/man8
+etc/monkeysphere
+etc/monkeysphere/authorized_user_ids

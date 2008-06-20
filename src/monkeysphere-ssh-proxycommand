@@ -1,0 +1,80 @@
+#!/bin/sh -e
+
+# monkeysphere-ssh-proxycommand: MonkeySphere ssh ProxyCommand hook
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+# This is meant to be run as an ssh ProxyCommand to initiate a
+# monkeysphere known_hosts update before an ssh connection to host is
+# established.  Can be added to ~/.ssh/config as follows:
+#  ProxyCommand monkeysphere-ssh-proxycommand %h %p
+
+usage() {
+cat <<EOF >&2
+usage: ssh -o ProxyCommand="$(basename $0) %h %p" ...
+EOF
+}
+
+log() {
+    echo "$@" >&2
+}
+
+if [ "$1" = '--no-connect' ] ; then
+    NO_CONNECT='true'
+    shift 1
+fi
+
+HOST="$1"
+PORT="$2"
+
+if [ -z "$HOST" ] ; then
+    log "host must be specified."
+    usage
+    exit 1
+fi
+if [ -z "$PORT" ] ; then
+    log "port must be specified."
+    usage
+    exit 1
+fi
+
+# set the host URI
+URI="ssh://${HOST}"
+if [ "$PORT" != '22' ] ; then
+    URI="${URI}:$PORT"
+fi
+
+# if the host is in the gpg keyring...
+if gpg --list-key ="${URI}" 2>&1 >/dev/null ; then
+    # do not check the keyserver
+    CHECK_KEYSERVER="false"
+# if the host is NOT in the keyring...
+else
+    # if the host key is found in the known_hosts file...
+    # FIXME: this only works for default known_hosts location
+    hostKey=$(ssh-keygen -F "$HOST")
+    if [ "$hostKey" ] ; then
+	# if the check keyserver variable is NOT set to true...
+	if  [ "$CHECK_KEYSERVER" != 'true' ] ; then
+	    # schedule a keyserver check for host at a later time
+	    echo "monkeysphere update-known_hosts $HOST" | at noon
+	fi
+    # if the host key is not found in the known_hosts file...
+    else
+	# check the keyserver
+	CHECK_KEYSERVER="true"
+    fi
+fi
+export CHECK_KEYSERVER
+
+# update the known_hosts file for the host
+monkeysphere update-known_hosts "$HOST"
+
+# exec a netcat passthrough to host for the ssh connection
+if [ -z "$NO_CONNECT" ] ; then
+    exec nc "$HOST" "$PORT"
+fi

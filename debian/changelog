@@ -1,0 +1,23 @@
+monkeysphere (0.2-1) UNRELEASED; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * NOT YET RELEASED (switch to "experimental" when ready to release)
+
+  [ Jameson Graef Rollins ]
+  * Add AUTHORIZED_USER_IDS config variable for server, which defaults to
+    %h/.config/monkeysphere/authorized_user_ids, instead of
+    /etc/monkeysphere/authorized_user_ids.
+  * Remove {update,remove}-userids functions, since we decided they
+    weren't useful enough to be worth maintaining.
+  * Better handling of unknown users in server update-users
+  * Add file locking when modifying known_hosts or authorized_keys
+
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Fri, 20 Jun 2008 00:43:44 -0400
+
+monkeysphere (0.1-1) experimental; urgency=low
+
+  * First release of debian package for monkeysphere.
+  * This is experimental -- please report bugs!
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Thu, 19 Jun 2008 00:34:53 -0400
+

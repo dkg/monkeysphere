@@ -1,0 +1,69 @@
+******************************************************************************
+*                                                                            *
+*               	george system log		                     *
+*                                                                            *
+******************************************************************************
+*  Please add new entries in reverse chronological order whenever you make   *
+*  changes to this system 					             *
+******************************************************************************
+
+2008-06-20 - dkg
+	* touched /etc/environment to get rid of some spurious auth.log
+	entries.
+	* turned up sshd's LogLevel from INFO to DEBUG
+	
+2008-06-19 - dkg
+	* installed rsync (for maintaining a public apt repo)
+	
+	* configured mathopd to listen on port 80, serving /srv/www as /
+	and /srv/apt as /debian.  We've got nothing in /srv/www at the
+	moment, though.
+
+	* installed lsof and psmisc as sysadmin utilities.  sorry for the
+	bloat!
+
+	* installed strace to try to figure out why onak is segfaulting.
+	
+2008-06-19 - dkg
+	* removed etch sources, switched "testing" to "lenny", added
+	lenny/updates, removed all contrib and non-free.
+	
+	* removed testing pin in /etc/apt/preferences
+	* ran the upgrade
+	
+	* reset emacs22 to emacs22-nox (avoiding dependencies)
+	
+	* removed sysklog and klogd because of errors restarting klogd.
+	Installed syslog-ng in their stead, which still gives errors
+	related to /proc/kmsg unreadability, but the install completes :/
+	
+	* added experimental
+	* juggled pinning: experimental: 1, unstable: 2	
+	* added mathopd onak, tweaked /etc/mathopd.conf and /etc/onak.conf
+	
+	* installed monkeysphere v0.1-1, changed host key, published
+	them via the local keyserver (see host-key-publication)
+
+	* added local unprivileged user accounts for everyone listed in
+	/usr/share/doc/monkeysphere/copyright
+
+	* configured authorized_user_ids for every user account based on
+	my best guess at their OpenPGP User ID (see
+	user-id-configuration).
+
+	* set up a cronjob (in /etc/crontab) to run "monkeysphere-server
+	update-users" at 26 minutes past the hour.
+	
+2008-06-18 - jrollins
+	* installed less, emacs;
+	* aptitude update && aptitude dist-upgrade
+
+2008-06-18 - micah
+	* debootstrap'd debian etch install
+	* installed /etc/apt/sources.list with local proxy sources for etch,
+	  testing, unstable, backports and volatile
+	* configured /etc/apt/preferences and apt.conf.d/local-conf to
+	  pin etch, but make testing, sid and backports available
+	* added backports.org apt-key
+	* installed openssh-server and openssh-client packages
+	* added dkg, jrollins, mjgoins ssh public_keys to /root/.ssh/authorized_keys

@@ -1,0 +1,188 @@
+#!/bin/bash
+
+# monkeysphere: MonkeySphere client tool
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+########################################################################
+PGRM=$(basename $0)
+
+SHAREDIR=${SHAREDIR:-"/usr/share/monkeysphere"}
+export SHAREDIR
+. "${SHAREDIR}/common"
+
+GLOBAL_CONFIG=${GLOBAL_CONFIG:-"${ETC}/monkeysphere.conf"}
+[ -r "$GLOBAL_CONFIG" ] && . "$GLOBAL_CONFIG"
+
+# date in UTF format if needed
+DATE=$(date -u '+%FT%T')
+
+# unset some environment variables that could screw things up
+GREP_OPTIONS=
+
+########################################################################
+# FUNCTIONS
+########################################################################
+
+usage() {
+cat <<EOF
+usage: $PGRM <subcommand> [args]
+MonkeySphere client tool.
+
+subcommands:
+  update-known_hosts (k) [HOST]...  update known_hosts file
+  update-authorized_keys (a)        update authorized_keys file
+  gen-subkey (g) KEYID              generate an 'a' capable subkey
+  help (h,?)                        this help
+
+EOF
+}
+
+# generate a subkey with the 'a' usage flags set
+# FIXME: this needs some tweaking to clean it up
+gen_subkey(){
+    local keyID
+    local gpgOut
+    local userID
+
+    keyID="$1"
+
+    gpgOut=$(gpg --quiet --fixed-list-mode --list-keys --with-colons \
+	"$keyID" 2> /dev/null)
+
+    # return 1 if there only "tru" lines are output from gpg
+    if [ -z "$(echo "$gpgOut" | grep -v '^tru:')" ] ; then
+	failure "Key ID '$keyID' not found."
+    fi
+
+    # set subkey defaults
+    SUBKEY_TYPE=${SUBKEY_TYPE:-"RSA"}
+    #SUBKEY_LENGTH=${SUBKEY_LENGTH:-"2048"}
+    SUBKEY_USAGE=${SUBKEY_USAGE:-"auth"}
+    SUBKEY_EXPIRE=${SUBKEY_EXPIRE:-"0"}
+    cat <<EOF
+Please specify how long the key should be valid.
+         0 = key does not expire
+      <n>  = key expires in n days
+      <n>w = key expires in n weeks
+      <n>m = key expires in n months
+      <n>y = key expires in n years
+EOF
+    read -p "Key is valid for? ($SUBKEY_EXPIRE) " SUBKEY_EXPIRE; SUBKEY_EXPIRE=${SUBKEY_EXPIRE:-"0"}
+
+    # generate the list of commands that will be passed to edit-key
+    editCommands=$(cat <<EOF
+addkey
+7
+S
+E
+A
+Q
+$SUBKEY_LENGTH
+$SUBKEY_EXPIRE
+save
+EOF
+)
+
+    log "generating subkey..."
+    echo "$editCommands" | gpg --expert --command-fd 0 --edit-key "$keyID"
+    log "done."
+}
+
+########################################################################
+# MAIN
+########################################################################
+
+COMMAND="$1"
+[ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
+shift
+
+# set ms home directory
+MS_HOME=${MS_HOME:-"${HOME}/.config/monkeysphere"}
+
+# load configuration file
+MS_CONF=${MS_CONF:-"${MS_HOME}/monkeysphere.conf"}
+[ -e "$MS_CONF" ] && . "$MS_CONF"
+
+# set empty config variable with defaults
+AUTHORIZED_USER_IDS=${AUTHORIZED_USER_IDS:-"${MS_HOME}/authorized_user_ids"}
+GNUPGHOME=${GNUPGHOME:-"${HOME}/.gnupg"}
+KEYSERVER=${KEYSERVER:-"subkeys.pgp.net"}
+CHECK_KEYSERVER=${CHECK_KEYSERVER:="true"}
+REQUIRED_HOST_KEY_CAPABILITY=${REQUIRED_HOST_KEY_CAPABILITY:-"a"}
+REQUIRED_USER_KEY_CAPABILITY=${REQUIRED_USER_KEY_CAPABILITY:-"a"}
+KNOWN_HOSTS=${KNOWN_HOSTS:-"${HOME}/.ssh/known_hosts"}
+AUTHORIZED_KEYS=${AUTHORIZED_KEYS:-"${HOME}/.ssh/authorized_keys"}
+HASH_KNOWN_HOSTS=${HASH_KNOWN_HOSTS:-"true"}
+
+export GNUPGHOME
+
+# make sure gpg home exists with proper permissions
+mkdir -p -m 0700 "$GNUPGHOME"
+
+# make sure the user monkeysphere home directory exists
+mkdir -p -m 0700 "$MS_HOME"
+touch "$AUTHORIZED_USER_IDS"
+touch "$AUTHORIZED_KEYS"
+
+case $COMMAND in
+    'update-known_hosts'|'update-known-hosts'|'k')
+	MODE='known_hosts'
+
+        # touch the known_hosts file to make sure it exists
+	# ssh-keygen complains if it doesn't exist
+	touch "$KNOWN_HOSTS"
+
+        # if hosts are specified on the command line, process just
+        # those hosts
+	if [ "$1" ] ; then
+	    process_hosts_known_hosts "$@"
+
+        # otherwise, if no hosts are specified, process every host
+        # in the user's known_hosts file
+	else
+	    if [ ! -s "$KNOWN_HOSTS" ] ; then
+		failure "known_hosts file '$KNOWN_HOSTS' is empty."
+	    fi
+	    log "processing known_hosts file..."
+	    process_known_hosts
+	fi
+
+	log "known_hosts file updated."
+	;;
+
+    'update-authorized_keys'|'update-authorized-keys'|'a')
+	MODE='authorized_keys'
+
+        # fail if the authorized_user_ids file is empty
+	if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
+	    failure "$AUTHORIZED_USER_IDS is empty."
+	fi
+
+	# process authorized_user_ids file
+	log "processing authorized_user_ids file..."
+	process_authorized_user_ids "$AUTHORIZED_USER_IDS"
+	log "authorized_keys file updated."
+	;;
+
+    'gen-subkey'|'g')
+	keyID="$1"
+	if [ -z "$keyID" ] ; then
+	    failure "You must specify the key ID of your primary key."
+	fi
+	gen_subkey "$keyID"
+	;;
+
+    'help'|'h'|'?')
+        usage
+        ;;
+
+    *)
+        failure "Unknown command: '$COMMAND'
+Type '$PGRM help' for usage."
+        ;;
+esac

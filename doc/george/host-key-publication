@@ -1,0 +1,28 @@
+2008-06-19 02:34:57-0400
+------------------------
+
+Adding george's host key to the monkeysphere was more complicated than
+it needed to be.
+
+As the server admin, i did (accepting the defaults where possible):
+
+ monkeysphere-server gen-key
+ KEYID=$(GNUPGHOME=/etc/monkeysphere/gnupg gpg --with-colons --list-key  =ssh://$(hostname --fqdn) | grep ^pub: | cut -f5 -d:)
+ (umask 077 && GNUPGHOME=/etc/monkeysphere/gnupg gpg --export-secret-key $KEYID | openpgp2ssh $KEYID >/etc/monkeysphere/ssh_host_rsa_key)
+   # modify /etc/ssh/sshd_config to remove old host keys lines, and 
+   # add new line: HostKey /etc/monkeysphere/ssh_host_rsa_key 
+ /etc/init.d/ssh restart
+
+ KEYSERVER=george.riseup.net monkeysphere-server publish-key
+  # (needed to publish by hand here because of reasonable sanity checks)
+ monkeysphere-server show-fingerprint
+
+  # then from a remote host:
+ gpg --keyserver george.riseup.net --search =ssh://george.riseup.net
+ gpg --fingerprint --sign-key =ssh://george.riseup.net
+ KEYID=$(gpg --with-colons --list-key =ssh://george.riseup.net | grep ^pub: | cut -f5 -d:)
+ gpg --keyserver george.riseup.net --send "$KEYID"
+ gpg --keyserver george.riseup.net --send "$MYGPGID"
+
+
+How could this have been streamlined?

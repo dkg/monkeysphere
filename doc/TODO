@@ -1,0 +1,109 @@
+Next-Steps Monkeysphere Projects:
+---------------------------------
+
+Detail advantages of monkeysphere: detail the race conditions in ssh,
+   and how the monkeysphere can help you reduce these threat vectors:
+   threat model reduction diagrams.
+
+Determine how openssh handles multiple processes writing to
+   known_hosts/authorized_keys files (lockfile, atomic appends?)
+
+Handle unverified monkeysphere hosts in such a way that they're not
+   always removed from known_hosts file.  Ask user to lsign the host
+   key?
+
+Handle multiple hostnames (multiple user IDs?) when generating host
+   keys with gen-key.
+
+Work out the details (and describe a full use case) for assigning a
+   REVOKER during monkeysphere-server gen_key -- how is this set?  How
+   do we export it so it's available when a second-party revocation is
+   needed?
+
+Actually enable server hostkey publication.
+
+Streamline host key generation, publication, verification.  See
+   doc/george/host-key-publication for what dkg went through on
+   2008-06-19
+
+Ensure that authorized_user_ids are under as tight control as ssh
+   expects from authorized_keys: we don't want monkeysphere to be a
+   weak link in the filesystem.
+
+What happens when a user account has no corresponding
+   /etc/monkeysphere/authorized_user_ids/$USER file?  What gets placed
+   in /var/cache/monkeysphere/authorized_keys/$USER?  It looks
+   currently untouched, which could mean bad things for such a user.
+   - if authorized_user_ids is empty, then the user's authorized_keys
+     file will be also, unless the user-controlled authorized_keys file
+     is added.  I believe this is expected, correct behavior.
+
+Consider the default permissions for
+   /var/cache/monkeysphere/authorized_keys/* (and indeed the whole
+   directory path leading up to that)
+
+As an administrator, how do i reverse the effect of a
+   "monkeysphere-server trust-keys" that i later decide i should not
+   have run?
+
+Make sure alternate ports are handled for known_hosts.
+
+Script to import private key into ssh agent.
+
+Provide a friendly interactive UI for marginal or failing client-side
+   hostkey verifications.  Handle the common cases smoothly, and
+   provide good debugging info for the unusual cases.
+
+Make sure onak properly escapes user IDs with colons in them.
+
+Build a decent, presentable web site for documentation, evangelism,
+   etc.  Include a mention of how to report trouble or concerns.
+
+Create ssh2openpgp or convert to full-fledged keytrans.
+
+Resolve the bugs listed in openpgp2ssh(1):BUGS.
+
+Understand and document alternate trustdb models.
+
+Understand and document the output of gpg --check-trustdb:
+ gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+ gpg: depth: 0  valid:   2  signed:  20  trust: 0-, 0q, 0n, 0m, 0f, 2u
+ gpg: depth: 1  valid:  20  signed:  67  trust: 15-, 0q, 1n, 3m, 1f, 0u
+ gpg: next trustdb check due at 2008-10-09
+
+Understand and document the numeric values between sig! and the keyid
+   in "gpg --check-sigs $KEYID" .  Compare with the details found from
+   "gpg --with-colons --check-sigs $KEYID".  This has to do with trust
+   signatures.
+
+Fix gpg's documentation to clarify the difference between validity and
+   ownertrust.  Include better documentation for trust signatures.
+
+Make it easier to do domain-relative ssh host trust signatures with
+   gnupg. (e.g. "i trust Jamie McClelland (keyID 76CC057D) to properly
+   identify ssh servers in the mayfirst.org domain") See:
+   http://tools.ietf.org/html/rfc4880#section-5.2.3.21 and grep for
+   "tsign" in gpg(1).
+
+Fix the order of questions when user does a tsign in gpg or gpg2.
+
+File bug against ssh-keygen about how "-R" option removes comments
+   from known_hosts file.
+
+File bug against ssh-keygen to see if we can get it to write to hash a
+   known_hosts file to/from stdout/stdin.
+
+Add environment variables sections to man pages.
+
+Environment variable scoping.
+
+Move environment variable precedence before conf file.
+
+When using ssh-proxycommand, if only host keys found are expired or
+   revoked, then output loud warning with prompt, or fail hard.
+
+Update monkeysphere-ssh-proxycommand man page with new keyserver
+   checking policy info.
+
+Update monkeysphere-ssh-proxycommand man page with info about
+   no-connect option.

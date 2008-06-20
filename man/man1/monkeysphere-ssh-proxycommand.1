@@ -1,0 +1,53 @@
+.TH MONKEYSPHERE-SSH-PROXYCOMMAND "1" "June 2008" "monkeysphere 0.1" "User Commands"
+
+.SH NAME
+
+monkeysphere-ssh-proxycommand \- MonkeySphere ssh ProxyCommand script
+
+.SH DESCRIPTION
+
+\fBmonkeysphere-ssh-proxy\fP is an ssh proxy command that can be used
+to trigger a monkeysphere update of the known_hosts file for the hosts
+that are being connected to.  It is meant to be run as an ssh
+ProxyCommand.  This can either be done by specifying the proxy command
+on the command line:
+
+.B ssh -o ProxyCommand="monkeysphere-ssh-proxycommand %h %p" ...
+
+or by adding the following line to your ~/.ssh/config script:
+
+.B ProxyCommand monkeysphere-ssh-proxycommand %h %p
+
+The script can easily be incorporated into other ProxyCommand scripts
+by calling it with the "--no-connect" option, ie:
+
+.B monkeysphere-ssh-proxycommand --no-connect "$HOST" "$PORT"
+
+This will run everything but will not exec netcat to make the tcp
+connection to the host.
+
+.SH KEYSERVER CHECKING
+
+The proxy command has a fairly nuanced policy for when keyservers are
+queried when processing host.  If the host userID is not found in
+either the user's keyring or in the known_hosts file, then the
+keyserver is queried for the host userID.  If the host userID is found
+in the user's keyring, then the keyserver is not checked.  This is
+because...  If the host userID is not found in the user's keyring, but
+the host is listed in the known_hosts file, then defered check is
+scheduled.
+
+.SH ENVIRONMENT VARIABLES
+
+.TP
+KEYSERVER The keyserver to query.
+
+.SH AUTHOR
+
+Written by Jameson Rollins <jrollins@fifthhorseman.net>
+
+.SH SEE ALSO
+
+.BR monkeypshere (1),
+.BR ssh (1),
+.BR gpg (1)
