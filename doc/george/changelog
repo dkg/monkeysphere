@@ -7,7 +7,14 @@
 *  changes to this system 					             *
 ******************************************************************************
 
-2008-06-20 - dkg
+2008-06-20 - micah
+	* Commented out the 'export SSHD_OOM_ADJUST=-17' from the
+	/etc/init.d/ssh initscript, and the 'SSHD_OOM_ADJUST=-17' from
+	/etc/default/ssh in order to make this error go away:
+	"error writing /proc/self/oom_adj: Operation not permitted"
+	(c.f. Debian #487325)
+	  
+200r-06-20 - dkg
 	* touched /etc/environment to get rid of some spurious auth.log
 	entries.
 	* turned up sshd's LogLevel from INFO to DEBUG
