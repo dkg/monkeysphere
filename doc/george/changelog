@@ -10,6 +10,7 @@
 2008-06-20 - dkg
 	* touched /etc/environment to get rid of some spurious auth.log
 	entries.
+	* turned up sshd's LogLevel from INFO to DEBUG
 	
 2008-06-19 - dkg
 	* installed rsync (for maintaining a public apt repo)
