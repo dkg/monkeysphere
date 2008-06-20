@@ -376,62 +376,79 @@ process_user_id() {
     done
 }
 
-# process a host in known_host file
-process_host_known_hosts() {
+# process hosts in the known_host file
+process_hosts_known_hosts() {
     local host
     local userID
     local ok
     local keyid
     local tmpfile
 
-    host="$1"
-    userID="ssh://${host}"
+    # create a lockfile on known_hosts
+    lockfile-create "$KNOWN_HOSTS"
 
-    log "processing host: $host"
+    for host ; do
+	log "processing host: $host"
 
-    process_user_id "ssh://${host}" | \
-    while read -r ok keyid ; do
-	sshKey=$(gpg2ssh "$keyid")
-	# remove the old host key line
-	remove_line "$KNOWN_HOSTS" "$sshKey"
-	# if key OK, add new host line
-	if [ "$ok" -eq '0' ] ; then
-	    # hash if specified
-	    if [ "$HASH_KNOWN_HOSTS" = 'true' ] ; then
-		# FIXME: this is really hackish cause ssh-keygen won't
-		# hash from stdin to stdout
-		tmpfile=$(mktemp)
-		ssh2known_hosts "$host" "$sshKey" > "$tmpfile"
-		ssh-keygen -H -f "$tmpfile" 2> /dev/null
-		cat "$tmpfile" >> "$KNOWN_HOSTS"
-		rm -f "$tmpfile" "${tmpfile}.old"
-	    else
-		ssh2known_hosts "$host" "$sshKey" >> "$KNOWN_HOSTS"
+	userID="ssh://${host}"
+
+	process_user_id "ssh://${host}" | \
+	while read -r ok keyid ; do
+	    sshKey=$(gpg2ssh "$keyid")
+	    # remove the old host key line
+	    remove_line "$KNOWN_HOSTS" "$sshKey"
+	    # if key OK, add new host line
+	    if [ "$ok" -eq '0' ] ; then
+		# hash if specified
+		if [ "$HASH_KNOWN_HOSTS" = 'true' ] ; then
+		    # FIXME: this is really hackish cause ssh-keygen won't
+		    # hash from stdin to stdout
+		    tmpfile=$(mktemp)
+		    ssh2known_hosts "$host" "$sshKey" > "$tmpfile"
+		    ssh-keygen -H -f "$tmpfile" 2> /dev/null
+		    cat "$tmpfile" >> "$KNOWN_HOSTS"
+		    rm -f "$tmpfile" "${tmpfile}.old"
+		else
+		    ssh2known_hosts "$host" "$sshKey" >> "$KNOWN_HOSTS"
+		fi
 	    fi
-	fi
+	done
+	# touch the lockfile, for good measure.
+	lockfile-touch --oneshot "$KNOWN_HOSTS"
     done
+
+    # remove the lockfile
+    lockfile-remove "$KNOWN_HOSTS"
 }
 
-# process a uid in an authorized_keys file
-process_uid_authorized_keys() {
+# process uids for the authorized_keys file
+process_uids_authorized_keys() {
     local userID
     local ok
     local keyid
 
-    userID="$1"
+    # create a lockfile on authorized_keys
+    lockfile-create "$AUTHORIZED_KEYS"
 
-    log "processing user ID: $userID"
+    for userID ; do
+	log "processing user ID: $userID"
 
-    process_user_id "$userID" | \
-    while read -r ok keyid ; do
-	sshKey=$(gpg2ssh "$keyid")
-	# remove the old host key line
-	remove_line "$AUTHORIZED_KEYS" "$sshKey"
-	# if key OK, add new host line
-	if [ "$ok" -eq '0' ] ; then
-	    ssh2authorized_keys "$userID" "$sshKey" >> "$AUTHORIZED_KEYS"
-	fi
+	process_user_id "$userID" | \
+	while read -r ok keyid ; do
+	    sshKey=$(gpg2ssh "$keyid")
+	    # remove the old host key line
+	    remove_line "$AUTHORIZED_KEYS" "$sshKey"
+	    # if key OK, add new host line
+	    if [ "$ok" -eq '0' ] ; then
+		ssh2authorized_keys "$userID" "$sshKey" >> "$AUTHORIZED_KEYS"
+	    fi
+	done
+	# touch the lockfile, for good measure.
+	lockfile-touch --oneshot "$AUTHORIZED_KEYS"
     done
+
+    # remove the lockfile
+    lockfile-remove "$AUTHORIZED_KEYS"
 }
 
 # process known_hosts file
@@ -446,10 +463,7 @@ process_known_hosts() {
     cat "$KNOWN_HOSTS" | meat | \
 	cut -d ' ' -f 1 | grep -v '^|.*$' | \
     while IFS=, read -r -a hosts ; do
-	# and process each host
-	for host in ${hosts[*]} ; do
-	    process_host_known_hosts "$host"
-	done
+	process_hosts_known_hosts ${hosts[@]}
     done
 }
 
@@ -461,7 +475,7 @@ process_authorized_user_ids() {
 
     cat "$authorizedUserIDs" | meat | \
     while read -r userid ; do
-	process_uid_authorized_keys "$userid"
+	process_uids_authorized_keys "$userid"
     done
 }
 

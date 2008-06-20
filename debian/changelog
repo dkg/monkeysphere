@@ -10,8 +10,9 @@ monkeysphere (0.2-1) UNRELEASED; urgency=low
   * Remove {update,remove}-userids functions, since we decided they
     weren't useful enough to be worth maintaining.
   * Better handling of unknown users in server update-users
+  * Add file locking when modifying known_hosts or authorized_keys
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Thu, 19 Jun 2008 18:08:57 -0400
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Fri, 20 Jun 2008 00:43:44 -0400
 
 monkeysphere (0.1-1) experimental; urgency=low
 
