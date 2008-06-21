@@ -103,8 +103,9 @@ translate_ssh_variables() {
     # get the user's home directory
     userHome=$(getent passwd "$uname" | cut -d: -f6)
 
-    # translate ssh-style path variables
+    # translate '%u' to user name
     path=${path/\%u/"$uname"}
+    # translate '%h' to user home directory
     path=${path/\%h/"$userHome"}
 
     echo "$path"
