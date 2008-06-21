@@ -46,4 +46,6 @@ gpg --export-secret-key $GPGID | GNUPGHOME="$FOO" gpg --import
 
 GNUPGHOME="$FOO" gpg --edit-key $GPGID
 
+ln -s /dev/stdin "$FOO"/monkeysphere-key
+
 GNUPGHOME="$FOO" gpg --export-secret-key $GPGID | openpgp2ssh $GPGID | ssh-add -c /dev/stdin
