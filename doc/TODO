@@ -107,3 +107,9 @@ Update monkeysphere-ssh-proxycommand man page with new keyserver
 
 Update monkeysphere-ssh-proxycommand man page with info about
    no-connect option.
+
+File bug against seahorse about how, when creating new primary keys,
+   it presents option for "RSA (sign only)" but then creates an "esca"
+   key.
+
+File bug against enigmail about lack of ability to create subkeys.
