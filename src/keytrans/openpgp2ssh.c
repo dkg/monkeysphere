@@ -427,7 +427,7 @@ int main(int argc, char* argv[]) {
       
     } else {
       /* we have no idea what kind of key this is at all anyway! */
-      err(0,"Input does contain any form of OpenPGP key I recognize.\n");
+      err(0,"Input does not contain any form of OpenPGP key I recognize.\n");
       return 1;
     }
   }
