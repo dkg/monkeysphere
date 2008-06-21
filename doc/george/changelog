@@ -7,6 +7,10 @@
 *  changes to this system 					             *
 ******************************************************************************
 
+2008-06-21 - micah
+	* Restored /etc/init.d/ssh to original package state and changed
+	/etc/default/ssh to have 'unset SSHD_OOM_ADJUST' instead.
+	
 2008-06-20 - micah
 	* Commented out the 'export SSHD_OOM_ADJUST=-17' from the
 	/etc/init.d/ssh initscript, and the 'SSHD_OOM_ADJUST=-17' from
