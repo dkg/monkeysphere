@@ -37,4 +37,6 @@ gpg --export-secret-key --export-options export-reset-subkey-passwd $GPGID | GNU
 
 GNUPGHOME=$FOO gpg --edit-key $GPGID
 
-GNUPGHOME=$FOO gpg --export-secret-key $GPGID | openpgp2ssh $GPGID | ssh-add -c /dev/stdin
+ln -s /dev/stdin $FOO/monkeysphere-key
+
+GNUPGHOME=$FOO gpg --export-secret-key $GPGID | openpgp2ssh $GPGID | (cd $FOO && ssh-add -c monkeysphere-key)
