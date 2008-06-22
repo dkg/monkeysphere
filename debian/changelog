@@ -11,8 +11,9 @@ monkeysphere (0.2-1) UNRELEASED; urgency=low
     weren't useful enough to be worth maintaining.
   * Better handling of unknown users in server update-users
   * Add file locking when modifying known_hosts or authorized_keys
+  * Better failure/prompting for gen-subkey
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Fri, 20 Jun 2008 00:43:44 -0400
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sat, 21 Jun 2008 16:39:26 -0400
 
 monkeysphere (0.1-1) experimental; urgency=low
 

@@ -103,8 +103,9 @@ translate_ssh_variables() {
     # get the user's home directory
     userHome=$(getent passwd "$uname" | cut -d: -f6)
 
-    # translate ssh-style path variables
+    # translate '%u' to user name
     path=${path/\%u/"$uname"}
+    # translate '%h' to user home directory
     path=${path/\%h/"$userHome"}
 
     echo "$path"
@@ -121,6 +122,17 @@ gpg2ssh() {
     keyID=$(echo "$1" | cut -c 25-) #TMP
 
     gpg --export "$keyID" | openpgp2ssh "$keyID" 2> /dev/null
+}
+
+# output the ssh key for a given secret key ID
+gpgsecret2ssh() {
+    local keyID
+
+    #keyID="$1" #TMP
+    # only use last 16 characters until openpgp2ssh can take all 40 #TMP
+    keyID=$(echo "$1" | cut -c 25-) #TMP
+
+    gpg --export-secret-key "$keyID" | openpgp2ssh "$keyID" 2> /dev/null
 }
 
 # output known_hosts line from ssh key
@@ -206,8 +218,8 @@ get_key_fingerprint() {
     keyID="$1"
 
     gpg --list-key --with-colons --fixed-list-mode \
-	--with-fingerprint "$keyID" | grep "$keyID" | \
-	grep '^fpr:' | cut -d: -f10
+	--with-fingerprint --with-fingerprint "$keyID" | \
+	grep '^fpr:' | grep "$keyID" | cut -d: -f10
 }
 
 ########################################################################
@@ -522,8 +534,7 @@ process_authorized_keys() {
 trust_key() {
     # get the key from the key server
     if ! gpg --keyserver "$KEYSERVER" --recv-key "$keyID" ; then
-	log "could not retrieve key '$keyID'"
-	return 1
+	failure "Could not retrieve key '$keyID'."
     fi
 
     # get key fingerprint
@@ -537,9 +548,9 @@ trust_key() {
     # import "full" trust for fingerprint into gpg
     echo ${fingerprint}:5: | gpg --import-ownertrust
     if [ $? = 0 ] ; then
-	log "owner trust updated."
+	log "Owner trust updated."
     else
-	failure "there was a problem changing owner trust."
+	failure "There was a problem changing owner trust."
     fi	
 }
 
@@ -555,7 +566,6 @@ publish_server_key() {
     # dummy command so as not to publish fakes keys during testing
     # eventually:
     #gpg --keyserver "$KEYSERVER" --send-keys $(hostname -f)
-    echo "NOT PUBLISHED (to avoid permanent publication errors during monkeysphere development).
+    failure "NOT PUBLISHED (to avoid permanent publication errors during monkeysphere development).
 To publish manually, do: gpg --keyserver $KEYSERVER --send-keys $(hostname -f)"
-    return 1
 }

@@ -16,27 +16,37 @@
 
 
 cleanup() {
-    echo -n "removing temp gpg home... "
+    echo -n "removing temp gpg home... " 1>&2
     rm -rf $FOO
-    echo "done."
+    echo "done." 1>&2
 }
 
 trap cleanup EXIT
 
-GPGID="$1"
-
-idchars=$(echo $GPGID | wc -m)
-if [ "$idchars" -ne 17 ] ; then
-    echo "GPGID is not 16 characters ($idchars)."
-    exit 1
-fi
+#GPGID="$1"
+GPGID=$(echo "$1" | cut -c 25-)
 
 FOO=$(mktemp -d)
 
-gpg --export-secret-key --export-options export-reset-subkey-passwd $GPGID | GNUPGHOME=$FOO gpg --import
+gpg --export-secret-key $GPGID | GNUPGHOME="$FOO" gpg --import
 
-GNUPGHOME=$FOO gpg --edit-key $GPGID
+# idea to script the password stuff.  not working.
+# read -s -p "enter gpg password: " PASSWD; echo
+# cmd=$(cat <<EOF
+# passwd
+# $PASSWD
+# \n
+# \n
+# \n
+# yes
+# save
+# EOF
+# )
+# echo -e "$cmd" | GNUPGHOME="$FOO" gpg --command-fd 0 --edit-key $GPGID
 
-ln -s /dev/stdin $FOO/monkeysphere-key
+GNUPGHOME="$FOO" gpg --edit-key $GPGID
 
-GNUPGHOME=$FOO gpg --export-secret-key $GPGID | openpgp2ssh $GPGID | (cd $FOO && ssh-add -c monkeysphere-key)
+ln -s /dev/stdin "$FOO"/openpgp
+
+GNUPGHOME="$FOO" gpg --export-secret-key $GPGID | \
+    openpgp2ssh $GPGID | ssh-add -c "$FOO"/openpgp
