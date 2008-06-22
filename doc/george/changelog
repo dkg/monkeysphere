@@ -10,6 +10,17 @@
 2008-06-22 - dkg
 	* installed screen (mjgoins and i were collaborating)
 	
+2008-06-21 - micah
+	* Restored /etc/init.d/ssh to original package state and changed
+	/etc/default/ssh to have 'unset SSHD_OOM_ADJUST' instead.
+	
+2008-06-20 - micah
+	* Commented out the 'export SSHD_OOM_ADJUST=-17' from the
+	/etc/init.d/ssh initscript, and the 'SSHD_OOM_ADJUST=-17' from
+	/etc/default/ssh in order to make this error go away:
+	"error writing /proc/self/oom_adj: Operation not permitted"
+	(c.f. Debian #487325)
+	  
 2008-06-20 - dkg
 	* touched /etc/environment to get rid of some spurious auth.log
 	entries.

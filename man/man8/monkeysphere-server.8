@@ -51,6 +51,25 @@ in place of `trust-keys'.
 Output a brief usage summary.  `h' or `?' may be used in place of
 `help'.
 
+.SH SETUP
+
+In order to start using the monkeysphere, there are a couple of things
+you need to do first.  The first is to generate an OpenPGP key for the
+server and convert that key to an ssh key that can be used by ssh for
+host authentication.  To do this, run the "gen-key" subcommand.  Once
+that is done, publish the key to a keyserver with "publish-key"
+subcommand.  Finally, you need to modify the sshd_config to tell sshd
+where the new server host key:
+
+HostKey /etc/monkeysphere/ssh_host_rsa_key
+
+If the server will also handle user authentication through
+monkeysphere-generated authorized_keys files, set the following:
+
+AuthorizedKeysFile /var/cache/monkeysphere/authorized_keys/%u
+
+Once those changes are made, restart the ssh server.
+
 .SH FILES
 
 .TP
@@ -62,6 +81,9 @@ System-wide monkeysphere config file.
 .TP
 /etc/monkeysphere/gnupg
 Monkeysphere GNUPG home directory.
+.TP
+/etc/monkeysphere/ssh_host_rsa_key
+Copy of the host's private key in ssh format, suitable for use by sshd.
 .TP
 /etc/monkeysphere/authorized_user_ids/USER
 Server maintained authorized_user_ids files for users.

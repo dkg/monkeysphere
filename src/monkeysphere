@@ -54,14 +54,30 @@ gen_subkey(){
     gpgOut=$(gpg --quiet --fixed-list-mode --list-keys --with-colons \
 	"$keyID" 2> /dev/null)
 
-    # return 1 if there only "tru" lines are output from gpg
+    # fail if there only "tru" lines are output from gpg, which
+    # indicates the key was not found.
     if [ -z "$(echo "$gpgOut" | grep -v '^tru:')" ] ; then
 	failure "Key ID '$keyID' not found."
     fi
 
+    # fail if multiple pub lines are returned, which means the id given
+    # is not unique
+    if [ $(echo "$gpgOut" | grep '^pub:' | wc -l) -gt '1' ] ; then
+	failure "Key ID '$keyID' is not unique."
+    fi
+
+    # prompt if an authentication subkey already exists
+    if echo "$gpgOut" | egrep "^(pub|sub):" | cut -d: -f 12 | grep -q a ; then
+	echo "An authentication subkey already exists for key '$keyID'."
+	read -p "Are you sure you would like to generate another one? [y|N]: " OK; OK=${OK:N}
+	if [ "${OK/y/Y}" != 'Y' ] ; then
+	    failure "aborting."
+	fi
+    fi
+
     # set subkey defaults
     SUBKEY_TYPE=${SUBKEY_TYPE:-"RSA"}
-    #SUBKEY_LENGTH=${SUBKEY_LENGTH:-"2048"}
+    SUBKEY_LENGTH=${SUBKEY_LENGTH:-}
     SUBKEY_USAGE=${SUBKEY_USAGE:-"auth"}
     SUBKEY_EXPIRE=${SUBKEY_EXPIRE:-"0"}
     cat <<EOF
