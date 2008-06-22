@@ -7,6 +7,9 @@
 *  changes to this system 					             *
 ******************************************************************************
 
+2008-06-22 - dkg
+	* installed screen (mjgoins and i were collaborating)
+	
 2008-06-20 - dkg
 	* touched /etc/environment to get rid of some spurious auth.log
 	entries.
