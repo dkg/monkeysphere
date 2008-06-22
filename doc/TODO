@@ -113,3 +113,12 @@ File bug against seahorse about how, when creating new primary keys,
    key.
 
 File bug against enigmail about lack of ability to create subkeys.
+
+Priviledge separation: monkeysphere user to handle authn keyring and
+   generate authorized_keys file (which would be moved into place by
+   root).  Host keyring would be owned by root.
+
+Check permissions of authorized_user_ids file to be writable only by
+   user and root (same as authorized_keys)
+
+Improve function that sets owner trust for keys in server keychain.

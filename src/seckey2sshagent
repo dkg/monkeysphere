@@ -16,9 +16,9 @@
 
 
 cleanup() {
-    echo -n "removing temp gpg home... "
+    echo -n "removing temp gpg home... " 1>&2
     rm -rf $FOO
-    echo "done."
+    echo "done." 1>&2
 }
 
 trap cleanup EXIT
@@ -46,6 +46,7 @@ gpg --export-secret-key $GPGID | GNUPGHOME="$FOO" gpg --import
 
 GNUPGHOME="$FOO" gpg --edit-key $GPGID
 
-ln -s /dev/stdin "$FOO"/monkeysphere-key
+ln -s /dev/stdin "$FOO"/openpgp
 
-GNUPGHOME="$FOO" gpg --export-secret-key $GPGID | openpgp2ssh $GPGID | ssh-add -c /dev/stdin
+GNUPGHOME="$FOO" gpg --export-secret-key $GPGID | \
+    openpgp2ssh $GPGID | ssh-add -c "$FOO"/openpgp

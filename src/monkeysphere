@@ -77,7 +77,7 @@ gen_subkey(){
 
     # set subkey defaults
     SUBKEY_TYPE=${SUBKEY_TYPE:-"RSA"}
-    #SUBKEY_LENGTH=${SUBKEY_LENGTH:-"2048"}
+    SUBKEY_LENGTH=${SUBKEY_LENGTH:-}
     SUBKEY_USAGE=${SUBKEY_USAGE:-"auth"}
     SUBKEY_EXPIRE=${SUBKEY_EXPIRE:-"0"}
     cat <<EOF
