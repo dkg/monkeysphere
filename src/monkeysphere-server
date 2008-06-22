@@ -34,8 +34,8 @@ subcommands:
   update-users (s) [USER]...            update users authorized_keys files
   gen-key (g) [HOSTNAME]                generate gpg key for the server
   show-fingerprint (f)                  show server's host key fingerprint
-  publish-key (p)                       publish server key to keyserver
-  trust-keys (t) KEYID...               mark keyids as trusted
+  publish-key (p)                       publish server's host key to keyserver
+  trust-key (t) KEYID [LEVEL]           set owner trust for keyid
   help (h,?)                            this help
 
 EOF
@@ -240,15 +240,8 @@ case $COMMAND in
 	publish_server_key
 	;;
 
-    'trust-keys'|'trust-key'|'t')
-	if [ -z "$1" ] ; then
-	    failure "You must specify at least one key to trust."
-	fi
-
-	# process key IDs
-	for keyID ; do
-	    trust_key "$keyID"
-	done
+    'trust-key'|'trust-key'|'t')
+	trust_key "$@"
 	;;
 
     'help'|'h'|'?')

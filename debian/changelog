@@ -12,8 +12,9 @@ monkeysphere (0.2-1) UNRELEASED; urgency=low
   * Better handling of unknown users in server update-users
   * Add file locking when modifying known_hosts or authorized_keys
   * Better failure/prompting for gen-subkey
+  * Add ability to set any owner trust level for keys in server keychain.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sat, 21 Jun 2008 16:39:26 -0400
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sun, 22 Jun 2008 11:42:42 -0400
 
 monkeysphere (0.1-1) experimental; urgency=low
 

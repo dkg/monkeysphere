@@ -532,6 +532,16 @@ process_authorized_keys() {
 # retrieve key from web of trust, and set owner trust to "full"
 # if key is found.
 trust_key() {
+    local keyID
+    local trustLevel
+
+    keyID="$1"
+    trustLevel="$2"
+
+    if [ -z "$keyID" ] ; then
+	failure "You must specify key to trust."
+    fi
+
     # get the key from the key server
     if ! gpg --keyserver "$KEYSERVER" --recv-key "$keyID" ; then
 	failure "Could not retrieve key '$keyID'."
@@ -540,13 +550,41 @@ trust_key() {
     # get key fingerprint
     fingerprint=$(get_key_fingerprint "$keyID")
 
+    echo "key found:"
+    gpg --fingerprint "$fingerprint"
+
+    while [ -z "$trustLevel" ] ; do
+	cat <<EOF
+Please decide how far you trust this user to correctly verify other users' keys
+(by looking at passports, checking fingerprints from different sources, etc.)
+
+  1 = I don't know or won't say
+  2 = I do NOT trust
+  3 = I trust marginally
+  4 = I trust fully
+  5 = I trust ultimately
+
+EOF
+	read -p "Your decision? " trustLevel
+	if echo "$trustLevel" | grep -v "[1-5]" ; then
+	    echo "Unknown trust level '$trustLevel'."
+	    unset trustLevel
+	elif [ "$trustLevel" = 'q' ] ; then
+	    failure "Aborting."
+	fi
+    done
+
     # attach a "non-exportable" signature to the key
     # this is required for the key to have any validity at all
     # the 'y's on stdin indicates "yes, i really want to sign"
-    echo -e 'y\ny' | gpg --lsign-key --command-fd 0 "$fingerprint"
+    echo -e 'y\ny' | gpg --quiet --lsign-key --command-fd 0 "$fingerprint"
 
-    # import "full" trust for fingerprint into gpg
-    echo ${fingerprint}:5: | gpg --import-ownertrust
+    # index trustLevel by one to difference between level in ui and level
+    # internally
+    trustLevel=$((trustLevel+1))
+
+    # import new owner trust level for key
+    echo "${fingerprint}:${trustLevel}:" | gpg --import-ownertrust
     if [ $? = 0 ] ; then
 	log "Owner trust updated."
     else
