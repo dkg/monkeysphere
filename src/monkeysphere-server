@@ -21,6 +21,9 @@ DATE=$(date -u '+%FT%T')
 # unset some environment variables that could screw things up
 GREP_OPTIONS=
 
+# assuming other problems don't crop up, we'll return 0 as success
+ERR=0
+
 ########################################################################
 # FUNCTIONS
 ########################################################################
