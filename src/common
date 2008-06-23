@@ -445,6 +445,9 @@ update_known_hosts() {
     # least one host
     returnCode=0
 
+    # set the trap to remove any lockfiles on exit
+    trap "lockfile-remove $KNOWN_HOSTS" EXIT
+
     # create a lockfile on known_hosts
     lockfile-create "$KNOWN_HOSTS"
 
@@ -525,6 +528,9 @@ update_authorized_keys() {
     # every user ID.  code will be set to 1 if a key is not found for
     # at least one user ID
     returnCode=0
+
+    # set the trap to remove any lockfiles on exit
+    trap "lockfile-remove $AUTHORIZED_KEYS" EXIT
 
     # create a lockfile on authorized_keys
     lockfile-create "$AUTHORIZED_KEYS"
