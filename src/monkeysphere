@@ -26,7 +26,6 @@ GREP_OPTIONS=
 
 # default return code
 ERR=0
-export ERR
 
 ########################################################################
 # FUNCTIONS
