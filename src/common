@@ -18,8 +18,6 @@ ETC="/etc/monkeysphere"
 export ETC
 CACHE="/var/cache/monkeysphere"
 export CACHE
-ERR=0
-export ERR
 
 ########################################################################
 ### UTILITY FUNCTIONS
@@ -344,9 +342,9 @@ process_user_id() {
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
 		    log "  * acceptable key found."
-		    echo 0 "$fingerprint"
+		    echo "0:${fingerprint}"
 		else
-		    echo 1 "$fingerprint"
+		    echo "1:${fingerprint}"
 		fi
 		;;
 	    'sub') # sub keys
@@ -379,116 +377,193 @@ process_user_id() {
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
 		    log "  * acceptable key found."
-		    echo 0 "$fingerprint"
+		    echo "0:${fingerprint}"
 		else
-		    echo 1 "$fingerprint"
+		    echo "1:${fingerprint}"
 		fi
 		;;
 	esac
     done
 }
 
-# process hosts in the known_host file
-process_hosts_known_hosts() {
+# process a single host in the known_host file
+process_host_known_hosts() {
     local host
     local userID
     local ok
     local keyid
     local tmpfile
+    local returnCode
+
+    # default return code is 1, which assumes no key was found
+    returnCode=1
+
+    host="$1"
+
+    log "processing host: $host"
+
+    userID="ssh://${host}"
+
+    for line in $(process_user_id "ssh://${host}") ; do
+	ok=$(echo "$line" | cut -d: -f1)
+	keyid=$(echo "$line" | cut -d: -f2)
+
+	sshKey=$(gpg2ssh "$keyid")
+	# remove the old host key line
+	remove_line "$KNOWN_HOSTS" "$sshKey"
+	# if key OK, add new host line
+	if [ "$ok" -eq '0' ] ; then
+	    # hash if specified
+	    if [ "$HASH_KNOWN_HOSTS" = 'true' ] ; then
+		# FIXME: this is really hackish cause ssh-keygen won't
+		# hash from stdin to stdout
+		tmpfile=$(mktemp)
+		ssh2known_hosts "$host" "$sshKey" > "$tmpfile"
+		ssh-keygen -H -f "$tmpfile" 2> /dev/null
+		cat "$tmpfile" >> "$KNOWN_HOSTS"
+		rm -f "$tmpfile" "${tmpfile}.old"
+	    else
+		ssh2known_hosts "$host" "$sshKey" >> "$KNOWN_HOSTS"
+	    fi
+	    # set return code to be 0, since a key was found
+	    returnCode=0
+	fi
+	return "$returnCode"
+    done
+
+    return "$returnCode"
+}
+
+# update the known_hosts file for a set of hosts listed on command
+# line
+update_known_hosts() {
+    local host
+    local returnCode
+
+    # default return code is 0, which assumes a key was found for
+    # every host.  code will be set to 1 if a key is not found for at
+    # least one host
+    returnCode=0
 
     # create a lockfile on known_hosts
     lockfile-create "$KNOWN_HOSTS"
 
     for host ; do
-	log "processing host: $host"
-
-	userID="ssh://${host}"
-
-	process_user_id "ssh://${host}" | \
-	while read -r ok keyid ; do
-	    sshKey=$(gpg2ssh "$keyid")
-	    # remove the old host key line
-	    remove_line "$KNOWN_HOSTS" "$sshKey"
-	    # if key OK, add new host line
-	    if [ "$ok" -eq '0' ] ; then
-		# hash if specified
-		if [ "$HASH_KNOWN_HOSTS" = 'true' ] ; then
-		    # FIXME: this is really hackish cause ssh-keygen won't
-		    # hash from stdin to stdout
-		    tmpfile=$(mktemp)
-		    ssh2known_hosts "$host" "$sshKey" > "$tmpfile"
-		    ssh-keygen -H -f "$tmpfile" 2> /dev/null
-		    cat "$tmpfile" >> "$KNOWN_HOSTS"
-		    rm -f "$tmpfile" "${tmpfile}.old"
-		else
-		    ssh2known_hosts "$host" "$sshKey" >> "$KNOWN_HOSTS"
-		fi
-	    fi
-	done
+	# process the host, change return code if host key not found
+	process_host_known_hosts "$host" || returnCode=1
+	
 	# touch the lockfile, for good measure.
 	lockfile-touch --oneshot "$KNOWN_HOSTS"
     done
 
     # remove the lockfile
     lockfile-remove "$KNOWN_HOSTS"
+
+    return "$returnCode"
+}
+
+# process known_hosts file, going through line-by-line, extract each
+# host, and process with the host processing function
+process_known_hosts() {
+    local returnCode
+
+    # default return code is 0, which assumes a key was found for
+    # every host.  code will be set to 1 if a key is not found for at
+    # least one host
+    returnCode=0
+
+    # take all the hosts from the known_hosts file (first field), grep
+    # out all the hashed hosts (lines starting with '|')...
+    for line in $(cat "$KNOWN_HOSTS" | meat | cut -d ' ' -f 1 | grep -v '^|.*$') ; do
+	# break up hosts into separate words
+	update_known_hosts $(echo "$line" | tr , ' ') || returnCode=1
+    done
+
+    return "$returnCode"
 }
 
 # process uids for the authorized_keys file
-process_uids_authorized_keys() {
+process_uid_authorized_keys() {
     local userID
     local ok
     local keyid
+    local returnCode
+
+    # default return code is 1, which assumes no key was found
+    returnCode=1
+
+    userID="$1"
+
+    log "processing user ID: $userID"
+
+    for line in $(process_user_id "$userID") ; do
+	ok=$(echo "$line" | cut -d: -f1)
+	keyid=$(echo "$line" | cut -d: -f2)
+
+	sshKey=$(gpg2ssh "$keyid")
+	# remove the old host key line
+	remove_line "$AUTHORIZED_KEYS" "$sshKey"
+	# if key OK, add new host line
+	if [ "$ok" -eq '0' ] ; then
+	    ssh2authorized_keys "$userID" "$sshKey" >> "$AUTHORIZED_KEYS"
+
+	    # set return code to be 0, since a key was found
+	    returnCode=0
+	fi
+    done
+
+    return "$returnCode"
+}
+
+# update the authorized_keys files from a list of user IDs on command
+# line
+update_authorized_keys() {
+    local userID
+    local returnCode
+
+    # default return code is 0, which assumes a key was found for
+    # every user ID.  code will be set to 1 if a key is not found for
+    # at least one user ID
+    returnCode=0
 
     # create a lockfile on authorized_keys
     lockfile-create "$AUTHORIZED_KEYS"
 
     for userID ; do
-	log "processing user ID: $userID"
+	# process the user ID, change return code if key not found for
+	# user ID
+	process_uid_authorized_keys "$userID" || returnCode=1
 
-	process_user_id "$userID" | \
-	while read -r ok keyid ; do
-	    sshKey=$(gpg2ssh "$keyid")
-	    # remove the old host key line
-	    remove_line "$AUTHORIZED_KEYS" "$sshKey"
-	    # if key OK, add new host line
-	    if [ "$ok" -eq '0' ] ; then
-		ssh2authorized_keys "$userID" "$sshKey" >> "$AUTHORIZED_KEYS"
-	    fi
-	done
 	# touch the lockfile, for good measure.
 	lockfile-touch --oneshot "$AUTHORIZED_KEYS"
     done
 
     # remove the lockfile
     lockfile-remove "$AUTHORIZED_KEYS"
-}
 
-# process known_hosts file
-# go through line-by-line, extract each host, and process with the
-# host processing function
-process_known_hosts() {
-    local hosts
-    local host
-
-    # take all the hosts from the known_hosts file (first field),
-    # grep out all the hashed hosts (lines starting with '|')...
-    cat "$KNOWN_HOSTS" | meat | \
-	cut -d ' ' -f 1 | grep -v '^|.*$' | \
-    while IFS=, read -r -a hosts ; do
-	process_hosts_known_hosts ${hosts[@]}
-    done
+    return "$returnCode"
 }
 
 # process an authorized_user_ids file for authorized_keys
 process_authorized_user_ids() {
     local userid
+    local returnCode
+
+    # default return code is 0, and is set to 1 if a key for a user ID
+    # is not found
+    returnCode=0
 
     authorizedUserIDs="$1"
 
-    cat "$authorizedUserIDs" | meat | \
-    while read -r userid ; do
-	process_uids_authorized_keys "$userid"
+    # set the IFS to be newline for parsing the authorized_user_ids
+    # file.  can't find it in BASH(1) (found it on the net), but it
+    # works.
+    IFS=$'\n'
+    for userid in $(cat "$authorizedUserIDs" | meat) ; do
+	update_authorized_keys "$userid" || returnCode=1
     done
+
+    return "$returnCode"
 }
 
 # EXPERIMENTAL (unused) process userids found in authorized_keys file
@@ -498,6 +573,11 @@ process_authorized_user_ids() {
 process_authorized_keys() {
     local authorizedKeys
     local userID
+    local returnCode
+
+    # default return code is 0, and is set to 1 if a key for a user
+    # is not found
+    returnCode=0
 
     authorizedKeys="$1"
 
@@ -522,8 +602,10 @@ process_authorized_keys() {
 
 	# process the userid
 	log "processing userid: '$userID'"
-	process_user_id "$userID" > /dev/null
+	process_user_id "$userID" > /dev/null || returnCode=1
     done
+
+    return "$returnCode"
 }
 
 ##################################################
@@ -532,6 +614,16 @@ process_authorized_keys() {
 # retrieve key from web of trust, and set owner trust to "full"
 # if key is found.
 trust_key() {
+    local keyID
+    local trustLevel
+
+    keyID="$1"
+    trustLevel="$2"
+
+    if [ -z "$keyID" ] ; then
+	failure "You must specify key to trust."
+    fi
+
     # get the key from the key server
     if ! gpg --keyserver "$KEYSERVER" --recv-key "$keyID" ; then
 	failure "Could not retrieve key '$keyID'."
@@ -540,13 +632,41 @@ trust_key() {
     # get key fingerprint
     fingerprint=$(get_key_fingerprint "$keyID")
 
+    echo "key found:"
+    gpg --fingerprint "$fingerprint"
+
+    while [ -z "$trustLevel" ] ; do
+	cat <<EOF
+Please decide how far you trust this user to correctly verify other users' keys
+(by looking at passports, checking fingerprints from different sources, etc.)
+
+  1 = I don't know or won't say
+  2 = I do NOT trust
+  3 = I trust marginally
+  4 = I trust fully
+  5 = I trust ultimately
+
+EOF
+	read -p "Your decision? " trustLevel
+	if echo "$trustLevel" | grep -v "[1-5]" ; then
+	    echo "Unknown trust level '$trustLevel'."
+	    unset trustLevel
+	elif [ "$trustLevel" = 'q' ] ; then
+	    failure "Aborting."
+	fi
+    done
+
     # attach a "non-exportable" signature to the key
     # this is required for the key to have any validity at all
     # the 'y's on stdin indicates "yes, i really want to sign"
-    echo -e 'y\ny' | gpg --lsign-key --command-fd 0 "$fingerprint"
+    echo -e 'y\ny' | gpg --quiet --lsign-key --command-fd 0 "$fingerprint"
 
-    # import "full" trust for fingerprint into gpg
-    echo ${fingerprint}:5: | gpg --import-ownertrust
+    # index trustLevel by one to difference between level in ui and level
+    # internally
+    trustLevel=$((trustLevel+1))
+
+    # import new owner trust level for key
+    echo "${fingerprint}:${trustLevel}:" | gpg --import-ownertrust
     if [ $? = 0 ] ; then
 	log "Owner trust updated."
     else

@@ -24,6 +24,10 @@ DATE=$(date -u '+%FT%T')
 # unset some environment variables that could screw things up
 GREP_OPTIONS=
 
+# default return code
+ERR=0
+export ERR
+
 ########################################################################
 # FUNCTIONS
 ########################################################################
@@ -156,7 +160,7 @@ case $COMMAND in
         # if hosts are specified on the command line, process just
         # those hosts
 	if [ "$1" ] ; then
-	    process_hosts_known_hosts "$@"
+	    update_known_hosts "$@" || ERR=1
 
         # otherwise, if no hosts are specified, process every host
         # in the user's known_hosts file
@@ -165,7 +169,7 @@ case $COMMAND in
 		failure "known_hosts file '$KNOWN_HOSTS' is empty."
 	    fi
 	    log "processing known_hosts file..."
-	    process_known_hosts
+	    process_known_hosts || ERR=1
 	fi
 
 	log "known_hosts file updated."
@@ -181,7 +185,7 @@ case $COMMAND in
 
 	# process authorized_user_ids file
 	log "processing authorized_user_ids file..."
-	process_authorized_user_ids "$AUTHORIZED_USER_IDS"
+	process_authorized_user_ids "$AUTHORIZED_USER_IDS" || ERR=1
 	log "authorized_keys file updated."
 	;;
 
@@ -202,3 +206,5 @@ case $COMMAND in
 Type '$PGRM help' for usage."
         ;;
 esac
+
+exit "$ERR"

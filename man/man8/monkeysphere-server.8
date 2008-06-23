@@ -43,9 +43,11 @@ Show the fingerprint for the host's OpenPGP key.  `f' may be used in place of
 Publish the host's gpg key to the keyserver.  `p' may be used in place
 of `publish-key'.
 .TP
-.B trust-keys KEYID...
-Mark key specified with key IDs with full owner trust.  `t' may be used
-in place of `trust-keys'.
+.B trust-key KEYID [LEVEL]
+Set owner trust for key.  If LEVEL is not specified, then the program
+will prompt for an owner trust level to set for KEYID.  This function
+lsigns the key as well so that it will have a known validity.  `t' may
+be used in place of `trust-key'.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
