@@ -7,8 +7,12 @@
 *  changes to this system 					             *
 ******************************************************************************
 2008-06-23 - dkg
+	* added monkeysphere apt repository to /etc/apt/sources.list
+	* added dkg's key to apt's list of trusted keys.
 	* ran aptitude dist-upgrade
 	* upgraded to monkeysphere 0.2-1
+	* moved authorized_user_ids files into users' home directories.
+	* installed lockfile-progs
 	
 2008-06-22 - dkg
 	* installed screen (mjgoins and i were collaborating)
