@@ -171,7 +171,7 @@ mkdir -p -m 0700 "$GNUPGHOME"
 mkdir -p "${CACHE}/authorized_keys"
 
 case $COMMAND in
-    'update-users'|'update-user'|'s')
+    'update-users'|'update-user'|'u')
 	if [ "$1" ] ; then
 	    # get users from command line
 	    unames="$@"
@@ -196,6 +196,9 @@ case $COMMAND in
 
 	    # skip user if authorized_user_ids file does not exist
 	    if [ ! -f "$authorizedUserIDs" ] ; then
+		#FIXME: what about a user with no authorized_user_ids
+		# file, but with an authorized_keys file when
+		# USER_CONTROLLED_AUTHORIZED_KEYS is set?
 		continue
 	    fi
 
@@ -207,6 +210,10 @@ case $COMMAND in
 	    # skip if the user's authorized_user_ids file is empty
 	    if [ ! -s "$authorizedUserIDs" ] ; then
 		log "authorized_user_ids file '$authorizedUserIDs' is empty."
+		#FIXME: what about a user with an empty
+		# authorized_user_ids file, but with an
+		# authorized_keys file when
+		# USER_CONTROLLED_AUTHORIZED_KEYS is set?
 		continue
 	    fi
 
