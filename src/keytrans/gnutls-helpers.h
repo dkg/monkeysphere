@@ -49,7 +49,18 @@ int convert_string_to_keyid(gnutls_openpgp_keyid_t out, const char* str);
 int convert_string_to_printable_keyid(printable_keyid out, const char* str);
 
 /* you must have twice as many bytes in the out buffer as in the in buffer */
-void hex_print_data(char* out, const char* in, size_t incount);
+void hex_print_data(char* out, const unsigned char* in, size_t incount);
+
+/* expects a null-terminated string as in, containing an even number
+   of hexadecimal characters.
+
+   returns length in *bits* of raw data as output. 
+
+   the out buffer must be at least half as long as in to hold the
+   output.  if out is NULL, no output will be generated, but the
+   length will still be returned.
+*/
+unsigned int hexstring2bin(unsigned char* out, const char* in);
 
 /* functions to get data into datum objects: */
 

@@ -21,6 +21,9 @@ DATE=$(date -u '+%FT%T')
 # unset some environment variables that could screw things up
 GREP_OPTIONS=
 
+# assuming other problems don't crop up, we'll return 0 as success
+ERR=0
+
 ########################################################################
 # FUNCTIONS
 ########################################################################
@@ -31,7 +34,7 @@ usage: $PGRM <subcommand> [args]
 MonkeySphere server admin tool.
 
 subcommands:
-  update-users (s) [USER]...            update users authorized_keys files
+  update-users (u) [USER]...            update users authorized_keys files
   gen-key (g) [HOSTNAME]                generate gpg key for the server
   show-fingerprint (f)                  show server's host key fingerprint
   publish-key (p)                       publish server's host key to keyserver
@@ -168,7 +171,7 @@ mkdir -p -m 0700 "$GNUPGHOME"
 mkdir -p "${CACHE}/authorized_keys"
 
 case $COMMAND in
-    'update-users'|'update-user'|'s')
+    'update-users'|'update-user'|'u')
 	if [ "$1" ] ; then
 	    # get users from command line
 	    unames="$@"
@@ -193,6 +196,9 @@ case $COMMAND in
 
 	    # skip user if authorized_user_ids file does not exist
 	    if [ ! -f "$authorizedUserIDs" ] ; then
+		#FIXME: what about a user with no authorized_user_ids
+		# file, but with an authorized_keys file when
+		# USER_CONTROLLED_AUTHORIZED_KEYS is set?
 		continue
 	    fi
 
@@ -204,6 +210,10 @@ case $COMMAND in
 	    # skip if the user's authorized_user_ids file is empty
 	    if [ ! -s "$authorizedUserIDs" ] ; then
 		log "authorized_user_ids file '$authorizedUserIDs' is empty."
+		#FIXME: what about a user with an empty
+		# authorized_user_ids file, but with an
+		# authorized_keys file when
+		# USER_CONTROLLED_AUTHORIZED_KEYS is set?
 		continue
 	    fi
 
@@ -220,6 +230,13 @@ case $COMMAND in
 		    loge "done."
 		fi
 	    fi
+
+            # openssh appears to check the contents of the
+            # authorized_keys file as the user in question, so the file
+            # must be readable by that user at least.
+            # FIXME: is there a better way to do this?
+            chgrp $(getent passwd "$uname" | cut -f4 -d:) "$AUTHORIZED_KEYS"
+            chmod g+r "$AUTHORIZED_KEYS"
 
 	    # move the temp authorized_keys file into place
 	    mv -f "$AUTHORIZED_KEYS" "${CACHE}/authorized_keys/${uname}"

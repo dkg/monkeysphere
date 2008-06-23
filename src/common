@@ -109,7 +109,7 @@ translate_ssh_variables() {
     echo "$path"
 }
 
-### CONVERTION UTILITIES
+### CONVERSION UTILITIES
 
 # output the ssh key for a given key ID
 gpg2ssh() {
@@ -263,7 +263,7 @@ process_user_id() {
     fi
     requiredPubCapability=$(echo "$requiredCapability" | tr "[:lower:]" "[:upper:]")
 
-    # if CHECK_KEYSERVER variable set, check the keyserver
+    # if CHECK_KEYSERVER variable set to true, check the keyserver
     # for the user ID
     if [ "$CHECK_KEYSERVER" = "true" ] ; then
 	gpg_fetch_userid "$userID"
