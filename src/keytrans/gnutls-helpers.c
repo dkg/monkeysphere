@@ -44,11 +44,11 @@ void init_keyid(gnutls_openpgp_keyid_t keyid) {
 void make_keyid_printable(printable_keyid out, gnutls_openpgp_keyid_t keyid)
 {
   assert(sizeof(out) >= 2*sizeof(keyid));
-  hex_print_data((char*)out, (const char*)keyid, sizeof(keyid));
+  hex_print_data((char*)out, (const unsigned char*)keyid, sizeof(keyid));
 }
 
 /* you must have twice as many bytes in the out buffer as in the in buffer */
-void hex_print_data(char* out, const char* in, size_t incount)
+void hex_print_data(char* out, const unsigned char* in, size_t incount)
 {
   static const char hex[16] = "0123456789ABCDEF";
   unsigned int inix = 0, outix = 0;
@@ -73,7 +73,6 @@ unsigned char hex2bin(unsigned char x) {
 
 void collapse_printable_keyid(gnutls_openpgp_keyid_t out, printable_keyid in) {
   unsigned int pkix = 0, outkix = 0;
-  
   while (pkix < sizeof(printable_keyid)) {
     unsigned hi = hex2bin(in[pkix]);
     unsigned lo = hex2bin(in[pkix + 1]);
@@ -90,6 +89,27 @@ void collapse_printable_keyid(gnutls_openpgp_keyid_t out, printable_keyid in) {
     pkix += 2;
     outkix++;
   }
+}
+
+unsigned int hexstring2bin(unsigned char* out, const char* in) {
+  unsigned int pkix = 0, outkix = 0;
+  int hi = 0; /* which nybble is it? */
+  
+  while (in[pkix]) {
+    unsigned char z = hex2bin(in[pkix]);
+    if (z != 0xff) {
+      if (!hi) {
+	if (out) out[outkix] = (z << 4);
+	hi = 1;
+      } else {
+	if (out) out[outkix] |= z;
+	hi = 0;
+	outkix++;
+      }
+      pkix++;
+    }      
+  }
+  return outkix*8 + (hi ? 4 : 0);
 }
 
 int convert_string_to_keyid(gnutls_openpgp_keyid_t out, const char* str) {
