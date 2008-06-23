@@ -1,3 +1,9 @@
+monkeysphere (0.2-2) experimental; urgency=low
+
+  * added lockfile-progs dependency
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 23 Jun 2008 19:34:05 -0400
+
 monkeysphere (0.2-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
