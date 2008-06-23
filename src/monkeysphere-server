@@ -231,6 +231,13 @@ case $COMMAND in
 		fi
 	    fi
 
+            # openssh appears to check the contents of the
+            # authorized_keys file as the user in question, so the file
+            # must be readable by that user at least.
+            # FIXME: is there a better way to do this?
+            chgrp $(getent passwd "$uname" | cut -f4 -d:) "$AUTHORIZED_KEYS"
+            chmod g+r "$AUTHORIZED_KEYS"
+
 	    # move the temp authorized_keys file into place
 	    mv -f "$AUTHORIZED_KEYS" "${CACHE}/authorized_keys/${uname}"
 
