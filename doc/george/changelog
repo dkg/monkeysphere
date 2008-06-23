@@ -6,7 +6,10 @@
 *  Please add new entries in reverse chronological order whenever you make   *
 *  changes to this system 					             *
 ******************************************************************************
-
+2008-06-23 - dkg
+	* ran aptitude dist-upgrade
+	* upgraded to monkeysphere 0.2-1
+	
 2008-06-22 - dkg
 	* installed screen (mjgoins and i were collaborating)
 	
