@@ -125,8 +125,8 @@ EOF
 
     # write the key to the file
     # NOTE: assumes that the primary key is the proper key to use
-    (umask 077 && gpgsecret2ssh "$keyID" > "${MS_HOME}/ssh_host_rsa_key")
-    log "Private SSH host key output to file: ${MS_HOME}/ssh_host_rsa_key"
+    (umask 077 && gpgsecret2ssh "$keyID" > "${VARLIB}/ssh_host_rsa_key")
+    log "Private SSH host key output to file: ${VARLIB}/ssh_host_rsa_key"
 }
 
 # gpg output key fingerprint
