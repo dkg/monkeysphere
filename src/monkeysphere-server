@@ -11,9 +11,12 @@
 ########################################################################
 PGRM=$(basename $0)
 
-SHAREDIR=${SHAREDIR:-"/usr/share/monkeysphere"}
-export SHAREDIR
-. "${SHAREDIR}/common"
+SHARE=${SHARE:-"/usr/share/monkeysphere"}
+export SHARE
+. "${SHARE}/common"
+
+VARLIB="/var/lib/monkeysphere"
+export VARLIB
 
 # date in UTF format if needed
 DATE=$(date -u '+%FT%T')
@@ -49,8 +52,9 @@ gen_key() {
     local hostName
 
     hostName=${1:-$(hostname --fqdn)}
-    service=${SERVICE:-"ssh"}
-    userID="${service}://${hostName}"
+
+    SERVICE=${SERVICE:-"ssh"}
+    userID="${SERVICE}://${hostName}"
 
     if gpg --list-key ="$userID" > /dev/null 2>&1 ; then
 	failure "Key for '$userID' already exists"
@@ -154,21 +158,23 @@ MS_CONF=${MS_CONF:-"$MS_HOME"/monkeysphere-server.conf}
 [ -e "$MS_CONF" ] && . "$MS_CONF"
 
 # set empty config variable with defaults
-GNUPGHOME=${GNUPGHOME:-"${MS_HOME}/gnupg"}
+MONKEYSPHERE_USER=${MONKEYSPHERE_USER:-"monkeysphere"}
 KEYSERVER=${KEYSERVER:-"subkeys.pgp.net"}
 CHECK_KEYSERVER=${CHECK_KEYSERVER:="true"}
-REQUIRED_USER_KEY_CAPABILITY=${REQUIRED_USER_KEY_CAPABILITY:-"a"}
 AUTHORIZED_USER_IDS=${AUTHORIZED_USER_IDS:-"%h/.config/monkeysphere/authorized_user_ids"}
-USER_CONTROLLED_AUTHORIZED_KEYS=${USER_CONTROLLED_AUTHORIZED_KEYS:-"%h/.ssh/authorized_keys"}
+RAW_AUTHORIZED_KEYS=${RAW_AUTHORIZED_KEYS:-"%h/.ssh/authorized_keys"}
 
+# other variables
+REQUIRED_USER_KEY_CAPABILITY=${REQUIRED_USER_KEY_CAPABILITY:-"a"}
+GNUPGHOME_HOST=${GNUPGHOME_HOST:-"${VARLIB}/gnupg-host"}
+GNUPGHOME_AUTHENTICATION=${GNUPGHOME_AUTHENTICATION:-"${VARLIB}/gnupg-authentication"}
+
+# set default GNUPGHOME, and make sure the directory exists.  this is
+# true for all functions expect user authentication
+# (ie. update-users).
+GNUPGHOME="$GNUPGHOME_HOST"
 export GNUPGHOME
-
-# make sure the monkeysphere home directory exists
-mkdir -p "${MS_HOME}/authorized_user_ids"
-# make sure gpg home exists with proper permissions
 mkdir -p -m 0700 "$GNUPGHOME"
-# make sure the authorized_keys directory exists
-mkdir -p "${CACHE}/authorized_keys"
 
 case $COMMAND in
     'update-users'|'update-user'|'u')
@@ -180,24 +186,42 @@ case $COMMAND in
 	    unames=$(getent passwd | cut -d: -f1)
 	fi
 
+	# set mode
+	MODE="authorized_keys"
+
+        # make sure the authorized_keys directory exists
+	mkdir -p "${VARLIB}/authorized_keys"
+
+	# set GNUPGHOME, and make sure the directory exists
+	GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
+	export GNUPGHOME
+	mkdir -p -m 0700 "$GNUPGHOME"
+
 	# loop over users
 	for uname in $unames ; do
-	    MODE="authorized_keys"
-
 	    # check all specified users exist
 	    if ! getent passwd "$uname" >/dev/null ; then
 		error "----- unknown user '$uname' -----"
 		continue
 	    fi
 
-	    log "----- user: $uname -----"
-
-	    # set authorized_user_ids variable, translating ssh-style
-	    # path variables
+	    # set authorized_user_ids and raw authorized_keys variables,
+	    # translating ssh-style path variables
 	    authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
+	    rawAuthorizedKeys=$(translate_ssh_variables "$uname" "$RAW_AUTHORIZED_KEYS")
+
+	    # if neither is found, skip user
+	    if [ ! -s "$authorizedUserIDs" -a ! -s "$rawAuthorizedKeys" ] ; then
+		continue
+	    fi
+
+	    log "----- user: $uname -----"
 
 	    # temporary authorized_keys file
 	    AUTHORIZED_KEYS=$(mktemp)
+
+	    # trap to delete file on exit
+	    trap "rm -f $AUTHORIZE_KEYS" EXIT
 
 	    # process authorized_user_ids file
 	    if [ -s "$authorizedUserIDs" ] ; then
@@ -206,16 +230,16 @@ case $COMMAND in
 	    fi
 
 	    # add user-controlled authorized_keys file path if specified
-	    if [ "$USER_CONTROLLED_AUTHORIZED_KEYS" != '-' ] ; then
-		userAuthorizedKeys=$(translate_ssh_variables "$uname" "$USER_CONTROLLED_AUTHORIZED_KEYS")
-		if [ -s "$userAuthorizedKeys" ] ; then
-		    log -n "adding user's authorized_keys file... "
-		    cat "$userAuthorizedKeys" >> "$AUTHORIZED_KEYS"
+	    if [ "$RAW_AUTHORIZED_KEYS" != '-' ] ; then
+		if [ -s "$rawAuthorizedKeys" ] ; then
+		    log -n "adding raw authorized_keys file... "
+		    cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
 		    loge "done."
 		fi
 	    fi
 
-	    # if the resulting authorized_keys file is not empty
+	    # if the resulting authorized_keys file is not empty, move
+	    # the temp authorized_keys file into place
 	    if [ -s "$AUTHORIZED_KEYS" ] ; then
 		# openssh appears to check the contents of the
                 # authorized_keys file as the user in question, so the
@@ -224,8 +248,7 @@ case $COMMAND in
 		chgrp $(getent passwd "$uname" | cut -f4 -d:) "$AUTHORIZED_KEYS"
 		chmod g+r "$AUTHORIZED_KEYS"
 
-		# move the temp authorized_keys file into place
-		mv -f "$AUTHORIZED_KEYS" "${CACHE}/authorized_keys/${uname}"
+		mv -f "$AUTHORIZED_KEYS" "${VARLIB}/authorized_keys/${uname}"
 
 		log "authorized_keys file updated."
 

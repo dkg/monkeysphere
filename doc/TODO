@@ -5,9 +5,6 @@ Detail advantages of monkeysphere: detail the race conditions in ssh,
    and how the monkeysphere can help you reduce these threat vectors:
    threat model reduction diagrams.
 
-Determine how openssh handles multiple processes writing to
-   known_hosts/authorized_keys files (lockfile, atomic appends?)
-
 Handle unverified monkeysphere hosts in such a way that they're not
    always removed from known_hosts file.  Ask user to lsign the host
    key?
@@ -30,21 +27,9 @@ Ensure that authorized_user_ids are under as tight control as ssh
    expects from authorized_keys: we don't want monkeysphere to be a
    weak link in the filesystem.
 
-What happens when a user account has no corresponding
-   /etc/monkeysphere/authorized_user_ids/$USER file?  What gets placed
-   in /var/cache/monkeysphere/authorized_keys/$USER?  It looks
-   currently untouched, which could mean bad things for such a user.
-   - if authorized_user_ids is empty, then the user's authorized_keys
-     file will be also, unless the user-controlled authorized_keys file
-     is added.  I believe this is expected, correct behavior.
-
 Consider the default permissions for
-   /var/cache/monkeysphere/authorized_keys/* (and indeed the whole
+   /var/lib/monkeysphere/authorized_keys/* (and indeed the whole
    directory path leading up to that)
-
-As an administrator, how do i reverse the effect of a
-   "monkeysphere-server trust-keys" that i later decide i should not
-   have run?
 
 Make sure alternate ports are handled for known_hosts.
 
@@ -105,9 +90,6 @@ When using ssh-proxycommand, if only host keys found are expired or
 Update monkeysphere-ssh-proxycommand man page with new keyserver
    checking policy info.
 
-Update monkeysphere-ssh-proxycommand man page with info about
-   no-connect option.
-
 File bug against seahorse about how, when creating new primary keys,
    it presents option for "RSA (sign only)" but then creates an "esca"
    key.
@@ -118,17 +100,9 @@ Privilege separation: monkeysphere user to handle authn keyring and
    generate authorized_keys file (which would be moved into place by
    root).  Host keyring would be owned by root.
 
-Check permissions of authorized_user_ids file to be writable only by
-   user and root (same as authorized_keys)
-
-Improve function that sets owner trust for keys in server keychain.
-
 Test and document what happens when any filesystem that the
    monkeysphere-server relies on and modifies (/tmp, /etc, and /var?)
    fills up.
-
-Consider moving monkeysphere-managed files (gpg homedirs? temporary
-   files?) into /var.
 
 Optimize keyserver access, particularly on monkeysphere-server
    update-users -- is there a way to query the keyserver all in a
