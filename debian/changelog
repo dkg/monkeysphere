@@ -1,3 +1,10 @@
+monkeysphere (0.4-1) UNRELEASED; urgency=low
+
+  [Daniel Kahn Gillmor]
+  * New version (switch UNRELEASED to experimental when ready)
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Tue, 24 Jun 2008 01:25:45 -0400
+
 monkeysphere (0.3-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
