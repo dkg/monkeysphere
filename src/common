@@ -466,6 +466,8 @@ update_known_hosts() {
 process_known_hosts() {
     local returnCode
 
+    log "processing known_hosts file..."
+
     # default return code is 0, which assumes a key was found for
     # every host.  code will be set to 1 if a key is not found for at
     # least one host
@@ -551,6 +553,8 @@ process_authorized_user_ids() {
     local userid
     local returnCode
 
+    log "processing authorized_user_ids file..."
+
     # default return code is 0, and is set to 1 if a key for a user ID
     # is not found
     returnCode=0
@@ -608,86 +612,4 @@ process_authorized_keys() {
     done
 
     return "$returnCode"
-}
-
-##################################################
-### GPG HELPER FUNCTIONS
-
-# retrieve key from web of trust, and set owner trust to "full"
-# if key is found.
-trust_key() {
-    local keyID
-    local trustLevel
-
-    keyID="$1"
-    trustLevel="$2"
-
-    if [ -z "$keyID" ] ; then
-	failure "You must specify key to trust."
-    fi
-
-    # get the key from the key server
-    if ! gpg --keyserver "$KEYSERVER" --recv-key "$keyID" ; then
-	failure "Could not retrieve key '$keyID'."
-    fi
-
-    # get key fingerprint
-    fingerprint=$(get_key_fingerprint "$keyID")
-
-    echo "key found:"
-    gpg --fingerprint "$fingerprint"
-
-    while [ -z "$trustLevel" ] ; do
-	cat <<EOF
-Please decide how far you trust this user to correctly verify other users' keys
-(by looking at passports, checking fingerprints from different sources, etc.)
-
-  1 = I don't know or won't say
-  2 = I do NOT trust
-  3 = I trust marginally
-  4 = I trust fully
-  5 = I trust ultimately
-
-EOF
-	read -p "Your decision? " trustLevel
-	if echo "$trustLevel" | grep -v "[1-5]" ; then
-	    echo "Unknown trust level '$trustLevel'."
-	    unset trustLevel
-	elif [ "$trustLevel" = 'q' ] ; then
-	    failure "Aborting."
-	fi
-    done
-
-    # attach a "non-exportable" signature to the key
-    # this is required for the key to have any validity at all
-    # the 'y's on stdin indicates "yes, i really want to sign"
-    echo -e 'y\ny' | gpg --quiet --lsign-key --command-fd 0 "$fingerprint"
-
-    # index trustLevel by one to difference between level in ui and level
-    # internally
-    trustLevel=$((trustLevel+1))
-
-    # import new owner trust level for key
-    echo "${fingerprint}:${trustLevel}:" | gpg --import-ownertrust
-    if [ $? = 0 ] ; then
-	log "Owner trust updated."
-    else
-	failure "There was a problem changing owner trust."
-    fi	
-}
-
-# publish server key to keyserver
-publish_server_key() {
-    read -p "really publish key to $KEYSERVER? [y|N]: " OK; OK=${OK:=N}
-    if [ ${OK/y/Y} != 'Y' ] ; then
-	failure "aborting."
-    fi
-
-    # publish host key
-    # FIXME: need to figure out better way to identify host key
-    # dummy command so as not to publish fakes keys during testing
-    # eventually:
-    #gpg --keyserver "$KEYSERVER" --send-keys $(hostname -f)
-    failure "NOT PUBLISHED (to avoid permanent publication errors during monkeysphere development).
-To publish manually, do: gpg --keyserver $KEYSERVER --send-keys $(hostname -f)"
 }

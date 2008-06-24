@@ -10,6 +10,7 @@
 
 ########################################################################
 PGRM=$(basename $0)
+PGRM_PATH=$(dirname $0)
 
 SHARE=${SHARE:-"/usr/share/monkeysphere"}
 export SHARE
@@ -50,12 +51,16 @@ EOF
 # generate server gpg key
 gen_key() {
     local hostName
+    local userID
+    local keyParameters
+    local fingerprint
 
     hostName=${1:-$(hostname --fqdn)}
 
     SERVICE=${SERVICE:-"ssh"}
     userID="${SERVICE}://${hostName}"
 
+    GNUPGHOME="$GNUPGHOME_HOST"
     if gpg --list-key ="$userID" > /dev/null 2>&1 ; then
 	failure "Key for '$userID' already exists"
     fi
@@ -113,19 +118,32 @@ EOF
 EOF
 )
 
-    log "generating server key... "
+    log "generating server key..."
+    GNUPGHOME="$GNUPGHOME_HOST"
     echo "$keyParameters" | gpg --batch --gen-key
 
     # output the server fingerprint
     fingerprint_server_key "=${userID}"
 
     # find the key fingerprint of the server primary key
-    keyID=$(gpg --list-key --with-colons --with-fingerprint "=${userID}" | \
+    GNUPGHOME="$GNUPGHOME_HOST"
+    fingerprint=$(gpg --list-key --with-colons --with-fingerprint "=${userID}" | \
 	grep '^fpr:' | head -1 | cut -d: -f10)
+
+    # export the host key to the authentication keyring
+    GNUPGHOME="$GNUPGHOME_HOST" gpg --export "$fingerprint" | \
+	su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
+	"GNUPGHOME=$GNUPGHOME_AUTHENTICATION gpg --import"
+
+    # set host key owner trust to ultimate in authentication keyring
+    echo "${fingerprint}:6:" | \
+        su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
+        "GNUPGHOME=$GNUPGHOME_AUTHENTICATION gpg --import-ownertrust"
 
     # write the key to the file
     # NOTE: assumes that the primary key is the proper key to use
-    (umask 077 && gpgsecret2ssh "$keyID" > "${VARLIB}/ssh_host_rsa_key")
+    GNUPGHOME="$GNUPGHOME_HOST"
+    (umask 077 && gpgsecret2ssh "$fingerprint" > "${VARLIB}/ssh_host_rsa_key")
     log "Private SSH host key output to file: ${VARLIB}/ssh_host_rsa_key"
 }
 
@@ -133,13 +151,120 @@ EOF
 fingerprint_server_key() {
     local ID
 
-    if [ -z "$1" ] ; then
+    if [ "$1" ] ; then
 	ID="$1"
     else
 	ID="=ssh://$(hostname --fqdn)"
     fi
 
     gpg --fingerprint --list-secret-keys "$ID"
+}
+
+# publish server key to keyserver
+publish_server_key() {
+    read -p "really publish key to $KEYSERVER? [y|N]: " OK; OK=${OK:=N}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "aborting."
+    fi
+
+    # publish host key
+    # FIXME: need to figure out better way to identify host key
+    # dummy command so as not to publish fakes keys during testing
+    # eventually:
+    #gpg --keyserver "$KEYSERVER" --send-keys $(hostname -f)
+    failure "NOT PUBLISHED (to avoid permanent publication errors during monkeysphere development).
+To publish manually, do: gpg --keyserver $KEYSERVER --send-keys $(hostname -f)"
+}
+
+
+# retrieve key from web of trust, and set owner trust to "full"
+# if key is found.
+trust_key() {
+    local keyID
+    local trustLevel
+
+    keyID="$1"
+    trustLevel="$2"
+
+    if [ -z "$keyID" ] ; then
+	failure "You must specify key to trust."
+    fi
+
+    export keyID
+
+    # get the key from the key server
+    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
+    su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
+	"gpg --keyserver $KEYSERVER --recv-key $keyID"
+    if [ "$?" != 0 ] ; then
+	failure "Could not retrieve key '$keyID'."
+    fi
+
+    # move the key from the authentication keyring to the host keyring
+    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
+    su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
+	"gpg --export $keyID" | \
+	GNUPGHOME="$GNUPGHOME_HOST" gpg --import
+
+    # get key fingerprint
+    GNUPGHOME="$GNUPGHOME_HOST"
+    fingerprint=$(get_key_fingerprint "$keyID")
+
+    echo "key found:"
+    GNUPGHOME="$GNUPGHOME_HOST"
+    gpg --fingerprint "$fingerprint"
+
+    while [ -z "$trustLevel" ] ; do
+	cat <<EOF
+Please decide how far you trust this user to correctly verify other users' keys
+(by looking at passports, checking fingerprints from different sources, etc.)
+
+  1 = I don't know or won't say
+  2 = I do NOT trust
+  3 = I trust marginally
+  4 = I trust fully
+  5 = I trust ultimately
+
+EOF
+	read -p "Your decision? " trustLevel
+	if echo "$trustLevel" | grep -v "[1-5]" ; then
+	    echo "Unknown trust level '$trustLevel'."
+	    unset trustLevel
+	elif [ "$trustLevel" = 'q' ] ; then
+	    failure "Aborting."
+	fi
+    done
+
+    # attach a "non-exportable" signature to the key
+    # this is required for the key to have any validity at all
+    # the 'y's on stdin indicates "yes, i really want to sign"
+    GNUPGHOME="$GNUPGHOME_HOST"
+    echo -e 'y\ny' | \
+	gpg --quiet --lsign-key --command-fd 0 "$fingerprint"
+
+    # copy the host keyring into the authentication keyring
+    mv "$GNUPGHOME_AUTHENTICATION"/pubring.gpg{,.old}
+    cp "$GNUPGHOME_HOST"/pubring.gpg "$GNUPGHOME_AUTHENTICATION"/pubring.gpg
+    chown "$MONKEYSPHERE_USER" "$GNUPGHOME_AUTHENTICATION"/pubring.gpg
+    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
+    su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
+	"gpg --import ${GNUPGHOME_AUTHENTICATION}/pubring.gpg.old"
+
+    # index trustLevel by one to difference between level in ui and level
+    # internally
+    trustLevel=$((trustLevel+1))
+
+    # import new owner trust level for key
+    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
+    echo "${fingerprint}:${trustLevel}:" | \
+        su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
+        "GNUPGHOME=$GNUPGHOME_AUTHENTICATION gpg --import-ownertrust"
+
+    if [ $? = 0 ] ; then
+	log "Owner trust updated."
+    else
+	failure "There was a problem changing owner trust."
+    fi
 }
 
 ########################################################################
@@ -169,12 +294,15 @@ REQUIRED_USER_KEY_CAPABILITY=${REQUIRED_USER_KEY_CAPABILITY:-"a"}
 GNUPGHOME_HOST=${GNUPGHOME_HOST:-"${VARLIB}/gnupg-host"}
 GNUPGHOME_AUTHENTICATION=${GNUPGHOME_AUTHENTICATION:-"${VARLIB}/gnupg-authentication"}
 
-# set default GNUPGHOME, and make sure the directory exists.  this is
-# true for all functions expect user authentication
-# (ie. update-users).
-GNUPGHOME="$GNUPGHOME_HOST"
+# export variables
+export MODE
+export MONKEYSPHERE_USER
+export KEYSERVER
+export CHECK_KEYSERVER
+export REQUIRED_USER_KEY_CAPABILITY
+export GNUPGHOME_HOST
+export GNUPGHOME_AUTHENTICATION
 export GNUPGHOME
-mkdir -p -m 0700 "$GNUPGHOME"
 
 case $COMMAND in
     'update-users'|'update-user'|'u')
@@ -189,13 +317,16 @@ case $COMMAND in
 	# set mode
 	MODE="authorized_keys"
 
+	# set gnupg home
+	GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
+
+	# check to see if the gpg trust database has been initialized
+	if [ ! -s "${GNUPGHOME}/trustdb.gpg" ] ; then
+	    failure "GNUPG trust database uninitialized.  Please see MONKEYSPHERE-SERVER(8)."
+	fi
+
         # make sure the authorized_keys directory exists
 	mkdir -p "${VARLIB}/authorized_keys"
-
-	# set GNUPGHOME, and make sure the directory exists
-	GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
-	export GNUPGHOME
-	mkdir -p -m 0700 "$GNUPGHOME"
 
 	# loop over users
 	for uname in $unames ; do
@@ -211,67 +342,96 @@ case $COMMAND in
 	    rawAuthorizedKeys=$(translate_ssh_variables "$uname" "$RAW_AUTHORIZED_KEYS")
 
 	    # if neither is found, skip user
-	    if [ ! -s "$authorizedUserIDs" -a ! -s "$rawAuthorizedKeys" ] ; then
-		continue
+	    if [ ! -s "$authorizedUserIDs" ] ; then
+		if [ "$rawAuthorizedKeys" = '-' -o ! -s "$rawAuthorizedKeys" ] ; then
+		    continue
+		fi
 	    fi
 
 	    log "----- user: $uname -----"
 
-	    # temporary authorized_keys file
-	    AUTHORIZED_KEYS=$(mktemp)
+            # make temporary directory
+            TMPDIR=$(mktemp -d)
 
-	    # trap to delete file on exit
-	    trap "rm -f $AUTHORIZE_KEYS" EXIT
+	    # trap to delete temporary directory on exit
+	    trap "rm -rf $TMPDIR" EXIT
 
-	    # process authorized_user_ids file
+            # create temporary authorized_user_ids file
+            TMP_AUTHORIZED_USER_IDS="${TMPDIR}/authorized_user_ids"
+            touch "$TMP_AUTHORIZED_USER_IDS"
+
+            # create temporary authorized_keys file
+            AUTHORIZED_KEYS="${TMPDIR}/authorized_keys"
+            touch "$AUTHORIZED_KEYS"
+
+            # set restrictive permissions on the temporary files
+	    # FIXME: is there a better way to do this?
+            chmod 0700 "$TMPDIR"
+            chmod 0600 "$AUTHORIZED_KEYS"
+            chmod 0600 "$TMP_AUTHORIZED_USER_IDS"
+            chown -R "$MONKEYSPHERE_USER" "$TMPDIR"
+
+	    # if the authorized_user_ids file exists...
 	    if [ -s "$authorizedUserIDs" ] ; then
-		log "processing authorized_user_ids file..."
-		process_authorized_user_ids "$authorizedUserIDs"
+                # copy user authorized_user_ids file to temporary
+                # location
+		cat "$authorizedUserIDs" > "$TMP_AUTHORIZED_USER_IDS"
+
+		# export needed variables
+		export AUTHORIZED_KEYS
+		export TMP_AUTHORIZED_USER_IDS
+
+		# process authorized_user_ids file, as monkeysphere
+		# user
+		su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
+		    ". ${SHARE}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
 	    fi
 
 	    # add user-controlled authorized_keys file path if specified
-	    if [ "$RAW_AUTHORIZED_KEYS" != '-' ] ; then
-		if [ -s "$rawAuthorizedKeys" ] ; then
-		    log -n "adding raw authorized_keys file... "
-		    cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
-		    loge "done."
-		fi
+	    if [ "$rawAuthorizedKeys" != '-' -a -s "$rawAuthorizedKeys" ] ; then
+		log -n "adding raw authorized_keys file... "
+		cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
+		loge "done."
 	    fi
+
+	    # openssh appears to check the contents of the
+            # authorized_keys file as the user in question, so the
+            # file must be readable by that user at least.
+	    # FIXME: is there a better way to do this?
+	    chown root "$AUTHORIZED_KEYS"
+	    chgrp $(getent passwd "$uname" | cut -f4 -d:) "$AUTHORIZED_KEYS"
+	    chmod g+r "$AUTHORIZED_KEYS"
 
 	    # if the resulting authorized_keys file is not empty, move
-	    # the temp authorized_keys file into place
-	    if [ -s "$AUTHORIZED_KEYS" ] ; then
-		# openssh appears to check the contents of the
-                # authorized_keys file as the user in question, so the
-                # file must be readable by that user at least.
-		# FIXME: is there a better way to do this?
-		chgrp $(getent passwd "$uname" | cut -f4 -d:) "$AUTHORIZED_KEYS"
-		chmod g+r "$AUTHORIZED_KEYS"
+	    # it into place
+	    mv -f "$AUTHORIZED_KEYS" "${VARLIB}/authorized_keys/${uname}"
 
-		mv -f "$AUTHORIZED_KEYS" "${VARLIB}/authorized_keys/${uname}"
-
-		log "authorized_keys file updated."
-
-	    # else destroy it
-	    else
-		rm -f "$AUTHORIZED_KEYS"
-	    fi
+	    log "authorized_keys file updated."
+	    
+	    # destroy temporary directory
+	    rm -rf "$TMPDIR"
 	done
 	;;
 
     'gen-key'|'g')
-	gen_key "$1"
+	# set gnupg home
+	GNUPGHOME="$GNUPGHOME_HOST"
+	gen_key "$@"
 	;;
 
     'show-fingerprint'|'f')
+	# set gnupg home
+	GNUPGHOME="$GNUPGHOME_HOST"
 	fingerprint_server_key "$@"
 	;;
 
     'publish-key'|'p')
+	# set gnupg home
+	GNUPGHOME="$GNUPGHOME_HOST"
 	publish_server_key
 	;;
 
-    'trust-key'|'trust-key'|'t')
+    'trust-key'|'t')
 	trust_key "$@"
 	;;
 
