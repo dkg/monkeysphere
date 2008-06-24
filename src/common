@@ -115,9 +115,7 @@ translate_ssh_variables() {
 gpg2ssh() {
     local keyID
     
-    #keyID="$1" #TMP
-    # only use last 16 characters until openpgp2ssh can take all 40 #TMP
-    keyID=$(echo "$1" | cut -c 25-) #TMP
+    keyID="$1"
 
     gpg --export "$keyID" | openpgp2ssh "$keyID" 2> /dev/null
 }
