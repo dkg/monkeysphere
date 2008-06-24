@@ -63,12 +63,12 @@ that is done, publish the key to a keyserver with "publish-key"
 subcommand.  Finally, you need to modify the sshd_config to tell sshd
 where the new server host key:
 
-HostKey /etc/monkeysphere/ssh_host_rsa_key
+HostKey /var/lib/monkeysphere/ssh_host_rsa_key
 
 If the server will also handle user authentication through
 monkeysphere-generated authorized_keys files, set the following:
 
-AuthorizedKeysFile /var/cache/monkeysphere/authorized_keys/%u
+AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
 
 Once those changes are made, restart the ssh server.
 
@@ -81,17 +81,18 @@ System monkeysphere-server config file.
 /etc/monkeysphere/monkeysphere.conf
 System-wide monkeysphere config file.
 .TP
-/etc/monkeysphere/gnupg
-Monkeysphere GNUPG home directory.
+/var/lib/monkeysphere/authorized_keys/USER
+Monkeysphere-generated user authorized_keys files.
 .TP
-/etc/monkeysphere/ssh_host_rsa_key
-Copy of the host's private key in ssh format, suitable for use by sshd.
+/var/lib/monkeysphere/ssh_host_rsa_key
+Copy of the host's private key in ssh format, suitable for use by
+sshd.
 .TP
-/etc/monkeysphere/authorized_user_ids/USER
-Server maintained authorized_user_ids files for users.
+/var/lib/monkeysphere/gnupg-host
+Monkeysphere host GNUPG home directory.
 .TP
-/var/cache/monkeysphere/authorized_keys/USER
-User authorized_keys file.
+/var/lib/monkeysphere/gnupg-authentication
+Monkeysphere authentication GNUPG home directory.
 
 .SH AUTHOR
 
