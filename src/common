@@ -16,8 +16,6 @@
 # managed directories
 ETC="/etc/monkeysphere"
 export ETC
-CACHE="/var/cache/monkeysphere"
-export CACHE
 
 ########################################################################
 ### UTILITY FUNCTIONS

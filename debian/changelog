@@ -3,7 +3,11 @@ monkeysphere (0.3-1) UNRELEASED; urgency=low
   [ Daniel Kahn Gillmor ]
   * new version (above: change UNRELEASED to experimental when releasing)
 
- -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 23 Jun 2008 19:58:47 -0400
+  [ Jameson Graef Rollins ]
+  * Move files in /var/cache/monkeysphere and GNUPGHOME for server to
+    the more appropriate /var/lib/monkeysphere.
+
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Tue, 24 Jun 2008 00:22:09 -0400
 
 monkeysphere (0.2-2) experimental; urgency=low
 
