@@ -190,58 +190,49 @@ case $COMMAND in
 		continue
 	    fi
 
-	    # set authorized_user_ids variable,
-	    # translate ssh-style path variables
-	    authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
-
-	    # skip user if authorized_user_ids file does not exist
-	    if [ ! -f "$authorizedUserIDs" ] ; then
-		#FIXME: what about a user with no authorized_user_ids
-		# file, but with an authorized_keys file when
-		# USER_CONTROLLED_AUTHORIZED_KEYS is set?
-		continue
-	    fi
-
 	    log "----- user: $uname -----"
+
+	    # set authorized_user_ids variable, translating ssh-style
+	    # path variables
+	    authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
 
 	    # temporary authorized_keys file
 	    AUTHORIZED_KEYS=$(mktemp)
 
-	    # skip if the user's authorized_user_ids file is empty
-	    if [ ! -s "$authorizedUserIDs" ] ; then
-		log "authorized_user_ids file '$authorizedUserIDs' is empty."
-		#FIXME: what about a user with an empty
-		# authorized_user_ids file, but with an
-		# authorized_keys file when
-		# USER_CONTROLLED_AUTHORIZED_KEYS is set?
-		continue
-	    fi
-
 	    # process authorized_user_ids file
-	    log "processing authorized_user_ids file..."
-	    process_authorized_user_ids "$authorizedUserIDs"
+	    if [ -s "$authorizedUserIDs" ] ; then
+		log "processing authorized_user_ids file..."
+		process_authorized_user_ids "$authorizedUserIDs"
+	    fi
 
 	    # add user-controlled authorized_keys file path if specified
 	    if [ "$USER_CONTROLLED_AUTHORIZED_KEYS" != '-' ] ; then
 		userAuthorizedKeys=$(translate_ssh_variables "$uname" "$USER_CONTROLLED_AUTHORIZED_KEYS")
-		if [ -f "$userAuthorizedKeys" ] ; then
+		if [ -s "$userAuthorizedKeys" ] ; then
 		    log -n "adding user's authorized_keys file... "
 		    cat "$userAuthorizedKeys" >> "$AUTHORIZED_KEYS"
 		    loge "done."
 		fi
 	    fi
 
-            # openssh appears to check the contents of the
-            # authorized_keys file as the user in question, so the file
-            # must be readable by that user at least.
-            # FIXME: is there a better way to do this?
-            chgrp $(getent passwd "$uname" | cut -f4 -d:) "$AUTHORIZED_KEYS"
-            chmod g+r "$AUTHORIZED_KEYS"
+	    # if the resulting authorized_keys file is not empty
+	    if [ -s "$AUTHORIZED_KEYS" ] ; then
+		# openssh appears to check the contents of the
+                # authorized_keys file as the user in question, so the
+                # file must be readable by that user at least.
+		# FIXME: is there a better way to do this?
+		chgrp $(getent passwd "$uname" | cut -f4 -d:) "$AUTHORIZED_KEYS"
+		chmod g+r "$AUTHORIZED_KEYS"
 
-	    # move the temp authorized_keys file into place
-	    mv -f "$AUTHORIZED_KEYS" "${CACHE}/authorized_keys/${uname}"
+		# move the temp authorized_keys file into place
+		mv -f "$AUTHORIZED_KEYS" "${CACHE}/authorized_keys/${uname}"
 
-	    log "authorized_keys file updated."
+		log "authorized_keys file updated."
+
+	    # else destroy it
+	    else
+		rm -f "$AUTHORIZED_KEYS"
+	    fi
 	done
 	;;
 
