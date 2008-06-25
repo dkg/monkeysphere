@@ -26,8 +26,8 @@ Update the admin-controlled authorized_keys files for user.  For each
 user specified, user ID's listed in the user's authorized_user_ids
 file are processed, and the user's authorized_keys file in
 /var/cache/monkeysphere/authorized_keys/USER.  See `man monkeysphere'
-for more info.  If the USER_CONTROLLED_AUTHORIZED_KEYS variable is
-set, then a user-controlled authorized_keys file (usually
+for more info.  If the RAW_AUTHORIZED_KEYS variable is set, then a
+user-controlled authorized_keys file (usually
 ~USER/.ssh/authorized_keys) is added to the authorized_keys file.  `u'
 may be used in place of `update-users.
 .TP

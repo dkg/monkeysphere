@@ -168,7 +168,6 @@ case $COMMAND in
 	    if [ ! -s "$KNOWN_HOSTS" ] ; then
 		failure "known_hosts file '$KNOWN_HOSTS' is empty."
 	    fi
-	    log "processing known_hosts file..."
 	    process_known_hosts || ERR=1
 	fi
 
@@ -184,7 +183,6 @@ case $COMMAND in
 	fi
 
 	# process authorized_user_ids file
-	log "processing authorized_user_ids file..."
 	process_authorized_user_ids "$AUTHORIZED_USER_IDS" || ERR=1
 	log "authorized_keys file updated."
 	;;
