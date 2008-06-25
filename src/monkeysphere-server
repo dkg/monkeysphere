@@ -48,6 +48,20 @@ subcommands:
 EOF
 }
 
+gpg_host() {
+    GNUPGHOME="$GNUPGHOME_HOST"
+    export GNUPGHOME
+
+    gpg "$@"
+}
+
+gpg_authentication() {
+    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
+    export GNUPGHOME
+
+    su --preserve-environment "$MONKEYSPHERE_USER" -c -- "gpg $@"
+}
+
 # generate server gpg key
 gen_key() {
     local hostName
@@ -60,8 +74,7 @@ gen_key() {
     SERVICE=${SERVICE:-"ssh"}
     userID="${SERVICE}://${hostName}"
 
-    GNUPGHOME="$GNUPGHOME_HOST"
-    if gpg --list-key ="$userID" > /dev/null 2>&1 ; then
+    if gpg_host --list-key ="$userID" > /dev/null 2>&1 ; then
 	failure "Key for '$userID' already exists"
     fi
 
@@ -119,26 +132,21 @@ EOF
 )
 
     log "generating server key..."
-    GNUPGHOME="$GNUPGHOME_HOST"
-    echo "$keyParameters" | gpg --batch --gen-key
+    echo "$keyParameters" | gpg_host --batch --gen-key
 
     # output the server fingerprint
     fingerprint_server_key "=${userID}"
 
     # find the key fingerprint of the server primary key
-    GNUPGHOME="$GNUPGHOME_HOST"
-    fingerprint=$(gpg --list-key --with-colons --with-fingerprint "=${userID}" | \
+    fingerprint=$(gpg_host --list-key --with-colons --with-fingerprint "=${userID}" | \
 	grep '^fpr:' | head -1 | cut -d: -f10)
 
     # export the host key to the authentication keyring
-    GNUPGHOME="$GNUPGHOME_HOST" gpg --export "$fingerprint" | \
-	su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
-	"GNUPGHOME=$GNUPGHOME_AUTHENTICATION gpg --import"
+    gpg_host --export "$fingerprint" | gpg_authentication --import
 
     # set host key owner trust to ultimate in authentication keyring
     echo "${fingerprint}:6:" | \
-        su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
-        "GNUPGHOME=$GNUPGHOME_AUTHENTICATION gpg --import-ownertrust"
+	gpg_authentication "--import-ownertrust"
 
     # write the key to the file
     # NOTE: assumes that the primary key is the proper key to use
@@ -176,7 +184,6 @@ publish_server_key() {
 To publish manually, do: gpg --keyserver $KEYSERVER --send-keys $(hostname -f)"
 }
 
-
 # retrieve key from web of trust, and set owner trust to "full"
 # if key is found.
 trust_key() {
@@ -193,26 +200,19 @@ trust_key() {
     export keyID
 
     # get the key from the key server
-    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
-    su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
-	"gpg --keyserver $KEYSERVER --recv-key $keyID"
-    if [ "$?" != 0 ] ; then
+    if ! su_monkeysphere_user "gpg --keyserver $KEYSERVER --recv-key $keyID" ; then
 	failure "Could not retrieve key '$keyID'."
     fi
 
     # move the key from the authentication keyring to the host keyring
-    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
-    su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
-	"gpg --export $keyID" | \
-	GNUPGHOME="$GNUPGHOME_HOST" gpg --import
+    gpg_authentication --export "$keyID" | gpg_host --import
 
     # get key fingerprint
     GNUPGHOME="$GNUPGHOME_HOST"
     fingerprint=$(get_key_fingerprint "$keyID")
 
     echo "key found:"
-    GNUPGHOME="$GNUPGHOME_HOST"
-    gpg --fingerprint "$fingerprint"
+    gpg_host --fingerprint "$fingerprint"
 
     while [ -z "$trustLevel" ] ; do
 	cat <<EOF
@@ -238,27 +238,22 @@ EOF
     # attach a "non-exportable" signature to the key
     # this is required for the key to have any validity at all
     # the 'y's on stdin indicates "yes, i really want to sign"
-    GNUPGHOME="$GNUPGHOME_HOST"
     echo -e 'y\ny' | \
-	gpg --quiet --lsign-key --command-fd 0 "$fingerprint"
+	gpg_host --quiet --lsign-key --command-fd 0 "$fingerprint"
 
     # copy the host keyring into the authentication keyring
     mv "$GNUPGHOME_AUTHENTICATION"/pubring.gpg{,.old}
     cp "$GNUPGHOME_HOST"/pubring.gpg "$GNUPGHOME_AUTHENTICATION"/pubring.gpg
     chown "$MONKEYSPHERE_USER" "$GNUPGHOME_AUTHENTICATION"/pubring.gpg
-    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
-    su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
-	"gpg --import ${GNUPGHOME_AUTHENTICATION}/pubring.gpg.old"
+    gpg_authentication --import "$GNUPGHOME_AUTHENTICATION"/pubring.gpg.old
 
     # index trustLevel by one to difference between level in ui and level
     # internally
     trustLevel=$((trustLevel+1))
 
     # import new owner trust level for key
-    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
     echo "${fingerprint}:${trustLevel}:" | \
-        su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
-        "GNUPGHOME=$GNUPGHOME_AUTHENTICATION gpg --import-ownertrust"
+        gpg_authentication --import-ownertrust
 
     if [ $? = 0 ] ; then
 	log "Owner trust updated."
