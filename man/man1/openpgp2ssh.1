@@ -19,11 +19,14 @@ SSH-style key on standard output.
 .Pp
 If the data on standard input contains no subkeys, you can invoke
 .Nm
-without arguments.  If the data on standard input contains
-multiple keys (e.g. a primary key and associated subkeys), you must
-specify a specific OpenPGP keyid (e.g. CCD2ED94D21739E9) or
-fingerprint as the first argument to indicate which key to export.
-The keyid must be exactly 16 hex characters.
+without arguments.  If the data on standard input contains multiple
+keys (e.g. a primary key and associated subkeys), you must specify a
+specific OpenPGP key identifier as the first argument to indicate
+which key to export.  The key ID is normally the 40 hex digit OpenPGP
+fingerprint of the key or subkey desired, but
+.Nm
+will accept as few as the last 8 digits of the fingerprint as a key
+ID.
 .Pp
 If the input contains an OpenPGP RSA or DSA public key, it will be
 converted to the OpenSSH-style single-line keystring, prefixed with
@@ -78,8 +81,9 @@ Secret key output is currently not passphrase-protected.
 .Nm
 currently cannot handle passphrase-protected secret keys on input.
 .Pp
-It would be nice to be able to use keyids shorter or longer than 16
-hex characters.
+Key identifiers consisting of an odd number of hex digits are not
+accepted.  Users who use a key ID with a standard length of 8, 16, or
+40 hex digits should not be affected by this.
 .Pp
 .Nm
 only acts on keys associated with the first primary key

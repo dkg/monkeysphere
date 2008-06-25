@@ -31,6 +31,8 @@ fi
 HOST="$1"
 PORT="$2"
 
+MS_HOME=${MS_HOME:-"${HOME}/.config/monkeysphere"}
+
 if [ -z "$HOST" ] ; then
     log "host must be specified."
     usage
@@ -58,11 +60,12 @@ else
     # FIXME: this only works for default known_hosts location
     hostKey=$(ssh-keygen -F "$HOST")
     if [ "$hostKey" ] ; then
-	# if the check keyserver variable is NOT set to true...
-	if  [ "$CHECK_KEYSERVER" != 'true' ] ; then
-	    # schedule a keyserver check for host at a later time
-	    echo "monkeysphere update-known_hosts $HOST" | at noon
-	fi
+	# do not check the keyserver
+	# FIXME: more nuanced checking should be done here to properly
+	# take into consideration hosts that join monkeysphere by
+	# converting an existing and known ssh key
+	CHECK_KEYSERVER="false"
+
     # if the host key is not found in the known_hosts file...
     else
 	# check the keyserver

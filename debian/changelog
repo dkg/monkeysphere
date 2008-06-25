@@ -1,7 +1,31 @@
-monkeysphere (0.2-1) UNRELEASED; urgency=low
+monkeysphere (0.4-1) UNRELEASED; urgency=low
+
+  [Daniel Kahn Gillmor]
+  * New version (switch UNRELEASED to experimental when ready)
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Tue, 24 Jun 2008 01:25:45 -0400
+
+monkeysphere (0.3-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
-  * NOT YET RELEASED (switch to "experimental" when ready to release)
+  * new version.
+
+  [ Jameson Graef Rollins ]
+  * Move files in /var/cache/monkeysphere and GNUPGHOME for server to
+    the more appropriate /var/lib/monkeysphere.
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Tue, 24 Jun 2008 00:55:29 -0400
+
+monkeysphere (0.2-2) experimental; urgency=low
+
+  * added lockfile-progs dependency
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 23 Jun 2008 19:34:05 -0400
+
+monkeysphere (0.2-1) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * openpgp2ssh now supports specifying keys by full fingerprint.
 
   [ Jameson Graef Rollins ]
   * Add AUTHORIZED_USER_IDS config variable for server, which defaults to
@@ -14,7 +38,7 @@ monkeysphere (0.2-1) UNRELEASED; urgency=low
   * Better failure/prompting for gen-subkey
   * Add ability to set any owner trust level for keys in server keychain.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sun, 22 Jun 2008 11:42:42 -0400
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 23 Jun 2008 17:03:19 -0400
 
 monkeysphere (0.1-1) experimental; urgency=low
 

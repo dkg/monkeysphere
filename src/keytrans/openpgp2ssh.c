@@ -35,15 +35,16 @@
 
 
 /* FIXME: keyid should be const as well */
-int convert_private_pgp_to_x509(gnutls_x509_privkey_t* output, const gnutls_openpgp_privkey_t* pgp_privkey, gnutls_openpgp_keyid_t* keyid) {
+int convert_private_pgp_to_x509(gnutls_x509_privkey_t* output, const gnutls_openpgp_privkey_t* pgp_privkey, const unsigned char* keyfpr, unsigned int fprlen) {
   gnutls_datum_t m, e, d, p, q, u, g, y, x;
   gnutls_pk_algorithm_t pgp_algo;
   unsigned int pgp_bits;
   int ret;
-  gnutls_openpgp_keyid_t curkeyid;
   int subkeyidx;
   int subkeycount;
   int found = 0;
+  unsigned char fingerprint[20];
+  size_t fingerprint_length = sizeof(fingerprint); 
 
   init_datum(&m);
   init_datum(&e);
@@ -61,20 +62,27 @@ int convert_private_pgp_to_x509(gnutls_x509_privkey_t* output, const gnutls_open
     return 1;
   }
 
-  if ((keyid == NULL) && 
+  if ((keyfpr == NULL) && 
       (subkeycount > 0)) {
-    err(0,"No keyid passed in, but there were %d keys to choose from\n", subkeycount + 1);
+    err(0,"No key identifier passed in, but there were %d keys to choose from\n", subkeycount + 1);
     return 1;
   }
 
-  if (keyid != NULL) {
-    ret = gnutls_openpgp_privkey_get_key_id(*pgp_privkey, curkeyid);
+  if (keyfpr != NULL) {
+    ret = gnutls_openpgp_privkey_get_fingerprint(*pgp_privkey, fingerprint, &fingerprint_length);
     if (ret) {
-      err(0,"Could not get keyid (error: %d)\n", ret);
+      err(0,"Could not get fingerprint (error: %d)\n", ret);
       return 1;
     }
+    if (fprlen > fingerprint_length) {
+      err(0, "Requested key identifier is longer than computed fingerprint\n");
+      return 1;
+    }
+    if (fingerprint_length > fprlen) {
+      err(0, "Only comparing last %d bits of key fingerprint\n", fprlen*8);
+    }
   }
-  if ((keyid == NULL) || (memcmp(*keyid, curkeyid, sizeof(gnutls_openpgp_keyid_t)) == 0)) {
+  if ((keyfpr == NULL) || (memcmp(fingerprint + (fingerprint_length - fprlen), keyfpr, fprlen) == 0)) {
     /* we want to export the primary key: */
     err(0,"exporting primary key\n");
 
@@ -106,12 +114,19 @@ int convert_private_pgp_to_x509(gnutls_x509_privkey_t* output, const gnutls_open
   } else {
     /* lets trawl through the subkeys until we find the one we want: */
     for (subkeyidx = 0; (subkeyidx < subkeycount) && !found; subkeyidx++) {
-      ret = gnutls_openpgp_privkey_get_subkey_id(*pgp_privkey, subkeyidx, curkeyid);
+      ret = gnutls_openpgp_privkey_get_subkey_fingerprint(*pgp_privkey, subkeyidx, fingerprint, &fingerprint_length);
       if (ret) {
-	err(0,"Could not get keyid of subkey with index %d (error: %d)\n", subkeyidx, ret);
+	err(0,"Could not get fingerprint of subkey with index %d (error: %d)\n", subkeyidx, ret);
 	return 1;
       }
-      if (memcmp(*keyid, curkeyid, sizeof(gnutls_openpgp_keyid_t)) == 0) {
+      if (fprlen > fingerprint_length) {
+	err(0, "Requested key identifier is longer than computed fingerprint\n");
+	return 1;
+      }
+      if (fingerprint_length > fprlen) {
+	err(1, "Only comparing last %d bits of key fingerprint\n", fprlen*8);
+      }
+      if (memcmp(fingerprint + (fingerprint_length - fprlen), keyfpr, fprlen) == 0) {
 	err(0,"exporting subkey index %d\n", subkeyidx);
 
 	/* FIXME: this is almost identical to the block above for the
@@ -172,8 +187,7 @@ int convert_private_pgp_to_x509(gnutls_x509_privkey_t* output, const gnutls_open
 }
 
 /* FIXME: keyid should be const also */
-int emit_public_openssh_from_pgp(const gnutls_openpgp_crt_t* pgp_crt, gnutls_openpgp_keyid_t* keyid) {
-  gnutls_openpgp_keyid_t curkeyid;
+int emit_public_openssh_from_pgp(const gnutls_openpgp_crt_t* pgp_crt, const unsigned char* keyfpr, size_t fprlen) {
   int ret;
   int subkeyidx;
   int subkeycount;
@@ -187,6 +201,9 @@ int emit_public_openssh_from_pgp(const gnutls_openpgp_crt_t* pgp_crt, gnutls_ope
   /* output_data must be at least 2 chars longer than the maximum possible
      algorithm name: */
   char output_data[20];
+
+  unsigned char fingerprint[20];
+  size_t fingerprint_length = sizeof(fingerprint); 
 
   /* variables for the output conversion: */
   int pipestatus;
@@ -208,20 +225,27 @@ int emit_public_openssh_from_pgp(const gnutls_openpgp_crt_t* pgp_crt, gnutls_ope
     return 1;
   }
 
-  if ((keyid == NULL) && 
+  if ((keyfpr == NULL) && 
       (subkeycount > 0)) {
-    err(0,"No keyid passed in, but there were %d keys to choose from\n", subkeycount + 1);
+    err(0,"No key identifier passed in, but there were %d keys to choose from\n", subkeycount + 1);
     return 1;
   }
 
-  if (keyid != NULL) {
-    ret = gnutls_openpgp_crt_get_key_id(*pgp_crt, curkeyid);
+  if (keyfpr != NULL) {
+    ret = gnutls_openpgp_crt_get_fingerprint(*pgp_crt, fingerprint, &fingerprint_length);
     if (ret) {
-      err(0,"Could not get keyid (error: %d)\n", ret);
+      err(0,"Could not get key fingerprint (error: %d)\n", ret);
       return 1;
     }
+    if (fprlen > fingerprint_length) {
+      err(0, "Requested key identifier is longer than computed fingerprint\n");
+      return 1;
+    }
+    if (fingerprint_length > fprlen) {
+      err(0, "Only comparing last %d bits of key fingerprint\n", fprlen*8);
+    }
   }
-  if ((keyid == NULL) || (memcmp(*keyid, curkeyid, sizeof(gnutls_openpgp_keyid_t)) == 0)) {
+  if ((keyfpr == NULL) || (memcmp(fingerprint + (fingerprint_length - fprlen), keyfpr, fprlen) == 0)) {
     /* we want to export the primary key: */
     err(0,"exporting primary key\n");
 
@@ -252,12 +276,19 @@ int emit_public_openssh_from_pgp(const gnutls_openpgp_crt_t* pgp_crt, gnutls_ope
   } else {
     /* lets trawl through the subkeys until we find the one we want: */
     for (subkeyidx = 0; (subkeyidx < subkeycount) && !found; subkeyidx++) {
-      ret = gnutls_openpgp_crt_get_subkey_id(*pgp_crt, subkeyidx, curkeyid);
+      ret = gnutls_openpgp_crt_get_subkey_fingerprint(*pgp_crt, subkeyidx, fingerprint, &fingerprint_length);
       if (ret) {
-	err(0,"Could not get keyid of subkey with index %d (error: %d)\n", subkeyidx, ret);
+	err(0,"Could not get fingerprint of subkey with index %d (error: %d)\n", subkeyidx, ret);
 	return 1;
       }
-      if (memcmp(*keyid, curkeyid, sizeof(gnutls_openpgp_keyid_t)) == 0) {
+      if (fprlen > fingerprint_length) {
+	err(0, "Requested key identifier is longer than computed fingerprint\n");
+	return 1;
+      }
+      if (fingerprint_length > fprlen) {
+	err(1, "Only comparing last %d bits of key fingerprint\n", fprlen*8);
+      }
+      if (memcmp(fingerprint + (fingerprint_length - fprlen), keyfpr, fprlen) == 0) {
 	err(0,"exporting subkey index %d\n", subkeyidx);
 
 	/* FIXME: this is almost identical to the block above for the
@@ -351,7 +382,7 @@ int emit_public_openssh_from_pgp(const gnutls_openpgp_crt_t* pgp_crt, gnutls_ope
 
 int main(int argc, char* argv[]) {
   gnutls_datum_t data;
-  int ret;
+  int ret = 0;
   gnutls_x509_privkey_t x509_privkey;
   gnutls_openpgp_privkey_t pgp_privkey;
   gnutls_openpgp_crt_t pgp_crt;
@@ -359,18 +390,54 @@ int main(int argc, char* argv[]) {
   char output_data[10240];
   size_t ods = sizeof(output_data);
   
-  gnutls_openpgp_keyid_t keyid;
-  gnutls_openpgp_keyid_t* use_keyid;
+  unsigned char * fingerprint = NULL;
+  size_t fpr_size;
+  char * prettyfpr = NULL;
 
   init_gnutls();
 
-  /* figure out what keyid we should be looking for: */
-  use_keyid = NULL;
+  /* figure out what key we should be looking for: */
   if (argv[1] != NULL) {
-    ret = convert_string_to_keyid(keyid, argv[1]);
-    if (ret != 0)
-      return ret;
-    use_keyid = &keyid;
+    if (strlen(argv[1]) > 81) {
+      /* safety check to avoid some sort of wacky overflow situation:
+	 there's no reason that the key id should be longer than twice
+	 a sane fingerprint (one byte between chars, and then another
+	 two at the beginning and end) */
+      err(0, "Key identifier is way too long.  Please use at most 40 hex digits.\n");
+      return 1;
+    }
+
+    fpr_size = hexstring2bin(NULL, argv[1]);
+    if (fpr_size > 40*4) {
+      err(0, "Key identifier is longer than 40 hex digits\n");
+      return 1;
+    }
+    /* since fpr_size is initially in bits: */
+    if (fpr_size % 8 != 0) {
+      err(0, "Please provide an even number of hex digits for the key identifier\n");
+      return 1;
+    }
+    fpr_size /= 8;
+
+    fingerprint = malloc(sizeof(unsigned char) * fpr_size);
+    bzero(fingerprint, sizeof(unsigned char) * fpr_size);
+    hexstring2bin(fingerprint, argv[1]);
+
+    prettyfpr = malloc(sizeof(unsigned char)*fpr_size*2 + 1);
+    if (prettyfpr != NULL) {
+      hex_print_data(prettyfpr, fingerprint, fpr_size);
+      prettyfpr[sizeof(unsigned char)*fpr_size*2] = '\0';
+      err(1, "searching for key with fingerprint '%s'\n", prettyfpr);
+      free(prettyfpr);
+    }
+
+    if (fpr_size < 4) {
+      err(0, "You MUST provide at least 8 hex digits in any key identifier\n");
+      return 1;
+    }
+    if (fpr_size < 8)
+      err(0, "You should provide at least 16 hex digits in any key identifier (proceeding with %d digits anyway)\n", fpr_size*2);
+   
   }
 
   
@@ -397,7 +464,7 @@ int main(int argc, char* argv[]) {
       return 1;
     }
     
-    ret = convert_private_pgp_to_x509(&x509_privkey, &pgp_privkey, use_keyid);
+    ret = convert_private_pgp_to_x509(&x509_privkey, &pgp_privkey, fingerprint, fpr_size);
 
     gnutls_openpgp_privkey_deinit(pgp_privkey);
     if (ret)
@@ -423,7 +490,7 @@ int main(int argc, char* argv[]) {
       /* we're dealing with a public key */
       err(0,"Translating public key\n");
 
-      ret = emit_public_openssh_from_pgp(&pgp_crt, use_keyid);
+      ret = emit_public_openssh_from_pgp(&pgp_crt, fingerprint, fpr_size);
       
     } else {
       /* we have no idea what kind of key this is at all anyway! */
@@ -433,5 +500,6 @@ int main(int argc, char* argv[]) {
   }
 
   gnutls_global_deinit();
+  free(fingerprint);
   return 0;
 }
