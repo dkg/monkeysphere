@@ -10,11 +10,10 @@
 
 ########################################################################
 PGRM=$(basename $0)
-PGRM_PATH=$(dirname $0)
 
 SHARE=${SHARE:-"/usr/share/monkeysphere"}
 export SHARE
-. "${SHARE}/common"
+. "${SHARE}/common" || exit 1
 
 VARLIB="/var/lib/monkeysphere"
 export VARLIB
@@ -42,24 +41,154 @@ subcommands:
   gen-key (g) [HOSTNAME]                generate gpg key for the server
   show-fingerprint (f)                  show server's host key fingerprint
   publish-key (p)                       publish server's host key to keyserver
-  trust-key (t) KEYID [LEVEL]           set owner trust for keyid
+  trust-key (t) KEYID                   import and tsign a certification key
   help (h,?)                            this help
 
 EOF
 }
 
+su_monkeysphere_user() {
+    su --preserve-environment "$MONKEYSPHERE_USER" -- -c "$@"
+}
+
+# function to interact with the host gnupg keyring
 gpg_host() {
+    local returnCode
+
     GNUPGHOME="$GNUPGHOME_HOST"
     export GNUPGHOME
 
-    gpg "$@"
+    # NOTE: we supress this warning because we need the monkeysphere
+    # user to be able to read the host pubring.  we realize this might
+    # be problematic, but it's the simplest solution, without too much
+    # loss of security.
+    gpg --no-permission-warning "$@"
+    returnCode="$?"
+
+    # always reset the permissions on the host pubring so that the
+    # monkeysphere user can read the trust signatures
+    chgrp "$MONKEYSPHERE_USER" "${GNUPGHOME_HOST}/pubring.gpg"
+    chmod g+r "${GNUPGHOME_HOST}/pubring.gpg"
+    
+    return "$returnCode"
 }
 
+# function to interact with the authentication gnupg keyring
 gpg_authentication() {
     GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
     export GNUPGHOME
 
-    su --preserve-environment "$MONKEYSPHERE_USER" -c -- "gpg $@"
+    su_monkeysphere_user "gpg $@"
+}
+
+# update authorized_keys for users
+update_users() {
+    if [ "$1" ] ; then
+	# get users from command line
+	unames="$@"
+    else
+	# or just look at all users if none specified
+	unames=$(getent passwd | cut -d: -f1)
+    fi
+
+    # set mode
+    MODE="authorized_keys"
+
+    # set gnupg home
+    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
+
+    # check to see if the gpg trust database has been initialized
+    if [ ! -s "${GNUPGHOME}/trustdb.gpg" ] ; then
+	failure "GNUPG trust database uninitialized.  Please see MONKEYSPHERE-SERVER(8)."
+    fi
+
+    # make sure the authorized_keys directory exists
+    mkdir -p "${VARLIB}/authorized_keys"
+
+    # loop over users
+    for uname in $unames ; do
+	# check all specified users exist
+	if ! getent passwd "$uname" >/dev/null ; then
+	    error "----- unknown user '$uname' -----"
+	    continue
+	fi
+
+	# set authorized_user_ids and raw authorized_keys variables,
+	# translating ssh-style path variables
+	authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
+	rawAuthorizedKeys=$(translate_ssh_variables "$uname" "$RAW_AUTHORIZED_KEYS")
+
+	# if neither is found, skip user
+	if [ ! -s "$authorizedUserIDs" ] ; then
+	    if [ "$rawAuthorizedKeys" = '-' -o ! -s "$rawAuthorizedKeys" ] ; then
+		continue
+	    fi
+	fi
+
+	log "----- user: $uname -----"
+
+        # make temporary directory
+        TMPDIR=$(mktemp -d)
+
+	# trap to delete temporary directory on exit
+	trap "rm -rf $TMPDIR" EXIT
+
+        # create temporary authorized_user_ids file
+        TMP_AUTHORIZED_USER_IDS="${TMPDIR}/authorized_user_ids"
+        touch "$TMP_AUTHORIZED_USER_IDS"
+
+        # create temporary authorized_keys file
+        AUTHORIZED_KEYS="${TMPDIR}/authorized_keys"
+        touch "$AUTHORIZED_KEYS"
+
+        # set restrictive permissions on the temporary files
+	# FIXME: is there a better way to do this?
+        chmod 0700 "$TMPDIR"
+        chmod 0600 "$AUTHORIZED_KEYS"
+        chmod 0600 "$TMP_AUTHORIZED_USER_IDS"
+        chown -R "$MONKEYSPHERE_USER" "$TMPDIR"
+
+	# if the authorized_user_ids file exists...
+	if [ -s "$authorizedUserIDs" ] ; then
+            # copy user authorized_user_ids file to temporary
+            # location
+	    cat "$authorizedUserIDs" > "$TMP_AUTHORIZED_USER_IDS"
+
+	    # export needed variables
+	    export AUTHORIZED_KEYS
+	    export TMP_AUTHORIZED_USER_IDS
+
+	    # process authorized_user_ids file, as monkeysphere
+	    # user
+	    su_monkeysphere_user \
+		". ${SHARE}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
+	    ERR="$?"
+	fi
+
+	# add user-controlled authorized_keys file path if specified
+	if [ "$rawAuthorizedKeys" != '-' -a -s "$rawAuthorizedKeys" ] ; then
+	    log -n "adding raw authorized_keys file... "
+	    cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
+	    loge "done."
+	fi
+
+	# openssh appears to check the contents of the
+        # authorized_keys file as the user in question, so the
+        # file must be readable by that user at least.
+	# FIXME: is there a better way to do this?
+	chown root "$AUTHORIZED_KEYS"
+	chgrp $(getent passwd "$uname" | cut -f4 -d:) "$AUTHORIZED_KEYS"
+	chmod g+r "$AUTHORIZED_KEYS"
+
+	# if the resulting authorized_keys file is not empty, move
+	# it into place
+	mv -f "$AUTHORIZED_KEYS" "${VARLIB}/authorized_keys/${uname}"
+
+	log "authorized_keys file updated."
+
+	# destroy temporary directory
+	rm -rf "$TMPDIR"
+    done
 }
 
 # generate server gpg key
@@ -103,7 +232,7 @@ Expire-Date: $KEY_EXPIRE
 EOF
 )
 
-    # add the revoker field if requested
+    # add the revoker field if specified
     # FIXME: the "1:" below assumes that $REVOKER's key is an RSA key.  why?
     # FIXME: why is this marked "sensitive"?  how will this signature ever
     # be transmitted to the expected revoker?
@@ -115,7 +244,7 @@ EOF
 )
     fi
 
-    echo "The following key parameters will be used:"
+    echo "The following key parameters will be used for the host private key:"
     echo "$keyParameters"
 
     read -p "Generate key? [Y|n]: " OK; OK=${OK:=Y}
@@ -141,31 +270,18 @@ EOF
     fingerprint=$(gpg_host --list-key --with-colons --with-fingerprint "=${userID}" | \
 	grep '^fpr:' | head -1 | cut -d: -f10)
 
-    # export the host key to the authentication keyring
-    gpg_host --export "$fingerprint" | gpg_authentication --import
-
-    # set host key owner trust to ultimate in authentication keyring
-    echo "${fingerprint}:6:" | \
-	gpg_authentication "--import-ownertrust"
-
-    # write the key to the file
+    # translate the private key to ssh format, and export to a file
+    # for sshs usage.
     # NOTE: assumes that the primary key is the proper key to use
-    GNUPGHOME="$GNUPGHOME_HOST"
-    (umask 077 && gpgsecret2ssh "$fingerprint" > "${VARLIB}/ssh_host_rsa_key")
+    (umask 077 && \
+	gpg_host --export-secret-key "$fingerprint" | \
+	openpgp2ssh "$fingerprint" > "${VARLIB}/ssh_host_rsa_key")
     log "Private SSH host key output to file: ${VARLIB}/ssh_host_rsa_key"
 }
 
 # gpg output key fingerprint
 fingerprint_server_key() {
-    local ID
-
-    if [ "$1" ] ; then
-	ID="$1"
-    else
-	ID="=ssh://$(hostname --fqdn)"
-    fi
-
-    gpg --fingerprint --list-secret-keys "$ID"
+    gpg_host --fingerprint --list-secret-keys
 }
 
 # publish server key to keyserver
@@ -179,9 +295,8 @@ publish_server_key() {
     # FIXME: need to figure out better way to identify host key
     # dummy command so as not to publish fakes keys during testing
     # eventually:
-    #gpg --keyserver "$KEYSERVER" --send-keys $(hostname -f)
-    failure "NOT PUBLISHED (to avoid permanent publication errors during monkeysphere development).
-To publish manually, do: gpg --keyserver $KEYSERVER --send-keys $(hostname -f)"
+    #gpg_authentication "--keyring $GNUPGHOME_HOST/pubring.gpg --keyserver $KEYSERVER --send-keys $(hostname -f)"
+    failure "NOT PUBLISHED (to avoid permanent publication errors during monkeysphere development)."
 }
 
 # retrieve key from web of trust, and set owner trust to "full"
@@ -191,7 +306,10 @@ trust_key() {
     local trustLevel
 
     keyID="$1"
-    trustLevel="$2"
+
+    # default values for trust depth and domain
+    DEPTH=${DEPTH:-1}
+    DOMAIN=${DOMAIN:-}
 
     if [ -z "$keyID" ] ; then
 	failure "You must specify key to trust."
@@ -199,67 +317,44 @@ trust_key() {
 
     export keyID
 
+    # export host ownertrust to authentication keyring
+    gpg_host --export-ownertrust | gpg_authentication "--import-ownertrust"
+
     # get the key from the key server
-    if ! su_monkeysphere_user "gpg --keyserver $KEYSERVER --recv-key $keyID" ; then
-	failure "Could not retrieve key '$keyID'."
+    gpg_authentication "--keyserver $KEYSERVER --recv-key $keyID"
+
+    # get the full fingerprint of a key ID
+    fingerprint=$(gpg_authentication "--list-key --with-colons --with-fingerprint $keyID" | \
+	grep '^fpr:' | grep "$keyID" | cut -d: -f10)
+
+    if [ -z "$fingerprint" ] ; then
+	failure "Could not find key '$keyID'."
     fi
-
-    # move the key from the authentication keyring to the host keyring
-    gpg_authentication --export "$keyID" | gpg_host --import
-
-    # get key fingerprint
-    GNUPGHOME="$GNUPGHOME_HOST"
-    fingerprint=$(get_key_fingerprint "$keyID")
 
     echo "key found:"
-    gpg_host --fingerprint "$fingerprint"
+    gpg_authentication "--fingerprint $fingerprint"
 
-    while [ -z "$trustLevel" ] ; do
-	cat <<EOF
-Please decide how far you trust this user to correctly verify other users' keys
-(by looking at passports, checking fingerprints from different sources, etc.)
+    # export the key to the host keyring
+    gpg_authentication "--export $keyID" | gpg_host --import
 
-  1 = I don't know or won't say
-  2 = I do NOT trust
-  3 = I trust marginally
-  4 = I trust fully
-  5 = I trust ultimately
-
+    # ltsign command
+    # NOTE: *all* user IDs will be ltsigned
+    ltsignCommand=$(cat <<EOF
+ltsign
+y
+2
+$DEPTH
+$DOMAIN
+y
+save
 EOF
-	read -p "Your decision? " trustLevel
-	if echo "$trustLevel" | grep -v "[1-5]" ; then
-	    echo "Unknown trust level '$trustLevel'."
-	    unset trustLevel
-	elif [ "$trustLevel" = 'q' ] ; then
-	    failure "Aborting."
-	fi
-    done
+)
 
-    # attach a "non-exportable" signature to the key
-    # this is required for the key to have any validity at all
-    # the 'y's on stdin indicates "yes, i really want to sign"
-    echo -e 'y\ny' | \
-	gpg_host --quiet --lsign-key --command-fd 0 "$fingerprint"
+    # ltsign the key
+    echo "$ltsignCommand" | gpg_host --quiet --command-fd 0 --edit-key "$fingerprint"
 
-    # copy the host keyring into the authentication keyring
-    mv "$GNUPGHOME_AUTHENTICATION"/pubring.gpg{,.old}
-    cp "$GNUPGHOME_HOST"/pubring.gpg "$GNUPGHOME_AUTHENTICATION"/pubring.gpg
-    chown "$MONKEYSPHERE_USER" "$GNUPGHOME_AUTHENTICATION"/pubring.gpg
-    gpg_authentication --import "$GNUPGHOME_AUTHENTICATION"/pubring.gpg.old
-
-    # index trustLevel by one to difference between level in ui and level
-    # internally
-    trustLevel=$((trustLevel+1))
-
-    # import new owner trust level for key
-    echo "${fingerprint}:${trustLevel}:" | \
-        gpg_authentication --import-ownertrust
-
-    if [ $? = 0 ] ; then
-	log "Owner trust updated."
-    else
-	failure "There was a problem changing owner trust."
-    fi
+    # update the trustdb for the authentication keyring
+    gpg_authentication "--check-trustdb"
 }
 
 ########################################################################
@@ -270,11 +365,8 @@ COMMAND="$1"
 [ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
 shift
 
-# set ms home directory
-MS_HOME=${MS_HOME:-"$ETC"}
-
 # load configuration file
-MS_CONF=${MS_CONF:-"$MS_HOME"/monkeysphere-server.conf}
+MS_CONF=${MS_CONF:-"${ETC}/monkeysphere-server.conf"}
 [ -e "$MS_CONF" ] && . "$MS_CONF"
 
 # set empty config variable with defaults
@@ -290,6 +382,7 @@ GNUPGHOME_HOST=${GNUPGHOME_HOST:-"${VARLIB}/gnupg-host"}
 GNUPGHOME_AUTHENTICATION=${GNUPGHOME_AUTHENTICATION:-"${VARLIB}/gnupg-authentication"}
 
 # export variables
+export DATE
 export MODE
 export MONKEYSPHERE_USER
 export KEYSERVER
@@ -301,128 +394,18 @@ export GNUPGHOME
 
 case $COMMAND in
     'update-users'|'update-user'|'u')
-	if [ "$1" ] ; then
-	    # get users from command line
-	    unames="$@"
-	else
-	    # or just look at all users if none specified
-	    unames=$(getent passwd | cut -d: -f1)
-	fi
-
-	# set mode
-	MODE="authorized_keys"
-
-	# set gnupg home
-	GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
-
-	# check to see if the gpg trust database has been initialized
-	if [ ! -s "${GNUPGHOME}/trustdb.gpg" ] ; then
-	    failure "GNUPG trust database uninitialized.  Please see MONKEYSPHERE-SERVER(8)."
-	fi
-
-        # make sure the authorized_keys directory exists
-	mkdir -p "${VARLIB}/authorized_keys"
-
-	# loop over users
-	for uname in $unames ; do
-	    # check all specified users exist
-	    if ! getent passwd "$uname" >/dev/null ; then
-		error "----- unknown user '$uname' -----"
-		continue
-	    fi
-
-	    # set authorized_user_ids and raw authorized_keys variables,
-	    # translating ssh-style path variables
-	    authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
-	    rawAuthorizedKeys=$(translate_ssh_variables "$uname" "$RAW_AUTHORIZED_KEYS")
-
-	    # if neither is found, skip user
-	    if [ ! -s "$authorizedUserIDs" ] ; then
-		if [ "$rawAuthorizedKeys" = '-' -o ! -s "$rawAuthorizedKeys" ] ; then
-		    continue
-		fi
-	    fi
-
-	    log "----- user: $uname -----"
-
-            # make temporary directory
-            TMPDIR=$(mktemp -d)
-
-	    # trap to delete temporary directory on exit
-	    trap "rm -rf $TMPDIR" EXIT
-
-            # create temporary authorized_user_ids file
-            TMP_AUTHORIZED_USER_IDS="${TMPDIR}/authorized_user_ids"
-            touch "$TMP_AUTHORIZED_USER_IDS"
-
-            # create temporary authorized_keys file
-            AUTHORIZED_KEYS="${TMPDIR}/authorized_keys"
-            touch "$AUTHORIZED_KEYS"
-
-            # set restrictive permissions on the temporary files
-	    # FIXME: is there a better way to do this?
-            chmod 0700 "$TMPDIR"
-            chmod 0600 "$AUTHORIZED_KEYS"
-            chmod 0600 "$TMP_AUTHORIZED_USER_IDS"
-            chown -R "$MONKEYSPHERE_USER" "$TMPDIR"
-
-	    # if the authorized_user_ids file exists...
-	    if [ -s "$authorizedUserIDs" ] ; then
-                # copy user authorized_user_ids file to temporary
-                # location
-		cat "$authorizedUserIDs" > "$TMP_AUTHORIZED_USER_IDS"
-
-		# export needed variables
-		export AUTHORIZED_KEYS
-		export TMP_AUTHORIZED_USER_IDS
-
-		# process authorized_user_ids file, as monkeysphere
-		# user
-		su --preserve-environment "$MONKEYSPHERE_USER" -c -- \
-		    ". ${SHARE}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
-	    fi
-
-	    # add user-controlled authorized_keys file path if specified
-	    if [ "$rawAuthorizedKeys" != '-' -a -s "$rawAuthorizedKeys" ] ; then
-		log -n "adding raw authorized_keys file... "
-		cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
-		loge "done."
-	    fi
-
-	    # openssh appears to check the contents of the
-            # authorized_keys file as the user in question, so the
-            # file must be readable by that user at least.
-	    # FIXME: is there a better way to do this?
-	    chown root "$AUTHORIZED_KEYS"
-	    chgrp $(getent passwd "$uname" | cut -f4 -d:) "$AUTHORIZED_KEYS"
-	    chmod g+r "$AUTHORIZED_KEYS"
-
-	    # if the resulting authorized_keys file is not empty, move
-	    # it into place
-	    mv -f "$AUTHORIZED_KEYS" "${VARLIB}/authorized_keys/${uname}"
-
-	    log "authorized_keys file updated."
-	    
-	    # destroy temporary directory
-	    rm -rf "$TMPDIR"
-	done
+	update_users "$@"
 	;;
 
     'gen-key'|'g')
-	# set gnupg home
-	GNUPGHOME="$GNUPGHOME_HOST"
 	gen_key "$@"
 	;;
 
     'show-fingerprint'|'f')
-	# set gnupg home
-	GNUPGHOME="$GNUPGHOME_HOST"
-	fingerprint_server_key "$@"
+	fingerprint_server_key
 	;;
 
     'publish-key'|'p')
-	# set gnupg home
-	GNUPGHOME="$GNUPGHOME_HOST"
 	publish_server_key
 	;;
 

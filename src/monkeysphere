@@ -13,7 +13,7 @@ PGRM=$(basename $0)
 
 SHAREDIR=${SHAREDIR:-"/usr/share/monkeysphere"}
 export SHAREDIR
-. "${SHAREDIR}/common"
+. "${SHAREDIR}/common" || exit 1
 
 GLOBAL_CONFIG=${GLOBAL_CONFIG:-"${ETC}/monkeysphere.conf"}
 [ -r "$GLOBAL_CONFIG" ] && . "$GLOBAL_CONFIG"
@@ -160,7 +160,8 @@ case $COMMAND in
         # if hosts are specified on the command line, process just
         # those hosts
 	if [ "$1" ] ; then
-	    update_known_hosts "$@" || ERR=1
+	    update_known_hosts "$@"
+	    ERR="$?"
 
         # otherwise, if no hosts are specified, process every host
         # in the user's known_hosts file
@@ -168,10 +169,10 @@ case $COMMAND in
 	    if [ ! -s "$KNOWN_HOSTS" ] ; then
 		failure "known_hosts file '$KNOWN_HOSTS' is empty."
 	    fi
-	    process_known_hosts || ERR=1
-	fi
 
-	log "known_hosts file updated."
+	    process_known_hosts
+	    ERR="$?"
+	fi
 	;;
 
     'update-authorized_keys'|'update-authorized-keys'|'a')
@@ -183,8 +184,8 @@ case $COMMAND in
 	fi
 
 	# process authorized_user_ids file
-	process_authorized_user_ids "$AUTHORIZED_USER_IDS" || ERR=1
-	log "authorized_keys file updated."
+	process_authorized_user_ids "$AUTHORIZED_USER_IDS"
+	ERR="$?"
 	;;
 
     'gen-subkey'|'g')

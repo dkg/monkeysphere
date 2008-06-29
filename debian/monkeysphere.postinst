@@ -5,13 +5,30 @@
 # Author: Jameson Rollins <jrollins@fifthhorseman.net>
 # (c) 2008
 
+VARLIB="/var/lib/monkeysphere"
+
 if ! getent passwd monkeysphere >/dev/null ; then
     echo "adding monkeysphere user..."
-    adduser --quiet --system --no-create-home --home '/var/lib/monkeysphere' \
-    --shell '/bin/sh' --gecos 'monkeysphere authentication user,,,' monkeysphere
+    adduser --quiet --system --no-create-home --group \
+	--home '/var/lib/monkeysphere' \
+	--shell '/bin/sh' \
+	--gecos 'monkeysphere authentication user,,,' \
+	monkeysphere
 fi
 
-# install host gnupg home directories
-install --mode 700 -d /var/lib/monkeysphere/gnupg-host
-# install authentication gnupg home directories
-install --mode 700 --owner monkeysphere -d /var/lib/monkeysphere/gnupg-authentication
+# install host gnupg home directory
+install --owner root --group monkeysphere --mode 750 -d "$VARLIB"/gnupg-host
+# install host gpg.conf
+cat <<EOF > "$VARLIB"/gnupg-host/gpg.conf
+list-options show-uid-validity
+EOF
+
+# install authentication gnupg home directory
+install --owner monkeysphere --group monkeysphere --mode 700 -d "$VARLIB"/gnupg-authentication
+# install authentication gpg.conf
+cat <<EOF > "$VARLIB"/gnupg-authentication/gpg.conf
+list-options show-uid-validity
+primary-keyring ${VARLIB}/gnupg-authentication/pubring.gpg
+keyring ${VARLIB}/gnupg-host/pubring.gpg
+EOF
+chown monkeysphere:monkeysphere "$VARLIB"/gnupg-authentication/gpg.conf

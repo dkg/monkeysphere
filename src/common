@@ -42,12 +42,12 @@ loge() {
 
 # cut out all comments(#) and blank lines from standard input
 meat() {
-    grep -v -e "^[[:space:]]*#" -e '^$'
+    grep -v -e "^[[:space:]]*#" -e '^$' "$1"
 }
 
 # cut a specified line from standard input
 cutline() {
-    head --line="$1" | tail -1
+    head --line="$1" "$2" | tail -1
 }
 
 # check that characters are in a string (in an AND fashion).
@@ -83,8 +83,13 @@ remove_line() {
     file="$1"
     string="$2"
 
+    # if the line is there are removed, return 0
     if [ "$file" -a "$string" ] ; then
 	grep -v "$string" "$file" | sponge "$file"
+	return 0
+    # otherwise return 1
+    else
+	return 1
     fi
 }
 
@@ -116,17 +121,6 @@ gpg2ssh() {
     keyID="$1"
 
     gpg --export "$keyID" | openpgp2ssh "$keyID" 2> /dev/null
-}
-
-# output the ssh key for a given secret key ID
-gpgsecret2ssh() {
-    local keyID
-
-    #keyID="$1" #TMP
-    # only use last 16 characters until openpgp2ssh can take all 40 #TMP
-    keyID=$(echo "$1" | cut -c 25-) #TMP
-
-    gpg --export-secret-key "$keyID" | openpgp2ssh "$keyID" 2> /dev/null
 }
 
 # output known_hosts line from ssh key
@@ -194,6 +188,11 @@ gpg2authorized_keys() {
 # (not just first N (5 in this case))
 gpg_fetch_userid() {
     local userID
+    local returnCode
+
+    if [ "$CHECK_KEYSERVER" != 'true' ] ; then
+	return 0
+    fi
 
     userID="$1"
 
@@ -202,18 +201,16 @@ gpg_fetch_userid() {
 	gpg --quiet --batch --with-colons \
 	--command-fd 0 --keyserver "$KEYSERVER" \
 	--search ="$userID" > /dev/null 2>&1
+    returnCode="$?"
     loge "done."
-}
 
-# get the full fingerprint of a key ID
-get_key_fingerprint() {
-    local keyID
+    # if the user is the monkeysphere user, then update the
+    # monkeysphere user's trustdb
+    if [ $(id -un) = "$MONKEYSPHERE_USER" ] ; then
+	gpg_authentication "--check-trustdb" > /dev/null 2>&1
+    fi
 
-    keyID="$1"
-
-    gpg --list-key --with-colons --fixed-list-mode \
-	--with-fingerprint --with-fingerprint "$keyID" | \
-	grep '^fpr:' | grep "$keyID" | cut -d: -f10
+    return "$returnCode"
 }
 
 ########################################################################
@@ -259,16 +256,13 @@ process_user_id() {
     fi
     requiredPubCapability=$(echo "$requiredCapability" | tr "[:lower:]" "[:upper:]")
 
-    # if CHECK_KEYSERVER variable set to true, check the keyserver
-    # for the user ID
-    if [ "$CHECK_KEYSERVER" = "true" ] ; then
-	gpg_fetch_userid "$userID"
-    fi
-
     # output gpg info for (exact) userid and store
     gpgOut=$(gpg --list-key --fixed-list-mode --with-colon \
 	--with-fingerprint --with-fingerprint \
 	="$userID" 2>/dev/null)
+
+    # fetch the user ID if necessary/requested
+    gpg_fetch_userid "$userID"
 
     # if the gpg query return code is not 0, return 1
     if [ "$?" -ne 0 ] ; then
@@ -388,11 +382,9 @@ process_host_known_hosts() {
     local userID
     local ok
     local keyid
+    local idOK
+    local idRemoved
     local tmpfile
-    local returnCode
-
-    # default return code is 1, which assumes no key was found
-    returnCode=1
 
     host="$1"
 
@@ -405,8 +397,10 @@ process_host_known_hosts() {
 	keyid=$(echo "$line" | cut -d: -f2)
 
 	sshKey=$(gpg2ssh "$keyid")
-	# remove the old host key line
-	remove_line "$KNOWN_HOSTS" "$sshKey"
+
+	# remove the old host key line, and note if removed
+	remove_line "$KNOWN_HOSTS" "$sshKey" && idRemoved=true
+
 	# if key OK, add new host line
 	if [ "$ok" -eq '0' ] ; then
 	    # hash if specified
@@ -421,25 +415,39 @@ process_host_known_hosts() {
 	    else
 		ssh2known_hosts "$host" "$sshKey" >> "$KNOWN_HOSTS"
 	    fi
-	    # set return code to be 0, since a key was found
-	    returnCode=0
+
+	    # note that at least one ok id was found
+	    idOK=true
 	fi
-	return "$returnCode"
     done
 
-    return "$returnCode"
+    # if at least one ok id was found, return 0
+    if [ "$idOK" ] ; then
+	return 0
+
+    # if ids were only removed, return 2
+    elif [ "$idRemoved" ] ; then
+	return 2
+
+    # else return 1, to indicate nothing happened
+    else
+	return 1
+    fi
 }
 
 # update the known_hosts file for a set of hosts listed on command
 # line
 update_known_hosts() {
+    local nHosts
     local host
-    local returnCode
+    local nHostsOK
+    local nHostsBAD
 
-    # default return code is 0, which assumes a key was found for
-    # every host.  code will be set to 1 if a key is not found for at
-    # least one host
-    returnCode=0
+    # the number of hosts specified on command line
+    nHosts="$#"
+
+    nHostsOK=0
+    nHostsBAD=0
 
     # set the trap to remove any lockfiles on exit
     trap "lockfile-remove $KNOWN_HOSTS" EXIT
@@ -448,9 +456,18 @@ update_known_hosts() {
     lockfile-create "$KNOWN_HOSTS"
 
     for host ; do
-	# process the host, change return code if host key not found
-	process_host_known_hosts "$host" || returnCode=1
-	
+	# process the host
+	process_host_known_hosts "$host"
+	# note the result
+	case "$?" in
+	    0)
+		nHostsOK=$((nHostsOK+1))
+		;;
+	    2)
+		nHostsBAD=$((nHostsBAD+1))
+		;;
+	esac
+
 	# touch the lockfile, for good measure.
 	lockfile-touch --oneshot "$KNOWN_HOSTS"
     done
@@ -458,29 +475,37 @@ update_known_hosts() {
     # remove the lockfile
     lockfile-remove "$KNOWN_HOSTS"
 
-    return "$returnCode"
+    # note if the known_hosts file was updated
+    if [ "$nHostsOK" -gt 0 -o "$nHostsBAD" -gt 0 ] ; then
+	log "known_hosts file updated."
+    fi
+
+    # if all hosts were OK, return 0
+    if [ "$nHostsOK" -eq "$nHosts" ] ; then
+	return 0
+
+    # if all hosts were BAD, return 2
+    elif [ "$nHostsBAD" -eq "$nHosts" ] ; then
+	return 2
+
+    # else return 1
+    else
+	return 1
+    fi
 }
 
-# process known_hosts file, going through line-by-line, extract each
-# host, and process with the host processing function
+# process hosts from a known_hosts file
 process_known_hosts() {
-    local returnCode
+    local hosts
 
     log "processing known_hosts file..."
 
-    # default return code is 0, which assumes a key was found for
-    # every host.  code will be set to 1 if a key is not found for at
-    # least one host
-    returnCode=0
+    hosts=$(meat "$KNOWN_HOSTS" | cut -d ' ' -f 1 | grep -v '^|.*$' | tr , ' ' | tr '\n' ' ')
 
-    # take all the hosts from the known_hosts file (first field), grep
-    # out all the hashed hosts (lines starting with '|')...
-    for line in $(cat "$KNOWN_HOSTS" | meat | cut -d ' ' -f 1 | grep -v '^|.*$') ; do
-	# break up hosts into separate words
-	update_known_hosts $(echo "$line" | tr , ' ') || returnCode=1
-    done
-
-    return "$returnCode"
+    # take all the hosts from the known_hosts file (first
+    # field), grep out all the hashed hosts (lines starting
+    # with '|')...
+    update_known_hosts $hosts
 }
 
 # process uids for the authorized_keys file
@@ -488,10 +513,8 @@ process_uid_authorized_keys() {
     local userID
     local ok
     local keyid
-    local returnCode
-
-    # default return code is 1, which assumes no key was found
-    returnCode=1
+    local idOK
+    local idRemoved
 
     userID="$1"
 
@@ -502,30 +525,46 @@ process_uid_authorized_keys() {
 	keyid=$(echo "$line" | cut -d: -f2)
 
 	sshKey=$(gpg2ssh "$keyid")
+
 	# remove the old host key line
-	remove_line "$AUTHORIZED_KEYS" "$sshKey"
+	remove_line "$AUTHORIZED_KEYS" "$sshKey" && idRemoved=true
+
 	# if key OK, add new host line
 	if [ "$ok" -eq '0' ] ; then
 	    ssh2authorized_keys "$userID" "$sshKey" >> "$AUTHORIZED_KEYS"
 
-	    # set return code to be 0, since a key was found
-	    returnCode=0
+	    # note that at least one ok id was found
+	    idOK=true
 	fi
     done
 
-    return "$returnCode"
+    # if at least one ok id was found, return 0
+    if [ "$idOK" ] ; then
+	return 0
+
+    # if ids were only removed, return 2
+    elif [ "$idRemoved" ] ; then
+	return 2
+
+    # else return 1, to indicate nothing happened
+    else
+	return 1
+    fi
 }
 
 # update the authorized_keys files from a list of user IDs on command
 # line
 update_authorized_keys() {
     local userID
-    local returnCode
+    local nIDs
+    local nIDsOK
+    local nIDsBAD
 
-    # default return code is 0, which assumes a key was found for
-    # every user ID.  code will be set to 1 if a key is not found for
-    # at least one user ID
-    returnCode=0
+    # the number of ids specified on command line
+    nIDs="$#"
+
+    nIDsOK=0
+    nIDsBAD=0
 
     # set the trap to remove any lockfiles on exit
     trap "lockfile-remove $AUTHORIZED_KEYS" EXIT
@@ -536,7 +575,17 @@ update_authorized_keys() {
     for userID ; do
 	# process the user ID, change return code if key not found for
 	# user ID
-	process_uid_authorized_keys "$userID" || returnCode=1
+	process_uid_authorized_keys "$userID"
+
+	# note the result
+	case "$?" in
+	    0)
+		nIDsOK=$((nIDsOK+1))
+		;;
+	    2)
+		nIDsBAD=$((nIDsBAD+1))
+		;;
+	esac
 
 	# touch the lockfile, for good measure.
 	lockfile-touch --oneshot "$AUTHORIZED_KEYS"
@@ -545,31 +594,40 @@ update_authorized_keys() {
     # remove the lockfile
     lockfile-remove "$AUTHORIZED_KEYS"
 
-    return "$returnCode"
+    # note if the authorized_keys file was updated
+    if [ "$nIDsOK" -gt 0 -o "$nIDsBAD" -gt 0 ] ; then
+	log "authorized_keys file updated."
+    fi
+
+    # if all ids were OK, return 0
+    if [ "$nIDsOK" -eq "$nIDs" ] ; then
+	return 0
+
+    # if all ids were BAD, return 2
+    elif [ "$nIDsBAD" -eq "$nIDs" ] ; then
+	return 2
+
+    # else return 1
+    else
+	return 1
+    fi
 }
 
 # process an authorized_user_ids file for authorized_keys
 process_authorized_user_ids() {
-    local userid
-    local returnCode
-
-    log "processing authorized_user_ids file..."
-
-    # default return code is 0, and is set to 1 if a key for a user ID
-    # is not found
-    returnCode=0
+    local line
+    local userIDs
 
     authorizedUserIDs="$1"
 
-    # set the IFS to be newline for parsing the authorized_user_ids
-    # file.  can't find it in BASH(1) (found it on the net), but it
-    # works.
-    IFS=$'\n'
-    for userid in $(cat "$authorizedUserIDs" | meat) ; do
-	update_authorized_keys "$userid" || returnCode=1
+    log "processing authorized_user_ids file..."
+
+    # extract user IDs from authorized_user_ids file
+    for line in $(seq 1 $(meat "$authorizedUserIDs" | wc -l)) ; do
+	userIDs[$((line-1))]=$(cutline "$line" "$authorizedUserIDs")
     done
 
-    return "$returnCode"
+    update_authorized_keys "${userIDs[@]}"
 }
 
 # EXPERIMENTAL (unused) process userids found in authorized_keys file
@@ -590,7 +648,7 @@ process_authorized_keys() {
     # take all the monkeysphere userids from the authorized_keys file
     # comment field (third field) that starts with "MonkeySphere uid:"
     # FIXME: needs to handle authorized_keys options (field 0)
-    cat "$authorizedKeys" | meat | \
+    meat "$authorizedKeys" | \
     while read -r options keytype key comment ; do
 	# if the comment field is empty, assume the third field was
 	# the comment
