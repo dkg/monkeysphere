@@ -6,8 +6,9 @@ monkeysphere (0.4-1) UNRELEASED; urgency=low
   [ Jameson Graef Rollins ]
   * Privilege separation: use monkeysphere user to handle maintenance of
     the gnupg authentication keychain for server.
+  * Improved certifier key management.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Tue, 24 Jun 2008 13:52:28 -0400
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sun, 29 Jun 2008 14:14:59 -0400
 
 monkeysphere (0.3-1) experimental; urgency=low
 

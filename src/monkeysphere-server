@@ -41,7 +41,9 @@ subcommands:
   gen-key (g) [HOSTNAME]                generate gpg key for the server
   show-fingerprint (f)                  show server's host key fingerprint
   publish-key (p)                       publish server's host key to keyserver
-  trust-key (t) KEYID                   import and tsign a certification key
+  add-certifier (a) KEYID               import and tsign a certification key
+  remove-certifier (r) KEYID            remove a certification key
+  list-certifiers (l)                   list certification keys
   help (h,?)                            this help
 
 EOF
@@ -245,7 +247,7 @@ EOF
     echo "The following key parameters will be used for the host private key:"
     echo "$keyParameters"
 
-    read -p "Generate key? [Y|n]: " OK; OK=${OK:=Y}
+    read -p "Generate key? (Y/n) " OK; OK=${OK:=Y}
     if [ ${OK/y/Y} != 'Y' ] ; then
 	failure "aborting."
     fi
@@ -284,7 +286,7 @@ fingerprint_server_key() {
 
 # publish server key to keyserver
 publish_server_key() {
-    read -p "really publish key to $KEYSERVER? [y|N]: " OK; OK=${OK:=N}
+    read -p "really publish key to $KEYSERVER? (y/N) " OK; OK=${OK:=N}
     if [ ${OK/y/Y} != 'Y' ] ; then
 	failure "aborting."
     fi
@@ -297,22 +299,14 @@ publish_server_key() {
     failure "NOT PUBLISHED (to avoid permanent publication errors during monkeysphere development)."
 }
 
-# retrieve key from web of trust, and set owner trust to "full"
-# if key is found.
-trust_key() {
+# retrieve key from web of trust, import it into the host keyring, and
+# ltsign the key in the host keyring so that it may certify other keys
+add_certifier() {
     local keyID
-    local trustLevel
+    local fingerprint
+    local ltsignCommand
 
     keyID="$1"
-
-    # default values for trust depth and domain
-    DEPTH=${DEPTH:-1}
-    DOMAIN=${DOMAIN:-}
-
-    if [ -z "$keyID" ] ; then
-	failure "You must specify key to trust."
-    fi
-
     export keyID
 
     # export host ownertrust to authentication keyring
@@ -332,8 +326,17 @@ trust_key() {
     echo "key found:"
     gpg_authentication "--fingerprint $fingerprint"
 
+    read -p "Are you sure you want to add this key as a certifier of users on this system? (y/N) " OK; OK=${OK:-N}
+    if [ "${OK/y/Y}" != 'Y' ] ; then
+	failure "aborting."
+    fi
+
     # export the key to the host keyring
     gpg_authentication "--export $keyID" | gpg_host --import
+
+    # default values for trust depth and domain
+    DEPTH=${DEPTH:-1}
+    DOMAIN=${DOMAIN:-}
 
     # ltsign command
     # NOTE: *all* user IDs will be ltsigned
@@ -353,6 +356,25 @@ EOF
 
     # update the trustdb for the authentication keyring
     gpg_authentication "--check-trustdb"
+}
+
+# delete a certifiers key from the host keyring
+remove_certifier() {
+    local keyID
+    local fingerprint
+
+    keyID="$1"
+
+    # delete the requested key (with prompting)
+    gpg_host --delete-key "$keyID"
+
+    # update the trustdb for the authentication keyring
+    gpg_authentication "--check-trustdb"
+}
+
+# list the host certifiers
+list_certifiers() {
+    gpg_host --list-keys
 }
 
 ########################################################################
@@ -407,8 +429,22 @@ case $COMMAND in
 	publish_server_key
 	;;
 
-    'trust-key'|'t')
-	trust_key "$@"
+    'add-certifier'|'a')
+	if [ -z "$1" ] ; then
+	    failure "You must specify a key ID."
+	fi
+	add_certifier "$1"
+	;;
+
+    'remove-certifier'|'r')
+	if [ -z "$1" ] ; then
+	    failure "You must specify a key ID."
+	fi
+	remove_certifier "$1"
+	;;
+
+    'list-certifiers'|'l')
+	list_certifiers "$@"
 	;;
 
     'help'|'h'|'?')
