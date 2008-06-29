@@ -184,8 +184,6 @@ update_users() {
 	# it into place
 	mv -f "$AUTHORIZED_KEYS" "${VARLIB}/authorized_keys/${uname}"
 
-	log "authorized_keys file updated."
-
 	# destroy temporary directory
 	rm -rf "$TMPDIR"
     done
