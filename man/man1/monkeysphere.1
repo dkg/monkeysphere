@@ -57,7 +57,7 @@ Output a brief usage summary.  `h' or `?' may be used in place of
 .SH HOST URIs
 
 Host OpenPGP keys have associated user IDs that use the ssh URI
-specification for the host, ie. "ssh://host.full.domain".
+specification for the host, ie. "ssh://host.full.domain[:port]".
 
 .SH KEY ACCEPTABILITY
 
@@ -67,7 +67,8 @@ GPG keys are considered acceptable if the following criteria are met:
 The key must have the "authentication" ("a") usage flag set.
 .TP
 .B validity
-The key must be "fully" valid, and must not be expired or revoked.
+The key must be "fully" valid (ie. signed by a trusted certifier), and
+must not be expired or revoked.
 
 .SH FILES
 

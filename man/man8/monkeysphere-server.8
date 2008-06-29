@@ -126,6 +126,17 @@ It is recommended to add "monkeysphere-server update-users" to a
 system crontab, so that user keys are kept up-to-date, and key
 revokations and expirations can be processed in a timely manor.
 
+.SH KEY ACCEPTABILITY
+
+GPG keys are considered acceptable if the following criteria are met:
+.TP
+.B capability
+The key must have the "authentication" ("a") usage flag set.
+.TP
+.B validity
+The key must be "fully" valid (ie. signed by a trusted certifier), and
+must not be expired or revoked.
+
 .SH FILES
 
 .TP
