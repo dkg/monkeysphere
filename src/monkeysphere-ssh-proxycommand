@@ -51,7 +51,7 @@ fi
 # if the host is in the gpg keyring...
 if gpg --list-key ="${URI}" 2>&1 >/dev/null ; then
     # do not check the keyserver
-    CHECK_KEYSERVER="false"
+    CHECK_KEYSERVER=${CHECK_KEYSERVER:-"false"}
 
 # if the host is NOT in the keyring...
 else
@@ -63,12 +63,12 @@ else
 	# FIXME: more nuanced checking should be done here to properly
 	# take into consideration hosts that join monkeysphere by
 	# converting an existing and known ssh key
-	CHECK_KEYSERVER="false"
+	CHECK_KEYSERVER=${CHECK_KEYSERVER:-"false"}
 
     # if the host key is not found in the known_hosts file...
     else
 	# check the keyserver
-	CHECK_KEYSERVER="true"
+	CHECK_KEYSERVER=${CHECK_KEYSERVER:-"true"}
     fi
 fi
 export CHECK_KEYSERVER
