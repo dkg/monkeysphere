@@ -11,9 +11,9 @@ monkeysphere-server \- monkeysphere server admin user interface
 .SH DESCRIPTION
 
 \fBMonkeySphere\fP is a system to leverage the OpenPGP Web of Trust
-for ssh authentication and encryption.  OpenPGP keys are tracked via
-GnuPG, and added to the ssh authorized_keys and known_hosts files to
-be used for authentication of ssh connections.
+for ssh authentication.  OpenPGP keys are tracked via GnuPG, and added
+to the ssh authorized_keys and known_hosts files to be used for
+authentication of ssh connections.
 
 \fBmonkeysphere-server\fP is the MonkeySphere server admin utility.
 
@@ -22,17 +22,24 @@ be used for authentication of ssh connections.
 \fBmonkeysphere-server\fP takes various subcommands:
 .TP
 .B update-users [USER]...
-Update the admin-controlled authorized_keys files for user.  For each
-user specified, user ID's listed in the user's authorized_user_ids
-file are processed, and the user's authorized_keys file in
-/var/cache/monkeysphere/authorized_keys/USER.  See `man monkeysphere'
-for more info.  If the RAW_AUTHORIZED_KEYS variable is set, then a
-user-controlled authorized_keys file (usually
-~USER/.ssh/authorized_keys) is added to the authorized_keys file.  `u'
-may be used in place of `update-users.
+Update admin-controlled authorized_keys files at
+/var/cache/monkeysphere/authorized_keys/USER.  For each specified
+user, the user ID's listed in the user's authorized_user_ids file are
+processed.  For each user ID, gpg will be queried for keys associated
+with that user ID, querying a keyserver if specified.  If a key is
+found, it will be converted to an ssh key, and any matching ssh keys
+will be removed from the user's authorized_keys file.  If the found
+key is acceptable (see KEY ACCEPTABILITY), then the key will be
+updated and re-added to the authorized_keys file.  If no gpg key is
+found for the user ID, then nothing is done.  If the
+RAW_AUTHORIZED_KEYS variable is set, then a user-controlled
+authorized_keys file (usually ~USER/.ssh/authorized_keys) is added to
+the authorized_keys file.  If no users are specified, then all users
+listed in /etc/passwd are processed.  `u' may be used in place of
+`update-users.
 .TP
 .B gen-key
-Generate a gpg key pair for the host.  `g' may be used in place of
+Generate a OpenPGP key pair for the host.  `g' may be used in place of
 `gen-key'.
 .TP
 .B show-fingerprint
@@ -40,8 +47,8 @@ Show the fingerprint for the host's OpenPGP key.  `f' may be used in place of
 `show-fingerprint'.
 .TP
 .B publish-key
-Publish the host's gpg key to the keyserver.  `p' may be used in place
-of `publish-key'.
+Publish the host's OpenPGP key to the keyserver.  `p' may be used in
+place of `publish-key'.
 .TP
 .B add-certifier KEYID
 Add a certifier key to host keyring.  The key with specified key ID
@@ -56,11 +63,8 @@ key ID will be removed entirely from the host keyring so that the key
 will not longer be able to certify users on the system.  `r' may be
 used in place of `remove-certifier'.
 .TP
-.B list-certifiers KEYID
-Add key to certify system users.  If LEVEL is not specified, then the program
-will prompt for an owner trust level to set for KEYID.  This function
-lsigns the key as well so that it will have a known validity.  `l' may
-be used in place of `list-certifiers'.
+.B list-certifiers
+List certifier keys.  `l' may be used in place of `list-certifiers'.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
@@ -70,37 +74,37 @@ Output a brief usage summary.  `h' or `?' may be used in place of
 
 In order to start using the monkeysphere, you must first generate an
 OpenPGP key for the server and convert that key to an ssh key that can
-be used by ssh for host authentication.  To do this, run the "gen-key"
-subcommand to generate the host key pair:
+be used by ssh for host authentication.  This can be done with the
+\fBgen-key\fP subcommand:
 
 $ monkeysphere-server gen-key
 
 To enable host verification via the monkeysphere, you must then
-publish the host's key to the Web of Trust using the "publish-key"
+publish the host's key to the Web of Trust using the \fBpublish-key\fP
 command to push the key to a keyserver.  Then modify the sshd_config
 to tell sshd where the new server host key is located:
 
 HostKey /var/lib/monkeysphere/ssh_host_rsa_key
 
-For users logging into the system to be able to verify the host via
-the monkeysphere, at least one person (ie. a server admin) will need
-to sign the host's key.  This is done in the same way that key signing
-is usually done, by pulling the host's key from the keyserver, signing
-the key, and re-publishing the signature.  Once that is done, users
-logging into the host will be able to certify the host's key via the
-signature of the host admin.
+In order for users logging into the system to be able to verify the
+host via the monkeysphere, at least one person (ie. a server admin)
+will need to sign the host's key.  This is done in the same way that
+key signing is usually done, by pulling the host's key from the
+keyserver, signing the key, and re-publishing the signature.  Once
+that is done, users logging into the host will be able to certify the
+host's key via the signature of the host admin.
 
 If the server will also handle user authentication through
 monkeysphere-generated authorized_keys files, the server must be told
 which keys will act as user certifiers.  This is done with the
-"add-certifier" command:
+\fBadd-certifier\fP command:
 
 $ monkeysphere-server add-certifier KEYID
 
 where KEYID is the key ID of the server admin, or whoever's signature
 will be certifying users to the system.  Certifiers can be later
-remove with the "remove-certifier" command, and listed with the
-"list-certifiers" command.
+remove with the \fBremove-certifier\fP command, and listed with the
+\fBlist-certifiers\fP command.
 
 Remote user's will then be granted access to a local user account
 based on the appropriately signed and valid keys associated with user
@@ -109,16 +113,17 @@ default, the authorized_user_ids file for local users is found in
 ~/.config/monkeysphere/authorized_user_ids.  This can be changed in
 the monkeysphere-server.conf file.
 
-The "update-users" command can then be used to generate
-authorized_keys file for local users that sshd can use to grant access
-to user accounts for remote users:
+The \fBupdate-users\fP command can then be used to generate
+authorized_keys file for local users based on the authorized user IDs
+listed in the user's authorized_user_ids file:
 
-$ monkeysphere-server update-users [USER]
+$ monkeysphere-server update-users USER
 
-If no user is specified, authorized_keys files will be generated for
-all users on the system.  You must also tell sshd to look at the
-monkeysphere-generated authorized_keys file for user authentication by
-setting the following in the sshd_config:
+sshd can then use these files to grant access to user accounts for
+remote users.  If no user is specified, authorized_keys files will be
+generated for all users on the system.  You must also tell sshd to
+look at the monkeysphere-generated authorized_keys file for user
+authentication by setting the following in the sshd_config:
 
 AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
 
