@@ -43,10 +43,12 @@ if [ -z "$PORT" ] ; then
 fi
 
 # set the host URI
-URI="ssh://${HOST}"
 if [ "$PORT" != '22' ] ; then
-    URI="${URI}:${PORT}"
+    HOSTP="${HOST}:${PORT}"
+else
+    HOSTP="${HOST}"
 fi
+URI="ssh://${HOSTP}"
 
 # if the host is in the gpg keyring...
 if gpg --list-key ="${URI}" 2>&1 >/dev/null ; then
@@ -74,7 +76,7 @@ fi
 export CHECK_KEYSERVER
 
 # update the known_hosts file for the host
-monkeysphere update-known_hosts "$HOST"
+monkeysphere update-known_hosts "$HOSTP"
 
 # exec a netcat passthrough to host for the ssh connection
 if [ -z "$NO_CONNECT" ] ; then
