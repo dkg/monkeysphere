@@ -6,14 +6,14 @@ monkeysphere \- MonkeySphere client user interface
 
 .SH SYNOPSIS
 
-.B monkeysphere \fIcommand\fP [\fIargs\fP]
+.B monkeysphere \fIsubcommand\fP [\fIargs\fP]
 
 .SH DESCRIPTION
 
-\fBMonkeySphere\fP is a system to leverage the OpenPGP Web of Trust
+\fBMonkeySphere\fP is a framework to leverage the OpenPGP Web of Trust
 for ssh authentication.  OpenPGP keys are tracked via GnuPG, and added
-to the ssh authorized_keys and known_hosts files to be used for
-authentication of ssh connections.
+to the authorized_keys and known_hosts files used by ssh for
+connection authentication.
 
 \fBmonkeysphere\fP is the MonkeySphere client utility.
 
@@ -23,58 +23,42 @@ authentication of ssh connections.
 .TP
 .B update-known_hosts [HOST]...
 Update the known_hosts file.  For each specified host, gpg will be
-queried for a key associated with the host URI (see HOST URIs),
-querying a keyserver if specified.  If a key is found, it will be
-converted to an ssh key, and any matching ssh keys will be removed
-from the user's known_hosts file.  If the found key is acceptable (see
-KEY ACCEPTABILITY), then the key will be updated and re-added to the
-known_hosts file.  If no gpg key is found for the host, then nothing
-is done.  If no hosts are specified, all hosts listed in the
-known_hosts file will be processed.  This command will exit with a
-status of 0 if all host were found to be acceptable, 2 if all the
-hosts were found to be unacceptable (ie. with keys removed from the
-known_hosts file), and 1 otherwise.  `k' may be used in place of
-`update-known_hosts'.
+queried for a key associated with the host URI (see HOST
+IDENTIFICATION in monkeysphere(5)), optionally querying a keyserver.
+If an acceptable key is found for the host (see KEY ACCEPTABILITY in
+monkeysphere(5)), the key is added to the user's known_hosts file.  If
+a key is found but is unacceptable for the host, any matching keys are
+removed from the user's known_hosts file.  If no gpg key is found for
+the host, nothing is done.  If no hosts are specified, all hosts
+listed in the known_hosts file will be processed.  This subcommand
+will exit with a status of 0 if at least one acceptable key was found
+for a specified host, 1 if no matching keys were found at all, and 2
+if matching keys were found but none were acceptable.  `k' may be used
+in place of `update-known_hosts'.
 .TP
 .B update-authorized_keys
 Update the monkeysphere authorized_keys file.  For each user ID in the
 user's authorized_user_ids file, gpg will be queried for keys
-associated with that user ID, querying a keyserver if specified.  If a
-key is found, it will be converted to an ssh key, and any matching ssh
-keys will be removed from the user's authorized_keys file.  If the
-found key is acceptable (see KEY ACCEPTABILITY), then the key will be
-updated and re-added to the authorized_keys file.  If no gpg key is
-found for the user ID, then nothing is done.  This command will exit
-with a status of 0 if all user IDs were found to be acceptable, 2 if
-all the user IDs were found to be unacceptable (ie. with keys removed
-from the authorized_keys file), and 1 otherwise.  `a' may be used in
-place of `update-authorized_keys'.
+associated with that user ID, optionally querying a keyserver.  If an
+acceptable key is found (see KEY ACCEPTABILITY in monkeysphere(5)),
+the key is add to the user's authorized_keys file.  If a key is found
+but is unacceptable for the user ID, any matching keys are removed
+from the user's authorized_keys file.  If no gpg key is found for the
+user ID, nothing is done.  This subcommand will exit with a status of
+0 if at least one acceptable key was found for a user ID, 1 if no
+matching keys wer found at all, and 2 if matching keys were found but
+none were acceptable.  `a' may be used in place of
+`update-authorized_keys'.
 .TP
 .B gen-subkey KEYID
-Generate an `a` capable subkey.  For the primary key with the
+Generate an authentication subkey.  For the primary key with the
 specified key ID, generate a subkey with "authentication" capability
-that can be used for MonkeySphere transactions.  `g' may be used in
+that can be used for monkeysphere transactions.  `g' may be used in
 place of `gen-subkey'.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
 `help'.
-
-.SH HOST URIs
-
-Host OpenPGP keys have associated user IDs that use the ssh URI
-specification for the host, ie. "ssh://host.full.domain[:port]".
-
-.SH KEY ACCEPTABILITY
-
-GPG keys are considered acceptable if the following criteria are met:
-.TP
-.B capability
-The key must have the "authentication" ("a") usage flag set.
-.TP
-.B validity
-The key must be "fully" valid (ie. signed by a trusted certifier), and
-must not be expired or revoked.
 
 .SH FILES
 
@@ -91,11 +75,13 @@ addition to the authorized_keys file.
 
 .SH AUTHOR
 
-Written by Jameson Rollins <jrollins@fifthhorseman.net>
+Written by Jameson Rollins <jrollins@fifthhorseman.net>, Daniel
+Kahn Gillmor <dkg@fifthhorseman.net>
 
 .SH SEE ALSO
 
 .BR monkeysphere-ssh-proxycommand (1),
 .BR monkeysphere-server (8),
+.BR monkeysphere (5),
 .BR ssh (1),
 .BR gpg (1)

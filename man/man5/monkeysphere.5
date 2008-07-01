@@ -1,0 +1,54 @@
+.TH MONKEYSPHERE "5" "June 2008" "monkeysphere" "System Frameworks"
+
+.SH NAME
+
+monkeysphere \- ssh authentication framework using OpenPGP Web of
+Trust
+
+.SH DESCRIPTION
+
+\fBMonkeySphere\fP is a framework to leverage the OpenPGP Web of Trust
+for ssh authentication.  OpenPGP keys are tracked via GnuPG, and added
+to the authorized_keys and known_hosts files used by ssh for
+connection authentication.
+
+.SH IDENTITY CERTIFIERS
+
+FIXME: describe identity certifier concept
+
+.SH KEY ACCEPTABILITY
+
+During known_host and authorized_keys updates, the monkeysphere
+commands work from a set of user IDs to determine acceptable keys for
+ssh authentication.  OpenPGP keys are considered acceptable if the
+following criteria are met:
+.TP
+.B capability
+The key must have the "authentication" ("a") usage flag set.
+.TP
+.B validity
+The key itself must be valid, i.e. it must be well-formed, not
+expired, and not revoked.
+.TP
+.B certification
+The relevant user ID must be signed by a trusted identity certifier.
+
+.SH HOST IDENTIFICATION
+
+The OpenPGP keys for hosts have associated user IDs that use the ssh
+URI specification for the host, i.e. "ssh://host.full.domain[:port]".
+
+.SH AUTHOR
+
+Written by Jameson Rollins <jrollins@fifthhorseman.net>, Daniel Kahn
+Gillmor <dkg@fifthhorseman.net>
+
+.SH SEE ALSO
+
+.BR monkeysphere (1),
+.BR monkeysphere-server (8),
+.BR monkeysphere-ssh-proxycommand (1),
+.BR gpg (1),
+.BR ssh (1),
+.BR http://tools.ietf.org/html/rfc4880,
+.BR http://tools.ietf.org/wg/secsh/draft-ietf-secsh-scp-sftp-ssh-uri/

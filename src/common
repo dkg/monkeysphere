@@ -85,7 +85,7 @@ remove_line() {
 
     # if the line is there are removed, return 0
     if [ "$file" -a "$string" ] ; then
-	grep -v "$string" "$file" | sponge "$file"
+	grep -v -F "$string" "$file" | sponge "$file"
 	return 0
     # otherwise return 1
     else

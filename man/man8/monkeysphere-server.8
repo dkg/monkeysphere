@@ -1,4 +1,4 @@
-.TH MONKEYSPHERE-SERVER "1" "June 2008" "monkeysphere 0.1" "User Commands"
+.TH MONKEYSPHERE-SERVER "1" "June 2008" "monkeysphere" "User Commands"
 
 .SH NAME
 
@@ -6,14 +6,14 @@ monkeysphere-server \- monkeysphere server admin user interface
 
 .SH SYNOPSIS
 
-.B monkeysphere-server \fIcommand\fP [\fIargs\fP]
+.B monkeysphere-server \fIsubcommand\fP [\fIargs\fP]
 
 .SH DESCRIPTION
 
-\fBMonkeySphere\fP is a system to leverage the OpenPGP Web of Trust
+\fBMonkeySphere\fP is a framework to leverage the OpenPGP Web of Trust
 for ssh authentication.  OpenPGP keys are tracked via GnuPG, and added
-to the ssh authorized_keys and known_hosts files to be used for
-authentication of ssh connections.
+to the authorized_keys and known_hosts files used by ssh for
+connection authentication.
 
 \fBmonkeysphere-server\fP is the MonkeySphere server admin utility.
 
@@ -21,22 +21,19 @@ authentication of ssh connections.
 
 \fBmonkeysphere-server\fP takes various subcommands:
 .TP
-.B update-users [USER]...
-Update admin-controlled authorized_keys files at
-/var/cache/monkeysphere/authorized_keys/USER.  For each specified
-user, the user ID's listed in the user's authorized_user_ids file are
-processed.  For each user ID, gpg will be queried for keys associated
-with that user ID, querying a keyserver if specified.  If a key is
-found, it will be converted to an ssh key, and any matching ssh keys
-will be removed from the user's authorized_keys file.  If the found
-key is acceptable (see KEY ACCEPTABILITY), then the key will be
-updated and re-added to the authorized_keys file.  If no gpg key is
-found for the user ID, then nothing is done.  If the
-RAW_AUTHORIZED_KEYS variable is set, then a user-controlled
-authorized_keys file (usually ~USER/.ssh/authorized_keys) is added to
-the authorized_keys file.  If no users are specified, then all users
-listed in /etc/passwd are processed.  `u' may be used in place of
-`update-users.
+.B update-users [ACCOUNT]...
+Rebuild the monkeysphere-controlled authorized_keys files.  For each
+specified account, the user ID's listed in the account's
+authorized_user_ids file are processed.  For each user ID, gpg will be
+queried for keys associated with that user ID, optionally querying a
+keyserver.  If an acceptable key is found (see KEY ACCEPTABILITY in
+monkeysphere(5)), the key is added to the account's
+monkeysphere-controlled authorized_keys file.  If the
+RAW_AUTHORIZED_KEYS variable is set, then a separate authorized_keys
+file (usually ~USER/.ssh/authorized_keys) is appended to the
+monkeysphere-controlled authorized_keys file.  If no accounts are
+specified, then all accounts on the system are processed.  `u' may be
+used in place of `update-users'.
 .TP
 .B gen-key
 Generate a OpenPGP key pair for the host.  `g' may be used in place of
@@ -50,21 +47,17 @@ Show the fingerprint for the host's OpenPGP key.  `f' may be used in place of
 Publish the host's OpenPGP key to the keyserver.  `p' may be used in
 place of `publish-key'.
 .TP
-.B add-certifier KEYID
-Add a certifier key to host keyring.  The key with specified key ID
-will be retrieved from the keyserver and imported to the host keyring.
-It will then be given a non-exportable trust signature, with default
-depth of 1, so that the key may certifier users to log into the
-system.  `a' may be used in place of `add-certifier'.
+.B add-identity-certifier KEYID
+Instruct system to trust user identity certifications made by KEYID.
+`a' may be used in place of `add-certifier'.
 .TP
-.B remove-certifier KEYID
-Remove a certifier key from the host keyring.  The key with specified
-key ID will be removed entirely from the host keyring so that the key
-will not longer be able to certify users on the system.  `r' may be
-used in place of `remove-certifier'.
+.B remove-identity-certifier KEYID
+Instruct system to ignore user identity certifications made by KEYID.
+`r' may be used in place of `remove-certifier'.
 .TP
-.B list-certifiers
-List certifier keys.  `l' may be used in place of `list-certifiers'.
+.B list-identity-certifiers
+List key IDs trusted by the system to certify user identities.  `l'
+may be used in place of `list-identity-certifiers'.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
@@ -131,17 +124,6 @@ It is recommended to add "monkeysphere-server update-users" to a
 system crontab, so that user keys are kept up-to-date, and key
 revokations and expirations can be processed in a timely manor.
 
-.SH KEY ACCEPTABILITY
-
-GPG keys are considered acceptable if the following criteria are met:
-.TP
-.B capability
-The key must have the "authentication" ("a") usage flag set.
-.TP
-.B validity
-The key must be "fully" valid (ie. signed by a trusted certifier), and
-must not be expired or revoked.
-
 .SH FILES
 
 .TP
@@ -166,10 +148,12 @@ Monkeysphere authentication GNUPG home directory.
 
 .SH AUTHOR
 
-Written by Jameson Rollins <jrollins@fifthhorseman.net>
+Written by Jameson Rollins <jrollins@fifthhorseman.net>, Daniel Kahn
+Gillmor <dkg@fifthhorseman.net>
 
 .SH SEE ALSO
 
 .BR monkeysphere (1),
+.BR monkeysphere (5),
 .BR gpg (1),
 .BR ssh (1)
