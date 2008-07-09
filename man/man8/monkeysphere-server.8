@@ -35,9 +35,10 @@ monkeysphere-controlled authorized_keys file.  If no accounts are
 specified, then all accounts on the system are processed.  `u' may be
 used in place of `update-users'.
 .TP
-.B gen-key
-Generate a OpenPGP key pair for the host.  `g' may be used in place of
-`gen-key'.
+.B gen-key [HOSTNAME]
+Generate a OpenPGP key pair for the host.  If HOSTNAME is not
+specified, then the system fully-qualified domain name will be user.
+`g' may be used in place of `gen-key'.
 .TP
 .B show-fingerprint
 Show the fingerprint for the host's OpenPGP key.  `f' may be used in place of

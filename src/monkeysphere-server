@@ -11,7 +11,7 @@
 ########################################################################
 PGRM=$(basename $0)
 
-SHARE=${SHARE:-"/usr/share/monkeysphere"}
+SHARE=${MONKEYSPHERE_SHARE:="/usr/share/monkeysphere"}
 export SHARE
 . "${SHARE}/common" || exit 1
 
@@ -22,7 +22,7 @@ export VARLIB
 DATE=$(date -u '+%FT%T')
 
 # unset some environment variables that could screw things up
-GREP_OPTIONS=
+unset GREP_OPTIONS
 
 # default return code
 ERR=0
@@ -38,12 +38,21 @@ MonkeySphere server admin tool.
 
 subcommands:
   update-users (u) [USER]...            update users authorized_keys files
+
   gen-key (g) [HOSTNAME]                generate gpg key for the server
+    -l|--length BITS                      key length in bits (2048)
+    -e|--expire EXPIRE                    date to expire
+    -r|--revoker FINGERPRINT              add a revoker
   show-fingerprint (f)                  show server's host key fingerprint
   publish-key (p)                       publish server's host key to keyserver
-  add-certifier (a) KEYID               import and tsign a certification key
-  remove-certifier (r) KEYID            remove a certification key
-  list-certifiers (l)                   list certification keys
+
+  add-identity-certifier (a) KEYID      import and tsign a certification key
+    -n|--domain DOMAIN                    domain of certifier ()
+    -t|--trust TRUST                      trust level of certifier ('full')
+    -d|--depth DEPTH                      trust depth for certifier (1)
+  remove-identity-certifier (r) KEYID   remove a certification key
+  list-identity-certifiers (l)          list certification keys
+
   help (h,?)                            this help
 
 EOF
@@ -76,6 +85,9 @@ gpg_host() {
 }
 
 # function to interact with the authentication gnupg keyring
+# FIXME: this function requires basically accepts only a single
+# argument because of problems with quote expansion.  this needs to be
+# fixed/improved.
 gpg_authentication() {
     GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
     export GNUPGHOME
@@ -199,20 +211,20 @@ gen_key() {
     local fingerprint
 
     hostName=${1:-$(hostname --fqdn)}
+    userID="ssh://${hostName}"
 
-    SERVICE=${SERVICE:-"ssh"}
-    userID="${SERVICE}://${hostName}"
-
+    # check for presense of key with user ID
     if gpg_host --list-key ="$userID" > /dev/null 2>&1 ; then
 	failure "Key for '$userID' already exists"
     fi
 
-    # set key defaults
-    KEY_TYPE=${KEY_TYPE:-"RSA"}
-    KEY_LENGTH=${KEY_LENGTH:-"2048"}
-    KEY_USAGE=${KEY_USAGE:-"auth"}
-    KEY_EXPIRE=${KEY_EXPIRE:-"0"}
-    cat <<EOF
+    # set key variables
+    KEY_TYPE="RSA"
+    KEY_LENGTH=${KEY_LENGTH:="2048"}
+    KEY_USAGE="auth"
+    # prompt about key expiration if not specified
+    if [ -z "$KEY_EXPIRE" ] ; then
+	cat <<EOF
 Please specify how long the key should be valid.
          0 = key does not expire
       <n>  = key expires in n days
@@ -220,7 +232,16 @@ Please specify how long the key should be valid.
       <n>m = key expires in n months
       <n>y = key expires in n years
 EOF
-    read -p "Key is valid for? ($KEY_EXPIRE) " KEY_EXPIRE; KEY_EXPIRE=${KEY_EXPIRE:-"0"}
+	while [ -z "$KEY_EXPIRE" ] ; do
+	    read -p "Key is valid for? (0) " KEY_EXPIRE
+	    if ! test_gpg_expire ${KEY_EXPIRE:=0} ; then
+		echo "invalid value"
+		unset KEY_EXPIRE
+	    fi
+	done
+    elif ! test_gpg_expire "$KEY_EXPIRE" ; then
+	failure "invalid key expiration value '$KEY_EXPIRE'."
+    fi
 
     # set key parameters
     keyParameters=$(cat <<EOF
@@ -233,12 +254,10 @@ EOF
 )
 
     # add the revoker field if specified
-    # FIXME: the "1:" below assumes that $REVOKER's key is an RSA key.  why?
-    # FIXME: why is this marked "sensitive"?  how will this signature ever
-    # be transmitted to the expected revoker?
+    # FIXME: the "1:" below assumes that $REVOKER's key is an RSA key.
+    # FIXME: key is marked "sensitive"?  is this appropriate?
     if [ "$REVOKER" ] ; then
 	keyParameters="${keyParameters}"$(cat <<EOF
-
 Revoker: 1:$REVOKER sensitive
 EOF
 )
@@ -313,14 +332,14 @@ add_certifier() {
     gpg_host --export-ownertrust | gpg_authentication "--import-ownertrust"
 
     # get the key from the key server
-    gpg_authentication "--keyserver $KEYSERVER --recv-key $keyID"
+    gpg_authentication "--keyserver $KEYSERVER --recv-key '$keyID'"
 
     # get the full fingerprint of a key ID
     fingerprint=$(gpg_authentication "--list-key --with-colons --with-fingerprint $keyID" | \
 	grep '^fpr:' | grep "$keyID" | cut -d: -f10)
 
     if [ -z "$fingerprint" ] ; then
-	failure "Could not find key '$keyID'."
+	failure "Could not find key \"${keyID}\"."
     fi
 
     echo "key found:"
@@ -335,15 +354,16 @@ add_certifier() {
     gpg_authentication "--export $keyID" | gpg_host --import
 
     # default values for trust depth and domain
-    DEPTH=${DEPTH:-1}
     DOMAIN=${DOMAIN:-}
+    TRUST=${TRUST:-2}
+    DEPTH=${DEPTH:-1}
 
     # ltsign command
     # NOTE: *all* user IDs will be ltsigned
     ltsignCommand=$(cat <<EOF
 ltsign
 y
-2
+$TRUST
 $DEPTH
 $DOMAIN
 y
@@ -381,27 +401,29 @@ list_certifiers() {
 # MAIN
 ########################################################################
 
-COMMAND="$1"
-[ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
-shift
+# unset variables that should be defined only in config file
+unset KEYSERVER
+unset AUTHORIZED_USER_IDS
+unset RAW_AUTHORIZED_KEYS
+unset MONKEYSPHERE_USER
 
 # load configuration file
-MS_CONF=${MS_CONF:-"${ETC}/monkeysphere-server.conf"}
-[ -e "$MS_CONF" ] && . "$MS_CONF"
+[ -e ${MONKEYSPHERE_SERVER_CONFIG:="${ETC}/monkeysphere-server.conf"} ] && . "$MONKEYSPHERE_SERVER_CONFIG"
 
-# set empty config variable with defaults
-MONKEYSPHERE_USER=${MONKEYSPHERE_USER:-"monkeysphere"}
-KEYSERVER=${KEYSERVER:-"subkeys.pgp.net"}
-CHECK_KEYSERVER=${CHECK_KEYSERVER:="true"}
-AUTHORIZED_USER_IDS=${AUTHORIZED_USER_IDS:-"%h/.config/monkeysphere/authorized_user_ids"}
-RAW_AUTHORIZED_KEYS=${RAW_AUTHORIZED_KEYS:-"%h/.ssh/authorized_keys"}
+# set empty config variable with ones from the environment, or with
+# defaults
+KEYSERVER=${MONKEYSPHERE_KEYSERVER:=${KEYSERVER:="subkeys.pgp.net"}}
+AUTHORIZED_USER_IDS=${MONKEYSPHERE_AUTHORIZED_USER_IDS:=${AUTHORIZED_USER_IDS:="%h/.config/monkeysphere/authorized_user_ids"}}
+RAW_AUTHORIZED_KEYS=${MONKEYSPHERE_RAW_AUTHORIZED_KEYS:=${RAW_AUTHORIZED_KEYS:="%h/.ssh/authorized_keys"}}
+MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkeysphere"}}
 
 # other variables
-REQUIRED_USER_KEY_CAPABILITY=${REQUIRED_USER_KEY_CAPABILITY:-"a"}
-GNUPGHOME_HOST=${GNUPGHOME_HOST:-"${VARLIB}/gnupg-host"}
-GNUPGHOME_AUTHENTICATION=${GNUPGHOME_AUTHENTICATION:-"${VARLIB}/gnupg-authentication"}
+CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
+REQUIRED_USER_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_USER_KEY_CAPABILITY:="a"}
+GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${VARLIB}/gnupg-host"}
+GNUPGHOME_AUTHENTICATION=${MONKEYSPHERE_GNUPGHOME_AUTHENTICATION:="${VARLIB}/gnupg-authentication"}
 
-# export variables
+# export variables needed in su invocation
 export DATE
 export MODE
 export MONKEYSPHERE_USER
@@ -411,6 +433,65 @@ export REQUIRED_USER_KEY_CAPABILITY
 export GNUPGHOME_HOST
 export GNUPGHOME_AUTHENTICATION
 export GNUPGHOME
+
+# get subcommand
+COMMAND="$1"
+[ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
+shift
+
+# unset option variables
+unset KEY_LENGTH
+unset KEY_EXPIRE
+unset REVOKER
+unset DOMAIN
+unset TRUST
+unset DEPTH
+
+# get options for key generation and add-certifier functions
+TEMP=$(getopt -o l:e:r:n:t:d: -l length:,expire:,revoker:,domain:,trust:,depth: -n "$PGRM" -- "$@")
+
+if [ $? != 0 ] ; then
+    usage
+    exit 1
+fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+	-l|--length)
+	    KEY_LENGTH="$2"
+	    shift 2
+	    ;;
+	-e|--expire)
+	    KEY_EXPIRE="$2"
+	    shift 2
+	    ;;
+	-r|--revoker)
+	    REVOKER="$2"
+	    shift 2
+	    ;;
+	-n|--domain)
+	    DOMAIN="$2"
+	    shift 2
+	    ;;
+	-t|--trust)
+	    TRUST="$2"
+	    shift 2
+	    ;;
+	-d|--depth)
+	    DEPTH="$2"
+	    shift 2
+	    ;;
+	--)
+	    shift
+	    ;;
+        *)
+            break
+            ;;
+    esac
+done
 
 case $COMMAND in
     'update-users'|'update-user'|'u')
@@ -429,21 +510,21 @@ case $COMMAND in
 	publish_server_key
 	;;
 
-    'add-certifier'|'a')
+    'add-identity-certifier'|'add-certifier'|'a')
 	if [ -z "$1" ] ; then
 	    failure "You must specify a key ID."
 	fi
 	add_certifier "$1"
 	;;
 
-    'remove-certifier'|'r')
+    'remove-identity-certifier'|'remove-certifier'|'r')
 	if [ -z "$1" ] ; then
 	    failure "You must specify a key ID."
 	fi
 	remove_certifier "$1"
 	;;
 
-    'list-certifiers'|'l')
+    'list-identity-certifiers'|'list-certifiers'|'list-certifier'|'l')
 	list_certifiers "$@"
 	;;
 

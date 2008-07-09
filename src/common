@@ -83,10 +83,11 @@ remove_line() {
     file="$1"
     string="$2"
 
-    # if the line is there are removed, return 0
-    if [ "$file" -a "$string" ] ; then
+    # if the string is in the file and removed, return 0
+    if grep -q -F "$string" "$file" 2> /dev/null ; then
 	grep -v -F "$string" "$file" | sponge "$file"
 	return 0
+
     # otherwise return 1
     else
 	return 1
@@ -110,6 +111,11 @@ translate_ssh_variables() {
     path=${path/\%h/"$userHome"}
 
     echo "$path"
+}
+
+# test that a string to conforms to GPG's expiration format
+test_gpg_expire() {
+    echo "$1" | egrep -q "^[0-9][mwy]?$"
 }
 
 ### CONVERSION UTILITIES
@@ -256,13 +262,13 @@ process_user_id() {
     fi
     requiredPubCapability=$(echo "$requiredCapability" | tr "[:lower:]" "[:upper:]")
 
+    # fetch the user ID if necessary/requested
+    gpg_fetch_userid "$userID"
+
     # output gpg info for (exact) userid and store
     gpgOut=$(gpg --list-key --fixed-list-mode --with-colon \
 	--with-fingerprint --with-fingerprint \
 	="$userID" 2>/dev/null)
-
-    # fetch the user ID if necessary/requested
-    gpg_fetch_userid "$userID"
 
     # if the gpg query return code is not 0, return 1
     if [ "$?" -ne 0 ] ; then
@@ -380,10 +386,10 @@ process_user_id() {
 process_host_known_hosts() {
     local host
     local userID
+    local nKeys
+    local nKeysOK
     local ok
     local keyid
-    local idOK
-    local idRemoved
     local tmpfile
 
     host="$1"
@@ -392,17 +398,26 @@ process_host_known_hosts() {
 
     userID="ssh://${host}"
 
+    nKeys=0
+    nKeysOK=0
+
     for line in $(process_user_id "ssh://${host}") ; do
+	# note that key was found
+	nKeys=$((nKeys+1))
+
 	ok=$(echo "$line" | cut -d: -f1)
 	keyid=$(echo "$line" | cut -d: -f2)
 
 	sshKey=$(gpg2ssh "$keyid")
 
 	# remove the old host key line, and note if removed
-	remove_line "$KNOWN_HOSTS" "$sshKey" && idRemoved=true
+	remove_line "$KNOWN_HOSTS" "$sshKey"
 
 	# if key OK, add new host line
 	if [ "$ok" -eq '0' ] ; then
+	    # note that key was found ok
+	    nKeysOK=$((nKeysOK+1))
+
 	    # hash if specified
 	    if [ "$HASH_KNOWN_HOSTS" = 'true' ] ; then
 		# FIXME: this is really hackish cause ssh-keygen won't
@@ -415,21 +430,19 @@ process_host_known_hosts() {
 	    else
 		ssh2known_hosts "$host" "$sshKey" >> "$KNOWN_HOSTS"
 	    fi
-
-	    # note that at least one ok id was found
-	    idOK=true
 	fi
     done
 
-    # if at least one ok id was found, return 0
-    if [ "$idOK" ] ; then
-	return 0
-
-    # if ids were only removed, return 2
-    elif [ "$idRemoved" ] ; then
-	return 2
-
-    # else return 1, to indicate nothing happened
+    # if at least one key was found...
+    if [ "$nKeys" -gt 0 ] ; then
+	# if ok keys were found, return 0
+	if [ "$nKeysOK" -gt 0 ] ; then
+	    return 0
+	# else return 2
+	else
+	    return 2
+	fi
+    # if no keys were found, return 1
     else
 	return 1
     fi
@@ -439,9 +452,9 @@ process_host_known_hosts() {
 # line
 update_known_hosts() {
     local nHosts
-    local host
     local nHostsOK
     local nHostsBAD
+    local host
 
     # the number of hosts specified on command line
     nHosts="$#"
@@ -480,17 +493,19 @@ update_known_hosts() {
 	log "known_hosts file updated."
     fi
 
-    # if all hosts were OK, return 0
-    if [ "$nHostsOK" -eq "$nHosts" ] ; then
+    # if an acceptable host was found, return 0
+    if [ "$nHostsOK" -gt 0 ] ; then
 	return 0
-
-    # if all hosts were BAD, return 2
-    elif [ "$nHostsBAD" -eq "$nHosts" ] ; then
-	return 2
-
-    # else return 1
+    # else if no ok hosts were found...
     else
-	return 1
+	# if no bad host were found then no hosts were found at all,
+	# and return 1
+	if [ "$nHostsBAD" -eq 0 ] ; then
+	    return 1
+	# else if at least one bad host was found, return 2
+	else
+	    return 2
+	fi
     fi
 }
 
@@ -511,42 +526,49 @@ process_known_hosts() {
 # process uids for the authorized_keys file
 process_uid_authorized_keys() {
     local userID
+    local nKeys
+    local nKeysOK
     local ok
     local keyid
-    local idOK
-    local idRemoved
 
     userID="$1"
 
     log "processing user ID: $userID"
 
+    nKeys=0
+    nKeysOK=0
+
     for line in $(process_user_id "$userID") ; do
+	# note that key was found
+	nKeys=$((nKeys+1))
+
 	ok=$(echo "$line" | cut -d: -f1)
 	keyid=$(echo "$line" | cut -d: -f2)
 
 	sshKey=$(gpg2ssh "$keyid")
 
 	# remove the old host key line
-	remove_line "$AUTHORIZED_KEYS" "$sshKey" && idRemoved=true
+	remove_line "$AUTHORIZED_KEYS" "$sshKey"
 
 	# if key OK, add new host line
 	if [ "$ok" -eq '0' ] ; then
-	    ssh2authorized_keys "$userID" "$sshKey" >> "$AUTHORIZED_KEYS"
+	    # note that key was found ok
+	    nKeysOK=$((nKeysOK+1))
 
-	    # note that at least one ok id was found
-	    idOK=true
+	    ssh2authorized_keys "$userID" "$sshKey" >> "$AUTHORIZED_KEYS"
 	fi
     done
 
-    # if at least one ok id was found, return 0
-    if [ "$idOK" ] ; then
-	return 0
-
-    # if ids were only removed, return 2
-    elif [ "$idRemoved" ] ; then
-	return 2
-
-    # else return 1, to indicate nothing happened
+    # if at least one key was found...
+    if [ "$nKeys" -gt 0 ] ; then
+	# if ok keys were found, return 0
+	if [ "$nKeysOK" -gt 0 ] ; then
+	    return 0
+	# else return 2
+	else
+	    return 2
+	fi
+    # if no keys were found, return 1
     else
 	return 1
     fi
@@ -599,17 +621,19 @@ update_authorized_keys() {
 	log "authorized_keys file updated."
     fi
 
-    # if all ids were OK, return 0
-    if [ "$nIDsOK" -eq "$nIDs" ] ; then
+    # if an acceptable id was found, return 0
+    if [ "$nIDsOK" -gt 0 ] ; then
 	return 0
-
-    # if all ids were BAD, return 2
-    elif [ "$nIDsBAD" -eq "$nIDs" ] ; then
-	return 2
-
-    # else return 1
+    # else if no ok ids were found...
     else
-	return 1
+	# if no bad ids were found then no ids were found at all, and
+	# return 1
+	if [ "$nIDsBAD" -eq 0 ] ; then
+	    return 1
+	# else if at least one bad id was found, return 2
+	else
+	    return 2
+	fi
     fi
 }
 

@@ -11,18 +11,15 @@
 ########################################################################
 PGRM=$(basename $0)
 
-SHAREDIR=${SHAREDIR:-"/usr/share/monkeysphere"}
-export SHAREDIR
-. "${SHAREDIR}/common" || exit 1
-
-GLOBAL_CONFIG=${GLOBAL_CONFIG:-"${ETC}/monkeysphere.conf"}
-[ -r "$GLOBAL_CONFIG" ] && . "$GLOBAL_CONFIG"
+SHARE=${MONKEYSPHERE_SHARE:-"/usr/share/monkeysphere"}
+export SHARE
+. "${SHARE}/common" || exit 1
 
 # date in UTF format if needed
 DATE=$(date -u '+%FT%T')
 
 # unset some environment variables that could screw things up
-GREP_OPTIONS=
+unset GREP_OPTIONS
 
 # default return code
 ERR=0
@@ -40,6 +37,8 @@ subcommands:
   update-known_hosts (k) [HOST]...  update known_hosts file
   update-authorized_keys (a)        update authorized_keys file
   gen-subkey (g) KEYID              generate an 'a' capable subkey
+    -l|--length BITS                  key length in bits (2048)
+    -e|--expire EXPIRE                date to expire
   help (h,?)                        this help
 
 EOF
@@ -79,11 +78,12 @@ gen_subkey(){
     fi
 
     # set subkey defaults
-    SUBKEY_TYPE=${SUBKEY_TYPE:-"RSA"}
-    SUBKEY_LENGTH=${SUBKEY_LENGTH:-}
-    SUBKEY_USAGE=${SUBKEY_USAGE:-"auth"}
-    SUBKEY_EXPIRE=${SUBKEY_EXPIRE:-"0"}
-    cat <<EOF
+    KEY_TYPE="RSA"
+    KEY_LENGTH=${KEY_LENGTH:-}
+    KEY_USAGE="auth"
+    # prompt about key expiration if not specified
+    if [ -z "$KEY_EXPIRE" ] ; then
+	cat <<EOF
 Please specify how long the key should be valid.
          0 = key does not expire
       <n>  = key expires in n days
@@ -91,7 +91,16 @@ Please specify how long the key should be valid.
       <n>m = key expires in n months
       <n>y = key expires in n years
 EOF
-    read -p "Key is valid for? ($SUBKEY_EXPIRE) " SUBKEY_EXPIRE; SUBKEY_EXPIRE=${SUBKEY_EXPIRE:-"0"}
+	while [ -z "$KEY_EXPIRE" ] ; do
+	    read -p "Key is valid for? (0) " KEY_EXPIRE
+	    if ! test_gpg_expire ${KEY_EXPIRE:=0} ; then
+		echo "invalid value"
+		unset KEY_EXPIRE
+	    fi
+	done
+    elif ! test_gpg_expire "$KEY_EXPIRE" ; then
+	failure "invalid key expiration value '$KEY_EXPIRE'."
+    fi
 
     # generate the list of commands that will be passed to edit-key
     editCommands=$(cat <<EOF
@@ -101,8 +110,8 @@ S
 E
 A
 Q
-$SUBKEY_LENGTH
-$SUBKEY_EXPIRE
+$KEY_LENGTH
+$KEY_EXPIRE
 save
 EOF
 )
@@ -116,46 +125,84 @@ EOF
 # MAIN
 ########################################################################
 
+# unset variables that should be defined only in config file
+unset KEYSERVER
+unset CHECK_KEYSERVER
+unset KNOWN_HOSTS
+unset HASH_KNOWN_HOSTS
+unset AUTHORIZED_KEYS
+
+# load global config
+[ -r "${ETC}/monkeysphere.conf" ] && . "${ETC}/monkeysphere.conf"
+
+# set monkeysphere home directory
+MONKEYSPHERE_HOME=${MONKEYSPHERE_HOME:="${HOME}/.config/monkeysphere"}
+mkdir -p -m 0700 "$MONKEYSPHERE_HOME"
+
+# load local config
+[ -e ${MONKEYSPHERE_CONFIG:="${MONKEYSPHERE_HOME}/monkeysphere.conf"} ] && . "$MONKEYSPHERE_CONFIG"
+
+# set empty config variables with ones from the environment, or from
+# config file, or with defaults
+GNUPGHOME=${MONKEYSPHERE_GNUPGHOME:=${GNUPGHOME:="${HOME}/.gnupg"}}
+KEYSERVER=${MONKEYSPHERE_KEYSERVER:=${KEYSERVER:="subkeys.pgp.net"}}
+CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
+KNOWN_HOSTS=${MONKEYSPHERE_KNOWN_HOSTS:=${KNOWN_HOSTS:="${HOME}/.ssh/known_hosts"}}
+HASH_KNOWN_HOSTS=${MONKEYSPHERE_HASH_KNOWN_HOSTS:=${HASH_KNOWN_HOSTS:="true"}}
+AUTHORIZED_KEYS=${MONKEYSPHERE_AUTHORIZED_KEYS:=${AUTHORIZED_KEYS:="${HOME}/.ssh/authorized_keys"}}
+
+# other variables not in config file
+AUTHORIZED_USER_IDS=${MONKEYSPHERE_AUTHORIZED_USER_IDS:="${MONKEYSPHERE_HOME}/authorized_user_ids"}
+REQUIRED_HOST_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_HOST_KEY_CAPABILITY:="a"}
+REQUIRED_USER_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_USER_KEY_CAPABILITY:="a"}
+
+# export GNUPGHOME and make sure gpg home exists with proper
+# permissions
+export GNUPGHOME
+mkdir -p -m 0700 "$GNUPGHOME"
+
+# get subcommand
 COMMAND="$1"
 [ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
 shift
 
-# set ms home directory
-MS_HOME=${MS_HOME:-"${HOME}/.config/monkeysphere"}
+# unset option variables
+unset KEY_LENGTH
+unset KEY_EXPIRE
 
-# load configuration file
-MS_CONF=${MS_CONF:-"${MS_HOME}/monkeysphere.conf"}
-[ -e "$MS_CONF" ] && . "$MS_CONF"
+# get options for key generation and add-certifier functions
+TEMP=$(getopt -o l:e: -l length:,expire: -n "$PGRM" -- "$@")
 
-# set empty config variable with defaults
-GNUPGHOME=${GNUPGHOME:-"${HOME}/.gnupg"}
-KEYSERVER=${KEYSERVER:-"subkeys.pgp.net"}
-CHECK_KEYSERVER=${CHECK_KEYSERVER:="true"}
-KNOWN_HOSTS=${KNOWN_HOSTS:-"${HOME}/.ssh/known_hosts"}
-HASH_KNOWN_HOSTS=${HASH_KNOWN_HOSTS:-"true"}
-AUTHORIZED_KEYS=${AUTHORIZED_KEYS:-"${HOME}/.ssh/authorized_keys"}
+if [ $? != 0 ] ; then
+    usage
+    exit 1
+fi
 
-# other variables
-AUTHORIZED_USER_IDS=${AUTHORIZED_USER_IDS:-"${MS_HOME}/authorized_user_ids"}
-REQUIRED_HOST_KEY_CAPABILITY=${REQUIRED_HOST_KEY_CAPABILITY:-"a"}
-REQUIRED_USER_KEY_CAPABILITY=${REQUIRED_USER_KEY_CAPABILITY:-"a"}
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
 
-export GNUPGHOME
-
-# make sure gpg home exists with proper permissions
-mkdir -p -m 0700 "$GNUPGHOME"
-
-# make sure the user monkeysphere home directory exists
-mkdir -p -m 0700 "$MS_HOME"
-touch "$AUTHORIZED_USER_IDS"
+while true ; do
+    case "$1" in
+	-l|--length)
+	    KEY_LENGTH="$2"
+	    shift 2
+	    ;;
+	-e|--expire)
+	    KEY_EXPIRE="$2"
+	    shift 2
+	    ;;
+	--)
+	    shift
+	    ;;
+        *)
+            break
+            ;;
+    esac
+done
 
 case $COMMAND in
     'update-known_hosts'|'update-known-hosts'|'k')
 	MODE='known_hosts'
-
-        # touch the known_hosts file to make sure it exists
-	# ssh-keygen complains if it doesn't exist
-	touch "$KNOWN_HOSTS"
 
         # if hosts are specified on the command line, process just
         # those hosts
@@ -167,7 +214,7 @@ case $COMMAND in
         # in the user's known_hosts file
 	else
 	    if [ ! -s "$KNOWN_HOSTS" ] ; then
-		failure "known_hosts file '$KNOWN_HOSTS' is empty."
+		failure "known_hosts file '$KNOWN_HOSTS' is empty or does not exist."
 	    fi
 
 	    process_known_hosts
@@ -180,7 +227,7 @@ case $COMMAND in
 
         # fail if the authorized_user_ids file is empty
 	if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
-	    failure "$AUTHORIZED_USER_IDS is empty."
+	    failure "$AUTHORIZED_USER_IDS is empty or does not exist."
 	fi
 
 	# process authorized_user_ids file
