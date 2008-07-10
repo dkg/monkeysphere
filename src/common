@@ -79,11 +79,15 @@ remove_line() {
     file="$1"
     string="$2"
 
-    # if the string is in the file and removed, return 0
+    if [ -z "$file" -o -z "$string" ] ; then
+	return 1
+    fi
+
+    # if the string is in the file...
     if grep -q -F "$string" "$file" 2> /dev/null ; then
+	# remove the line with the string, and return 0
 	grep -v -F "$string" "$file" | sponge "$file"
 	return 0
-
     # otherwise return 1
     else
 	return 1
@@ -112,6 +116,48 @@ translate_ssh_variables() {
 # test that a string to conforms to GPG's expiration format
 test_gpg_expire() {
     echo "$1" | egrep -q "^[0-9][mwy]?$"
+}
+
+# check that a file is properly owned, and that all it's parent
+# directories are not group/other writable
+check_key_file_permissions() {
+    local user
+    local path
+    local access
+    local gAccess
+    local oAccess
+
+    # function to check that an octal corresponds to writability
+    is_write() {
+	[ "$1" -eq 2 -o "$1" -eq 3 -o "$1" -eq 6 -o "$1" -eq 7 ]
+    }
+
+    user="$1"
+    path="$2"
+
+    # return 0 is path does not exist
+    [ -e "$path" ] || return 0
+
+    owner=$(stat --format '%U' "$path")
+    access=$(stat --format '%a' "$path")
+    gAccess=$(echo "$access" | cut -c2)
+    oAccess=$(echo "$access" | cut -c3)
+
+    # check owner
+    if [ "$owner" != "$user" -a "$owner" != 'root' ] ; then
+	return 1
+    fi
+
+    # check group/other writability
+    if is_write "$gAccess" || is_write "$oAccess" ; then
+	return 2
+    fi
+
+    if [ "$path" = '/' ] ; then
+	return 0
+    else
+	check_key_file_permissions $(dirname "$path")
+    fi
 }
 
 ### CONVERSION UTILITIES
@@ -405,6 +451,10 @@ process_host_known_hosts() {
 	keyid=$(echo "$line" | cut -d: -f2)
 
 	sshKey=$(gpg2ssh "$keyid")
+        if [ -z "$sshKey" ] ; then
+            log "  ! key could not be translated."
+            continue
+        fi
 
 	# remove the old host key line, and note if removed
 	remove_line "$KNOWN_HOSTS" "$sshKey"
@@ -542,6 +592,10 @@ process_uid_authorized_keys() {
 	keyid=$(echo "$line" | cut -d: -f2)
 
 	sshKey=$(gpg2ssh "$keyid")
+        if [ -z "$sshKey" ] ; then
+            log "  ! key could not be translated."
+            continue
+        fi
 
 	# remove the old host key line
 	remove_line "$AUTHORIZED_KEYS" "$sshKey"
@@ -636,15 +690,20 @@ update_authorized_keys() {
 # process an authorized_user_ids file for authorized_keys
 process_authorized_user_ids() {
     local line
+    local nline
     local userIDs
 
     authorizedUserIDs="$1"
 
     log "processing authorized_user_ids file..."
 
+    nline=0
+
     # extract user IDs from authorized_user_ids file
-    for line in $(seq 1 $(meat "$authorizedUserIDs" | wc -l)) ; do
-	userIDs[$((line-1))]=$(cutline "$line" "$authorizedUserIDs")
+    IFS=$'\n'
+    for line in $(meat "$authorizedUserIDs") ; do
+	userIDs["$nline"]="$line"
+	nline=$((nline+1))
     done
 
     update_authorized_keys "${userIDs[@]}"

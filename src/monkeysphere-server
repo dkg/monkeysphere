@@ -141,6 +141,16 @@ update_users() {
 
 	log "----- user: $uname -----"
 
+	if ! check_key_file_permissions "$uname" "$AUTHORIZED_USER_IDS" ; then
+	    log "Improper permissions on authorized_user_ids file."
+	    continue
+	fi
+
+	if ! check_key_file_permissions "$uname" "$RAW_AUTHORIZED_KEYS" ; then
+	    log "Improper permissions on authorized_keys file."
+	    continue
+	fi
+
         # make temporary directory
         TMPDIR=$(mktemp -d)
 

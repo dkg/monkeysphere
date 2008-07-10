@@ -24,6 +24,9 @@ unset GREP_OPTIONS
 # default return code
 RETURN=0
 
+# set the file creation mask to be only owner rw
+umask 077
+
 ########################################################################
 # FUNCTIONS
 ########################################################################
@@ -204,6 +207,10 @@ case $COMMAND in
     'update-known_hosts'|'update-known-hosts'|'k')
 	MODE='known_hosts'
 
+	if ! check_key_file_permissions "$USER" "$KNOWN_HOSTS" ; then
+	    failure "Improper permissions on known_hosts file."
+	fi
+
         # if hosts are specified on the command line, process just
         # those hosts
 	if [ "$1" ] ; then
@@ -227,7 +234,11 @@ case $COMMAND in
 
         # fail if the authorized_user_ids file is empty
 	if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
-	    failure "$AUTHORIZED_USER_IDS is empty or does not exist."
+	    failure "authorized_user_ids file '$AUTHORIZED_USER_IDS' is empty or does not exist."
+	fi
+
+	if ! check_key_file_permissions "$USER" "$AUTHORIZED_USER_IDS" ; then
+	    failure "Improper permissions on authorized_user_ids file."
 	fi
 
 	# process authorized_user_ids file
