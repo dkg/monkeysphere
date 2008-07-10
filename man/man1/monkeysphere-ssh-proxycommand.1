@@ -32,15 +32,24 @@ The proxy command has a fairly nuanced policy for when keyservers are
 queried when processing host.  If the host userID is not found in
 either the user's keyring or in the known_hosts file, then the
 keyserver is queried for the host userID.  If the host userID is found
-in the user's keyring, then the keyserver is not checked.  This is
-because...  If the host userID is not found in the user's keyring, but
-the host is listed in the known_hosts file, then defered check is
-scheduled.
+in the user's keyring, then the keyserver is not checked.  This
+assumes that the keyring is kept up-to-date, in a cron job or the
+like, so that revokations are properly handled.  If the host userID is
+not found in the user's keyring, but the host is listed in the
+known_hosts file, then the keyserver is not checked.  This last policy
+might change in the future, possibly by adding a defered check, so
+that hosts that go from non-monkeysphere-enabled to
+monkeysphere-enabled will be properly checked.
 
 .SH ENVIRONMENT VARIABLES
 
+All environment variables defined in monkeysphere(1) can also be used
+for the proxycommand, with one note:
+
 .TP
-KEYSERVER The keyserver to query.
+MONKEYSPHERE_CHECK_KEYSERVER
+Setting this variable (to `true' or `false') will override the policy
+defined in KEYSERVER CHECKING above.
 
 .SH AUTHOR
 
