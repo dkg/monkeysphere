@@ -25,7 +25,7 @@ DATE=$(date -u '+%FT%T')
 unset GREP_OPTIONS
 
 # default return code
-ERR=0
+RETURN=0
 
 ########################################################################
 # FUNCTIONS
@@ -33,7 +33,7 @@ ERR=0
 
 usage() {
 cat <<EOF
-usage: $PGRM <subcommand> [args]
+usage: $PGRM <subcommand> [options] [args]
 MonkeySphere server admin tool.
 
 subcommands:
@@ -123,7 +123,7 @@ update_users() {
     for uname in $unames ; do
 	# check all specified users exist
 	if ! getent passwd "$uname" >/dev/null ; then
-	    error "----- unknown user '$uname' -----"
+	    log "----- unknown user '$uname' -----"
 	    continue
 	fi
 
@@ -176,7 +176,7 @@ update_users() {
 	    # user
 	    su_monkeysphere_user \
 		". ${SHARE}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
-	    ERR="$?"
+	    RETURN="$?"
 	fi
 
 	# add user-controlled authorized_keys file path if specified
@@ -332,15 +332,11 @@ add_certifier() {
     gpg_host --export-ownertrust | gpg_authentication "--import-ownertrust"
 
     # get the key from the key server
-    gpg_authentication "--keyserver $KEYSERVER --recv-key '$keyID'"
+    gpg_authentication "--keyserver $KEYSERVER --recv-key '$keyID'" || failure
 
     # get the full fingerprint of a key ID
     fingerprint=$(gpg_authentication "--list-key --with-colons --with-fingerprint $keyID" | \
 	grep '^fpr:' | grep "$keyID" | cut -d: -f10)
-
-    if [ -z "$fingerprint" ] ; then
-	failure "Could not find key \"${keyID}\"."
-    fi
 
     echo "key found:"
     gpg_authentication "--fingerprint $fingerprint"
@@ -538,4 +534,4 @@ Type '$PGRM help' for usage."
         ;;
 esac
 
-exit "$ERR"
+exit "$RETURN"

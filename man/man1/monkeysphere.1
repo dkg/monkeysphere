@@ -53,12 +53,36 @@ none were acceptable.  `a' may be used in place of
 .B gen-subkey KEYID
 Generate an authentication subkey.  For the primary key with the
 specified key ID, generate a subkey with "authentication" capability
-that can be used for monkeysphere transactions.  `g' may be used in
-place of `gen-subkey'.
+that can be used for monkeysphere transactions.  An expiration length
+can be specified with the `-e' or `--expire' option (prompt
+otherwise).  `g' may be used in place of `gen-subkey'.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
 `help'.
+
+.SH ENVIRONMENT
+
+The following environment variables will override those specified in
+the monkeysphere.conf configuration file (defaults in parentheses):
+.TP
+MONKEYSPHERE_GNUPGHOME, GNUPGHOME
+GnuPG home directory (~/.gnupg).
+.TP
+MONKEYSPHERE_KEYSERVER
+OpenPGP keyserver to use (subkeys.pgp.net).
+.TP
+MONKEYSPHERE_CHECK_KEYSERVER
+Whether or not to check keyserver when making gpg queries (`true').
+.TP
+MONKEYSPHERE_KNOWN_HOSTS
+Path to ssh known_hosts file (~/.ssh/known_hosts).
+.TP
+MONKEYSPHERE_HASH_KNOWN_HOSTS
+Whether or not to hash to the known_hosts file entries (`true').
+.TP
+MONKEYSPHERE_AUTHORIZED_KEYS
+Path to ssh authorized_keys file (~/.ssh/authorized_keys).
 
 .SH FILES
 

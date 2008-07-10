@@ -22,7 +22,7 @@ DATE=$(date -u '+%FT%T')
 unset GREP_OPTIONS
 
 # default return code
-ERR=0
+RETURN=0
 
 ########################################################################
 # FUNCTIONS
@@ -30,7 +30,7 @@ ERR=0
 
 usage() {
 cat <<EOF
-usage: $PGRM <subcommand> [args]
+usage: $PGRM <subcommand> [options] [args]
 MonkeySphere client tool.
 
 subcommands:
@@ -208,7 +208,7 @@ case $COMMAND in
         # those hosts
 	if [ "$1" ] ; then
 	    update_known_hosts "$@"
-	    ERR="$?"
+	    RETURN="$?"
 
         # otherwise, if no hosts are specified, process every host
         # in the user's known_hosts file
@@ -218,7 +218,7 @@ case $COMMAND in
 	    fi
 
 	    process_known_hosts
-	    ERR="$?"
+	    RETURN="$?"
 	fi
 	;;
 
@@ -232,7 +232,7 @@ case $COMMAND in
 
 	# process authorized_user_ids file
 	process_authorized_user_ids "$AUTHORIZED_USER_IDS"
-	ERR="$?"
+	RETURN="$?"
 	;;
 
     'gen-subkey'|'g')
@@ -253,4 +253,4 @@ Type '$PGRM help' for usage."
         ;;
 esac
 
-exit "$ERR"
+exit "$RETURN"

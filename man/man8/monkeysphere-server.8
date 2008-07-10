@@ -38,7 +38,11 @@ used in place of `update-users'.
 .B gen-key [HOSTNAME]
 Generate a OpenPGP key pair for the host.  If HOSTNAME is not
 specified, then the system fully-qualified domain name will be user.
-`g' may be used in place of `gen-key'.
+An alternate key bit length can be specified with the `-l' or
+`--length' option (default 2048).  An expiration length can be
+specified with the `-e' or `--expire' option (prompt otherwise).  A
+key revoker fingerprint can be specified with the `-r' or `--revoker'
+option.  `g' may be used in place of `gen-key'.
 .TP
 .B show-fingerprint
 Show the fingerprint for the host's OpenPGP key.  `f' may be used in place of
@@ -50,7 +54,11 @@ place of `publish-key'.
 .TP
 .B add-identity-certifier KEYID
 Instruct system to trust user identity certifications made by KEYID.
-`a' may be used in place of `add-identity-certifier'.
+A certifier domain can be specified with the `-n' or `--domain'
+option.  A certifier trust level can be specified with the `-t' or
+`--trust' option (default is `full').  A certifier trust depth can be
+specified with the `-d' or `--depth' option (default is 1).  `a' may
+be used in place of `add-identity-certifier'.
 .TP
 .B remove-identity-certifier KEYID
 Instruct system to ignore user identity certifications made by KEYID.
@@ -124,6 +132,26 @@ AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
 It is recommended to add "monkeysphere-server update-users" to a
 system crontab, so that user keys are kept up-to-date, and key
 revokations and expirations can be processed in a timely manor.
+
+.SH ENVIRONMENT
+
+The following environment variables will override those specified in
+the monkeysphere-server.conf configuration file (defaults in
+parentheses):
+.TP
+MONKEYSPHERE_KEYSERVER
+OpenPGP keyserver to use (subkeys.pgp.net).
+.TP
+MONKEYSPHERE_AUTHORIZED_USER_IDS
+Path to user authorized_user_ids file
+(%h/.config/monkeysphere/authorized_user_ids).
+.TP
+MONKEYSPHERE_RAW_AUTHORIZED_KEYS
+Path to user-controlled authorized_keys file.  `-' means not to add
+user-controlled file (%h/.ssh/authorized_keys).
+.TP
+MONKEYSPHERE_MONKEYSPHERE_USER
+User to control authentication keychain (monkeypshere).
 
 .SH FILES
 

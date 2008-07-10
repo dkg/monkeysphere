@@ -20,14 +20,10 @@ export ETC
 ########################################################################
 ### UTILITY FUNCTIONS
 
-error() {
-    log "$1"
-    ERR=${2:-'1'}
-}
-
+# failure function.  exits with code 255, unless specified otherwise.
 failure() {
     echo "$1" >&2
-    exit ${2:-'1'}
+    exit ${2:-'255'}
 }
 
 # write output to stderr
