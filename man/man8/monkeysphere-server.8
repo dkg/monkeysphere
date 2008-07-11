@@ -97,7 +97,7 @@ to tell sshd where the new server host key is located:
 HostKey /var/lib/monkeysphere/ssh_host_rsa_key
 
 In order for users logging into the system to be able to verify the
-host via the monkeysphere, at least one person (ie. a server admin)
+host via the monkeysphere, at least one person (i.e. a server admin)
 will need to sign the host's key.  This is done in the same way that
 key signing is usually done, by pulling the host's key from the
 keyserver, signing the key, and re-publishing the signature.  Once
@@ -139,7 +139,7 @@ AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
 
 It is recommended to add "monkeysphere-server update-users" to a
 system crontab, so that user keys are kept up-to-date, and key
-revokations and expirations can be processed in a timely manor.
+revocations and expirations can be processed in a timely manor.
 
 .SH ENVIRONMENT
 
@@ -159,7 +159,7 @@ Path to user-controlled authorized_keys file.  `-' means not to add
 user-controlled file (%h/.ssh/authorized_keys).
 .TP
 MONKEYSPHERE_MONKEYSPHERE_USER
-User to control authentication keychain (monkeypshere).
+User to control authentication keychain (monkeysphere).
 
 .SH FILES
 
