@@ -53,9 +53,7 @@ subcommands:
   remove-identity-certifier (r) KEYID   remove a certification key
   list-identity-certifiers (l)          list certification keys
 
-  gpg-authentication-cmd                execute a gpg command to the
-                                        authentication keyring as the
-                                        monkeysphere user
+  gpg-authentication-cmd CMD            gnupg-authentication command
 
   help (h,?)                            this help
 

@@ -69,6 +69,13 @@ Instruct system to ignore user identity certifications made by KEYID.
 List key IDs trusted by the system to certify user identities.  `l'
 may be used in place of `list-identity-certifiers'.
 .TP
+.B gpg-authentication-cmd
+Execute a gpg command on the gnupg-authentication keyring as the
+monkeysphere user.  This takes a single command (multiple gpg
+arguments need to be quoted).  Use this command with caution, as
+modifying the gnupg-authentication keyring can affect ssh user
+authentication.
+.TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
 `help'.
