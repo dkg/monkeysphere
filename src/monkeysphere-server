@@ -37,7 +37,7 @@ usage: $PGRM <subcommand> [options] [args]
 MonkeySphere server admin tool.
 
 subcommands:
-  update-users (u) [USER]...            update users authorized_keys files
+  update-users (u) [USER]...            update user authorized_keys files
 
   gen-key (g) [HOSTNAME]                generate gpg key for the server
     -l|--length BITS                      key length in bits (2048)
@@ -48,10 +48,14 @@ subcommands:
 
   add-identity-certifier (a) KEYID      import and tsign a certification key
     -n|--domain DOMAIN                    domain of certifier ()
-    -t|--trust TRUST                      trust level of certifier ('full')
+    -t|--trust TRUST                      trust level of certifier (2)
     -d|--depth DEPTH                      trust depth for certifier (1)
   remove-identity-certifier (r) KEYID   remove a certification key
   list-identity-certifiers (l)          list certification keys
+
+  gpg-authentication-cmd                execute a gpg command to the
+                                        authentication keyring as the
+                                        monkeysphere user
 
   help (h,?)                            this help
 
@@ -215,10 +219,55 @@ update_users() {
 
 # generate server gpg key
 gen_key() {
+    local keyType
+    local keyLength
+    local keyUsage
+    local keyExpire
+    local revoker
     local hostName
     local userID
     local keyParameters
     local fingerprint
+
+    # set default key parameter values
+    keyType="RSA"
+    keyLength="2048"
+    keyUsage="auth"
+    keyExpire=
+    revoker=
+
+    # get options
+    TEMP=$(getopt -o l:e:r: -l length:,expire:,revoker: -n "$PGRM" -- "$@")
+
+    if [ $? != 0 ] ; then
+	exit 1
+    fi
+
+    # Note the quotes around `$TEMP': they are essential!
+    eval set -- "$TEMP"
+
+    while true ; do
+	case "$1" in
+	    -l|--length)
+		keyLength="$2"
+		shift 2
+		;;
+	    -e|--expire)
+		keyExpire="$2"
+		shift 2
+		;;
+	    -r|--revoker)
+		revoker="$2"
+		shift 2
+		;;
+	    --)
+		shift
+		;;
+            *)
+		break
+		;;
+	esac
+    done
 
     hostName=${1:-$(hostname --fqdn)}
     userID="ssh://${hostName}"
@@ -228,12 +277,8 @@ gen_key() {
 	failure "Key for '$userID' already exists"
     fi
 
-    # set key variables
-    KEY_TYPE="RSA"
-    KEY_LENGTH=${KEY_LENGTH:="2048"}
-    KEY_USAGE="auth"
     # prompt about key expiration if not specified
-    if [ -z "$KEY_EXPIRE" ] ; then
+    if [ -z "$keyExpire" ] ; then
 	cat <<EOF
 Please specify how long the key should be valid.
          0 = key does not expire
@@ -242,33 +287,33 @@ Please specify how long the key should be valid.
       <n>m = key expires in n months
       <n>y = key expires in n years
 EOF
-	while [ -z "$KEY_EXPIRE" ] ; do
-	    read -p "Key is valid for? (0) " KEY_EXPIRE
-	    if ! test_gpg_expire ${KEY_EXPIRE:=0} ; then
+	while [ -z "$keyExpire" ] ; do
+	    read -p "Key is valid for? (0) " keyExpire
+	    if ! test_gpg_expire ${keyExpire:=0} ; then
 		echo "invalid value"
-		unset KEY_EXPIRE
+		unset keyExpire
 	    fi
 	done
-    elif ! test_gpg_expire "$KEY_EXPIRE" ; then
-	failure "invalid key expiration value '$KEY_EXPIRE'."
+    elif ! test_gpg_expire "$keyExpire" ; then
+	failure "invalid key expiration value '$keyExpire'."
     fi
 
     # set key parameters
     keyParameters=$(cat <<EOF
-Key-Type: $KEY_TYPE
-Key-Length: $KEY_LENGTH
-Key-Usage: $KEY_USAGE
+Key-Type: $keyType
+Key-Length: $keyLength
+Key-Usage: $keyUsage
 Name-Real: $userID
-Expire-Date: $KEY_EXPIRE
+Expire-Date: $keyExpire
 EOF
 )
 
     # add the revoker field if specified
     # FIXME: the "1:" below assumes that $REVOKER's key is an RSA key.
     # FIXME: key is marked "sensitive"?  is this appropriate?
-    if [ "$REVOKER" ] ; then
+    if [ "$revoker" ] ; then
 	keyParameters="${keyParameters}"$(cat <<EOF
-Revoker: 1:$REVOKER sensitive
+Revoker: 1:$revoker sensitive
 EOF
 )
     fi
@@ -331,9 +376,50 @@ publish_server_key() {
 # retrieve key from web of trust, import it into the host keyring, and
 # ltsign the key in the host keyring so that it may certify other keys
 add_certifier() {
+    local domain
+    local trust
+    local depth
     local keyID
     local fingerprint
     local ltsignCommand
+
+    # set default values for trust depth and domain
+    domain=
+    trust=2
+    depth=1
+
+    # get options
+    TEMP=$(getopt -o n:t:d: -l domain:,trust:,depth: -n "$PGRM" -- "$@")
+
+    if [ $? != 0 ] ; then
+	exit 1
+    fi
+
+    # Note the quotes around `$TEMP': they are essential!
+    eval set -- "$TEMP"
+
+    while true ; do
+	case "$1" in
+	    -n|--domain)
+		domain="$2"
+		shift 2
+		;;
+	    -t|--trust)
+		trust="$2"
+		shift 2
+		;;
+	    -d|--depth)
+		depth="$2"
+		shift 2
+		;;
+	    --)
+		shift
+		;;
+            *)
+		break
+		;;
+	esac
+    done
 
     keyID="$1"
     export keyID
@@ -342,7 +428,7 @@ add_certifier() {
     gpg_host --export-ownertrust | gpg_authentication "--import-ownertrust"
 
     # get the key from the key server
-    gpg_authentication "--keyserver $KEYSERVER --recv-key '$keyID'" || failure
+    gpg_authentication "--keyserver $KEYSERVER --recv-key '$keyID'"
 
     # get the full fingerprint of a key ID
     fingerprint=$(gpg_authentication "--list-key --with-colons --with-fingerprint $keyID" | \
@@ -359,19 +445,14 @@ add_certifier() {
     # export the key to the host keyring
     gpg_authentication "--export $keyID" | gpg_host --import
 
-    # default values for trust depth and domain
-    DOMAIN=${DOMAIN:-}
-    TRUST=${TRUST:-2}
-    DEPTH=${DEPTH:-1}
-
     # ltsign command
     # NOTE: *all* user IDs will be ltsigned
     ltsignCommand=$(cat <<EOF
 ltsign
 y
-$TRUST
-$DEPTH
-$DOMAIN
+$trust
+$depth
+$domain
 y
 save
 EOF
@@ -401,6 +482,11 @@ remove_certifier() {
 # list the host certifiers
 list_certifiers() {
     gpg_host --list-keys
+}
+
+# issue command to gpg-authentication keyring
+gpg_authentication_cmd() {
+    gpg_authentication "$@"
 }
 
 ########################################################################
@@ -445,60 +531,6 @@ COMMAND="$1"
 [ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
 shift
 
-# unset option variables
-unset KEY_LENGTH
-unset KEY_EXPIRE
-unset REVOKER
-unset DOMAIN
-unset TRUST
-unset DEPTH
-
-# get options for key generation and add-certifier functions
-TEMP=$(getopt -o l:e:r:n:t:d: -l length:,expire:,revoker:,domain:,trust:,depth: -n "$PGRM" -- "$@")
-
-if [ $? != 0 ] ; then
-    usage
-    exit 1
-fi
-
-# Note the quotes around `$TEMP': they are essential!
-eval set -- "$TEMP"
-
-while true ; do
-    case "$1" in
-	-l|--length)
-	    KEY_LENGTH="$2"
-	    shift 2
-	    ;;
-	-e|--expire)
-	    KEY_EXPIRE="$2"
-	    shift 2
-	    ;;
-	-r|--revoker)
-	    REVOKER="$2"
-	    shift 2
-	    ;;
-	-n|--domain)
-	    DOMAIN="$2"
-	    shift 2
-	    ;;
-	-t|--trust)
-	    TRUST="$2"
-	    shift 2
-	    ;;
-	-d|--depth)
-	    DEPTH="$2"
-	    shift 2
-	    ;;
-	--)
-	    shift
-	    ;;
-        *)
-            break
-            ;;
-    esac
-done
-
 case $COMMAND in
     'update-users'|'update-user'|'u')
 	update_users "$@"
@@ -532,6 +564,10 @@ case $COMMAND in
 
     'list-identity-certifiers'|'list-certifiers'|'list-certifier'|'l')
 	list_certifiers "$@"
+	;;
+
+    'gpg-authentication-cmd')
+	gpg_authentication_cmd "$@"
 	;;
 
     'help'|'h'|'?')

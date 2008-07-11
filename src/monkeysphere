@@ -50,9 +50,44 @@ EOF
 # generate a subkey with the 'a' usage flags set
 # FIXME: this needs some tweaking to clean it up
 gen_subkey(){
+    local keyLength
+    local keyExpire
     local keyID
     local gpgOut
     local userID
+
+    # set default key parameter values
+    keyLength=
+    keyExpire=
+
+    # get options
+    TEMP=$(getopt -o l:e: -l length:,expire: -n "$PGRM" -- "$@")
+
+    if [ $? != 0 ] ; then
+	exit 1
+    fi
+
+    # Note the quotes around `$TEMP': they are essential!
+    eval set -- "$TEMP"
+
+    while true ; do
+	case "$1" in
+	    -l|--length)
+		keyLength="$2"
+		shift 2
+		;;
+	    -e|--expire)
+		keyExpire="$2"
+		shift 2
+		;;
+	    --)
+		shift
+		;;
+            *)
+		break
+		;;
+	esac
+    done
 
     keyID="$1"
 
@@ -81,11 +116,8 @@ gen_subkey(){
     fi
 
     # set subkey defaults
-    KEY_TYPE="RSA"
-    KEY_LENGTH=${KEY_LENGTH:-}
-    KEY_USAGE="auth"
     # prompt about key expiration if not specified
-    if [ -z "$KEY_EXPIRE" ] ; then
+    if [ -z "$keyExpire" ] ; then
 	cat <<EOF
 Please specify how long the key should be valid.
          0 = key does not expire
@@ -94,15 +126,15 @@ Please specify how long the key should be valid.
       <n>m = key expires in n months
       <n>y = key expires in n years
 EOF
-	while [ -z "$KEY_EXPIRE" ] ; do
-	    read -p "Key is valid for? (0) " KEY_EXPIRE
-	    if ! test_gpg_expire ${KEY_EXPIRE:=0} ; then
+	while [ -z "$keyExpire" ] ; do
+	    read -p "Key is valid for? (0) " keyExpire
+	    if ! test_gpg_expire ${keyExpire:=0} ; then
 		echo "invalid value"
-		unset KEY_EXPIRE
+		unset keyExpire
 	    fi
 	done
-    elif ! test_gpg_expire "$KEY_EXPIRE" ; then
-	failure "invalid key expiration value '$KEY_EXPIRE'."
+    elif ! test_gpg_expire "$keyExpire" ; then
+	failure "invalid key expiration value '$keyExpire'."
     fi
 
     # generate the list of commands that will be passed to edit-key
@@ -113,8 +145,8 @@ S
 E
 A
 Q
-$KEY_LENGTH
-$KEY_EXPIRE
+$keyLength
+$keyExpire
 save
 EOF
 )
@@ -168,40 +200,6 @@ mkdir -p -m 0700 "$GNUPGHOME"
 COMMAND="$1"
 [ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
 shift
-
-# unset option variables
-unset KEY_LENGTH
-unset KEY_EXPIRE
-
-# get options for key generation and add-certifier functions
-TEMP=$(getopt -o l:e: -l length:,expire: -n "$PGRM" -- "$@")
-
-if [ $? != 0 ] ; then
-    usage
-    exit 1
-fi
-
-# Note the quotes around `$TEMP': they are essential!
-eval set -- "$TEMP"
-
-while true ; do
-    case "$1" in
-	-l|--length)
-	    KEY_LENGTH="$2"
-	    shift 2
-	    ;;
-	-e|--expire)
-	    KEY_EXPIRE="$2"
-	    shift 2
-	    ;;
-	--)
-	    shift
-	    ;;
-        *)
-            break
-            ;;
-    esac
-done
 
 case $COMMAND in
     'update-known_hosts'|'update-known-hosts'|'k')
