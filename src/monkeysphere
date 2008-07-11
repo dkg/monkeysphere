@@ -90,6 +90,9 @@ gen_subkey(){
     done
 
     keyID="$1"
+    if [ -z "$keyID" ] ; then
+	failure "You must specify the key ID of your primary key."
+    fi
 
     gpgOut=$(gpg --quiet --fixed-list-mode --list-keys --with-colons \
 	"$keyID" 2> /dev/null)
@@ -245,11 +248,7 @@ case $COMMAND in
 	;;
 
     'gen-subkey'|'g')
-	keyID="$1"
-	if [ -z "$keyID" ] ; then
-	    failure "You must specify the key ID of your primary key."
-	fi
-	gen_subkey "$keyID"
+	gen_subkey "$@"
 	;;
 
     'help'|'h'|'?')

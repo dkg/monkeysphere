@@ -423,6 +423,9 @@ add_certifier() {
     done
 
     keyID="$1"
+    if [ -z "$keyID" ] ; then
+	failure "You must specify the key ID of a key to add."
+    fi
     export keyID
 
     # export host ownertrust to authentication keyring
@@ -438,7 +441,8 @@ add_certifier() {
     echo "key found:"
     gpg_authentication "--fingerprint $fingerprint"
 
-    read -p "Are you sure you want to add this key as a certifier of users on this system? (y/N) " OK; OK=${OK:-N}
+    echo "Are you sure you want to add this key as a certifier of"
+    read -p "users on this system? (y/N) " OK; OK=${OK:-N}
     if [ "${OK/y/Y}" != 'Y' ] ; then
 	failure "aborting."
     fi
@@ -472,6 +476,9 @@ remove_certifier() {
     local fingerprint
 
     keyID="$1"
+    if [ -z "$keyID" ] ; then
+	failure "You must specify the key ID of a key to remove."
+    fi
 
     # delete the requested key (with prompting)
     gpg_host --delete-key "$keyID"
@@ -550,16 +557,10 @@ case $COMMAND in
 	;;
 
     'add-identity-certifier'|'add-certifier'|'a')
-	if [ -z "$1" ] ; then
-	    failure "You must specify a key ID."
-	fi
 	add_certifier "$1"
 	;;
 
     'remove-identity-certifier'|'remove-certifier'|'r')
-	if [ -z "$1" ] ; then
-	    failure "You must specify a key ID."
-	fi
 	remove_certifier "$1"
 	;;
 
