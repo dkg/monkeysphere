@@ -5,7 +5,8 @@ usr/sbin
 usr/share
 usr/share/monkeysphere
 usr/share/man
-usr/share/man1
-usr/share/man8
+usr/share/man/man1
+usr/share/man/man5
+usr/share/man/man8
 etc/monkeysphere
 etc/monkeysphere/authorized_user_ids
