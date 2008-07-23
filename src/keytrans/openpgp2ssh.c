@@ -491,6 +491,8 @@ int main(int argc, char* argv[]) {
       err(0,"Translating public key\n");
 
       ret = emit_public_openssh_from_pgp(&pgp_crt, fingerprint, fpr_size);
+      if (ret != 0) 
+	return ret;
       
     } else {
       /* we have no idea what kind of key this is at all anyway! */

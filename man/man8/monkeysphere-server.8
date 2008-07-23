@@ -54,10 +54,12 @@ place of `publish-key'.
 .TP
 .B add-identity-certifier KEYID
 Instruct system to trust user identity certifications made by KEYID.
-A certifier domain can be specified with the `-n' or `--domain'
-option.  A certifier trust level can be specified with the `-t' or
-`--trust' option (possible values are `1' for `marginal' and `2' for
-`full' (default is `2')).  A certifier trust depth can be specified
+Using the `-n' or `--domain' option allows you to indicate that you
+only trust the given KEYID to make identifications within a specific
+domain (e.g. "trust KEYID to certify user identities within the
+@example.org domain").  A certifier trust level can be specified with
+the `-t' or `--trust' option (possible values are `marginal' and
+`full' (default is `full')).  A certifier trust depth can be specified
 with the `-d' or `--depth' option (default is 1).  `a' may be used in
 place of `add-identity-certifier'.
 .TP

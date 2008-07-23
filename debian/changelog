@@ -1,7 +1,8 @@
-monkeysphere (0.4-1) UNRELEASED; urgency=low
+monkeysphere (0.4-1) experimental; urgency=low
 
-  [Daniel Kahn Gillmor]
-  * New version (switch UNRELEASED to experimental when ready)
+  [ Daniel Kahn Gillmor ]
+  * New version.
+  * Fixed return code error in openpgp2ssh
 
   [ Jameson Graef Rollins ]
   * Privilege separation: use monkeysphere user to handle maintenance of
@@ -14,7 +15,7 @@ monkeysphere (0.4-1) UNRELEASED; urgency=low
   * Add write permission check on authorized_keys, known_hosts, and
     authorized_user_ids files.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Thu, 10 Jul 2008 16:47:17 -0400
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Tue, 22 Jul 2008 21:50:17 -0400
 
 monkeysphere (0.3-1) experimental; urgency=low
 

@@ -47,8 +47,8 @@ subcommands:
   publish-key (p)                       publish server's host key to keyserver
 
   add-identity-certifier (a) KEYID      import and tsign a certification key
-    -n|--domain DOMAIN                    domain of certifier ()
-    -t|--trust TRUST                      trust level of certifier (2)
+    -n|--domain DOMAIN                    limit ID certifications to IDs in DOMAIN ()
+    -t|--trust TRUST                      trust level of certifier (full)
     -d|--depth DEPTH                      trust depth for certifier (1)
   remove-identity-certifier (r) KEYID   remove a certification key
   list-identity-certifiers (l)          list certification keys
@@ -383,10 +383,11 @@ add_certifier() {
     local keyID
     local fingerprint
     local ltsignCommand
+    local trustval
 
     # set default values for trust depth and domain
     domain=
-    trust=2
+    trust=full
     depth=1
 
     # get options
@@ -450,12 +451,20 @@ add_certifier() {
     # export the key to the host keyring
     gpg_authentication "--export $keyID" | gpg_host --import
 
+    if [ "$trust" == marginal ]; then
+	trustval=1
+    elif [ "$trust" == full ]; then
+	trustval=2
+    else
+	failure "trust value requested ('$trust') was unclear (only 'marginal' or 'full' are supported)"
+    fi
+
     # ltsign command
     # NOTE: *all* user IDs will be ltsigned
     ltsignCommand=$(cat <<EOF
 ltsign
 y
-$trust
+$trustval
 $depth
 $domain
 y
