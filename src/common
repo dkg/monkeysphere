@@ -115,7 +115,7 @@ translate_ssh_variables() {
 
 # test that a string to conforms to GPG's expiration format
 test_gpg_expire() {
-    echo "$1" | egrep -q "^[0-9][mwy]?$"
+    echo "$1" | egrep -q "^[0-9]+[mwy]?$"
 }
 
 # check that a file is properly owned, and that all it's parent
