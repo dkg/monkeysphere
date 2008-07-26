@@ -93,18 +93,19 @@ $ monkeysphere-server gen-key
 
 To enable host verification via the monkeysphere, you must then
 publish the host's key to the Web of Trust using the \fBpublish-key\fP
-command to push the key to a keyserver.  Then modify the sshd_config
-to tell sshd where the new server host key is located:
+command to push the key to a keyserver.  You must also modify the
+sshd_config on the server to tell sshd where the new server host key
+is located:
 
 HostKey /var/lib/monkeysphere/ssh_host_rsa_key
 
 In order for users logging into the system to be able to verify the
-host via the monkeysphere, at least one person (i.e. a server admin)
-will need to sign the host's key.  This is done in the same way that
-key signing is usually done, by pulling the host's key from the
-keyserver, signing the key, and re-publishing the signature.  Once
-that is done, users logging into the host will be able to certify the
-host's key via the signature of the host admin.
+host via the monkeysphere, at least one person (e.g. a server admin)
+will need to sign the host's key.  This is done using standard key
+signing techniquies, usually by pulling the key from the keyserver,
+signing the key, and re-publishing the signature.  Once that is done,
+users logging into the host will be able to certify the host's key via
+the signature of the host admin.
 
 If the server will also handle user authentication through
 monkeysphere-generated authorized_keys files, the server must be told
@@ -114,8 +115,8 @@ which keys will act as user certifiers.  This is done with the
 $ monkeysphere-server add-certifier KEYID
 
 where KEYID is the key ID of the server admin, or whoever's signature
-will be certifying users to the system.  Certifiers can be later
-remove with the \fBremove-certifier\fP command, and listed with the
+will be certifying users to the system.  Certifiers can be removed
+with the \fBremove-certifier\fP command, and listed with the
 \fBlist-certifiers\fP command.
 
 Remote user's will then be granted access to a local user account
@@ -127,15 +128,16 @@ the monkeysphere-server.conf file.
 
 The \fBupdate-users\fP command can then be used to generate
 authorized_keys file for local users based on the authorized user IDs
-listed in the user's authorized_user_ids file:
+listed in the various local user's authorized_user_ids file:
 
 $ monkeysphere-server update-users USER
 
-sshd can then use these files to grant access to user accounts for
-remote users.  If no user is specified, authorized_keys files will be
-generated for all users on the system.  You must also tell sshd to
-look at the monkeysphere-generated authorized_keys file for user
-authentication by setting the following in the sshd_config:
+Not specifying a specific user will cause all users on the system to
+updated.  sshd can then use these monkeysphere generated
+authorized_keys files to grant access to user accounts for remote
+users.  You must also tell sshd to look at the monkeysphere-generated
+authorized_keys file for user authentication by setting the following
+in the sshd_config:
 
 AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
 
