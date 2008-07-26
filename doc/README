@@ -1,56 +1,39 @@
-Monkeysphere README
-===================
+Monkeysphere User README
+========================
 
-user usage
-----------
-For a user to update their known_hosts file:
+As a regular user on a system where the monkeysphere package is
+installed, you probably want to do a few things:
+
+Keeping your keyring up-to-date
+-------------------------------
+
+Regularly refresh your GnuPG keyring from the keyservers.  This can be
+done with a simple cronjob.
+
+FIXME: give an example of a useful cronjob
+
+
+Keeping your known_hosts file in sync with your keyring
+-------------------------------------------------------
+
+With your keyring updated, you want to make sure that openssh can
+still see the most recent trusted information about who the various
+hosts are:
 
 $ monkeysphere update-known_hosts
+
+
+Using monkeysphere-ssh-proxycommand(1)
+--------------------------------------
+
+FIXME: make a suggestion about how to integrate this in daily use.
+
+
+Miscellaneous
+-------------
 
 For a user to update their monkeysphere authorized_keys file:
 
 $ monkeysphere update-authorized_keys
 
-server service publication
---------------------------
-To publish a server host key:
-
-# monkeysphere-server gen-key
-# monkeysphere-server publish-key
-
-This will generate the key for server with the service URI
-(ssh://server.hostname).  The server admin should now sign the server
-key so that people in the admin's web of trust can authenticate the
-server without manual host key checking:
-
-$ gpg --search ='ssh://server.hostname'
-$ gpg --sign-key 'ssh://server.hostname'
-
-server authorized_keys maintenance
-----------------------------------
-A system can maintain monkeysphere authorized_keys files for it's
-users.
-
-For each user account on the server, the userids of people authorized
-to log into that account would be placed in:
-
-/etc/monkeysphere/authorized_user_ids/USER
-
-However, in order for users to become authenticated, the server must
-determine that the user keys have "full" validity.  This means that
-the server must fully trust at least one person whose signature on the
-connecting users key would validate the user.  This would generally be
-the server admin.  If the server admin's keyid is XXXXXXXX, then on
-the server run:
-
-# monkeysphere-server trust-keys XXXXXXXX
-
-To update the monkeysphere authorized_keys file for user "bob", the
-system would then run the following:
-
-# monkeysphere-server update-users bob
-
-To update the monkeysphere authorized_keys file for all users on the
-the system, run the same command with no arguments:
-
-# monkeysphere-server update-users
+FIXME: where is this file located?  What does this command do?

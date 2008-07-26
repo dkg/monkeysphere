@@ -107,3 +107,14 @@ Test and document what happens when any filesystem that the
 Optimize keyserver access, particularly on monkeysphere-server
    update-users -- is there a way to query the keyserver all in a
    chunk?
+
+Create DSA authentication subkey for server during gen-key
+
+Fix behavior when add-identity-certifier fails to fetch a key from the
+   keyserver.
+
+Allow server administrators to add-identity-certifier from a key in
+   the filesystem (or on stdin, etc)
+
+Add "monkeysphere-server diagnostics" subcommand to identify missing
+   pieces of monkeysphere server administration setup.
