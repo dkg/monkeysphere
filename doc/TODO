@@ -78,27 +78,14 @@ File bug against ssh-keygen about how "-R" option removes comments
 File bug against ssh-keygen to see if we can get it to write to hash a
    known_hosts file to/from stdout/stdin.
 
-Add environment variables sections to man pages.
-
-Environment variable scoping.
-
-Move environment variable precedence before conf file.
-
 When using ssh-proxycommand, if only host keys found are expired or
    revoked, then output loud warning with prompt, or fail hard.
-
-Update monkeysphere-ssh-proxycommand man page with new keyserver
-   checking policy info.
 
 File bug against seahorse about how, when creating new primary keys,
    it presents option for "RSA (sign only)" but then creates an "esca"
    key.
 
 File bug against enigmail about lack of ability to create subkeys.
-
-Privilege separation: monkeysphere user to handle authn keyring and
-   generate authorized_keys file (which would be moved into place by
-   root).  Host keyring would be owned by root.
 
 Test and document what happens when any filesystem that the
    monkeysphere-server relies on and modifies (/tmp, /etc, and /var?)

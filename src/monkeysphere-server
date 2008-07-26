@@ -342,6 +342,10 @@ EOF
     fingerprint=$(gpg_host --list-key --with-colons --with-fingerprint "=${userID}" | \
 	grep '^fpr:' | head -1 | cut -d: -f10)
 
+    # export host ownertrust to authentication keyring
+    log "setting ultimate owner trust for server key..."
+    echo "${fingerprint}:6:" | gpg_authentication "--import-ownertrust"
+
     # translate the private key to ssh format, and export to a file
     # for sshs usage.
     # NOTE: assumes that the primary key is the proper key to use
@@ -429,9 +433,6 @@ add_certifier() {
     fi
     export keyID
 
-    # export host ownertrust to authentication keyring
-    gpg_host --export-ownertrust | gpg_authentication "--import-ownertrust"
-
     # get the key from the key server
     gpg_authentication "--keyserver $KEYSERVER --recv-key '$keyID'"
 
@@ -470,7 +471,7 @@ $domain
 y
 save
 EOF
-)
+	)
 
     # ltsign the key
     echo "$ltsignCommand" | gpg_host --quiet --command-fd 0 --edit-key "$fingerprint"
