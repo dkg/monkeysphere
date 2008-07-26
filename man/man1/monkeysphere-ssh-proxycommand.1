@@ -7,10 +7,16 @@ monkeysphere-ssh-proxycommand \- MonkeySphere ssh ProxyCommand script
 .SH DESCRIPTION
 
 \fBmonkeysphere-ssh-proxy\fP is an ssh proxy command that can be used
-to trigger a monkeysphere update of the known_hosts file for the hosts
-that are being connected to.  It is meant to be run as an ssh
-ProxyCommand.  This can either be done by specifying the proxy command
-on the command line:
+to trigger a monkeysphere update of the ssh known_hosts file for a
+host that is being connected to with ssh.  This works by updating the
+known_hosts file for the host first, before an attempted connection to
+the host is made.  Once the known_hosts file has been updated, a TCP
+connection to the host is made by exec'ing netcat(1).  Regular ssh
+communication is then done over this netcat TCP connection (see
+ProxyCommand in ssh_config(5) for more info).
+
+This command is meant to be run as the ssh "ProxyCommand".  This can
+either be done by specifying the proxy command on the command line:
 
 .B ssh -o ProxyCommand="monkeysphere-ssh-proxycommand %h %p" ...
 
@@ -23,8 +29,10 @@ by calling it with the "--no-connect" option, i.e.:
 
 .B monkeysphere-ssh-proxycommand --no-connect "$HOST" "$PORT"
 
-This will run everything but will not exec netcat to make the tcp
-connection to the host.
+This will run everything except the final exec of netcat to make the
+TCP connection to the host.  In this way this command can be added to
+another proxy command that does other stuff, and then makes the
+connection to the host itself.
 
 .SH KEYSERVER CHECKING
 
@@ -44,7 +52,7 @@ monkeysphere-enabled will be properly checked.
 .SH ENVIRONMENT VARIABLES
 
 All environment variables defined in monkeysphere(1) can also be used
-for the proxycommand, with one note:
+for the proxy command, with one note:
 
 .TP
 MONKEYSPHERE_CHECK_KEYSERVER
@@ -59,4 +67,6 @@ Written by Jameson Rollins <jrollins@fifthhorseman.net>
 
 .BR monkeysphere (1),
 .BR ssh (1),
+.BR ssh_config (5),
+.BR netcat (1),
 .BR gpg (1)
