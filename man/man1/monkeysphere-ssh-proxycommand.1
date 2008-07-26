@@ -41,13 +41,13 @@ queried when processing host.  If the host userID is not found in
 either the user's keyring or in the known_hosts file, then the
 keyserver is queried for the host userID.  If the host userID is found
 in the user's keyring, then the keyserver is not checked.  This
-assumes that the keyring is kept up-to-date, in a cron job or the
-like, so that revocations are properly handled.  If the host userID is
-not found in the user's keyring, but the host is listed in the
-known_hosts file, then the keyserver is not checked.  This last policy
-might change in the future, possibly by adding a deferred check, so
-that hosts that go from non-monkeysphere-enabled to
-monkeysphere-enabled will be properly checked.
+assumes that the keyring is kept up-to-date, in a cronjob or the like,
+so that revocations are properly handled.  If the host userID is not
+found in the user's keyring, but the host is listed in the known_hosts
+file, then the keyserver is not checked.  This last policy might
+change in the future, possibly by adding a deferred check, so that
+hosts that go from non-monkeysphere-enabled to monkeysphere-enabled
+will be properly checked.
 
 .SH ENVIRONMENT VARIABLES
 

@@ -8,9 +8,11 @@ Keeping your keyring up-to-date
 -------------------------------
 
 Regularly refresh your GnuPG keyring from the keyservers.  This can be
-done with a simple cronjob.
+done with a simple cronjob.  An example of crontab line to do this is:
 
-FIXME: give an example of a useful cronjob
+0 12 * * * /usr/bin/gpg --refresh-keys
+
+This would refresh your keychain every day at noon.
 
 
 Keeping your known_hosts file in sync with your keyring
@@ -18,15 +20,27 @@ Keeping your known_hosts file in sync with your keyring
 
 With your keyring updated, you want to make sure that openssh can
 still see the most recent trusted information about who the various
-hosts are:
+hosts are.  This can be done with the monkeysphere-ssh-proxycommand
+(see next section) or with the update-known_hosts command:
 
 $ monkeysphere update-known_hosts
+
+This will command will check to see if there is an openpgp key for
+each (non-hashed) host listed in the known_hosts file, and then add
+the key for that host to the known_hosts file if one is found.  This
+command could be added to a crontab as well, if desired.
 
 
 Using monkeysphere-ssh-proxycommand(1)
 --------------------------------------
 
-FIXME: make a suggestion about how to integrate this in daily use.
+The best way to handle host keys is to use the monkeysphere ssh proxy
+command.  This command will make sure the known_hosts file is
+up-to-date for the host you are connecting to with ssh.  The best way
+to integrate this is to add the following line to the "Host *" section
+of your ~/.ssh/config file:
+
+ProxyCommand monkeysphere-ssh-proxycommand %h %p
 
 
 Setting up an OpenPGP authentication key
@@ -38,6 +52,7 @@ keyid $GPGID, you can set up such a subkey relatively easily with:
 
 $ monkeysphere gen-subkey $GPGID
 
+
 Using your OpenPGP authentication key for SSH
 ---------------------------------------------
 
@@ -48,11 +63,17 @@ FIXME: using the key with a single session?
 NOTE: the current version of openpgp2ssh does *not* deal well with
 encrypted keys (as of 2008-07-26)
 
+
 Miscellaneous
 -------------
 
-For a user to update their monkeysphere authorized_keys file:
+Users can also maintain their own authorized_keys files, for users
+that would be logging into their accounts.  This is done with the
+update-authorized_keys command:
 
 $ monkeysphere update-authorized_keys
 
-FIXME: where is this file located?  What does this command do?
+This command will take all the user IDs listed in the
+~/.config/monkeysphere/authorized_user_ids file and check to see if
+there are acceptable keys for those user IDs available.  If so, they
+will be added to the ~/.ssh/authorized_keys file.

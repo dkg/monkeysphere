@@ -23,7 +23,7 @@ $ gpg --sign-key ='ssh://server.hostname'
 Update OpenSSH configuration files
 ----------------------------------
 
-To use the newly-generated host key for ssh connections, Put the
+To use the newly-generated host key for ssh connections, put the
 following line in /etc/ssh/sshd_config (be sure to remove references
 to any other key):
 
