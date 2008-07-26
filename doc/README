@@ -29,6 +29,25 @@ Using monkeysphere-ssh-proxycommand(1)
 FIXME: make a suggestion about how to integrate this in daily use.
 
 
+Setting up an OpenPGP authentication key
+----------------------------------------
+
+First things first: you'll need to create a new subkey for your
+current key, if you don't already have one.  If your OpenPGP key is
+keyid $GPGID, you can set up such a subkey relatively easily with:
+
+$ monkeysphere gen-subkey $GPGID
+
+Using your OpenPGP authentication key for SSH
+---------------------------------------------
+
+FIXME: Sending the key to the ssh-agent?
+
+FIXME: using the key with a single session?
+
+NOTE: the current version of openpgp2ssh does *not* deal well with
+encrypted keys (as of 2008-07-26)
+
 Miscellaneous
 -------------
 
