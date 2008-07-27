@@ -37,17 +37,17 @@ if matching keys were found but none were acceptable.  `k' may be used
 in place of `update-known_hosts'.
 .TP
 .B update-authorized_keys
-Update the monkeysphere authorized_keys file.  For each user ID in the
-user's authorized_user_ids file, gpg will be queried for keys
-associated with that user ID, optionally querying a keyserver.  If an
-acceptable key is found (see KEY ACCEPTABILITY in monkeysphere(5)),
-the key is added to the user's authorized_keys file.  If a key is
-found but is unacceptable for the user ID, any matching keys are
-removed from the user's authorized_keys file.  If no gpg key is found
-for the user ID, nothing is done.  This subcommand will exit with a
-status of 0 if at least one acceptable key was found for a user ID, 1
-if no matching keys were found at all, and 2 if matching keys were
-found but none were acceptable.  `a' may be used in place of
+Update the authorized_keys file.  For each user ID in the user's
+authorized_user_ids file, gpg will be queried for keys associated with
+that user ID, optionally querying a keyserver.  If an acceptable key
+is found (see KEY ACCEPTABILITY in monkeysphere(5)), the key is added
+to the user's authorized_keys file.  If a key is found but is
+unacceptable for the user ID, any matching keys are removed from the
+user's authorized_keys file.  If no gpg key is found for the user ID,
+nothing is done.  This subcommand will exit with a status of 0 if at
+least one acceptable key was found for a user ID, 1 if no matching
+keys were found at all, and 2 if matching keys were found but none
+were acceptable.  `a' may be used in place of
 `update-authorized_keys'.
 .TP
 .B gen-subkey KEYID

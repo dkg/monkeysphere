@@ -1,3 +1,9 @@
+monkeysphere (0.5-1) experimental; urgency=low
+
+  * Tweak how empty authorized_user_ids and known_hosts files are handled.
+
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sun, 27 Jul 2008 12:03:30 -0700
+
 monkeysphere (0.4-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
