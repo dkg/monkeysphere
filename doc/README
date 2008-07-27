@@ -68,7 +68,12 @@ Miscellaneous
 -------------
 
 Users can also maintain their own authorized_keys files, for users
-that would be logging into their accounts.  This is done with the
+that would be logging into their accounts.  This is primarily useful
+for accounts on hosts that are not already systematically using the
+monkeysphere for user authentication.  If you're not sure whether this
+is the case for your host, ask your system administrator.
+
+If you want to do this as a regular user, use the
 update-authorized_keys command:
 
 $ monkeysphere update-authorized_keys
@@ -77,3 +82,10 @@ This command will take all the user IDs listed in the
 ~/.config/monkeysphere/authorized_user_ids file and check to see if
 there are acceptable keys for those user IDs available.  If so, they
 will be added to the ~/.ssh/authorized_keys file.
+
+You must have indicated reasonable ownertrust in some key for this
+account, or no keys will be found with trusted certification paths.
+
+If you find this useful, you might want to place a job like this in
+your crontab so that revocations and rekeyings can take place
+automatically.
