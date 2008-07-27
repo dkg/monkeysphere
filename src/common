@@ -563,6 +563,11 @@ process_known_hosts() {
 
     hosts=$(meat "$KNOWN_HOSTS" | cut -d ' ' -f 1 | grep -v '^|.*$' | tr , ' ' | tr '\n' ' ')
 
+    if [ -z "$hosts" ] ; then
+	log "no hosts to process."
+	return
+    fi
+
     # take all the hosts from the known_hosts file (first
     # field), grep out all the hashed hosts (lines starting
     # with '|')...
@@ -696,6 +701,11 @@ process_authorized_user_ids() {
     authorizedUserIDs="$1"
 
     log "processing authorized_user_ids file..."
+
+    if ! meat "$authorizedUserIDs" ; then
+	log "no user IDs to process."
+	return
+    fi
 
     nline=0
 

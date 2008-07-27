@@ -216,8 +216,8 @@ case $COMMAND in
         # otherwise, if no hosts are specified, process every host
         # in the user's known_hosts file
 	else
-	    if [ ! -s "$KNOWN_HOSTS" ] ; then
-		failure "known_hosts file '$KNOWN_HOSTS' is empty or does not exist."
+	    if [ ! -e "$KNOWN_HOSTS" ] ; then
+		failure "known_hosts file '$KNOWN_HOSTS' does not exist."
 	    fi
 
 	    process_known_hosts
@@ -229,8 +229,8 @@ case $COMMAND in
 	MODE='authorized_keys'
 
         # fail if the authorized_user_ids file is empty
-	if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
-	    failure "authorized_user_ids file '$AUTHORIZED_USER_IDS' is empty or does not exist."
+	if [ ! -e "$AUTHORIZED_USER_IDS" ] ; then
+	    failure "authorized_user_ids file '$AUTHORIZED_USER_IDS' does not exist."
 	fi
 
 	if ! check_key_file_permissions "$USER" "$AUTHORIZED_USER_IDS" ; then
