@@ -41,8 +41,10 @@ Provide a friendly interactive UI for marginal or failing client-side
 
 Make sure onak properly escapes user IDs with colons in them.
 
-Build a decent, presentable web site for documentation, evangelism,
-   etc.  Include a mention of how to report trouble or concerns.
+Indicate on web site how to report trouble or concerns, and how to
+   join the project.
+
+Clean up the style for the web site (pages, icons, etc).
 
 Create ssh2openpgp or convert to full-fledged keytrans.
 
