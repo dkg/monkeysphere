@@ -203,8 +203,9 @@ case $COMMAND in
     'update-known_hosts'|'update-known-hosts'|'k')
 	MODE='known_hosts'
 
+	# check permissions on the known_hosts file path
 	if ! check_key_file_permissions "$USER" "$KNOWN_HOSTS" ; then
-	    failure "Improper permissions on known_hosts file."
+	    failure "Improper permissions on known_hosts file path."
 	fi
 
         # if hosts are specified on the command line, process just
@@ -216,8 +217,10 @@ case $COMMAND in
         # otherwise, if no hosts are specified, process every host
         # in the user's known_hosts file
 	else
+	    # exit if the known_hosts file does not exist
 	    if [ ! -e "$KNOWN_HOSTS" ] ; then
-		failure "known_hosts file '$KNOWN_HOSTS' does not exist."
+		log "known_hosts file '$KNOWN_HOSTS' does not exist."
+		exit
 	    fi
 
 	    process_known_hosts
@@ -228,13 +231,20 @@ case $COMMAND in
     'update-authorized_keys'|'update-authorized-keys'|'a')
 	MODE='authorized_keys'
 
-        # fail if the authorized_user_ids file is empty
-	if [ ! -e "$AUTHORIZED_USER_IDS" ] ; then
-	    failure "authorized_user_ids file '$AUTHORIZED_USER_IDS' does not exist."
+	# check permissions on the authorized_user_ids file path
+	if ! check_key_file_permissions "$USER" "$AUTHORIZED_USER_IDS" ; then
+	    failure "Improper permissions on authorized_user_ids file path."
 	fi
 
-	if ! check_key_file_permissions "$USER" "$AUTHORIZED_USER_IDS" ; then
-	    failure "Improper permissions on authorized_user_ids file."
+	# check permissions on the authorized_keys file path
+	if ! check_key_file_permissions "$USER" "$AUTHORIZED_KEYS" ; then
+	    failure "Improper permissions on authorized_keys file path."
+	fi
+
+        # exit if the authorized_user_ids file is empty
+	if [ ! -e "$AUTHORIZED_USER_IDS" ] ; then
+	    log "authorized_user_ids file '$AUTHORIZED_USER_IDS' does not exist."
+	    exit
 	fi
 
 	# process authorized_user_ids file

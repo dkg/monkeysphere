@@ -1,8 +1,9 @@
 monkeysphere (0.5-1) experimental; urgency=low
 
   * Tweak how empty authorized_user_ids and known_hosts files are handled.
+  * Do not fail when authorized_user_ids or known_hosts file is not found.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sun, 27 Jul 2008 12:03:30 -0700
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sun, 27 Jul 2008 22:24:23 -0700
 
 monkeysphere (0.4-1) experimental; urgency=low
 
