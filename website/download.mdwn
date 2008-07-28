@@ -1,0 +1,11 @@
+##Downloading and Installing##
+
+If you are running a Debian system, you can install Monkeyspere
+by following these directions:
+
+You can add this repo to your system by putting the following lines in
+/etc/apt/sources.list.d/monkeysphere.list:
+
+		deb http://george.riseup.net/debian experimental monkeysphere
+		deb-src http://george.riseup.net/debian experimental monkeysphere
+

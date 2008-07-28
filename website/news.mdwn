@@ -1,0 +1,3 @@
+Here are the latest announcements about the Monkeysphere.
+
+[[inline pages="./news/* and !*/Discussion" rootpage="news" show="30"]]

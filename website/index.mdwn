@@ -1,0 +1,68 @@
+The Monkeysphere project's goal is to extend the web of trust model and other
+features of OpenPGP to other areas of the Internet to help us securely identify
+each other while we work online.
+
+[[bugs]] | [[download]] | [[news]]
+
+##Conceptual overview##
+
+Humans (and monkeys) have innate capacity to keep track of the identity of a
+finite number of people. After our social sphere exceeds several dozen or
+several hundred (depending on the individual), our ability to remember and
+distinguish people begins to break down. In other words, at a certain point, we
+can't know for sure that the person we ran into in the produce aisle really is
+the same person who we met at the party last week.
+
+For most of us, this limitation has not posed much of a problem in our daily,
+off-line lives.  With the Internet, however, we have an ability to interact
+with vastly larger numbers of people than we had before. In addition, on the
+Internet we lose many of our tricks for remembering and identifying people
+(physical characteristics, sound of the voice, etc.).
+
+Fortunately, with online communications we have easy access to tools that can
+help us navigate these problems.
+[OpenPGP](http://en.wikipedia.org/wiki/Openpgp) (a protocol commonly used for
+sending signed and encrypted email messagess) is one such tool. In its simplest
+form, it allows us to sign our communication in such a way that the recipient
+can verify the sender.
+
+OpenPGP goes beyond this simple use to implement a feature known as the [web of
+trust](http://en.wikipedia.org/wiki/Openpgp#Web_of_trust). The web of trust
+allows people  who have never met in person to communicate with a reasonable
+degree of certainty that they are who they say they are. It works like this:
+Person A trusts Person B. Person B verifies Person C's identity.  Then, Person
+A can verify Person C's identity. 
+
+The Monkeyshpere's goal is to extend the use of OpenPGP from email
+communications to other activities, such as:
+
+ * trusting the servers we login to
+ * granting access to servers to people we've never met
+
+##Technical Details##
+
+The project's first goal is to integrate with
+[http://en.wikipedia.org/wiki/Openssh](OpenSSH).
+
+OpenSSH provides a functional way for management of explicit RSA keys (without
+certification of any type). The basic idea of this project is to create a
+framework that uses GPG's keyring manipulation capabilities and public
+keyservers to generate files that OpenSSH will accept and handle without
+complaint.
+
+Both entities in an OpenSSH connection (client and server) thus have the
+responsibility to explicitly designate who they trust to "introduce" others.
+They can explicitly indicate this trust relationship with traditional GPG
+keyring trust indicators. No modification is made to the SSH protocol on the
+wire, which continues to use raw RSA public keys. 
+
+* [[download]]
+* [[news]]
+* [[documentation|doc]]
+* [[bugs]]
+* [[contact]]
+
+----
+
+This wiki is powered by [ikiwiki](http://ikiwiki.info).
+
