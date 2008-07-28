@@ -1,11 +1,14 @@
 ##Downloading and Installing##
 
-If you are running a Debian system, you can install Monkeyspere
+If you are running a Debian system, you can install Monkeysphere
 by following these directions:
 
 You can add this repo to your system by putting the following lines in
 /etc/apt/sources.list.d/monkeysphere.list:
 
-		deb http://george.riseup.net/debian experimental monkeysphere
-		deb-src http://george.riseup.net/debian experimental monkeysphere
+	deb http://george.riseup.net/debian experimental monkeysphere
+	deb-src http://george.riseup.net/debian experimental monkeysphere
 
+The repository is currently signed by [Daniel Kahn Gillmor's OpenPGP key](http://fifthhorseman.net/dkg.gpg "dkg's key"), key id D21739E9
+(fingerprint: `0EE5 BE97 9282 D80B 9F75 40F1 CCD2 ED94 D217 39E9`).
+To cryptographically verify the packages, you'll want to [add `dkg`'s key to your apt configuration](http://cmrg.fifthhorseman.net/wiki/apt/importing-keys "Instructions for adding dkg's key to apt")
