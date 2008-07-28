@@ -2,7 +2,7 @@ The Monkeysphere project's goal is to extend the web of trust model and other
 features of OpenPGP to other areas of the Internet to help us securely identify
 each other while we work online.
 
-[[bugs]] | [[download]] | [[news]]
+[[bugs]] | [[download]] | [[news]] | [[documentation|doc]]
 
 ## Conceptual overview ##
 
