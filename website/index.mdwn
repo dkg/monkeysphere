@@ -46,7 +46,7 @@ communications to other activities, such as:
 ## Technical Details ##
 
 The project's first goal is to integrate with
-[http://openssh.com/](OpenSSH).
+[OpenSSH](http://openssh.com/).
 
 OpenSSH provides a functional way for management of explicit RSA and
 DSA keys (without any type of [Public Key Infrastructure
