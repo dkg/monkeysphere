@@ -67,14 +67,6 @@ model.  No modification is made to the SSH protocol on the wire (it
 continues to use raw RSA public keys), and it should work with
 unpatched OpenSSH software.
 
-## Site Details ##
-
-* [[download]]
-* [[news]]
-* [[documentation|doc]]
-* [[bugs]]
-* [[contact]]
-
 ----
 
 This wiki is powered by [ikiwiki](http://ikiwiki.info).
