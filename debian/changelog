@@ -1,9 +1,13 @@
 monkeysphere (0.5-1) experimental; urgency=low
 
+  [ Daniel Kahn Gillmor ]
+  * updated READMEs to match current state of code
+  
+  [ Jameson Graef Rollins ]
   * Tweak how empty authorized_user_ids and known_hosts files are handled.
   * Do not fail when authorized_user_ids or known_hosts file is not found.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sun, 27 Jul 2008 22:24:23 -0700
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 28 Jul 2008 10:50:02 -0400
 
 monkeysphere (0.4-1) experimental; urgency=low
 
