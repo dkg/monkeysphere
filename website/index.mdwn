@@ -42,7 +42,7 @@ communications to other activities, such as:
 ##Technical Details##
 
 The project's first goal is to integrate with
-[http://en.wikipedia.org/wiki/Openssh](OpenSSH).
+[OpenSSH](http://en.wikipedia.org/wiki/Openssh).
 
 OpenSSH provides a functional way for management of explicit RSA keys (without
 certification of any type). The basic idea of this project is to create a
@@ -55,12 +55,6 @@ responsibility to explicitly designate who they trust to "introduce" others.
 They can explicitly indicate this trust relationship with traditional GPG
 keyring trust indicators. No modification is made to the SSH protocol on the
 wire, which continues to use raw RSA public keys. 
-
-* [[download]]
-* [[news]]
-* [[documentation|doc]]
-* [[bugs]]
-* [[contact]]
 
 ----
 
