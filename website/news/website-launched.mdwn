@@ -27,12 +27,11 @@ bottom to see what this all means if you want to modify the web site):
  * I created a clone of my monkeysphere git repository owned by this new user.
 
  * I created an ikiwiki setup file that:
+  * Specifies the clone as the "srcdir" 
 
-		* Specifies the clone as the "srcdir" 
+  * Specifies my new web directory as the web directory
 
-		* Specifies my new web directory as the web directory
-
-		* Generates a setuid binary, owned by the web directory owner, that will
+  * Generates a setuid binary, owned by the web directory owner, that will
 		update the src repo and re-generate the web pages. 
 
  * In my published git repo, I added this setuid binary file to my
