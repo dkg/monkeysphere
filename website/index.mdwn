@@ -1,49 +1,52 @@
-The Monkeysphere project's goal is to extend the web of trust model and other
-features of OpenPGP to other areas of the Internet to help us securely identify
-each other while we work online.
+The Monkeysphere project's goal is to extend the web of trust model
+and other features of OpenPGP to other areas of the Internet to help
+us securely identify each other while we work online.
 
-Specifically, the Monkeysphere is a framework to leverage the OpenPGP web of
-trust for OpenSSH authentication. In other words, it allows you to use your
-OpenPGP keys when using secure shell to both identify yourself and the servers
-you administer or connect to.  OpenPGP keys are tracked via GnuPG, and added to
-the authorized\_keys and known\_hosts files used by OpenSSH for connection
-authentication.
+Specifically, the Monkeysphere is a framework to leverage the OpenPGP
+web of trust for OpenSSH authentication.  In other words, it allows
+you to use your OpenPGP keys when using secure shell to both identify
+yourself and the servers you administer or connect to.  OpenPGP keys
+are tracked via GnuPG, and managed in the known\_hosts and
+authorized\_keys files used by OpenSSH for connection authentication.
 
 [[bugs]] | [[download]] | [[news]] | [[documentation|doc]]
 
 ## Conceptual overview ##
 
-Everyone who has used secure shell is familiar with the prompt given the first
-time you login, asking if you want to trust the server's fingerprint.  In
-addition, many of us take advantage of OpenSSH's ability to use RSA or DSA keys
-for authenticating to a server, rather than relying on a password exchange.
+Everyone who has used secure shell is familiar with the prompt given
+the first time you login, asking if you want to trust the server's
+fingerprint.  In addition, many of us take advantage of OpenSSH's
+ability to use RSA or DSA keys for authenticating to a server, rather
+than relying on a password exchange.
 
-[OpenSSH](http://openssh.com/) already provides a functional way for managing
-the RSA and DSA keys required for these interactions. However, it lacks any
-type of [Public Key Infrastructure
+[OpenSSH](http://openssh.com/) already provides a functional way for
+managing the RSA and DSA keys required for these
+interactions. However, it lacks any type of [Public Key Infrastructure
 (PKI)](http://en.wikipedia.org/wiki/Public_Key_Infrastructure).
 
 The basic idea of the Monkeysphere is to create a framework that uses
-[GnuPG](http://www.gnupg.org/)'s keyring manipulation capabilities and public
-keyservers to generate files that OpenSSH will accept and handle as intended.
+[GnuPG](http://www.gnupg.org/)'s keyring manipulation capabilities and
+public keyserver communication to manage the keys that OpenSSH uses
+for connection authentication.  
 
-This offers users of OpenSSH an effective PKI, including the possibility for
-key transitions, transitive identifications, revocations, and expirations.  It
-also actively invites broader participation in the
-[OpenPGP](http://en.wikipedia.org/wiki/Openpgp) [web of
-trust](http://en.wikipedia.org/wiki/Web_of_trust).
+Under the Monkeysphere, both parties to an OpenSSH connection (client
+and server) explicitly designate who they trust to certify the
+identity of the other party.  These trust designations are explicitly
+indicated with traditional GPG keyring trust models.  Monkeysphere
+then manages the keys in the known\_hosts and authorized\_keys files
+directly, in such a way that is completely transparent to SSH.  No
+modification is made to the SSH protocol on the wire (it continues to
+use raw RSA public keys), and no modification is needed to the OpenSSH
+software.
 
-Under the Monkeysphere, both parties to an OpenSSH connection (client and
-server) have a responsibility to explicitly designate who they trust to certify
-the identity of the other party. This trust designation is explicitly indicated
-with traditional GPG keyring trust model. No modification is made to the SSH
-protocol on the wire (it continues to use raw RSA public keys), and it should
-work with unpatched OpenSSH software.
+To emphasize: *no SSH modification is required to use the
+Monkeysphere*.
 
-Monkeysphere does not modify ssh in any way, and ssh can be used "out
-of the box".  Monkeysphere is a set of tools that manages keys in the
-known\_hosts and authorized\_keys files that ssh uses for connection
-authentication.
+This offers users of OpenSSH an effective PKI, including the
+possibility for key transitions, transitive identifications,
+revocations, and expirations.  It also actively invites broader
+participation in the [OpenPGP](http://en.wikipedia.org/wiki/Openpgp)
+[web of trust](http://en.wikipedia.org/wiki/Web_of_trust).
 
 ## Philosophy ##
 
@@ -96,4 +99,3 @@ email communications to other activities, such as:
 ----
 
 This wiki is powered by [ikiwiki](http://ikiwiki.info).
-
