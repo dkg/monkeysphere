@@ -1,0 +1,11 @@
+# Monkeysphere Documentation #
+
+## Dependencies ##
+
+ * Monkeysphere relies on [GnuTLS](http://gnutls.org/) version 2.4.0 or later.
+
+## References ##
+
+ * [Initial specifications at CMRG](http://cmrg.fifthhorseman.net/wiki/OpenPGPandSSH)
+ * [OpenPGP (RFC 4880)](http://tools.ietf.org/html/rfc4880)
+ * [Secure Shell Authentication Protocol (RFC 4252)](http://tools.ietf.org/html/rfc4252)

@@ -4,14 +4,17 @@ each other while we work online.
 
 [[bugs]] | [[download]] | [[news]]
 
-##Conceptual overview##
+## Conceptual overview ##
 
-Humans (and monkeys) have innate capacity to keep track of the identity of a
-finite number of people. After our social sphere exceeds several dozen or
-several hundred (depending on the individual), our ability to remember and
-distinguish people begins to break down. In other words, at a certain point, we
-can't know for sure that the person we ran into in the produce aisle really is
-the same person who we met at the party last week.
+Humans (and
+[monkeys](http://www.scottmccloud.com/comics/mi/mi-17/mi-17.html))
+have innate capacity to keep track of the identity of a finite number
+of people. After our social sphere exceeds several dozen or several
+hundred (depending on the individual), our ability to remember and
+distinguish people begins to break down. In other words, at a certain
+point, we can't know for sure that the person we ran into in the
+produce aisle really is the same person who we met at the party last
+week.
 
 For most of us, this limitation has not posed much of a problem in our daily,
 off-line lives.  With the Internet, however, we have an ability to interact
@@ -19,15 +22,16 @@ with vastly larger numbers of people than we had before. In addition, on the
 Internet we lose many of our tricks for remembering and identifying people
 (physical characteristics, sound of the voice, etc.).
 
-Fortunately, with online communications we have easy access to tools that can
-help us navigate these problems.
-[OpenPGP](http://en.wikipedia.org/wiki/Openpgp) (a protocol commonly used for
-sending signed and encrypted email messagess) is one such tool. In its simplest
-form, it allows us to sign our communication in such a way that the recipient
-can verify the sender.
+Fortunately, with online communications we have easy access to tools
+that can help us navigate these problems.
+[OpenPGP](http://en.wikipedia.org/wiki/Openpgp) (a cryptographic
+protocol commonly used for sending signed and encrypted email
+messagess) is one such tool. In its simplest form, it allows us to
+sign our communication in such a way that the recipient can verify the
+sender.
 
 OpenPGP goes beyond this simple use to implement a feature known as the [web of
-trust](http://en.wikipedia.org/wiki/Openpgp#Web_of_trust). The web of trust
+trust](http://en.wikipedia.org/wiki/Web_of_trust). The web of trust
 allows people  who have never met in person to communicate with a reasonable
 degree of certainty that they are who they say they are. It works like this:
 Person A trusts Person B. Person B verifies Person C's identity.  Then, Person
@@ -36,25 +40,34 @@ A can verify Person C's identity.
 The Monkeyshpere's goal is to extend the use of OpenPGP from email
 communications to other activities, such as:
 
- * trusting the servers we login to
- * granting access to servers to people we've never met
+ * conclusively identifying the remote server in a remote login session
+ * granting access to servers to people we've never directly met
 
-##Technical Details##
+## Technical Details ##
 
 The project's first goal is to integrate with
-[http://en.wikipedia.org/wiki/Openssh](OpenSSH).
+[http://openssh.com/](OpenSSH).
 
-OpenSSH provides a functional way for management of explicit RSA keys (without
-certification of any type). The basic idea of this project is to create a
-framework that uses GPG's keyring manipulation capabilities and public
-keyservers to generate files that OpenSSH will accept and handle without
-complaint.
+OpenSSH provides a functional way for management of explicit RSA and
+DSA keys (without any type of [Public Key Infrastructure
+(PKI)](http://en.wikipedia.org/wiki/Public_Key_Infrastructure)). The
+basic idea of this project is to create a framework that uses GPG's
+keyring manipulation capabilities and public keyservers to generate
+files that OpenSSH will accept and handle as intended.  This offers
+users of OpenSSH an effective PKI, including the possibility for key
+transitions, transitive identifications, revocations, and expirations.
+It also actively invites broader participation in the OpenPGP Web of
+Trust.
 
-Both entities in an OpenSSH connection (client and server) thus have the
-responsibility to explicitly designate who they trust to "introduce" others.
-They can explicitly indicate this trust relationship with traditional GPG
-keyring trust indicators. No modification is made to the SSH protocol on the
-wire, which continues to use raw RSA public keys. 
+Under the Monkeysphere, both parties to an OpenSSH connection (client
+and server) have a responsibility to explicitly designate who they
+trust to certify the identity of the other party.  This trust
+designation is explicitly indicated with traditional GPG keyring trust
+model.  No modification is made to the SSH protocol on the wire (it
+continues to use raw RSA public keys), and it should work with
+unpatched OpenSSH software.
+
+## Site Details ##
 
 * [[download]]
 * [[news]]
