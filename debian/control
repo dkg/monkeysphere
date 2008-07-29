@@ -5,7 +5,8 @@ Maintainer: Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>
 Uploaders: Jameson Rollins <jrollins@fifthhorseman.net>
 Build-Depends: debhelper (>= 7.0), libgnutls-dev (>= 2.4.0)
 Standards-Version: 3.8.0.1
-Homepage: http://cmrg.fifthhorseman.net/wiki/OpenPGPandSSH
+Homepage: http://monkeysphere.info/
+Vcs-Git: http://lair.fifthhorseman.net/~dkg/git/monkeysphere.git
 Dm-Upload-Allowed: yes
 
 Package: monkeysphere
