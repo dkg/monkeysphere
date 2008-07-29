@@ -15,3 +15,4 @@ However, I can no longer connect to any hosts. Here's example out put:
 
 The server auth.log has nothing in it.
 
+[[bugs/done]] 2008-07-29 11:18:42-0400 (released in 0.6-1)
