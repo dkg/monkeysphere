@@ -1,4 +1,4 @@
-monkeysphere (0.6-1) UNRELEASED; urgency=low
+monkeysphere (0.6-1) experimental; urgency=low
   
   [ Jameson Graef Rollins ]
   * Fix bug in return on error of ssh-proxycommand.
