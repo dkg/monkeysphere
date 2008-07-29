@@ -6,8 +6,8 @@ Specifically, the Monkeysphere is a framework to leverage the OpenPGP
 web of trust for OpenSSH authentication.  In other words, it allows
 you to use your OpenPGP keys when using secure shell to both identify
 yourself and the servers you administer or connect to.  OpenPGP keys
-are tracked via GnuPG, and managed in the `known\_hosts` and
-`authorized\_keys` files used by OpenSSH for connection authentication.
+are tracked via GnuPG, and managed in the `known_hosts` and
+`authorized_keys` files used by OpenSSH for connection authentication.
 
 [[bugs]] | [[download]] | [[news]] | [[documentation|doc]] |
 [[development|dev]]
@@ -32,7 +32,7 @@ authentication to work
 
 [OpenSSH](http://openssh.com/) currently provides a functional way to
 managing the RSA and DSA keys required for these interactions through
-the `known\_hosts` and `authorized\_keys` files.  However, it lacks
+the `known_hosts` and `authorized_keys` files.  However, it lacks
 any type of [Public Key Infrastructure
 (PKI)](http://en.wikipedia.org/wiki/Public_Key_Infrastructure) that
 can verify that the keys being used really are the one required or
@@ -56,7 +56,7 @@ Under the Monkeysphere, both parties to an OpenSSH connection (client
 and server) explicitly designate who they trust to certify the
 identity of the other party.  These trust designations are explicitly
 indicated with traditional GPG keyring trust models.  Monkeysphere
-then manages the keys in the `known\_hosts` and `authorized\_keys`
+then manages the keys in the `known_hosts` and `authorized_keys`
 files directly, in such a way that is completely transparent to SSH.
 No modification is made to the SSH protocol on the wire (it continues
 to use raw RSA public keys), and no modification is needed to the
