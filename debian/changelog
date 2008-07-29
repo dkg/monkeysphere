@@ -1,8 +1,12 @@
 monkeysphere (0.6-1) UNRELEASED; urgency=low
-
+  
+  [ Jameson Graef Rollins ]
   * Fix bug in return on error of ssh-proxycommand.
+  
+  [ Daniel Kahn Gillmor ]
+  * try socat if netcat is not available in proxycommand.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Tue, 29 Jul 2008 00:23:24 -0700
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Tue, 29 Jul 2008 10:27:20 -0400
 
 monkeysphere (0.5-1) experimental; urgency=low
 
