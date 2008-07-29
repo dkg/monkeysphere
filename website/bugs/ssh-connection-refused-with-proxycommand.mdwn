@@ -1,0 +1,17 @@
+I added the following to my .ssh/config:
+
+Host *
+ProxyCommand monkeysphere-ssh-proxycommand %h %p
+
+So that the monkeysphere would be used for all my connections.
+
+However, I can no longer connect to any hosts. Here's example out put:
+
+		0 jamie@liberace:bugs$ ssh root@chavez.mayfirst.org
+		ms: processing host: chavez.mayfirst.org
+		ms:   - key not found.
+		ssh_exchange_identification: Connection closed by remote host
+		255 jamie@liberace:bugs$
+
+The server auth.log has nothing in it.
+
