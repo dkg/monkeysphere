@@ -1,7 +1,7 @@
 I added the following to my .ssh/config:
 
-Host *
-ProxyCommand monkeysphere-ssh-proxycommand %h %p
+  Host *
+  ProxyCommand monkeysphere-ssh-proxycommand %h %p
 
 So that the monkeysphere would be used for all my connections.
 
