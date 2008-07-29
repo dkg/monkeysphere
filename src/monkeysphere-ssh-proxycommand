@@ -83,5 +83,12 @@ monkeysphere update-known_hosts "$HOSTP"
 
 # exec a netcat passthrough to host for the ssh connection
 if [ -z "$NO_CONNECT" ] ; then
-    exec nc "$HOST" "$PORT"
+    if (which nc 2>/dev/null >/dev/null); then
+	exec nc "$HOST" "$PORT"
+    elif (which socat 2>/dev/null >/dev/null); then
+	exec socat STDIO "TCP:$HOST:$PORT"
+    else
+	log "Neither netcat nor socat found -- could not complete monkeysphere-ssh-proxycommand connection to $HOST:$PORT"
+	exit 1
+    fi
 fi
