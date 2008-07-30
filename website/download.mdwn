@@ -12,3 +12,15 @@ You can add this repo to your system by putting the following lines in
 The repository is currently signed by [Daniel Kahn Gillmor's OpenPGP key](http://fifthhorseman.net/dkg.gpg "dkg's key"), key id D21739E9
 (fingerprint: `0EE5 BE97 9282 D80B 9F75 40F1 CCD2 ED94 D217 39E9`).
 To cryptographically verify the packages, you'll want to [add `dkg`'s key to your apt configuration](http://cmrg.fifthhorseman.net/wiki/apt/importing-keys "Instructions for adding dkg's key to apt")
+
+##git repositories##
+
+Development is done in an extremely distributed manner using 
+[git](http://git.or.cz/). Once you've
+[installed git](http://www.spheredev.org/wiki/Git_for_the_lazy), you can 
+clone the repository by doing
+
+	git clone http://lair.fifthhorseman.net/~dkg/git/monkeysphere.git/ monkeysphere
+
+Other developers have their own repositories, which you can substitute 
+for dkg's if you like.
