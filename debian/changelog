@@ -1,4 +1,4 @@
-monkeysphere (0.7-) UNRELEASED; urgency=low
+monkeysphere (0.7-1) UNRELEASED; urgency=low
 
   * Added monkeysphere-server diagnostics subcommand.
 
