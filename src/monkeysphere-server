@@ -37,27 +37,26 @@ usage: $PGRM <subcommand> [options] [args]
 MonkeySphere server admin tool.
 
 subcommands:
-  update-users (u) [USER]...            update user authorized_keys files
+ update-users (u) [USER]...          update user authorized_keys files
 
-  gen-key (g) [HOSTNAME]                generate gpg key for the server
-    -l|--length BITS                      key length in bits (2048)
-    -e|--expire EXPIRE                    date to expire
-    -r|--revoker FINGERPRINT              add a revoker
-  show-fingerprint (f)                  show server's host key fingerprint
-  publish-key (p)                       publish server's host key to keyserver
-  diagnostics (d)                       report on the server's monkeysphere status
+ gen-key (g) [HOSTNAME]              generate gpg key for the server
+   -l|--length BITS                    key length in bits (2048)
+   -e|--expire EXPIRE                  date to expire
+   -r|--revoker FINGERPRINT            add a revoker
+ show-fingerprint (f)                show server's host key fingerprint
+ publish-key (p)                     publish server's host key to keyserver
+ diagnostics (d)                     report on the server's monkeysphere status
 
-  add-identity-certifier (a) KEYID      import and tsign a certification key
-    -n|--domain DOMAIN                    limit ID certifications to IDs in DOMAIN ()
-    -t|--trust TRUST                      trust level of certifier (full)
-    -d|--depth DEPTH                      trust depth for certifier (1)
-  remove-identity-certifier (r) KEYID   remove a certification key
-  list-identity-certifiers (l)          list certification keys
+ add-identity-certifier (a) KEYID    import and tsign a certification key
+   -n|--domain DOMAIN                  limit ID certifications to IDs in DOMAIN
+   -t|--trust TRUST                    trust level of certifier (full)
+   -d|--depth DEPTH                    trust depth for certifier (1)
+ remove-identity-certifier (r) KEYID remove a certification key
+ list-identity-certifiers (l)        list certification keys
 
-  gpg-authentication-cmd CMD            gnupg-authentication command
+ gpg-authentication-cmd CMD          gnupg-authentication command
 
-  help (h,?)                            this help
-
+ help (h,?)                          this help
 EOF
 }
 
