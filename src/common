@@ -319,8 +319,6 @@ process_user_id() {
     fi
 
     # loop over all lines in the gpg output and process.
-    # need to do it this way (as opposed to "while read...") so that
-    # variables set in loop will be visible outside of loop
     echo "$gpgOut" | cut -d: -f1,2,5,10,12 | \
     while IFS=: read -r type validity keyid uidfpr usage ; do
 	# process based on record type
