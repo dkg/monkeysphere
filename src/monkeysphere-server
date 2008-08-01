@@ -387,6 +387,9 @@ diagnostics() {
     local curdate
     local warnwindow
     local warndate
+    local create
+    local expire
+    local uid
 
     seckey=$(gpg_host --list-secret-keys --with-colons --fixed-list-mode)
     keysfound=$(echo "$seckey" | grep -c ^sec:)
@@ -408,7 +411,7 @@ diagnostics() {
 		echo "Host key is expired!"
 		# FIXME: recommend a way to resolve this other than re-keying?
 	    elif (( "$keyexp" < "$warndate" )); then
-		echo "Host key expires in less than $warnwindow"
+		echo "Host key expires in less than $warnwindow:" $(date -d "$(( $keyexp - $curdate )) seconds" +%F)		
 		# FIXME: recommend a way to resolve this?
 	    fi
         # and weirdnesses:
@@ -431,7 +434,7 @@ diagnostics() {
 			echo "User ID '$uid' is expired!"
 			# FIXME: recommend a way to resolve this
 		    elif (( "$expire" < "$warndate" )); then
-			echo "User ID '$uid' expires in less than $warnwindow"
+			echo "User ID '$uid' expires in less than $warnwindow:" $(date -d "$(( $expire - $curdate )) seconds" +%F)		
 			# FIXME: recommend a way to resolve this
 		    fi
 		fi
