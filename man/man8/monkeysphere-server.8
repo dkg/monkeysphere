@@ -52,6 +52,14 @@ Show the fingerprint for the host's OpenPGP key.  `f' may be used in place of
 Publish the host's OpenPGP key to the keyserver.  `p' may be used in
 place of `publish-key'.
 .TP
+.B diagnostics
+Review the state of the server with respect to the MonkeySphere in
+general and report on suggested changes.  Among other checks, this
+includes making sure there is a valid host key, that the key is
+published, that the sshd configuration points to the right place, and
+that there are at least some valid identity certifiers.  `d' may be
+used in place of `diagnostics'.
+.TP
 .B add-identity-certifier KEYID
 Instruct system to trust user identity certifications made by KEYID.
 Using the `-n' or `--domain' option allows you to indicate that you

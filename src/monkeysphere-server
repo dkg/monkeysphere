@@ -45,6 +45,7 @@ subcommands:
     -r|--revoker FINGERPRINT              add a revoker
   show-fingerprint (f)                  show server's host key fingerprint
   publish-key (p)                       publish server's host key to keyserver
+  diagnostics (d)                       report on the server's monkeysphere status
 
   add-identity-certifier (a) KEYID      import and tsign a certification key
     -n|--domain DOMAIN                    limit ID certifications to IDs in DOMAIN ()
@@ -379,6 +380,101 @@ publish_server_key() {
     exit 255
 }
 
+diagnostics() {
+#  * check on the status and validity of the key and public certificates
+    local seckey
+    local keysfound
+    local keyexp
+    local curdate
+    local warnwindow
+    local warndate
+
+    seckey=$(gpg_host --list-secret-keys --with-colons --fixed-list-mode)
+    keysfound=$(echo "$seckey" | grep -c ^sec:)
+    curdate=$(date +%s)
+    # warn when anything is 2 months away from expiration
+    warnwindow='2 months'
+    warndate=$(date +%s -d "$warnwindow")
+
+    if (( "$keysfound" < 1 )); then
+	echo "No host key found!"
+	echo "Recommendation: run 'monkeysphere-server gen-key'"
+    else
+	if (( "$keysfound" > 1 )); then
+	    echo "more than one host key found?"
+	else
+	# check for key expiration:
+	    keyexp=$(echo "$seckey" | grep ^sec: | cut -f7 -d:)
+	    if (( "$keyexp"  < "$curdate" )); then
+		echo "Host key is expired!"
+		# FIXME: recommend a way to resolve this other than re-keying?
+	    elif (( "$keyexp" < "$warndate" )); then
+		echo "Host key expires in less than $warnwindow"
+		# FIXME: recommend a way to resolve this?
+	    fi
+        # and weirdnesses:
+	    if (( $(echo "$seckey" | grep ^sec: | cut -f6 -d:) > "$curdate" )); then
+		echo "Host key was created in the future(?!). Is your clock correct?"
+		echo "Recommendation: Check clock ($(date +%F_%T)); use NTP?"
+	    fi
+
+        # check for UserID expiration:
+	    echo "$seckey" | grep ^uid: | cut -d: -f6,7,10 | \
+	    while IFS=: read create expire uid ; do
+		# FIXME: should we be doing any checking on the form
+		# of the User ID?  Should we be unmangling it somehow?
+		if [ "$create" ] && (( "$create" > "$curdate" )); then
+		    echo "User ID '$uid' was created in the future(?!).  Is your clock correct?"
+		    echo "Recommendation: Check clock ($(date +%F_%T)); use NTP?"
+		fi
+		if [ "$expire" ] ; then
+		    if (( "$expire" < "$curdate" )); then
+			echo "User ID '$uid' is expired!"
+			# FIXME: recommend a way to resolve this
+		    elif (( "$expire" < "$warndate" )); then
+			echo "User ID '$uid' expires in less than $warnwindow"
+			# FIXME: recommend a way to resolve this
+		    fi
+		fi
+	    done
+	    
+# FIXME: verify that the host key is properly published to the
+#   keyservers
+
+# FIXME: check that there are valid, non-expired certifying signatures
+#   attached to the host key
+
+# FIXME: propose adding a revoker to the host key if none exist (do we
+#   have a way to do that after key generation?)
+
+# Ensure that the ssh_host_rsa_key file is present and non-empty:
+	    if [ ! -s "${VARLIB}/ssh_host_rsa_key" ] ; then
+		echo "The host key as prepared for SSH (${VARLIB}/ssh_host_rsa_key) is missing or empty!"
+	    else
+		if [ $(stat -c "${VARLIB}/ssh_host_rsa_key") != 600 ] ; then
+		    echo "Permissions seem wrong for ${VARLIB}/ssh_host_rsa_key -- should be 0600 !"
+		fi
+
+		# propose changes needed for sshd_config (if any)
+		if ! grep -q "^HostKey ${VARLIB}/ssh_host_rsa_key$" /etc/ssh/sshd_config; then
+		    echo "/etc/ssh/sshd_config does not point to the monkeysphere host key (${VARLIB}/ssh_host_rsa_key)."
+		    echo "Recommendation: add a line to /etc/ssh/sshd_config: 'HostKey ${VARLIB}/ssh_host_rsa_key'"
+		fi
+	    fi
+	fi
+    fi
+
+# FIXME: look at the ownership/privileges of the various keyrings,
+#    directories housing them, etc (what should those values be?  can
+#    we make them as minimal as possible?)
+
+# FIXME: look to see that the ownertrust rules are set properly on the
+#    authentication keyring
+
+# FIXME:  make sure that at least one identity certifier exists
+
+}
+
 # retrieve key from web of trust, import it into the host keyring, and
 # ltsign the key in the host keyring so that it may certify other keys
 add_certifier() {
@@ -565,6 +661,10 @@ case $COMMAND in
 
     'publish-key'|'p')
 	publish_server_key
+	;;
+
+    'diagnostics'|'d')
+	diagnostics
 	;;
 
     'add-identity-certifier'|'add-certifier'|'a')

@@ -1,3 +1,9 @@
+monkeysphere (0.7-) UNRELEASED; urgency=low
+
+  * Added monkeysphere-server diagnostics subcommand.
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Thu, 31 Jul 2008 19:27:45 -0400
+
 monkeysphere (0.6-1) experimental; urgency=low
   
   [ Jameson Graef Rollins ]
