@@ -450,7 +450,7 @@ diagnostics() {
 	    if [ ! -s "${VARLIB}/ssh_host_rsa_key" ] ; then
 		echo "The host key as prepared for SSH (${VARLIB}/ssh_host_rsa_key) is missing or empty!"
 	    else
-		if [ $(stat -c "${VARLIB}/ssh_host_rsa_key") != 600 ] ; then
+		if [ $(stat -c '%a' "${VARLIB}/ssh_host_rsa_key") != 600 ] ; then
 		    echo "Permissions seem wrong for ${VARLIB}/ssh_host_rsa_key -- should be 0600 !"
 		fi
 
