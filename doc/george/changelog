@@ -18,6 +18,7 @@
 	* cloned above repo at ~webmaster/monkeysphere
 	* created ~webmaster/ikiwiki.setup
 	* ikiwiki --setup ikiwiki.setup
+	* linked post-receive to new post-commit hook in monkeysphere.git
 	* changed default keyserver to be pgp.mit.edu (subkeys.pgp.net blows)
 
 	
