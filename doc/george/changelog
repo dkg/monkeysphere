@@ -4,8 +4,19 @@
 *                                                                            *
 ******************************************************************************
 *  Please add new entries in reverse chronological order whenever you make   *
-*  changes to this system 					             *
+*  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
+2008-08-02 - jrollins
+	* aptitude update && aptitude dist-upgrade
+	* restarted cron, nullmailer, sshd
+	* aptitude install git-core ikiwiki
+	* adduser webmaster
+	* as webmaster, cloned jrollins git repo at ~webmaster/monkeysphere
+	* added post-commit hook to webmaster repo to update monkeysphere
+	ikiwiki at /srv/www.
+	* ran the post-commit script to generate pages, which are now
+	visible.
+	
 2008-06-23 - dkg
 	* added monkeysphere apt repository to /etc/apt/sources.list
 	* added dkg's key to apt's list of trusted keys.
@@ -27,7 +38,7 @@
 	/etc/default/ssh in order to make this error go away:
 	"error writing /proc/self/oom_adj: Operation not permitted"
 	(c.f. Debian #487325)
-	  
+	
 2008-06-20 - dkg
 	* touched /etc/environment to get rid of some spurious auth.log
 	entries.
