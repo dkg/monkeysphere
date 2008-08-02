@@ -19,8 +19,11 @@
 	* created ~webmaster/ikiwiki.setup
 	* ikiwiki --setup ikiwiki.setup
 	* linked post-receive to new post-commit hook in monkeysphere.git
-	* changed default keyserver to be pgp.mit.edu (subkeys.pgp.net blows)
-
+	* changed default keyserver to be pgp.mit.edu (subkeys.pgp.net
+	blows)
+	* updated /etc/skel with ssh and monkeysphere stuff
+	* made authorzied_user_ids file for webmaster and ran
+	"monkeysphere-server u webmaster".
 	
 2008-06-23 - dkg
 	* added monkeysphere apt repository to /etc/apt/sources.list

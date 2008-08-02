@@ -498,6 +498,7 @@ update_known_hosts() {
     local nHosts
     local nHostsOK
     local nHostsBAD
+    local fileCheck
     local host
 
     # the number of hosts specified on command line
@@ -511,6 +512,9 @@ update_known_hosts() {
 
     # create a lockfile on known_hosts
     lockfile-create "$KNOWN_HOSTS"
+
+    # note pre update file checksum
+    fileCheck=$(md5sum "$KNOWN_HOSTS")
 
     for host ; do
 	# process the host
@@ -533,7 +537,7 @@ update_known_hosts() {
     lockfile-remove "$KNOWN_HOSTS"
 
     # note if the known_hosts file was updated
-    if [ "$nHostsOK" -gt 0 -o "$nHostsBAD" -gt 0 ] ; then
+    if [ "$(md5sum "$KNOWN_HOSTS")" != "$fileCheck" ] ; then
 	log "known_hosts file updated."
     fi
 
@@ -634,6 +638,7 @@ update_authorized_keys() {
     local nIDs
     local nIDsOK
     local nIDsBAD
+    local fileCheck
 
     # the number of ids specified on command line
     nIDs="$#"
@@ -646,6 +651,9 @@ update_authorized_keys() {
 
     # create a lockfile on authorized_keys
     lockfile-create "$AUTHORIZED_KEYS"
+
+    # note pre update file checksum
+    fileCheck=$(md5sum "$AUTHORIZED_KEYS")
 
     for userID ; do
 	# process the user ID, change return code if key not found for
@@ -670,7 +678,7 @@ update_authorized_keys() {
     lockfile-remove "$AUTHORIZED_KEYS"
 
     # note if the authorized_keys file was updated
-    if [ "$nIDsOK" -gt 0 -o "$nIDsBAD" -gt 0 ] ; then
+    if [ "$(md5sum "$AUTHORIZED_KEYS")" != "$fileCheck" ] ; then
 	log "authorized_keys file updated."
     fi
 
@@ -700,7 +708,7 @@ process_authorized_user_ids() {
 
     log "processing authorized_user_ids file..."
 
-    if ! meat "$authorizedUserIDs" ; then
+    if ! meat "$authorizedUserIDs" > /dev/null ; then
 	log "no user IDs to process."
 	return
     fi
