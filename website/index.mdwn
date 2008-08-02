@@ -2,7 +2,7 @@ The Monkeysphere project's goal is to extend the web of trust model
 and other features of OpenPGP to other areas of the Internet to help
 us securely identify each other while we work online.
 
-Specifically, the Monkeysphere is a framework to leverage the OpenPGP
+Specifically, monkeysphere is a framework to leverage the OpenPGP
 web of trust for OpenSSH authentication.  In other words, it allows
 you to use your OpenPGP keys when using secure shell to both identify
 yourself and the servers you administer or connect to.  OpenPGP keys

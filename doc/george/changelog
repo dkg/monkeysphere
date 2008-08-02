@@ -11,11 +11,15 @@
 	* restarted cron, nullmailer, sshd
 	* aptitude install git-core ikiwiki
 	* adduser webmaster
-	* as webmaster, cloned jrollins git repo at ~webmaster/monkeysphere
-	* added post-commit hook to webmaster repo to update monkeysphere
-	ikiwiki at /srv/www.
-	* ran the post-commit script to generate pages, which are now
-	visible.
+	* su - webmaster
+	* created a bare repo at ~webmaster/monkeysphere.git.  I then
+	pushed into this repo from my working directory on servo to verify
+	that it was accepting.
+	* cloned above repo at ~webmaster/monkeysphere
+	* created ~webmaster/ikiwiki.setup
+	* ikiwiki --setup ikiwiki.setup
+	* changed default keyserver to be pgp.mit.edu (subkeys.pgp.net blows)
+
 	
 2008-06-23 - dkg
 	* added monkeysphere apt repository to /etc/apt/sources.list
