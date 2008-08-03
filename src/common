@@ -314,7 +314,7 @@ process_user_id() {
 
     # if the gpg query return code is not 0, return 1
     if [ "$?" -ne 0 ] ; then
-        log "  - key not found."
+        log " no primary keys found."
         return 1
     fi
 
@@ -377,10 +377,19 @@ process_user_id() {
 		# output a line for the primary key
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
-		    log "  * acceptable key found."
-		    echo "0:${fingerprint}"
+		    log "  * acceptable primary key."
+		    if [ -z "$sshKey" ] ; then
+			log "    ! primary key could not be translated."
+		    else
+			echo "0:${sshKey}"
+		    fi
 		else
-		    echo "1:${fingerprint}"
+		    log "  - unacceptable primary key."
+		    if [ -z "$sshKey" ] ; then
+			log "   ! primary key could not be translated."
+		    else
+			echo "1:${sshKey}"
+		    fi
 		fi
 		;;
 	    'sub') # sub keys
@@ -404,18 +413,29 @@ process_user_id() {
 	    'fpr') # key fingerprint
 		fingerprint="$uidfpr"
 
+		sshKey=$(gpg2ssh "$fingerprint")
+
 		# if the last key was the pub key, skip
 		if [ "$lastKey" = pub ] ; then
 		    continue
 		fi
-		
-		# output a line for the last subkey
+
+		# output a line for the primary key
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
-		    log "  * acceptable key found."
-		    echo "0:${fingerprint}"
+		    log "  * acceptable sub key."
+		    if [ -z "$sshKey" ] ; then
+			log "    ! sub key could not be translated."
+		    else
+			echo "0:${sshKey}"
+		    fi
 		else
-		    echo "1:${fingerprint}"
+		    log "  - unacceptable sub key."
+		    if [ -z "$sshKey" ] ; then
+			log "    ! sub key could not be translated."
+		    else
+			echo "1:${sshKey}"
+		    fi
 		fi
 		;;
 	esac
@@ -429,28 +449,27 @@ process_host_known_hosts() {
     local nKeys
     local nKeysOK
     local ok
-    local keyid
+    local sshKey
     local tmpfile
 
     host="$1"
 
-    log "processing host: $host"
+    log "processing: $host"
 
     userID="ssh://${host}"
 
     nKeys=0
     nKeysOK=0
 
+    IFS=$'\n'
     for line in $(process_user_id "ssh://${host}") ; do
 	# note that key was found
 	nKeys=$((nKeys+1))
 
 	ok=$(echo "$line" | cut -d: -f1)
-	keyid=$(echo "$line" | cut -d: -f2)
+	sshKey=$(echo "$line" | cut -d: -f2)
 
-	sshKey=$(gpg2ssh "$keyid")
         if [ -z "$sshKey" ] ; then
-            log "  ! key could not be translated."
             continue
         fi
 
@@ -582,25 +601,24 @@ process_uid_authorized_keys() {
     local nKeys
     local nKeysOK
     local ok
-    local keyid
+    local sshKey
 
     userID="$1"
 
-    log "processing user ID: $userID"
+    log "processing: $userID"
 
     nKeys=0
     nKeysOK=0
 
+    IFS=$'\n'
     for line in $(process_user_id "$userID") ; do
 	# note that key was found
 	nKeys=$((nKeys+1))
 
 	ok=$(echo "$line" | cut -d: -f1)
-	keyid=$(echo "$line" | cut -d: -f2)
+	sshKey=$(echo "$line" | cut -d: -f2)
 
-	sshKey=$(gpg2ssh "$keyid")
         if [ -z "$sshKey" ] ; then
-            log "  ! key could not be translated."
             continue
         fi
 

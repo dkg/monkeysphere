@@ -5,8 +5,10 @@ monkeysphere (0.7-1) UNRELEASED; urgency=low
 
   [ Jameson Graef Rollins ]
   * fix how check for file modification is done.
+  * rework out user id processing is done to provide more verbose log
+    output.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sat, 02 Aug 2008 16:41:20 -0700
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sun, 03 Aug 2008 00:00:06 -0700
 
 monkeysphere (0.6-1) experimental; urgency=low
   
