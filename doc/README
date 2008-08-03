@@ -10,7 +10,7 @@ Keeping your keyring up-to-date
 Regularly refresh your GnuPG keyring from the keyservers.  This can be
 done with a simple cronjob.  An example of crontab line to do this is:
 
-0 12 * * * /usr/bin/gpg --refresh-keys
+0 12 * * * /usr/bin/gpg --refresh-keys > /dev/null
 
 This would refresh your keychain every day at noon.
 
