@@ -6,6 +6,12 @@
 *  Please add new entries in reverse chronological order whenever you make   *
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
+
+2008-08-03 - dkg
+	* aptitude update && aptitude dist-upgrade
+	* installed iproute
+	* added my User ID to ~webmaster/.config/monkeysphere/authorized_user_ids
+
 2008-08-02 - jrollins
 	* aptitude update && aptitude dist-upgrade
 	* restarted cron, nullmailer, sshd

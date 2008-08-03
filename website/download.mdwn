@@ -20,13 +20,13 @@ development model with [git](http://git.or.cz/).  Once you've
 [installed git](http://www.spheredev.org/wiki/Git_for_the_lazy), you
 can [git
 clone](http://www.kernel.org/pub/software/scm/git/docs/git-clone.html)
-any of the developer repositories:
+any of the developer repositories, including:
 
 Jameson Graef Rollins <jrollins@phys.columbia.edu>:
 
 	git clone http://lair.fifthhorseman.net/~jrollins/git/monkeysphere.git monkeysphere
 
-dkg:
+Daniel Kahn Gillmor <dkg@fifthhorseman.net>:
 
 	git clone http://lair.fifthhorseman.net/~dkg/git/monkeysphere.git monkeysphere
 
