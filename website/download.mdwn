@@ -22,11 +22,11 @@ can [git
 clone](http://www.kernel.org/pub/software/scm/git/docs/git-clone.html)
 any of the developer repositories, including:
 
-[mailto:jrollins@phys.columbia.edu](Jameson Graef Rollins):
+[Jameson Graef Rollins](mailto:jrollins@phys.columbia.edu):
 
 	git clone http://lair.fifthhorseman.net/~jrollins/git/monkeysphere.git monkeysphere
 
-[http://cmrg.fifthhorseman.net/wiki/dkg](Daniel Kahn Gillmor):
+[Daniel Kahn Gillmor](http://cmrg.fifthhorseman.net/wiki/dkg):
 
 	git clone http://lair.fifthhorseman.net/~dkg/git/monkeysphere.git monkeysphere
 
