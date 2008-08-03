@@ -1,4 +1,4 @@
-##Downloading and Installing##
+## Downloading and Installing ##
 
 If you are running a Debian system, you can install Monkeysphere
 by following these directions:
@@ -13,14 +13,24 @@ The repository is currently signed by [Daniel Kahn Gillmor's OpenPGP key](http:/
 (fingerprint: `0EE5 BE97 9282 D80B 9F75 40F1 CCD2 ED94 D217 39E9`).
 To cryptographically verify the packages, you'll want to [add `dkg`'s key to your apt configuration](http://cmrg.fifthhorseman.net/wiki/apt/importing-keys "Instructions for adding dkg's key to apt")
 
-##git repositories##
+## git repositories ##
 
-Development is done in an extremely distributed manner using 
-[git](http://git.or.cz/). Once you've
-[installed git](http://www.spheredev.org/wiki/Git_for_the_lazy), you can 
-clone the repository by doing
+The Monkeysphere is attempting to use a completely distributed
+development model with [git](http://git.or.cz/).  Once you've
+[installed git](http://www.spheredev.org/wiki/Git_for_the_lazy), you
+can [git
+clone](http://www.kernel.org/pub/software/scm/git/docs/git-clone.html)
+any of the developer repositories:
 
-	git clone http://lair.fifthhorseman.net/~dkg/git/monkeysphere.git/ monkeysphere
+Jameson Graef Rollins <jrollins@phys.columbia.edu>:
 
-Other developers have their own repositories, which you can substitute 
-for dkg's if you like.
+	git clone http://lair.fifthhorseman.net/~jrollins/git/monkeysphere.git monkeysphere
+
+dkg:
+
+	git clone http://lair.fifthhorseman.net/~dkg/git/monkeysphere.git monkeysphere
+
+## Contact ##
+
+Please feel free to contact any of the Monkeysphere developers with
+any questions, comments, bug reports, requests, etc.
