@@ -1,0 +1,28 @@
+Consider the following snippet in `~/.ssh/config`:
+
+	 Host foo
+	 HostKeyAlias bar
+
+for a host which is *not* participating in the monkeysphere.
+
+For such a host, when using `monkeysphere-ssh-proxy-command`, the
+public keyservers will be queried on each attempted ssh connection
+(even after a successful connection).
+
+This appears to be because:
+
+* `ssh` itself will write a line to `~/.ssh/known_hosts`, but it will
+  be labeled with `bar` because of the `HostKeyAlias`. 
+
+* `monkeysphere` won't be able to find any mention of it in the
+  keyring (it's not in the monkeysphere)
+
+* `monkeysphere-ssh-proxycommand` won't be able to find it in the
+  `known_hosts` file because it looks for `foo`, which is never
+  matched.
+
+excessive keyserver querying is bad behavior, because it causes delays
+for the users, and puts excessive load on the public keyserver
+infrastructure.
+
+How can we resolve this?
