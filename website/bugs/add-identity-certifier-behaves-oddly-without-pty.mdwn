@@ -1,0 +1,15 @@
+When executing `monkeysphere-server add-identity-certifier` across a
+link without a pseudo-terminal, it behaves oddly (prompts are created
+that are only halfway-readable, gpg gives error messages about lacking
+access to a `/dev/tty`, etc.
+
+You can try this directly if you have remote ssh access to the
+superuser on a monkeysphere-enabled host, assuming that `$GPGID` is
+set to the full fingerprint of a key you want to add as a trusted
+identity certifier:
+
+	ssh root@example.org monkeysphere-server add-identity-certifier $GPGID
+
+Compare this behavior with:
+
+	ssh -t root@example.org monkeysphere-server add-identity-certifier $GPGID
