@@ -1,8 +1,8 @@
-monkeysphere (0.7-1) UNRELEASED; urgency=low
+monkeysphere (0.7-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
   * Added monkeysphere-server diagnostics subcommand.
-  * rebuilding package from git repo
+  * rebuilding package using Format: 3.0 (git)
 
   [ Jameson Graef Rollins ]
   * fix how check for file modification is done.
