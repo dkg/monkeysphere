@@ -1,7 +1,8 @@
-monkeysphere (0.7-1) UNRELEASED; urgency=low
+monkeysphere (0.7-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
   * Added monkeysphere-server diagnostics subcommand.
+  * rebuilding package using Format: 3.0 (git)
 
   [ Jameson Graef Rollins ]
   * fix how check for file modification is done.
@@ -10,7 +11,7 @@ monkeysphere (0.7-1) UNRELEASED; urgency=low
   * fix bug in monkeysphpere update-authorized_keys subcommand where
     disallowed keys failed to be remove from authorized_keys file.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sun, 03 Aug 2008 00:55:05 -0700
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 04 Aug 2008 10:47:41 -0400
 
 monkeysphere (0.6-1) experimental; urgency=low
   
