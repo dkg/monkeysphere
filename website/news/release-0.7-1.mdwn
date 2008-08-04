@@ -1,0 +1,6 @@
+# MonkeySphere 0.7-1 released! #
+
+MonkeySphere 0.7-1 has been released.  This release contains bugfixes,
+a new `monkeysphere-server diagnostics` subcommand, and marks a
+transition to the new [Git-based debian packaging
+format](http://wiki.debian.org/GitSrc).  [[download]] it now!
