@@ -1,6 +1,6 @@
 In `~/.ssh/config`, i have:
 
-   HashKnownHosts No
+	HashKnownHosts No
 
 But when `monkeysphere-ssh-proxycommand` adds new hosts to
 `~/.ssh/known_hosts`, they appear to be added in a hashed form,
