@@ -1,0 +1,10 @@
+In `~/.ssh/config`, i have:
+
+   HashKnownHosts No
+
+But when `monkeysphere-ssh-proxycommand` adds new hosts to
+`~/.ssh/known_hosts`, they appear to be added in a hashed form,
+instead of in the clear.
+
+fwiw: i'm using OpenSSH 5.1p1 on a debian lenny system (backported
+from sid)
