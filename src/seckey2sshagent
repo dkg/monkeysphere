@@ -17,7 +17,7 @@
 
 cleanup() {
     echo -n "removing temp gpg home... " 1>&2
-    rm -rf $FOO
+    rm -rf "$TMPPRIVATE"
     echo "done." 1>&2
 }
 
@@ -44,7 +44,6 @@ if you're really sure.  Answer yes, because this is only relevant to
 the temporary keyring.  Then, do:
 
  save
- exit
 
 At this point, your key will be added to your running ssh-agent with
 the alias 'monkeysphere-key' and seckey2sshagent should terminate.
