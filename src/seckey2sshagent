@@ -67,8 +67,13 @@ trap cleanup EXIT
 GPGIDS="$1"
 
 if [ -z "$GPGIDS" ]; then
+    # hack: we need to get the list of secret keys, because if you
+    # --list-secret-keys with no arguments, GPG fails to print the
+    # capability flags (i've just filed this as
+    # https://bugs.g10code.com/gnupg/issue945)
+    KEYIDS=$(gpg2 --with-colons --list-secret-keys | grep ^sec | cut -f5 -d:)
     # default to using all fingerprints of authentication-enabled keys 
-    GPGIDS=$(gpg  --with-colons --fingerprint --fingerprint --list-secret-keys | egrep -A1 '^(ssb|sec):.*:[^:]*a[^:]*:$' | grep ^fpr: | cut -d: -f10)
+    GPGIDS=$(gpg  --with-colons --fingerprint --fingerprint --list-secret-keys $KEYIDS | egrep -A1 '^(ssb|sec):.*:[^:]*a[^:]*:$' | grep ^fpr: | cut -d: -f10)
 fi
 
 for GPGID in $GPGIDS; do
