@@ -4,8 +4,33 @@
 *                                                                            *
 ******************************************************************************
 *  Please add new entries in reverse chronological order whenever you make   *
-*  changes to this system 					             *
+*  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
+
+2008-08-03 - dkg
+	* aptitude update && aptitude dist-upgrade
+	* installed iproute
+	* added my User ID to ~webmaster/.config/monkeysphere/authorized_user_ids
+
+2008-08-02 - jrollins
+	* aptitude update && aptitude dist-upgrade
+	* restarted cron, nullmailer, sshd
+	* aptitude install git-core ikiwiki
+	* adduser webmaster
+	* su - webmaster
+	* created a bare repo at ~webmaster/monkeysphere.git.  I then
+	pushed into this repo from my working directory on servo to verify
+	that it was accepting.
+	* cloned above repo at ~webmaster/monkeysphere
+	* created ~webmaster/ikiwiki.setup
+	* ikiwiki --setup ikiwiki.setup
+	* linked post-receive to new post-commit hook in monkeysphere.git
+	* changed default keyserver to be pgp.mit.edu (subkeys.pgp.net
+	blows)
+	* updated /etc/skel with ssh and monkeysphere stuff
+	* made authorzied_user_ids file for webmaster and ran
+	"monkeysphere-server u webmaster".
+	
 2008-06-23 - dkg
 	* added monkeysphere apt repository to /etc/apt/sources.list
 	* added dkg's key to apt's list of trusted keys.
@@ -27,7 +52,7 @@
 	/etc/default/ssh in order to make this error go away:
 	"error writing /proc/self/oom_adj: Operation not permitted"
 	(c.f. Debian #487325)
-	  
+	
 2008-06-20 - dkg
 	* touched /etc/environment to get rid of some spurious auth.log
 	entries.

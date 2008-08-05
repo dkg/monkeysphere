@@ -1,3 +1,18 @@
+monkeysphere (0.7-1) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * Added monkeysphere-server diagnostics subcommand.
+  * rebuilding package using Format: 3.0 (git)
+
+  [ Jameson Graef Rollins ]
+  * fix how check for file modification is done.
+  * rework out user id processing is done to provide more verbose log
+    output.
+  * fix bug in monkeysphpere update-authorized_keys subcommand where
+    disallowed keys failed to be remove from authorized_keys file.
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 04 Aug 2008 10:47:41 -0400
+
 monkeysphere (0.6-1) experimental; urgency=low
   
   [ Jameson Graef Rollins ]

@@ -8,6 +8,7 @@ Standards-Version: 3.8.0.1
 Homepage: http://monkeysphere.info/
 Vcs-Git: http://lair.fifthhorseman.net/~dkg/git/monkeysphere.git
 Dm-Upload-Allowed: yes
+Format: 3.0 (git)
 
 Package: monkeysphere
 Architecture: any

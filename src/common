@@ -83,6 +83,10 @@ remove_line() {
 	return 1
     fi
 
+    if [ ! -e "$file" ] ; then
+	return 1
+    fi
+
     # if the string is in the file...
     if grep -q -F "$string" "$file" 2> /dev/null ; then
 	# remove the line with the string, and return 0
@@ -92,6 +96,24 @@ remove_line() {
     else
 	return 1
     fi
+}
+
+# remove all lines with MonkeySphere strings in file
+remove_monkeysphere_lines() {
+    local file
+
+    file="$1"
+
+    if [ -z "$file" ] ; then
+	return 1
+    fi
+
+    if [ ! -e "$file" ] ; then
+	return 1
+    fi
+
+    egrep -v '^MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2}$' \
+	"$file" | sponge "$file"
 }
 
 # translate ssh-style path variables %h and %u
@@ -314,13 +336,11 @@ process_user_id() {
 
     # if the gpg query return code is not 0, return 1
     if [ "$?" -ne 0 ] ; then
-        log "  - key not found."
+        log " no primary keys found."
         return 1
     fi
 
     # loop over all lines in the gpg output and process.
-    # need to do it this way (as opposed to "while read...") so that
-    # variables set in loop will be visible outside of loop
     echo "$gpgOut" | cut -d: -f1,2,5,10,12 | \
     while IFS=: read -r type validity keyid uidfpr usage ; do
 	# process based on record type
@@ -379,10 +399,19 @@ process_user_id() {
 		# output a line for the primary key
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
-		    log "  * acceptable key found."
-		    echo "0:${fingerprint}"
+		    log "  * acceptable primary key."
+		    if [ -z "$sshKey" ] ; then
+			log "    ! primary key could not be translated."
+		    else
+			echo "0:${sshKey}"
+		    fi
 		else
-		    echo "1:${fingerprint}"
+		    log "  - unacceptable primary key."
+		    if [ -z "$sshKey" ] ; then
+			log "   ! primary key could not be translated."
+		    else
+			echo "1:${sshKey}"
+		    fi
 		fi
 		;;
 	    'sub') # sub keys
@@ -406,18 +435,29 @@ process_user_id() {
 	    'fpr') # key fingerprint
 		fingerprint="$uidfpr"
 
+		sshKey=$(gpg2ssh "$fingerprint")
+
 		# if the last key was the pub key, skip
 		if [ "$lastKey" = pub ] ; then
 		    continue
 		fi
-		
-		# output a line for the last subkey
+
+		# output a line for the primary key
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
-		    log "  * acceptable key found."
-		    echo "0:${fingerprint}"
+		    log "  * acceptable sub key."
+		    if [ -z "$sshKey" ] ; then
+			log "    ! sub key could not be translated."
+		    else
+			echo "0:${sshKey}"
+		    fi
 		else
-		    echo "1:${fingerprint}"
+		    log "  - unacceptable sub key."
+		    if [ -z "$sshKey" ] ; then
+			log "    ! sub key could not be translated."
+		    else
+			echo "1:${sshKey}"
+		    fi
 		fi
 		;;
 	esac
@@ -431,28 +471,27 @@ process_host_known_hosts() {
     local nKeys
     local nKeysOK
     local ok
-    local keyid
+    local sshKey
     local tmpfile
 
     host="$1"
 
-    log "processing host: $host"
+    log "processing: $host"
 
     userID="ssh://${host}"
 
     nKeys=0
     nKeysOK=0
 
+    IFS=$'\n'
     for line in $(process_user_id "ssh://${host}") ; do
 	# note that key was found
 	nKeys=$((nKeys+1))
 
 	ok=$(echo "$line" | cut -d: -f1)
-	keyid=$(echo "$line" | cut -d: -f2)
+	sshKey=$(echo "$line" | cut -d: -f2)
 
-	sshKey=$(gpg2ssh "$keyid")
         if [ -z "$sshKey" ] ; then
-            log "  ! key could not be translated."
             continue
         fi
 
@@ -500,6 +539,7 @@ update_known_hosts() {
     local nHosts
     local nHostsOK
     local nHostsBAD
+    local fileCheck
     local host
 
     # the number of hosts specified on command line
@@ -513,6 +553,9 @@ update_known_hosts() {
 
     # create a lockfile on known_hosts
     lockfile-create "$KNOWN_HOSTS"
+
+    # note pre update file checksum
+    fileCheck="$(cat "$KNOWN_HOSTS" | md5sum)"
 
     for host ; do
 	# process the host
@@ -535,7 +578,7 @@ update_known_hosts() {
     lockfile-remove "$KNOWN_HOSTS"
 
     # note if the known_hosts file was updated
-    if [ "$nHostsOK" -gt 0 -o "$nHostsBAD" -gt 0 ] ; then
+    if [ "$(cat "$KNOWN_HOSTS" | md5sum)" != "$fileCheck" ] ; then
 	log "known_hosts file updated."
     fi
 
@@ -580,25 +623,24 @@ process_uid_authorized_keys() {
     local nKeys
     local nKeysOK
     local ok
-    local keyid
+    local sshKey
 
     userID="$1"
 
-    log "processing user ID: $userID"
+    log "processing: $userID"
 
     nKeys=0
     nKeysOK=0
 
+    IFS=$'\n'
     for line in $(process_user_id "$userID") ; do
 	# note that key was found
 	nKeys=$((nKeys+1))
 
 	ok=$(echo "$line" | cut -d: -f1)
-	keyid=$(echo "$line" | cut -d: -f2)
+	sshKey=$(echo "$line" | cut -d: -f2)
 
-	sshKey=$(gpg2ssh "$keyid")
         if [ -z "$sshKey" ] ; then
-            log "  ! key could not be translated."
             continue
         fi
 
@@ -636,6 +678,7 @@ update_authorized_keys() {
     local nIDs
     local nIDsOK
     local nIDsBAD
+    local fileCheck
 
     # the number of ids specified on command line
     nIDs="$#"
@@ -648,6 +691,12 @@ update_authorized_keys() {
 
     # create a lockfile on authorized_keys
     lockfile-create "$AUTHORIZED_KEYS"
+
+    # note pre update file checksum
+    fileCheck="$(cat "$AUTHORIZED_KEYS" | md5sum)"
+
+    # remove any monkeysphere lines from authorized_keys file
+    remove_monkeysphere_lines "$AUTHORIZED_KEYS"
 
     for userID ; do
 	# process the user ID, change return code if key not found for
@@ -672,7 +721,7 @@ update_authorized_keys() {
     lockfile-remove "$AUTHORIZED_KEYS"
 
     # note if the authorized_keys file was updated
-    if [ "$nIDsOK" -gt 0 -o "$nIDsBAD" -gt 0 ] ; then
+    if [ "$(cat "$AUTHORIZED_KEYS" | md5sum)" != "$fileCheck" ] ; then
 	log "authorized_keys file updated."
     fi
 
@@ -702,7 +751,7 @@ process_authorized_user_ids() {
 
     log "processing authorized_user_ids file..."
 
-    if ! meat "$authorizedUserIDs" ; then
+    if ! meat "$authorizedUserIDs" > /dev/null ; then
 	log "no user IDs to process."
 	return
     fi
@@ -717,46 +766,4 @@ process_authorized_user_ids() {
     done
 
     update_authorized_keys "${userIDs[@]}"
-}
-
-# EXPERIMENTAL (unused) process userids found in authorized_keys file
-# go through line-by-line, extract monkeysphere userids from comment
-# fields, and process each userid
-# NOT WORKING
-process_authorized_keys() {
-    local authorizedKeys
-    local userID
-    local returnCode
-
-    # default return code is 0, and is set to 1 if a key for a user
-    # is not found
-    returnCode=0
-
-    authorizedKeys="$1"
-
-    # take all the monkeysphere userids from the authorized_keys file
-    # comment field (third field) that starts with "MonkeySphere uid:"
-    # FIXME: needs to handle authorized_keys options (field 0)
-    meat "$authorizedKeys" | \
-    while read -r options keytype key comment ; do
-	# if the comment field is empty, assume the third field was
-	# the comment
-	if [ -z "$comment" ] ; then
-	    comment="$key"
-	fi
-
-	if echo "$comment" | egrep -v -q '^MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2}' ; then
-	    continue
-	fi
-	userID=$(echo "$comment" | awk "{ print $2 }")
-	if [ -z "$userID" ] ; then
-	    continue
-	fi
-
-	# process the userid
-	log "processing userid: '$userID'"
-	process_user_id "$userID" > /dev/null || returnCode=1
-    done
-
-    return "$returnCode"
 }
