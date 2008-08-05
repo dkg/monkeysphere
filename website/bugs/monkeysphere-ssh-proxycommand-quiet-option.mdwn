@@ -1,6 +1,6 @@
 I don't mind the monkeysphere-ssh-proxycommand output on regular connections.
 
-For me it looks something like this with a server not participatingin the
+For me it looks something like this with a server not participating in the
 monkey sphere:
 
 		ms: processing host: chavez.mayfirst.org
