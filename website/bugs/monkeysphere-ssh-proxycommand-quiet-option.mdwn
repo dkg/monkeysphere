@@ -1,0 +1,22 @@
+I don't mind the monkeysphere-ssh-proxycommand output on regular connections.
+
+For me it looks something like this with a server not participatingin the
+monkey sphere:
+
+		ms: processing host: chavez.mayfirst.org
+		ms:   - key not found.
+	
+And like this for a server participating:
+
+		ms: processing host: george.riseup.net
+		ms:  primary key found: 7353A74E3B757F8C
+		ms:   * acceptable key found.
+		ms: known_hosts file updated.
+
+However, I have some batch scripts that run ssh that also provide output, so the monkeysphere output clutters things up.
+
+I would really like to either have a -q/--quiet option, or, preferable for me
+at least, would be for silent output to be the default and have a -v/--verbose
+option to get the output. Or - maybe these should be environmental variables?
+In any event - someway to suppress informational output would be a useful
+improvement.
