@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # seckey2sshagent: this is a hack of a script to cope with the fact
 # that openpgp2ssh currently cannot support encrypted secret keys.
@@ -75,7 +75,7 @@ for GPGID in $GPGIDS; do
 
     TMPPRIVATE=$(mktemp -d)
     
-    gpg --export-secret-key $GPGID | GNUPGHOME="$TMPPRIVATE" gpg --import
+    gpg --export-secret-key "$GPGID" | GNUPGHOME="$TMPPRIVATE" gpg --import
     
 # idea to script the password stuff.  not working.
 # read -s -p "enter gpg password: " PASSWD; echo
@@ -91,15 +91,16 @@ for GPGID in $GPGIDS; do
 # )
 # echo -e "$cmd" | GNUPGHOME="$TMPPRIVATE" gpg --command-fd 0 --edit-key $GPGID
     
-    GNUPGHOME="$TMPPRIVATE" gpg --edit-key $GPGID
-    
+    GNUPGHOME="$TMPPRIVATE" gpg --edit-key "$GPGID"
+
+    KEYNAME='MonkeySphere Key '$(echo "$GPGID" | tr -c -d '0-9a-fA-F')''
 # creating this alias so the key is named "monkeysphere-key" in the
 # comment stored by the agent, while never being written to disk in
 # SSH form:
-    ln -s /dev/stdin "$TMPPRIVATE"/monkeysphere-key
+    ln -s /dev/stdin "$TMPPRIVATE/$KEYNAME"
     
-    GNUPGHOME="$TMPPRIVATE" gpg --export-secret-keys $GPGID | \
-	openpgp2ssh $GPGID | (cd "$TMPPRIVATE" && ssh-add -c monkeysphere-key)
+    GNUPGHOME="$TMPPRIVATE" gpg --export-secret-keys "$GPGID" | \
+	openpgp2ssh $GPGID | (cd "$TMPPRIVATE" && ssh-add -c "$KEYNAME")
 
     cleanup
 done
