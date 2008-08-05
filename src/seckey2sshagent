@@ -26,10 +26,6 @@ explanation() {
     echo -n "The basic strategy of seckey2sshagent is to dump your
 OpenPGP authentication key(s) into your agent.
 
-The first argument to the command should be your gpg key id (the 8 
-character hex string; try gpg --list-key your@emailaddress.org to 
-lookup your key id).
-
 This script is a gross hack at the moment.  It is done by creating a
 new, temporary private keyring, letting the user remove the
 passphrases from the keys, and then exporting them.  The temporary
@@ -61,7 +57,7 @@ You can check on it with:
 
 # if no hex string is supplied, just print an explanation.
 # this covers seckey2sshagent --help, --usage, -h, etc...
-if [ -z "$1" ] || [  "$(echo "$1" | tr -d '0-9a-fA-F')" ]; then
+if [  "$(echo "$1" | tr -d '0-9a-fA-F')" ]; then
     explanation
     exit
 fi
@@ -72,7 +68,7 @@ GPGIDS="$1"
 
 if [ -z "$GPGIDS" ]; then
     # default to using all fingerprints of authentication-enabled keys 
-    GPGIDS=$(gpg  --with-colons --fingerprint --fingerprint --list-secret-keys "$GPGID" | egrep -A1 '^(ssb|sec):.*:[^:]*a[^:]*:$' | grep ^fpr: | cut -d: -f10)
+    GPGIDS=$(gpg  --with-colons --fingerprint --fingerprint --list-secret-keys | egrep -A1 '^(ssb|sec):.*:[^:]*a[^:]*:$' | grep ^fpr: | cut -d: -f10)
 fi
 
 for GPGID in $GPGIDS; do
