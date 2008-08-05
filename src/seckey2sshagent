@@ -21,15 +21,63 @@ cleanup() {
     echo "done." 1>&2
 }
 
+explanation() {
+
+    echo -n "The basic strategy of seckey2sshagent is to dump your
+OpenPGP authentication key(s) into your agent.
+
+This script is a gross hack at the moment.  It is done by creating a
+new, temporary private keyring, letting the user remove the
+passphrases from the keys, and then exporting them.  The temporary
+private keyring is purged from the system.
+
+When you use this command, you'll find yourself dropped into a GPG
+'edit-key' dialog relevant *only* to the temporary private keyring.
+
+At that point, you should clear the password from your key, with:
+
+ passwd
+ <enter your current password>
+
+followed by the empty string for the new password.  GPG will ask you
+if you're really sure.  Answer yes, because this is only relevant to
+the temporary keyring.  Then, do:
+
+ save
+ exit
+
+At this point, your key will be added to your running ssh-agent with
+the alias 'monkeysphere-key' and seckey2sshagent should terminate.
+You can check on it with:
+
+ ssh-add -l
+
+" 
+    
+}
+
+# if no hex string is supplied, just print an explanation.
+# this covers seckey2sshagent --help, --usage, -h, etc...
+if [ "$(echo "$1" | tr -d '0-9a-fA-F')" ]; then
+    explanation
+    exit
+fi
+
 trap cleanup EXIT
 
-#GPGID="$1"
-GPGID=$(echo "$1" | cut -c 25-)
+GPGIDS="$1"
 
-FOO=$(mktemp -d)
+if [ -z "$GPGIDS" ]; then
+    # default to using all fingerprints of authentication-enabled keys 
+    GPGIDS=$(gpg  --with-colons --fingerprint --fingerprint --list-secret-keys "$GPGID" | egrep -A1 '^(ssb|sec):.*:[^:]*a[^:]*:$' | grep ^fpr: | cut -d: -f10)
+fi
 
-gpg --export-secret-key $GPGID | GNUPGHOME="$FOO" gpg --import
+for GPGID in $GPGIDS; do
 
+    TMPPRIVATE=$(mktemp -d)
+    
+    gpg --export-secret-key $GPGID | GNUPGHOME="$TMPPRIVATE" gpg --import
+    
 # idea to script the password stuff.  not working.
 # read -s -p "enter gpg password: " PASSWD; echo
 # cmd=$(cat <<EOF
@@ -42,11 +90,19 @@ gpg --export-secret-key $GPGID | GNUPGHOME="$FOO" gpg --import
 # save
 # EOF
 # )
-# echo -e "$cmd" | GNUPGHOME="$FOO" gpg --command-fd 0 --edit-key $GPGID
+# echo -e "$cmd" | GNUPGHOME="$TMPPRIVATE" gpg --command-fd 0 --edit-key $GPGID
+    
+    GNUPGHOME="$TMPPRIVATE" gpg --edit-key $GPGID
+    
+# creating this alias so the key is named "monkeysphere-key" in the
+# comment stored by the agent, while never being written to disk in
+# SSH form:
+    ln -s /dev/stdin "$TMPPRIVATE"/monkeysphere-key
+    
+    GNUPGHOME="$TMPPRIVATE" gpg --export-secret-keys $GPGID | \
+	openpgp2ssh $GPGID | (cd "$TMPPRIVATE" && ssh-add -c monkeysphere-key)
 
-GNUPGHOME="$FOO" gpg --edit-key $GPGID
+    cleanup
+done
 
-ln -s /dev/stdin "$FOO"/openpgp
 
-GNUPGHOME="$FOO" gpg --export-secret-key $GPGID | \
-    openpgp2ssh $GPGID | ssh-add -c "$FOO"/openpgp
