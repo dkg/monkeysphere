@@ -57,7 +57,7 @@ You can check on it with:
 
 # if no hex string is supplied, just print an explanation.
 # this covers seckey2sshagent --help, --usage, -h, etc...
-if [ "$(echo "$1" | tr -d '0-9a-fA-F')" ]; then
+if [  "$(echo "$1" | tr -d '0-9a-fA-F')" ]; then
     explanation
     exit
 fi
