@@ -2,3 +2,11 @@
 
 I know it's a hack - but installing seckey2sshagent in /usr/bin/ would make it
 much easier for people to use. 
+
+---
+
+I'm not sure I really want to include this hack with the debs.  It's really not useful for any kind of regular use.  I would rather focus on getting openpgp2ssh to support passprotected keys.
+
+As another possibility, I was planning on modifying the script so that it could export to a passprotected file.  I think this would be a lot more useful.  Let me get that working, then let's revist the issue of including it in the packaging.
+
+-- Big Jimmy.

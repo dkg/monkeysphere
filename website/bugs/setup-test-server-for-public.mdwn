@@ -5,3 +5,11 @@ test it with a participating server as soon as they've finished setting things
 up. Minimally - just testing the acceptance of the server's identity would be
 great.
 
+---
+
+I guess we don't really want to use george for this purpose?  Does
+someone have a spare virtual machine that we could use for this
+purpose?  The test machine wouldn't actually have to do any user
+authentication, I guess.
+
+-- Big Jimmy.

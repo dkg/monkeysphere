@@ -9,5 +9,16 @@ instead of in the clear.
 fwiw: i'm using OpenSSH 5.1p1 on a debian lenny system (backported
 from sid)
 
-> I can confirm this too (I'm running openssh-client 1:4.7p1-12) -- Jamie (Jam
-> Jam)
+---
+
+I can confirm this too (I'm running openssh-client 1:4.7p1-12)
+
+-- Jamie (Jam Jam)
+
+---
+
+There is absolutely no attempt by any monkeysphere utility to parse
+any ssh or sshd config file.  This will probably need to be delt with
+down the line, but it's not a particular easy task at the moment.
+
+-- Big Jimmy.
