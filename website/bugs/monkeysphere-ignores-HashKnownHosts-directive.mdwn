@@ -8,3 +8,6 @@ instead of in the clear.
 
 fwiw: i'm using OpenSSH 5.1p1 on a debian lenny system (backported
 from sid)
+
+> I can confirm this too (I'm running openssh-client 1:4.7p1-12) -- Jamie (Jam
+> Jam)
