@@ -1,0 +1,23 @@
+[[meta title="`monkeysphere gen-key` should guess at KeyID if none provided"]]
+
+Currently, if you have a single private key in your GnuPG keyring, and
+you call:
+
+	monkeysphere gen-key
+
+(with no additional arguments), it will report an error.
+
+It would be more user-friendly if we could guess which key to use.  I
+suggest:
+
+* If the user only has no GPG secret keys at all, it should fail, and
+  suggest that the user create a key first, then re-run `monkeysphere
+  gen-key`.  (`monkeysphere` could actually invoke `gpg --gen-key` for
+  the user directly, if the user wants that)
+
+* If the user only has one GPG secret key, it should use that key.
+
+* If the user has more than one GPG secret key, `monkeysphere` should
+  fail, and report the different key IDs that they user might want to
+  select (reporting which keys already have authorization subkeys or
+  the authorization capability on the primary key would be useful too)
