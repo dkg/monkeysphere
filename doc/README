@@ -1,6 +1,11 @@
 Monkeysphere User README
 ========================
 
+You don't have to be an OpenSSH or OpenPGP expert to use the
+Monkeysphere. However, you should be comfortable using secure shell and
+you should already have GnuPG installed and an OpenPGP key pair before
+you begin.
+
 As a regular user on a system where the monkeysphere package is
 installed, you probably want to do a few things:
 
@@ -18,14 +23,14 @@ This would refresh your keychain every day at noon.
 Keeping your known_hosts file in sync with your keyring
 -------------------------------------------------------
 
-With your keyring updated, you want to make sure that openssh can
+With your keyring updated, you want to make sure that OpenSSH can
 still see the most recent trusted information about who the various
 hosts are.  This can be done with the monkeysphere-ssh-proxycommand
 (see next section) or with the update-known_hosts command:
 
 $ monkeysphere update-known_hosts
 
-This will command will check to see if there is an openpgp key for
+This will command will check to see if there is an OpenPGP key for
 each (non-hashed) host listed in the known_hosts file, and then add
 the key for that host to the known_hosts file if one is found.  This
 command could be added to a crontab as well, if desired.
@@ -42,6 +47,24 @@ of your ~/.ssh/config file:
 
 ProxyCommand monkeysphere-ssh-proxycommand %h %p
 
+The "Host *" section specifies what ssh options to use for all
+connections. If you don't already have a "Host *" line, you can add it
+by entering:
+
+Host *
+
+On a line by itself. Add the ProxyCommand line just below it.
+
+Once you've completed this step - you are half-way there. You will now
+be able to verify servers participating in the monkeysphere provided
+their keys have been signed by someone that you trust.
+
+FIXME: We should setup a way for someone to download a test gpg key and
+then connect to a test server that is signed by this gpg key so users
+can establish that they are setup correctly.
+
+The remaining steps will complete the second half: allow servers to
+verify you based on your OpenPGP key.
 
 Setting up an OpenPGP authentication key
 ----------------------------------------
@@ -52,17 +75,29 @@ keyid $GPGID, you can set up such a subkey relatively easily with:
 
 $ monkeysphere gen-subkey $GPGID
 
+Typically, you can find out what your keyid is by running:
+
+gpg --list-key your@email.address
+
+The first line (starting with pub) will include your key length followed
+by the type of key (e.g. 1024D) followed by a slash and then your keyid.
 
 Using your OpenPGP authentication key for SSH
 ---------------------------------------------
 
-FIXME: Sending the key to the ssh-agent?
+Once you have created a OpenPGP authentication key, you can feed it to
+your ssh agent by running seckey2sshagent (currently this is found in
+the src directory). Please run:
 
-FIXME: using the key with a single session?
+./seckey2sshagent --help
+
+And read the directions - particularly the part about being dropped into
+a gpg edit session. This is a work in progress!
 
 NOTE: the current version of openpgp2ssh does *not* deal well with
 encrypted keys (as of 2008-07-26)
 
+FIXME: using the key with a single session?
 
 Miscellaneous
 -------------
