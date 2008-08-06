@@ -77,9 +77,9 @@ $ monkeysphere gen-subkey $GPGID
 
 Typically, you can find out what your keyid is by running:
 
-gpg --list-key your@email.address
+gpg --list-secret-keys
 
-The first line (starting with pub) will include your key length followed
+The first line (starting with sec) will include your key length followed
 by the type of key (e.g. 1024D) followed by a slash and then your keyid.
 
 Using your OpenPGP authentication key for SSH
