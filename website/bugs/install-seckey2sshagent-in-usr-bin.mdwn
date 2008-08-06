@@ -1,0 +1,4 @@
+[[meta title="Install seckey2sshagent in /usr/bin/"]]
+
+I know it's a hack - but installing seckey2sshagent in /usr/bin/ would make it
+much easier for people to use. 
