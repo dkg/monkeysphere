@@ -10,3 +10,12 @@ I'm not sure I really want to include this hack with the debs.  It's really not 
 As another possibility, I was planning on modifying the script so that it could export to a passprotected file.  I think this would be a lot more useful.  Let me get that working, then let's revist the issue of including it in the packaging.
 
 -- Big Jimmy.
+
+---
+
+> Ok - sounds good to me. I'm thinking in terms of getting other people to try
+> out the Monkeysphere - maybe the README should just say: we're only half
+> done. You can verify the identity of servers, but we haven't completed the
+> part about verifying you to a server. Then it could say: if you're really
+> interested, you can run this hacky script but we make no guarantees.
+-- Sir Jam Jam

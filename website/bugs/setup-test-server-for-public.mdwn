@@ -13,3 +13,9 @@ purpose?  The test machine wouldn't actually have to do any user
 authentication, I guess.
 
 -- Big Jimmy.
+
+> Maybe we should use George? As you point out - it doesn't actually
+> have to do any user authentication. It seems like a waste to have a
+> virtual machine that does nothing but deny people's ssh connections.
+> And - george is already setup and ready to go.
+> -- Sir Jam Jam
