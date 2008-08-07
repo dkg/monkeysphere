@@ -2,7 +2,7 @@
 
 When i try to generate a key on a headless machine (no kbd, no mouse,
 no Human Input Device (HID) at all), `monkeysphere gen-key` hangs for
-a *very* long time (a half hour at least) during the generation
+a *very* long time (over an hour so far!) during the generation
 process, particularly at this point:
 
 	ms: generating server key...
