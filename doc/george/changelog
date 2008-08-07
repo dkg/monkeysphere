@@ -13,6 +13,9 @@
 	* removed experimental stanza from /etc/apt/preferences (now the
 	  monkeysphere packages should upgrade automatically)
 	* upgraded to monkeysphere 0.7-1
+	* installed runit
+	* set up a public git daemon service to serve git repos from
+	  george, using runit.
 	
 2008-08-03 - dkg
 	* aptitude update && aptitude dist-upgrade
