@@ -9,9 +9,6 @@ Handle unverified monkeysphere hosts in such a way that they're not
    always removed from known_hosts file.  Ask user to lsign the host
    key?
 
-Handle multiple hostnames (multiple user IDs?) when generating host
-   keys with gen-key.
-
 Work out the details (and describe a full use case) for assigning a
    REVOKER during monkeysphere-server gen_key -- how is this set?  How
    do we export it so it's available when a second-party revocation is

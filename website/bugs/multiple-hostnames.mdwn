@@ -1,0 +1,15 @@
+[[meta title="Support multiple host names for monkeysphere-enabled servers"]]
+
+Some monkeysphere-enabled hosts answer to multiple host names, but the
+current `monkeysphere-server` only generates a single User ID
+corresponding to a single hostname.
+
+We should make it easier for machines with multiple names to create
+multiple User IDs at `gen-key` time.
+
+We should also make it easy to add new hostnames (and remove outdated
+ones).
+
+For example: `george.riseup.net` is now also known as
+`monkeysphere.info`.  It'd be nice to have a convenient way to add
+that hostname to the key without mucking around with gpg directly.
