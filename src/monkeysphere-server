@@ -390,6 +390,7 @@ diagnostics() {
     local expire
     local uid
     local fingerprint
+    local badhostkeys
 
     seckey=$(gpg_host --list-secret-keys --fingerprint --with-colons --fixed-list-mode)
     keysfound=$(echo "$seckey" | grep -c ^sec:)
@@ -470,6 +471,11 @@ diagnostics() {
 	    if ! grep -q "^HostKey ${VARLIB}/ssh_host_rsa_key$" /etc/ssh/sshd_config; then
 		echo "! /etc/ssh/sshd_config does not point to the monkeysphere host key (${VARLIB}/ssh_host_rsa_key)."
 		echo " - Recommendation: add a line to /etc/ssh/sshd_config: 'HostKey ${VARLIB}/ssh_host_rsa_key'"
+	    fi
+	    if badhostkeys=$(grep '^HostKey' | grep -q -v "^HostKey ${VARLIB}/ssh_host_rsa_key$") ; then
+		echo "! /etc/sshd_config refers to some non-monkeysphere host keys:"
+		echo "$badhostkeys"
+		echo "- Recommendation: remove the above HostKey lines from /etc/ssh/sshd_config"
 	    fi
 	fi
     fi
