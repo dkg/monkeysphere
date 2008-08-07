@@ -30,7 +30,7 @@ hosts are.  This can be done with the monkeysphere-ssh-proxycommand
 
 $ monkeysphere update-known_hosts
 
-This will command will check to see if there is an OpenPGP key for
+This command will check to see if there is an OpenPGP key for
 each (non-hashed) host listed in the known_hosts file, and then add
 the key for that host to the known_hosts file if one is found.  This
 command could be added to a crontab as well, if desired.
