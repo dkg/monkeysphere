@@ -32,7 +32,7 @@ umask 077
 ########################################################################
 
 usage() {
-cat <<EOF
+    cat <<EOF
 usage: $PGRM <subcommand> [options] [args]
 MonkeySphere client tool.
 
@@ -89,9 +89,17 @@ gen_subkey(){
 	esac
     done
 
-    keyID="$1"
-    if [ -z "$keyID" ] ; then
-	failure "You must specify the key ID of your primary key."
+    if [ -z "$1" ] ; then
+	# find all secret keys
+	keyID=$(gpg --with-colons --list-secret-keys | grep ^sec | cut -f5 -d:)
+	# if multiple sec keys exist, fail
+	if (( $(echo "$keyID" | wc -l) > 1 )) ; then
+	    echo "Multiple secret keys found:"
+	    echo "$keyID"
+	    failure "Please specify which primary key to use."
+	fi
+    else
+	keyID="$1"
     fi
 
     # get key output, and fail if not found
