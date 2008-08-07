@@ -1,3 +1,12 @@
+monkeysphere (0.8-1) UNRELEASED; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * debian/control: switched Vcs-Git to use "centralized" git repo instead
+    of my own.
+  * More monkeysphere-server diagnostics
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Thu, 07 Aug 2008 13:31:14 -0400
+
 monkeysphere (0.7-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]

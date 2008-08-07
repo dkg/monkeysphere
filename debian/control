@@ -6,7 +6,7 @@ Uploaders: Jameson Rollins <jrollins@fifthhorseman.net>
 Build-Depends: debhelper (>= 7.0), libgnutls-dev (>= 2.4.0)
 Standards-Version: 3.8.0.1
 Homepage: http://monkeysphere.info/
-Vcs-Git: http://lair.fifthhorseman.net/~dkg/git/monkeysphere.git
+Vcs-Git: git://monkeysphere.info/monkeysphere
 Dm-Upload-Allowed: yes
 Format: 3.0 (git)
 
