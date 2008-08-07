@@ -7,6 +7,13 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-08-07 - dkg
+	* aptitude update && aptitude dist-upgrade
+	* removed debian's experimental from the sources.list
+	* removed experimental stanza from /etc/apt/preferences (now the
+	  monkeysphere packages should upgrade automatically)
+	* upgraded to monkeysphere 0.7-1
+	
 2008-08-03 - dkg
 	* aptitude update && aptitude dist-upgrade
 	* installed iproute
