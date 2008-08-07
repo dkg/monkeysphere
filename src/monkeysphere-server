@@ -236,7 +236,7 @@ gen_key() {
     revoker=
 
     # get options
-    TEMP=$(getopt -o l:e:r: -l length:,expire:,revoker: -n "$PGRM" -- "$@")
+    TEMP=$(getopt -o e:l:r -l expire:,length:,revoker: -n "$PGRM" -- "$@")
 
     if [ $? != 0 ] ; then
 	exit 1
