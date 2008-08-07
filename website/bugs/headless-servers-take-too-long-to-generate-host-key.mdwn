@@ -1,0 +1,26 @@
+[[meta title="Running `monkeysphere gen-key` on a headless server takes way too long"]]
+
+When i try to generate a key on a headless machine (no kbd, no mouse,
+no Human Input Device (HID) at all), `monkeysphere gen-key` hangs for
+a *very* long time (a half hour at least) during the generation
+process, particularly at this point:
+
+	ms: generating server key...
+	
+	Not enough random bytes available.  Please do some other work to give
+	the OS a chance to collect more entropy! (Need 197 more bytes)
+
+And sure enough, there really is very little entropy in these systems
+at the time requested:
+
+	0 chomsky:~# cat /proc/sys/kernel/random/entropy_avail 
+	32
+	0 chomsky:~# 
+
+It's not clear to me how to increase the entropy available to the
+kernel without an HID.
+
+I've seen this happen on two machines now in the last week, and was
+able to resolve it on the first one by plugging in a keyboard and
+"massaging" it.  This won't work for a machine that's out of physical
+range, and has no keyboard to be plugged in anyway.
