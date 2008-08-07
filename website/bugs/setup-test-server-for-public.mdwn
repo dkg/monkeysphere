@@ -19,3 +19,22 @@ authentication, I guess.
 > virtual machine that does nothing but deny people's ssh connections.
 > And - george is already setup and ready to go.
 > -- Sir Jam Jam
+
+I like the idea of using George for this.  There's nothing wrong with
+denying people's ssh connections.  Also, we could make public user
+account with limited shells that we could add User IDs that we want to
+encourage to try out the monkeysphere from that perspective.  For
+example, if one of the George admins who is listed as an
+identity-certifier has already certified Foo T. Bar's key, we could
+write a simple note like:
+
+	Dear Foo T. Bar--
+	
+	The user account "foo@george.riseup.net" has been created for
+	you.  You can ssh into it by adding an authentication subkey
+	to your OpenPGP key and publishing it to the public keyservers
+	(or to george.riseup.net).  The easiest way to do this is with
+	the monkeysphere.
+	
+	You can verify george's ssh host key with the monkeysphere
+	before you connect to the host.  Here's how...
