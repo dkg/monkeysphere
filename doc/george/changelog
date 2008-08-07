@@ -15,7 +15,9 @@
 	* upgraded to monkeysphere 0.7-1
 	* installed runit
 	* set up a public git daemon service to serve git repos from
-	  george, using runit.
+	  george, using runit. (root-served repos are served from
+	  /srv/git, but ~USER/public_git is supported as well, if anyone
+	  wants to use that for publication).
 	
 2008-08-03 - dkg
 	* aptitude update && aptitude dist-upgrade

@@ -24,7 +24,7 @@ any of the developer repositories, including:
 
 The git repo from this web site:
 
-	git clone git://monkeysphere.info/~webmaster/monkeysphere monkeysphere
+	git clone git://monkeysphere.info/monkeysphere monkeysphere
 
 [Jameson Graef Rollins](http://cmrg.fifthhorseman.net/wiki/jrollins):
 
