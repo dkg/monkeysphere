@@ -24,3 +24,8 @@ I've seen this happen on two machines now in the last week, and was
 able to resolve it on the first one by plugging in a keyboard and
 "massaging" it.  This won't work for a machine that's out of physical
 range, and has no keyboard to be plugged in anyway.
+
+One thing that might help is to suggest that the system administrator
+install a package like `bsdgames` and play console-based games as a
+non-privileged user, since that seems to feed the entropy count
+somewhat.
