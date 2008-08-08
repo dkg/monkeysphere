@@ -1,0 +1,123 @@
+[[meta title="monkeysphere --gen-subkey seems to fail if no gpg-agent is running"]]
+
+Consider the following transcript of a user who starts with no OpenPGP
+key in the first place:
+	
+	0 wt215@squeak:~$ monkeysphere gen-subkey 
+	You have no secret key available.  You should create an OpenPGP
+	key before joining the monkeysphere. You can do this with:
+	   gpg --gen-key
+	255 wt215@squeak:~$ gpg --gen-key
+	gpg (GnuPG) 1.4.9; Copyright (C) 2008 Free Software Foundation, Inc.
+	This is free software: you are free to change and redistribute it.
+	There is NO WARRANTY, to the extent permitted by law.
+	
+	Please select what kind of key you want:
+	   (1) DSA and Elgamal (default)
+	   (2) DSA (sign only)
+	   (5) RSA (sign only)
+	Your selection? 5
+	RSA keys may be between 1024 and 4096 bits long.
+	What keysize do you want? (2048) 1024
+	Requested keysize is 1024 bits
+	Please specify how long the key should be valid.
+	         0 = key does not expire
+	      <n>  = key expires in n days
+	      <n>w = key expires in n weeks
+	      <n>m = key expires in n months
+	      <n>y = key expires in n years
+	Key is valid for? (0) 1 
+	Key expires at Sat 09 Aug 2008 09:41:34 AM EDT
+	Is this correct? (y/N) y
+	
+	You need a user ID to identify your key; the software constructs the user ID
+	from the Real Name, Comment and Email Address in this form:
+	    "Heinrich Heine (Der Dichter) <heinrichh@duesseldorf.de>"
+	
+	Real name: Foo T. Bar
+	Email address: monkey@example.org
+	Comment: DO NOT USE!
+	You selected this USER-ID:
+	    "Foo T. Bar (DO NOT USE!) <monkey@example.org>"
+	
+	Change (N)ame, (C)omment, (E)mail or (O)kay/(Q)uit? o
+	You need a Passphrase to protect your secret key.
+	
+	We need to generate a lot of random bytes. It is a good idea to perform
+	some other action (type on the keyboard, move the mouse, utilize the
+	disks) during the prime generation; this gives the random number
+	generator a better chance to gain enough entropy.
+	+++++
+	gpg: key A09F70B7 marked as ultimately trusted
+	public and secret key created and signed.
+	
+	gpg: checking the trustdb
+	gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+	gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+	gpg: next trustdb check due at 2008-08-09
+	pub   1024R/A09F70B7 2008-08-08 [expires: 2008-08-09]
+	      Key fingerprint = C3D3 1063 7CA1 5809 9EB9  7A63 F4E4 8D01 A09F 70B7
+	uid                  Foo T. Bar (DO NOT USE!) <monkey@example.org>
+	
+	Note that this key cannot be used for encryption.  You may want to use
+	the command "--edit-key" to generate a subkey for this purpose.
+	0 wt215@squeak:~$ monkeysphere gen-subkey 
+	Please specify how long the key should be valid.
+	         0 = key does not expire
+	      <n>  = key expires in n days
+	      <n>w = key expires in n weeks
+	      <n>m = key expires in n months
+	      <n>y = key expires in n years
+	Key is valid for? (0) 2
+	ms: generating subkey...
+	gpg (GnuPG) 1.4.9; Copyright (C) 2008 Free Software Foundation, Inc.
+	This is free software: you are free to change and redistribute it.
+	There is NO WARRANTY, to the extent permitted by law.
+	
+	Secret key is available.
+	
+	pub  1024R/A09F70B7  created: 2008-08-08  expires: 2008-08-09  usage: SC  
+	                     trust: ultimate      validity: ultimate
+	[ultimate] (1). Foo T. Bar (DO NOT USE!) <monkey@example.org>
+	
+	Key is protected.
+	
+	You need a passphrase to unlock the secret key for
+	user: "Foo T. Bar (DO NOT USE!) <monkey@example.org>"
+	1024-bit RSA key, ID A09F70B7, created 2008-08-08
+	
+	             gpg: Invalid passphrase; please try again ...
+	
+	You need a passphrase to unlock the secret key for
+	user: "Foo T. Bar (DO NOT USE!) <monkey@example.org>"
+	1024-bit RSA key, ID A09F70B7, created 2008-08-08
+	
+	             gpg: Invalid passphrase; please try again ...                                
+	
+	You need a passphrase to unlock the secret key for
+	user: "Foo T. Bar (DO NOT USE!) <monkey@example.org>"
+	1024-bit RSA key, ID A09F70B7, created 2008-08-08
+	
+	             gpg: Key generation failed: bad passphrase                                   
+	
+	
+	Invalid command  (try "help")
+	
+	ms: done.
+	0 wt215@squeak:~$ 
+
+This user does not have `use-agent` configured in `~/.gnupg/gpg.conf`.
+
+This problem can be resolved by the user doing:
+
+	echo use-agent >> ~/.gnupg/gpg.conf
+	gpg-agent --daemon monkeysphere --gen-subkey
+
+Then they will be prompted for their passphrase during key creation.
+
+If we're OK with relying on `gpg-agent`, we should make make that an
+explicit dependency, and ensure that an agent is running (or start one
+up specifically for the process).
+
+If we're not OK with relying on the agent, `--gen-subkey` needs
+fixing.
