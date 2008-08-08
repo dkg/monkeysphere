@@ -101,6 +101,11 @@ gen_subkey(){
     else
 	keyID="$1"
     fi
+    if [ -z "$keyID" ] ; then
+	failure "You have no secret key available.  You should create an OpenPGP
+key before joining the monkeysphere. You can do this with:
+   gpg --gen-key"
+    fi
 
     # get key output, and fail if not found
     gpgOut=$(gpg --quiet --fixed-list-mode --list-secret-keys --with-colons \
