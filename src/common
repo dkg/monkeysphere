@@ -294,7 +294,7 @@ gpg_fetch_userid() {
 # (see /usr/share/doc/gnupg/DETAILS.gz)
 # output is one line for every found key, in the following format:
 #
-# flag fingerprint
+# flag:fingerprint
 #
 # "flag" is an acceptability flag, 0 = ok, 1 = bad
 # "fingerprint" is the fingerprint of the key
@@ -380,6 +380,14 @@ process_user_id() {
 		fi
 		;;
 	    'uid') # user ids
+		if [ "$lastKey" != pub ] ; then
+		    log " - got a user ID after a sub key!  user IDs should only follow primary keys!"
+		    continue
+		fi
+		# don't bother with a uid if there is no valid or reasonable primary key.
+		if [ "$keyOK" != true ] ; then
+		    continue
+		fi
 		# if an acceptable user ID was already found, skip
 		if [ "$uidOK" ] ; then
 		    continue
@@ -401,14 +409,14 @@ process_user_id() {
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
 		    log "  * acceptable primary key."
 		    if [ -z "$sshKey" ] ; then
-			log "    ! primary key could not be translated."
+			log "    ! primary key could not be translated (not RSA or DSA?)."
 		    else
 			echo "0:${sshKey}"
 		    fi
 		else
 		    log "  - unacceptable primary key."
 		    if [ -z "$sshKey" ] ; then
-			log "   ! primary key could not be translated."
+			log "   ! primary key could not be translated (not RSA or DSA?)."
 		    else
 			echo "1:${sshKey}"
 		    fi
@@ -419,7 +427,17 @@ process_user_id() {
 		lastKey=sub
 		lastKeyOK=
 		fingerprint=
+		
+		# don't bother with sub keys if the primary key is not valid
+		if [ "$keyOK" != true ] ; then
+		    continue
+		fi
 
+		# don't bother with sub keys if no user ID is acceptable:
+		if [ "$uidOK" != true ] ; then
+		    continue
+		fi
+		
 		# if sub key validity is not ok, skip
 		if [ "$validity" != 'u' -a "$validity" != 'f' ] ; then
 		    continue
@@ -442,19 +460,19 @@ process_user_id() {
 		    continue
 		fi
 
-		# output a line for the primary key
+		# output a line for the sub key
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
 		    log "  * acceptable sub key."
 		    if [ -z "$sshKey" ] ; then
-			log "    ! sub key could not be translated."
+			log "    ! sub key could not be translated (not RSA or DSA?)."
 		    else
 			echo "0:${sshKey}"
 		    fi
 		else
 		    log "  - unacceptable sub key."
 		    if [ -z "$sshKey" ] ; then
-			log "    ! sub key could not be translated."
+			log "    ! sub key could not be translated (not RSA or DSA?)."
 		    else
 			echo "1:${sshKey}"
 		    fi
