@@ -15,4 +15,4 @@ following order instead:
  * keyserver variable in ~/.gnupg/gpg.conf
  * default value of subkeys.pgp.net
 
-- Sir Jam Jam
+-- Sir Jam Jam
