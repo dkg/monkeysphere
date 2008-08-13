@@ -34,6 +34,10 @@ The git repo from this web site:
 
 	git clone http://lair.fifthhorseman.net/~dkg/git/monkeysphere.git monkeysphere
 
+[Micah Anderson]
+	
+	git clone git://labs.riseup.net/~micah/monkeysphere
+
 ## Contact ##
 
 Please feel free to contact any of the Monkeysphere developers with
