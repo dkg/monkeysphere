@@ -73,7 +73,7 @@ file_hash() {
 # character
 # FIXME: undo all escape character translation in with-colons gpg output
 unescape() {
-    echo "$1" | sed 's/\\x3a/:/'
+    echo "$1" | sed 's/\\x3a/:/g'
 }
 
 # remove all lines with specified string from specified file

@@ -56,7 +56,7 @@ subcommands:
 
  gpg-authentication-cmd CMD          gnupg-authentication command
 
- help (h,?)                          this help
+ -h|--help|help (h,?)                this help
 EOF
 }
 
@@ -236,7 +236,7 @@ gen_key() {
     revoker=
 
     # get options
-    TEMP=$(getopt -o l:e:r: -l length:,expire:,revoker: -n "$PGRM" -- "$@")
+    TEMP=$(getopt -o e:l:r -l expire:,length:,revoker: -n "$PGRM" -- "$@")
 
     if [ $? != 0 ] ; then
 	exit 1
@@ -372,10 +372,10 @@ publish_server_key() {
     # FIXME: need to figure out better way to identify host key
     # dummy command so as not to publish fakes keys during testing
     # eventually:
-    #gpg_authentication "--keyserver $KEYSERVER --send-keys $(hostname -f)"
+    #gpg_authentication "--keyserver $KEYSERVER --send-keys =ssh://$(hostname -f)"
     echo "NOT PUBLISHED (to avoid permanent publication errors during monkeysphere development)."
     echo "The following command should publish the key:"
-    echo "monkeysphere-server gpg-authentication-cmd '--keyserver $KEYSERVER --send-keys $(hostname -f)'"
+    echo "monkeysphere-server gpg-authentication-cmd '--keyserver $KEYSERVER --send-keys =ssh://$(hostname -f)'"
     exit 255
 }
 
@@ -712,7 +712,7 @@ case $COMMAND in
 	gpg_authentication_cmd "$@"
 	;;
 
-    'help'|'h'|'?')
+    '--help'|'help'|'-h'|'h'|'?')
         usage
         ;;
 

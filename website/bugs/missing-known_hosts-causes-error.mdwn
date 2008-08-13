@@ -1,0 +1,8 @@
+[[meta title="Missing `~/.ssh/known_hosts` file causes errors from monkeysphere-ssh-proxycommand"]]
+
+As a user, if you don't have a `~/.ssh/known_hosts` file,
+`monkeysphere-ssh-proxycommand` produces some bogus output, like:
+
+	cat: /home/foo/.ssh/known_hosts: No such file or directory
+
+this should be fixable with a simple test.

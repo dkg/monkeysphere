@@ -1,0 +1,16 @@
+[[meta title="monkeysphere-server publish-key does not work"]]
+
+Currently, if you try to run `monkeysphere-server publish-key`, you
+can get the following output:
+
+	Really publish key to subkeys.pgp.net? (y/N) y
+	NOT PUBLISHED (to avoid permanent publication errors during monkeysphere development).
+	The following command should publish the key:
+	monkeysphere-server gpg-authentication-cmd '--keyserver subkeys.pgp.net --send-keys foo.example.org'
+
+I think we've demonstrated that this system works enough to warrant
+using the public keyserver infrastructure.
+
+I suggest that we should actually enable this feature explicitly.
+(leaving in the prompt is fine, though it would be nice to be able to
+`--force` it or something).
