@@ -59,7 +59,7 @@ if gpg --list-key ="${URI}" 2>&1 >/dev/null ; then
 else
     # if the host key is found in the known_hosts file...
     # FIXME: this only works for default known_hosts location
-    hostKey=$(ssh-keygen -F "$HOST")
+    hostKey=$(ssh-keygen -F "$HOST" 2>/dev/null)
 
     if [ "$hostKey" ] ; then
 	# do not check the keyserver
