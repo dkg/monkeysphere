@@ -6,3 +6,9 @@ As a user, if you don't have a `~/.ssh/known_hosts` file,
 	cat: /home/foo/.ssh/known_hosts: No such file or directory
 
 this should be fixable with a simple test.
+
+------
+
+Fixed in 70674cae8b3d69d0e750125387b26c0d5857c5ba.
+
+[[bugs/done]] 2008-08-12
