@@ -21,3 +21,5 @@ suggest:
   fail, and report the different key IDs that they user might want to
   select (reporting which keys already have authorization subkeys or
   the authorization capability on the primary key would be useful too)
+
+[[bugs/done]] completed 2008-08-08 09:40:33-0400 (to be released in 0.8-1)

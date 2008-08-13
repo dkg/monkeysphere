@@ -32,7 +32,7 @@ RETURN=0
 ########################################################################
 
 usage() {
-cat <<EOF
+    cat <<EOF
 usage: $PGRM <subcommand> [options] [args]
 MonkeySphere server admin tool.
 
@@ -468,14 +468,14 @@ diagnostics() {
 	    fi
 
 	    # propose changes needed for sshd_config (if any)
-	    if ! grep -q "^HostKey ${VARLIB}/ssh_host_rsa_key$" /etc/ssh/sshd_config; then
+	    if ! grep -q "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$" /etc/ssh/sshd_config; then
 		echo "! /etc/ssh/sshd_config does not point to the monkeysphere host key (${VARLIB}/ssh_host_rsa_key)."
 		echo " - Recommendation: add a line to /etc/ssh/sshd_config: 'HostKey ${VARLIB}/ssh_host_rsa_key'"
 	    fi
-	    if badhostkeys=$(grep '^HostKey' | grep -q -v "^HostKey ${VARLIB}/ssh_host_rsa_key$") ; then
+	    if badhostkeys=$(grep -i '^HostKey' | grep -q -v "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$") ; then
 		echo "! /etc/sshd_config refers to some non-monkeysphere host keys:"
 		echo "$badhostkeys"
-		echo "- Recommendation: remove the above HostKey lines from /etc/ssh/sshd_config"
+		echo " - Recommendation: remove the above HostKey lines from /etc/ssh/sshd_config"
 	    fi
 	fi
     fi
@@ -488,6 +488,19 @@ diagnostics() {
 #    authentication keyring
 
 # FIXME:  make sure that at least one identity certifier exists
+
+    echo "Checking for MonkeySphere-enabled public-key authentication for users ..."
+    # Ensure that User ID authentication is enabled:
+    if ! grep -q "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$" /etc/ssh/sshd_config; then
+	echo "! /etc/ssh/sshd_config does not point to monkeysphere authorized keys."
+	echo " - Recommendation: add a line to /etc/ssh/sshd_config: 'AuthorizedKeysFile ${VARLIB}/authorized_keys/%u'"
+    fi
+    if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' | grep -q -v "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$") ; then
+	echo "! /etc/sshd_config refers to non-monkeysphere authorized_keys files:"
+	echo "$badauthorizedkeys"
+	echo " - Recommendation: remove the above AuthorizedKeysFile lines from /etc/ssh/sshd_config"
+    fi
+
 
 }
 
