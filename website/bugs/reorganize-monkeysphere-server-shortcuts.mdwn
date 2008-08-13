@@ -1,0 +1,19 @@
+[[meta title="Reorganize monkeysphere-server shortcuts"]]
+
+Currently, `monkeysphere-server` supports three subcommands to adjust
+the "identity certifiers":
+
+* `add-identity-certifier` (`a`)
+* `remove-identity-certifier` (`r`)
+* `list-identity-certifier` (`l`)
+
+Since [we also want to be able to add/remove multiple
+hostnames](multiple-hostnames), i think we should change the shortcuts
+from `a`, `r`, and `l` to `c+`, `c-`, and `c`.
+
+This would let us create new subcommands like:
+
+* `add-host-name` (`n+`)
+* `revoke-host-name` (`n-`)
+* `list-host-names` (`n`)
+
