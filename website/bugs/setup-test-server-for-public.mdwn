@@ -51,3 +51,19 @@ So do we agree that george is doing what we want, and we can therefore
 close this bug?
 
 -- BJ (jgr)
+
+---
+
+I'm fine with closing this bug, unless we want to set up the limited
+shell access/welcome letter like i described above.  If we want to do
+that, it'd be worth keeping it open until those scripts are written.
+
+I envision a script you'd invoke like:
+
+	root@george# addmsuser foo 'Foo T. Bar <foo@example.org>'
+
+Which would create the `foo` account, populate
+`~foo/.config/monkeysphere/authorized_user_ids`, make a note in a log
+someplace, and send a welcome letter.
+
+--dkg

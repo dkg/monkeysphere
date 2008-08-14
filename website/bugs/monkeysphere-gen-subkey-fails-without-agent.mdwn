@@ -129,3 +129,9 @@ fine.  That should make this bug fairly easy to fix, so I'll get on
 it.
 
 -- BJ (jgr)
+
+---
+
+Alternately, we could use `--passwd-fd` and `ssh-agent`, along the
+lines i proposed [for handling passphrase-locked secret
+keys](handle-passphrase-locked-secret-keys).

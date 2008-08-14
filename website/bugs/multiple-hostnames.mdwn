@@ -22,3 +22,16 @@ we will continue to rely on the "publish-key" subcommand to actually
 publish all changes to the keys.
 
 -- BJ (jgr)
+
+---
+
+I think [when we reorganize the `monkeysphere-server`
+shortcuts](reorganize-monkeysphere-server-shortcuts) it'll make it
+clearer what the right interface should be.
+
+As for what should actually happen, i think that the server should
+actively revoke old User IDs, rather than removing them.  It should
+probably prompt the administrator to re-publish the host key as well,
+to ensure that the new User IDs are published.
+
+  --dkg
