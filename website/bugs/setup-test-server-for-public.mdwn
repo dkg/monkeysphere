@@ -44,3 +44,10 @@ write a simple note like:
 	before you connect to the host.  Here's how...
 
 --dkg
+
+---
+
+So do we agree that george is doing what we want, and we can therefore
+close this bug?
+
+-- BJ (jgr)

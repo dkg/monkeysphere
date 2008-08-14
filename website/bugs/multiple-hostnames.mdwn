@@ -13,3 +13,12 @@ ones).
 For example: `george.riseup.net` is now also known as
 `monkeysphere.info`.  It'd be nice to have a convenient way to add
 that hostname to the key without mucking around with gpg directly.
+
+---
+
+So how do we imagine the behavior here?  I assume that basically it
+would just add/remove user ID's to/from the host key locally.  I guess
+we will continue to rely on the "publish-key" subcommand to actually
+publish all changes to the keys.
+
+-- BJ (jgr)

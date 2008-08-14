@@ -121,3 +121,11 @@ up specifically for the process).
 
 If we're not OK with relying on the agent, `--gen-subkey` needs
 fixing.
+
+---
+
+I think requiring the agent and using it for getting the passphrase is
+fine.  That should make this bug fairly easy to fix, so I'll get on
+it.
+
+-- BJ (jgr)
