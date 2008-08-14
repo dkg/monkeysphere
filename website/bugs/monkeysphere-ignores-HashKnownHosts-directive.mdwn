@@ -22,3 +22,12 @@ any ssh or sshd config file.  This will probably need to be delt with
 down the line, but it's not a particular easy task at the moment.
 
 -- Big Jimmy.
+
+---
+
+I've [posted to the `openssh-unix-dev` list to see if there is a
+possibility of openssh making our lives easier
+here](http://marc.info/?l=openssh-unix-dev&m=121804767122918&w=2), but
+i haven't had much of a response yet.
+
+--dkg
