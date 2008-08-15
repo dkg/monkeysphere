@@ -8,8 +8,11 @@ monkeysphere (0.8-1) UNRELEASED; urgency=low
 
   [ Jameson Graef Rollins ]
   * fix another bug for when ssh key files are missing.
+  * sort processed keys so that "good" keys are processed after "bad"
+    keys.  This will prevent malicious bad keys from causing good keys to
+    be removed from key files.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Tue, 12 Aug 2008 17:58:09 -0700
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Thu, 14 Aug 2008 21:12:43 -0700
 
 monkeysphere (0.7-1) experimental; urgency=low
 
