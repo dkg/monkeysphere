@@ -67,3 +67,11 @@ Which would create the `foo` account, populate
 someplace, and send a welcome letter.
 
 --dkg
+
+---
+
+That idea really seems like a lot more trouble than it's worth to me,
+and I'm not really willing to maintain it myself, but if someone else
+wants to handle that, that would be fine with me.
+
+-- jgr
