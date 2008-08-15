@@ -15,8 +15,9 @@ monkeysphere (0.8-1) UNRELEASED; urgency=low
   * enabled host key publication.
   * added checking of gpg.conf for keyserver
   * new functions to add/revoke host key user IDs
+  * improved list-certifiers function (now non-priviledged)
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Fri, 15 Aug 2008 15:02:48 -0700
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Fri, 15 Aug 2008 15:57:14 -0700
 
 monkeysphere (0.7-1) experimental; urgency=low
 
