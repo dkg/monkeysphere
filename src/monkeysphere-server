@@ -414,20 +414,19 @@ revoke_hostname() {
 
 # publish server key to keyserver
 publish_server_key() {
-    read -p "Really publish key to $KEYSERVER? (y/N) " OK; OK=${OK:=N}
+    read -p "Really publish host key to $KEYSERVER? (y/N) " OK; OK=${OK:=N}
     if [ ${OK/y/Y} != 'Y' ] ; then
 	failure "aborting."
     fi
+
+    # find the key fingerprint
+    fingerprint=$(fingerprint_server_key)
 
     # publish host key
     # FIXME: need to figure out better way to identify host key
     # dummy command so as not to publish fakes keys during testing
     # eventually:
-    #gpg_authentication "--keyserver $KEYSERVER --send-keys =ssh://$(hostname -f)"
-    echo "NOT PUBLISHED (to avoid permanent publication errors during monkeysphere development)."
-    echo "The following command should publish the key:"
-    echo "monkeysphere-server gpg-authentication-cmd '--keyserver $KEYSERVER --send-keys =ssh://$(hostname -f)'"
-    exit 255
+    gpg_authentication "--keyserver $KEYSERVER --send-keys $fingerprint"
 }
 
 diagnostics() {
