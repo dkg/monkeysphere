@@ -413,9 +413,9 @@ revoke_hostname() {
     fi
 
     fpr=$(fingerprint_server_key)
-    tmpuidMatch="u:$(escape "$1")"
+    tmpuidMatch="u:$(escape "ssh://$1")"
 
-    if linenum=$(gpg_host --list-keys --with-colons --fixed-list-mode "$fpr" | egrep '^(uid|uat):' | cut -f2,10 -d: | grep -n -x -F 'r:Foo T. Bar (DO NOT USE!) <foo@example.net>') ; then
+    if linenum=$(gpg_host --list-keys --with-colons --fixed-list-mode "0x$fpr"\! | egrep '^(uid|uat):' | cut -f2,10 -d: | grep -n -x -F "$tmpuidMatch") ; then
 	uidNum=${linenum%%:*}
     else
 	failure "no non-revoked hostname '$1' is listed."
@@ -436,7 +436,7 @@ save
 EOF
 )
 
-    echo "$revuidCommand" | gpg_host --quiet --command-fd 0 --edit-key "0x$fingerprint"\!
+    echo "$revuidCommand" | gpg_host --quiet --command-fd 0 --edit-key "0x$fpr"\!
 
     echo "NOTE: host userID revokation has not been published."
     echo "Use '$PGRM publish-key' to publish these changes."
