@@ -48,7 +48,6 @@ EOF
 }
 
 # generate a subkey with the 'a' usage flags set
-# FIXME: this needs some tweaking to clean it up
 gen_subkey(){
     local keyLength
     local keyExpire
@@ -163,7 +162,18 @@ EOF
 )
 
     log "generating subkey..."
-    echo "$editCommands" | gpg --expert --command-fd 0 --edit-key "$keyID"
+    fifoDir=$(mktemp -d)
+    (umask 077 && mkfifo "$fifoDir/pass")
+    echo "$editCommands" | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
+    
+    if [ "$DISPLAY" ] && which ssh-askpass >/dev/null; then
+	ssh-askpass "Please enter your passphrase for $keyID: " > "$fifoDir/pass"
+    else
+	read -s -p "Please enter your passphrase for $keyID: " PASS
+	echo "$PASS" > "$fifoDir/pass"
+    fi
+    rm -rf "$fifoDir"
+    wait
     log "done."
 }
 
