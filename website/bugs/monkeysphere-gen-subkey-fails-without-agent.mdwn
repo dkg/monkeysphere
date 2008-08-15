@@ -121,3 +121,17 @@ up specifically for the process).
 
 If we're not OK with relying on the agent, `--gen-subkey` needs
 fixing.
+
+---
+
+I think requiring the agent and using it for getting the passphrase is
+fine.  That should make this bug fairly easy to fix, so I'll get on
+it.
+
+-- BJ (jgr)
+
+---
+
+Alternately, we could use `--passwd-fd` and `ssh-agent`, along the
+lines i proposed [for handling passphrase-locked secret
+keys](/bugs/handle-passphrase-locked-secret-keys).

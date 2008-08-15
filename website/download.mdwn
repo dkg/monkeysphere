@@ -32,7 +32,7 @@ The git repo from this web site:
 
 [Daniel Kahn Gillmor](http://cmrg.fifthhorseman.net/wiki/dkg):
 
-	git clone http://lair.fifthhorseman.net/~dkg/git/monkeysphere.git monkeysphere
+	git clone git://lair.fifthhorseman.net/~dkg/monkeysphere monkeysphere
 
 [Micah Anderson]
 	

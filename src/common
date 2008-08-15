@@ -64,6 +64,11 @@ check_capability() {
     return 0
 }
 
+# hash of a file
+file_hash() {
+    md5sum "$1" 2> /dev/null
+}
+
 # convert escaped characters from gpg output back into original
 # character
 # FIXME: undo all escape character translation in with-colons gpg output
@@ -479,7 +484,10 @@ process_user_id() {
 		fi
 		;;
 	esac
-    done
+    done | sort -t: -k1 -n -r
+    # NOTE: this last sort is important so that the "good" keys (key
+    # flag '0') come last.  This is so that they take precedence when
+    # being processed in the key files over "bad" keys (key flag '1')
 }
 
 # process a single host in the known_host file
@@ -493,16 +501,15 @@ process_host_known_hosts() {
     local tmpfile
 
     host="$1"
+    userID="ssh://${host}"
 
     log "processing: $host"
-
-    userID="ssh://${host}"
 
     nKeys=0
     nKeysOK=0
 
     IFS=$'\n'
-    for line in $(process_user_id "ssh://${host}") ; do
+    for line in $(process_user_id "${userID}") ; do
 	# note that key was found
 	nKeys=$((nKeys+1))
 
@@ -573,7 +580,7 @@ update_known_hosts() {
     lockfile-create "$KNOWN_HOSTS"
 
     # note pre update file checksum
-    fileCheck="$(cat "$KNOWN_HOSTS" | md5sum)"
+    fileCheck="$(file_hash "$KNOWN_HOSTS")"
 
     for host ; do
 	# process the host
@@ -596,7 +603,7 @@ update_known_hosts() {
     lockfile-remove "$KNOWN_HOSTS"
 
     # note if the known_hosts file was updated
-    if [ "$(cat "$KNOWN_HOSTS" | md5sum)" != "$fileCheck" ] ; then
+    if [ "$(file_hash "$KNOWN_HOSTS")" != "$fileCheck" ] ; then
 	log "known_hosts file updated."
     fi
 
@@ -711,7 +718,7 @@ update_authorized_keys() {
     lockfile-create "$AUTHORIZED_KEYS"
 
     # note pre update file checksum
-    fileCheck="$(cat "$AUTHORIZED_KEYS" | md5sum)"
+    fileCheck="$(file_hash "$AUTHORIZED_KEYS")"
 
     # remove any monkeysphere lines from authorized_keys file
     remove_monkeysphere_lines "$AUTHORIZED_KEYS"
@@ -739,7 +746,7 @@ update_authorized_keys() {
     lockfile-remove "$AUTHORIZED_KEYS"
 
     # note if the authorized_keys file was updated
-    if [ "$(cat "$AUTHORIZED_KEYS" | md5sum)" != "$fileCheck" ] ; then
+    if [ "$(file_hash "$AUTHORIZED_KEYS")" != "$fileCheck" ] ; then
 	log "authorized_keys file updated."
     fi
 

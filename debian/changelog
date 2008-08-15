@@ -6,7 +6,14 @@ monkeysphere (0.8-1) UNRELEASED; urgency=low
   * More monkeysphere-server diagnostics
   * monkeysphere --gen-subkey now guesses what KeyID you meant.
 
- -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Thu, 07 Aug 2008 13:31:14 -0400
+  [ Jameson Graef Rollins ]
+  * fix another bug for when ssh key files are missing.
+  * sort processed keys so that "good" keys are processed after "bad"
+    keys.  This will prevent malicious bad keys from causing good keys to
+    be removed from key files.
+  * enabled host key publication.
+
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Fri, 15 Aug 2008 00:48:22 -0700
 
 monkeysphere (0.7-1) experimental; urgency=low
 

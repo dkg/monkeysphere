@@ -7,6 +7,10 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-08-13 - dkg
+	* aptitude update && aptitude full-upgrade
+	* restarted services to clear up dependencies on old libraries
+	
 2008-08-07 - dkg
 	* aptitude update && aptitude dist-upgrade
 	* removed debian's experimental from the sources.list

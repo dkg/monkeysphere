@@ -39,20 +39,23 @@ MonkeySphere server admin tool.
 subcommands:
  update-users (u) [USER]...          update user authorized_keys files
 
- gen-key (g) [HOSTNAME]              generate gpg key for the server
+ gen-key (g) [NAME[:PORT]]           generate gpg key for the server
    -l|--length BITS                    key length in bits (2048)
    -e|--expire EXPIRE                  date to expire
    -r|--revoker FINGERPRINT            add a revoker
- show-fingerprint (f)                show server's host key fingerprint
- publish-key (p)                     publish server's host key to keyserver
- diagnostics (d)                     report on the server's monkeysphere status
+ add-hostname (n+) NAME[:PORT]       add hostname user ID to server key
+ revoke-hostname (n-) NAME[:PORT]    revoke hostname user ID
+ show-key (s)                        output all server host key information
+ fingerprint (f)                     output just the key fingerprint
+ publish-key (p)                     publish server host key to keyserver
+ diagnostics (d)                     report on server monkeysphere status
 
- add-identity-certifier (a) KEYID    import and tsign a certification key
-   -n|--domain DOMAIN                  limit ID certifications to IDs in DOMAIN
+ add-id-certifier (c+) KEYID         import and tsign a certification key
+   -n|--domain DOMAIN                  limit ID certifications to DOMAIN
    -t|--trust TRUST                    trust level of certifier (full)
    -d|--depth DEPTH                    trust depth for certifier (1)
- remove-identity-certifier (r) KEYID remove a certification key
- list-identity-certifiers (l)        list certification keys
+ remove-id-certifier (c-) KEYID      remove a certification key
+ list-id-certifiers (c)              list certification keys
 
  gpg-authentication-cmd CMD          gnupg-authentication command
 
@@ -95,6 +98,17 @@ gpg_authentication() {
     export GNUPGHOME
 
     su_monkeysphere_user "gpg $@"
+}
+
+# output key information
+show_server_key() {
+    gpg_host --list-secret-keys --fingerprint
+}
+
+# output just key fingerprint
+fingerprint_server_key() {
+    gpg_host --list-secret-keys --fingerprint --with-colons --fixed-list-mode | \
+	grep '^fpr:' | head -1 | cut -d: -f10
 }
 
 # update authorized_keys for users
@@ -339,9 +353,8 @@ EOF
     # output the server fingerprint
     fingerprint_server_key "=${userID}"
 
-    # find the key fingerprint of the server primary key
-    fingerprint=$(gpg_host --list-key --with-colons --with-fingerprint "=${userID}" | \
-	grep '^fpr:' | head -1 | cut -d: -f10)
+    # find the key fingerprint of the newly generated key
+    fingerprint=$(fingerprint_server_key)
 
     # export host ownertrust to authentication keyring
     log "setting ultimate owner trust for server key..."
@@ -356,27 +369,61 @@ EOF
     log "Private SSH host key output to file: ${VARLIB}/ssh_host_rsa_key"
 }
 
-# gpg output key fingerprint
-fingerprint_server_key() {
-    gpg_host --fingerprint --list-secret-keys
+# add hostname user ID to server key
+add_hostname() {
+    if [ -z "$1" ] ; then
+	failure "You must specify a hostname to add."
+    fi
+
+    userID="ssh://${1}"
+
+    if [ "$(gpg_host --list-key "=${userID}")" ] ; then
+	failure "Host userID '$userID' already exists."
+    fi
+
+    fingerprint=$(fingerprint_server_key)
+
+    adduidCommand=$(cat <<EOF
+adduid
+$userID
+
+
+O
+save
+EOF
+	)
+
+    # add uid
+    echo "$adduidCommand" | gpg_host --quiet --command-fd 0 --edit-key "$fingerprint"
+
+    echo "NOTE: new host userID has not been published."
+    echo "Use '$PGRM publish-key' to publish these changes."
+}
+
+# revoke hostname user ID to server key
+revoke_hostname() {
+    if [ -z "$1" ] ; then
+	failure "You must specify a hostname to revoke."
+    fi
+
+    failure "Sorry, not yet implemented."
+
+    echo "NOTE: host userID revokation has not been published."
+    echo "Use '$PGRM publish-key' to publish these changes."
 }
 
 # publish server key to keyserver
 publish_server_key() {
-    read -p "Really publish key to $KEYSERVER? (y/N) " OK; OK=${OK:=N}
+    read -p "Really publish host key to $KEYSERVER? (y/N) " OK; OK=${OK:=N}
     if [ ${OK/y/Y} != 'Y' ] ; then
 	failure "aborting."
     fi
 
+    # find the key fingerprint
+    fingerprint=$(fingerprint_server_key)
+
     # publish host key
-    # FIXME: need to figure out better way to identify host key
-    # dummy command so as not to publish fakes keys during testing
-    # eventually:
-    #gpg_authentication "--keyserver $KEYSERVER --send-keys $(hostname -f)"
-    echo "NOT PUBLISHED (to avoid permanent publication errors during monkeysphere development)."
-    echo "The following command should publish the key:"
-    echo "monkeysphere-server gpg-authentication-cmd '--keyserver $KEYSERVER --send-keys $(hostname -f)'"
-    exit 255
+    gpg_authentication "--keyserver $KEYSERVER --send-keys $fingerprint"
 }
 
 diagnostics() {
@@ -392,7 +439,7 @@ diagnostics() {
     local fingerprint
     local badhostkeys
 
-    seckey=$(gpg_host --list-secret-keys --fingerprint --with-colons --fixed-list-mode)
+    seckey=$(fingerprint_server_key)
     keysfound=$(echo "$seckey" | grep -c ^sec:)
     curdate=$(date +%s)
     # warn when anything is 2 months away from expiration
@@ -500,8 +547,6 @@ diagnostics() {
 	echo "$badauthorizedkeys"
 	echo " - Recommendation: remove the above AuthorizedKeysFile lines from /etc/ssh/sshd_config"
     fi
-
-
 }
 
 # retrieve key from web of trust, import it into the host keyring, and
@@ -684,11 +729,23 @@ case $COMMAND in
 	gen_key "$@"
 	;;
 
-    'show-fingerprint'|'f')
+    'add-hostname'|'add-name'|'n+')
+	add_hostname "$@"
+	;;
+
+    'revoke-hostname'|'revoke-name'|'n-')
+	revoke_hostname "$@"
+	;;
+
+    'show-key'|'show'|'s')
+	show_server_key
+	;;
+
+    'show-fingerprint'|'fingerprint'|'f')
 	fingerprint_server_key
 	;;
 
-    'publish-key'|'p')
+    'publish-key'|'publish'|'p')
 	publish_server_key
 	;;
 
@@ -696,15 +753,15 @@ case $COMMAND in
 	diagnostics
 	;;
 
-    'add-identity-certifier'|'add-certifier'|'a')
-	add_certifier "$1"
+    'add-identity-certifier'|'add-id-certifier'|'add-certifier'|'c+')
+	add_certifier "$@"
 	;;
 
-    'remove-identity-certifier'|'remove-certifier'|'r')
-	remove_certifier "$1"
+    'remove-identity-certifier'|'remove-id-certifier'|'remove-certifier'|'c-')
+	remove_certifier "$@"
 	;;
 
-    'list-identity-certifiers'|'list-certifiers'|'list-certifier'|'l')
+    'list-identity-certifiers'|'list-id-certifiers'|'list-certifiers'|'list-certifier'|'c')
 	list_certifiers "$@"
 	;;
 

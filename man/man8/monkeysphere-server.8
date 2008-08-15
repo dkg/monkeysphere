@@ -44,9 +44,21 @@ specified with the `-e' or `--expire' option (prompt otherwise).  A
 key revoker fingerprint can be specified with the `-r' or `--revoker'
 option.  `g' may be used in place of `gen-key'.
 .TP
-.B show-fingerprint
-Show the fingerprint for the host's OpenPGP key.  `f' may be used in place of
-`show-fingerprint'.
+.B add-hostname HOSTNAME
+Add a hostname user ID to the server host key.  `n+' may be used in
+place of `add-hostname'.
+.TP
+.B revoke-hostname HOSTNAME
+Revoke a hostname user ID from the server host key.  `n-' may be used
+in place of `revoke-hostname'.
+.TP
+.B show-key
+Output gpg information about host's OpenPGP key.  `s' may be used in
+place of `show-key'.
+.TP
+.B fingerprint
+Output just the fingerprint for the host's OpenPGP key.  `f' may be
+used in place of `fingerprint'.
 .TP
 .B publish-key
 Publish the host's OpenPGP key to the keyserver.  `p' may be used in
@@ -68,15 +80,15 @@ domain (e.g. "trust KEYID to certify user identities within the
 @example.org domain").  A certifier trust level can be specified with
 the `-t' or `--trust' option (possible values are `marginal' and
 `full' (default is `full')).  A certifier trust depth can be specified
-with the `-d' or `--depth' option (default is 1).  `a' may be used in
+with the `-d' or `--depth' option (default is 1).  `c+' may be used in
 place of `add-identity-certifier'.
 .TP
 .B remove-identity-certifier KEYID
 Instruct system to ignore user identity certifications made by KEYID.
-`r' may be used in place of `remove-identity-certifier'.
+`c-' may be used in place of `remove-identity-certifier'.
 .TP
 .B list-identity-certifiers
-List key IDs trusted by the system to certify user identities.  `l'
+List key IDs trusted by the system to certify user identities.  `c'
 may be used in place of `list-identity-certifiers'.
 .TP
 .B gpg-authentication-cmd
