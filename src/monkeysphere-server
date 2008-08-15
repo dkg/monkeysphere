@@ -423,9 +423,6 @@ publish_server_key() {
     fingerprint=$(fingerprint_server_key)
 
     # publish host key
-    # FIXME: need to figure out better way to identify host key
-    # dummy command so as not to publish fakes keys during testing
-    # eventually:
     gpg_authentication "--keyserver $KEYSERVER --send-keys $fingerprint"
 }
 
