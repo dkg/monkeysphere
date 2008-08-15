@@ -77,6 +77,12 @@ gpg_unescape() {
     sed 's/\\x3a/:/g'
 }
 
+# convert nasty chars into gpg-friendly form in pipeline
+# FIXME: escape everything, not just colons!
+gpg_escape() {
+    sed 's/:/\\x3a/g'
+}
+
 # remove all lines with specified string from specified file
 remove_line() {
     local file
