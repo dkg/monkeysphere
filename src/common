@@ -484,7 +484,10 @@ process_user_id() {
 		fi
 		;;
 	esac
-    done
+    done | sort -t: -k1 -n -r
+    # NOTE: this last sort is important so that the "good" keys (key
+    # flag '0') come last.  This is so that they take precedence when
+    # being processed in the key files over "bad" keys (key flag '1')
 }
 
 # process a single host in the known_host file
@@ -498,16 +501,15 @@ process_host_known_hosts() {
     local tmpfile
 
     host="$1"
+    userID="ssh://${host}"
 
     log "processing: $host"
-
-    userID="ssh://${host}"
 
     nKeys=0
     nKeysOK=0
 
     IFS=$'\n'
-    for line in $(process_user_id "ssh://${host}") ; do
+    for line in $(process_user_id "${userID}") ; do
 	# note that key was found
 	nKeys=$((nKeys+1))
 
