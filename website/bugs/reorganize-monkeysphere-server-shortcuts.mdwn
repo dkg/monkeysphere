@@ -19,4 +19,4 @@ This would let us create new subcommands like:
 
 ---
 
-[[bugs/done]] 2008-08-14
+[[bugs/done]] 2008-08-14 in 0181b6fc50824941e4f7ac3f535a216b8189568e
