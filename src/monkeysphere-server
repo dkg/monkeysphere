@@ -43,16 +43,16 @@ subcommands:
    -l|--length BITS                    key length in bits (2048)
    -e|--expire EXPIRE                  date to expire
    -r|--revoker FINGERPRINT            add a revoker
- show-fingerprint (f)                show server's host key fingerprint
- publish-key (p)                     publish server's host key to keyserver
- diagnostics (d)                     report on the server's monkeysphere status
+ show-fingerprint (f)                show server host key fingerprint
+ publish-key (p)                     publish server host key to keyserver
+ diagnostics (d)                     report on server monkeysphere status
 
- add-identity-certifier (a) KEYID    import and tsign a certification key
-   -n|--domain DOMAIN                  limit ID certifications to IDs in DOMAIN
+ add-id-certifier (c+) KEYID         import and tsign a certification key
+   -n|--domain DOMAIN                  limit ID certifications to DOMAIN
    -t|--trust TRUST                    trust level of certifier (full)
    -d|--depth DEPTH                    trust depth for certifier (1)
- remove-identity-certifier (r) KEYID remove a certification key
- list-identity-certifiers (l)        list certification keys
+ remove-id-certifier (c-) KEYID      remove a certification key
+ list-id-certifiers (c)              list certification keys
 
  gpg-authentication-cmd CMD          gnupg-authentication command
 
@@ -696,15 +696,15 @@ case $COMMAND in
 	diagnostics
 	;;
 
-    'add-identity-certifier'|'add-certifier'|'a')
+    'add-identity-certifier'|'add-id-certifier'|'add-certifier'|'c+')
 	add_certifier "$1"
 	;;
 
-    'remove-identity-certifier'|'remove-certifier'|'r')
+    'remove-identity-certifier'|'remove-id-certifier'|'remove-certifier'|'c-')
 	remove_certifier "$1"
 	;;
 
-    'list-identity-certifiers'|'list-certifiers'|'list-certifier'|'l')
+    'list-identity-certifiers'|'list-id-certifiers'|'list-certifiers'|'list-certifier'|'c')
 	list_certifiers "$@"
 	;;
 

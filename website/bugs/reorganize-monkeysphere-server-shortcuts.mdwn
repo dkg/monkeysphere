@@ -17,3 +17,6 @@ This would let us create new subcommands like:
 * `revoke-host-name` (`n-`)
 * `list-host-names` (`n`)
 
+---
+
+[[bugs/done]] 2008-08-14
