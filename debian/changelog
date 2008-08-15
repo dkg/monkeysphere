@@ -5,7 +5,7 @@ monkeysphere (0.8-1) UNRELEASED; urgency=low
     of my own.
   * More monkeysphere-server diagnostics
   * monkeysphere --gen-subkey now guesses what KeyID you meant.
-  * set up host-key revocation
+  * added Recommends: ssh-askpass to ensure monkeysphere --gen-subkey works
 
   [ Jameson Graef Rollins ]
   * fix another bug for when ssh key files are missing.

@@ -13,7 +13,7 @@ Format: 3.0 (git)
 Package: monkeysphere
 Architecture: any
 Depends: openssh-client, gnupg | gnupg2, coreutils (>= 6), moreutils, lockfile-progs, adduser, ${shlibs:Depends}
-Recommends: netcat | socat
+Recommends: netcat | socat, ssh-askpass
 Enhances: openssh-client, openssh-server
 Description: use the OpenPGP web of trust to verify ssh connections
  SSH key-based authentication is tried-and-true, but it lacks a true

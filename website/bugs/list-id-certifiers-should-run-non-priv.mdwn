@@ -1,0 +1,15 @@
+[[meta title="list-identity-certfiers should run as the non-privileged user"]]
+
+Right now, `monkeysphere-server list-identity-certifiers` runs as the
+superuser, and just lists the keys in the host's keyring.  This might
+not be the actual list of valid id certifiers, for a number of reasons:
+
+* the keys themselves might have been revoked by the owner
+
+* the id-certifiers might have been added with a different trust
+  level, or a regexp/domain limitation.
+
+It would make more sense to derive the list of trusted certifiers
+directly from the keyrings as seen by the non-privileged
+`monkeysphere` user, since this user's keyrings are what are going to
+judge the validity of various user IDs.

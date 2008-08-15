@@ -135,3 +135,10 @@ it.
 Alternately, we could use `--passwd-fd` and `ssh-agent`, along the
 lines i proposed [for handling passphrase-locked secret
 keys](/bugs/handle-passphrase-locked-secret-keys).
+
+--- 
+
+[[bugs/done]] as of 2008-08-15 16:48:26-0400 (to be released in 0.8-1)
+
+I opted to go with the `ssh-askpass` route, and fall back to echoing
+stuff to a fifo directly if `ssh-askpass` is not available.

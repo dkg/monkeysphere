@@ -732,7 +732,7 @@ EOF
 	)
 
     # ltsign the key
-    echo "$ltsignCommand" | gpg_host --quiet --command-fd 0 --edit-key "$fingerprint"
+    echo "$ltsignCommand" | gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}"\!
 
     # update the trustdb for the authentication keyring
     gpg_authentication "--check-trustdb"
