@@ -402,11 +402,41 @@ EOF
 
 # revoke hostname user ID to server key
 revoke_hostname() {
+    local msg
+    local uidNum
+    local tmpuidMatch
+    local fpr
+    local linenum
+
     if [ -z "$1" ] ; then
 	failure "You must specify a hostname to revoke."
     fi
 
-    failure "Sorry, not yet implemented."
+    fpr=$(fingerprint_server_key)
+    tmpuidMatch="u:$(escape "$1")"
+
+    if linenum=$(gpg_host --list-keys --with-colons --fixed-list-mode "$fpr" | egrep '^(uid|uat):' | cut -f2,10 -d: | grep -n -x -F 'r:Foo T. Bar (DO NOT USE!) <foo@example.net>') ; then
+	uidNum=${linenum%%:*}
+    else
+	failure "no non-revoked hostname '$1' is listed."
+    fi
+
+    msg="hostname removed by monkeysphere-server on $(date +%F)"
+    
+
+    revuidCommand=$(cat <<EOF
+$uidNum
+revuid
+y
+4
+$msg
+
+y
+save
+EOF
+)
+
+    echo "$revuidCommand" | gpg_host --quiet --command-fd 0 --edit-key "0x$fingerprint"\!
 
     echo "NOTE: host userID revokation has not been published."
     echo "Use '$PGRM publish-key' to publish these changes."
