@@ -12,8 +12,9 @@ monkeysphere (0.8-1) UNRELEASED; urgency=low
     keys.  This will prevent malicious bad keys from causing good keys to
     be removed from key files.
   * enabled host key publication.
+  * added checking of gpg.conf for keyserver
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Fri, 15 Aug 2008 00:48:22 -0700
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Fri, 15 Aug 2008 10:46:23 -0700
 
 monkeysphere (0.7-1) experimental; urgency=low
 
