@@ -493,7 +493,7 @@ EOF
 
 	show_server_key
 
-	echo "NOTE: User ID revoked, but revokation not published."
+	echo "NOTE: User ID revoked, but revocation not published."
 	echo "Run '$PGRM publish-key' to publish the revocation."
     else
 	failure "Problem revoking user ID."
