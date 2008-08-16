@@ -13,3 +13,7 @@ It would make more sense to derive the list of trusted certifiers
 directly from the keyrings as seen by the non-privileged
 `monkeysphere` user, since this user's keyrings are what are going to
 judge the validity of various user IDs.
+
+---
+
+[[bugs/done]] 2008-08-16 in a29b35e69d0fab5f2de42ed5edd9512a6552e75a
