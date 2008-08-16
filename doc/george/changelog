@@ -7,6 +7,11 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-08-16 - jrollins
+	* removed stale branches from jrollins from the master repo
+	* aptitude update && aptitude full-upgrade
+	* restarted services to clear up dependencies on old libraries
+	
 2008-08-13 - dkg
 	* aptitude update && aptitude full-upgrade
 	* restarted services to clear up dependencies on old libraries
