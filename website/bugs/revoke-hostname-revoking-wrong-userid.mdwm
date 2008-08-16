@@ -1,0 +1,94 @@
+[[meta title="revoke-hostname function revokes wrong hostname user ID"]]
+
+It appears that the monkeysphere-server revoke-hostname function will
+occasionaly revoke the wrong hostname.  I say occasionally, but it
+seems to be doing it pretty consistently for me at the moment:
+
+	servo:~ 0$ sudo monkeysphere-server n- servo.finestructure.net
+	The following host key user ID will be revoked:
+	  ssh://servo.finestructure.net
+	Are you sure you would like to revoke this user ID? (y/N) y
+	gpg (GnuPG) 1.4.9; Copyright (C) 2008 Free Software Foundation, Inc.
+	This is free software: you are free to change and redistribute it.
+	There is NO WARRANTY, to the extent permitted by law.
+	
+	Secret key is available.
+	
+	pub  1024R/9EEAC276  created: 2008-07-10  expires: never       usage: CA  
+	                     trust: ultimate      validity: ultimate
+	[ultimate] (1)  ssh://localhost.localdomain
+	[ultimate] (2). ssh://servo.finestructure.net
+	[ revoked] (3)  ssh://jamie.rollins
+	[ revoked] (4)  asdfsdflkjsdf
+	[ revoked] (5)  ssh://asdfsdlf.safsdf
+	[ revoked] (6)  ssh://bar.baz
+	[ revoked] (7)  ssh://foo.bar
+	[ revoked] (8)  ssh://
+	
+	
+	pub  1024R/9EEAC276  created: 2008-07-10  expires: never       usage: CA  
+	                     trust: ultimate      validity: ultimate
+	[ultimate] (1)* ssh://localhost.localdomain
+	[ultimate] (2). ssh://servo.finestructure.net
+	[ revoked] (3)  ssh://jamie.rollins
+	[ revoked] (4)  asdfsdflkjsdf
+	[ revoked] (5)  ssh://asdfsdlf.safsdf
+	[ revoked] (6)  ssh://bar.baz
+	[ revoked] (7)  ssh://foo.bar
+	[ revoked] (8)  ssh://
+	
+	Please select the reason for the revocation:
+	  0 = No reason specified
+	  4 = User ID is no longer valid
+	  Q = Cancel
+	(Probably you want to select 4 here)
+	Enter an optional description; end it with an empty line:
+	Reason for revocation: User ID is no longer valid
+	Hostname removed by monkeysphere-server 2008-08-16T17:34:02
+	
+	pub  1024R/9EEAC276  created: 2008-07-10  expires: never       usage: CA  
+	                     trust: ultimate      validity: ultimate
+	[ revoked] (1)  ssh://localhost.localdomain
+	[ultimate] (2). ssh://servo.finestructure.net
+	[ revoked] (3)  ssh://jamie.rollins
+	[ revoked] (4)  asdfsdflkjsdf
+	[ revoked] (5)  ssh://asdfsdlf.safsdf
+	[ revoked] (6)  ssh://bar.baz
+	[ revoked] (7)  ssh://foo.bar
+	[ revoked] (8)  ssh://
+	
+	gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+	gpg: depth: 0  valid:   1  signed:   2  trust: 0-, 0q, 0n, 0m, 0f, 1u
+	gpg: depth: 1  valid:   2  signed:   0  trust: 0-, 0q, 0n, 0m, 2f, 0u
+	gpg: next trustdb check due at 2012-01-07
+	sec   1024R/9EEAC276 2008-07-10
+	      Key fingerprint = C094 43E0 6882 8BE2 E9AD  516C 45CF 974D 9EEA C276
+	uid                  ssh://servo.finestructure.net
+	uid       [ revoked] ssh://localhost.localdomain
+	uid       [ revoked] ssh://jamie.rollins
+	uid       [ revoked] asdfsdflkjsdf
+	uid       [ revoked] ssh://asdfsdlf.safsdf
+	uid       [ revoked] ssh://bar.baz
+	uid       [ revoked] ssh://foo.bar
+	uid       [ revoked] ssh://
+	
+	NOTE: User ID revoked, but revokation not published.
+	Run 'monkeysphere-server publish-key' to publish the revocation.
+	servo:~ 0$ 
+
+Clearly this is unacceptable.  Because of more inadequacies in gpg,
+you can't specify a uid to revoke from the command line.  The uid
+revokation requires an edit-key script, which we have used before, but
+you have to specify by "number" which uid to revoke.  We currently try
+to guess the number from the ordering of the output of list-key.  This
+however is not always accurate.  I don't have a good solution for a
+fix at the moment.  Suggestions are most welcome.  It may just require
+some trial and error with edit-key to come up with something workable.
+
+This underlines the problem that gpg sucks ass as a tool for
+manipulating gpg keyrings non-interactively.  This is a big problem.
+We need something better that we can use.  I would gladly rewrite
+everything if there was a better tool out there, but I don't know of
+one.
+
+-- Big Jimmy.
