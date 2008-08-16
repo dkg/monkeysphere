@@ -9,7 +9,7 @@ yourself and the servers you administer or connect to.  OpenPGP keys
 are tracked via GnuPG, and managed in the `known_hosts` and
 `authorized_keys` files used by OpenSSH for connection authentication.
 
-[[bugs]] | [[download]] | [[news]] | [[documentation|doc]]
+[[bugs]] | [[download]] | [[news]] | [[documentation|doc]] | [[why should i be interested|why]]
 
 ## Conceptual overview ##
 
@@ -26,13 +26,14 @@ keys for authenticating to a server (known as
 "`PubkeyAuthentication`"), rather than relying on a password exchange.
 But again, the public part of the key needs to be transmitted to the
 server through a secure out-of-band channel (usually via a separate
-password-based SSH connection) in order for this type of
-authentication to work
+password-based SSH connection or a (hopefully signed) e-mail to the
+system administrator) in order for this type of authentication to
+work.
 
 [OpenSSH](http://openssh.com/) currently provides a functional way to
-managing the RSA and DSA keys required for these interactions through
-the `known_hosts` and `authorized_keys` files.  However, it lacks
-any type of [Public Key Infrastructure
+manage the RSA and DSA keys required for these interactions through
+the `known_hosts` and `authorized_keys` files.  However, it lacks any
+type of [Public Key Infrastructure
 (PKI)](http://en.wikipedia.org/wiki/Public_Key_Infrastructure) that
 can verify that the keys being used really are the one required or
 expected.
