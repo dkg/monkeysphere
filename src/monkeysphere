@@ -37,12 +37,12 @@ usage: $PGRM <subcommand> [options] [args]
 MonkeySphere client tool.
 
 subcommands:
-  update-known_hosts (k) [HOST]...  update known_hosts file
-  update-authorized_keys (a)        update authorized_keys file
-  gen-subkey (g) KEYID              generate an 'a' capable subkey
-    -l|--length BITS                  key length in bits (2048)
-    -e|--expire EXPIRE                date to expire
-  help (h,?)                        this help
+ update-known_hosts (k) [HOST]...    update known_hosts file
+ update-authorized_keys (a)          update authorized_keys file
+ gen-subkey (g) KEYID                generate an 'a' capable subkey
+   --length (-l) BITS                  key length in bits (2048)
+   --expire (-e) EXPIRE                date to expire
+ help (h,?)                          this help
 
 EOF
 }
