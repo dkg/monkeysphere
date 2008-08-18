@@ -1,0 +1,6 @@
+[[meta title="MonkeySphere 0.10-1 released!"]]
+
+# MonkeySphere 0.10-1 released! #
+
+MonkeySphere 0.10-1 has been released.  This is a bugfix-only release,
+fixing an critical inverted test in 0.9-1.  [[download]] it now!
