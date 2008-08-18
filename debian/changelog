@@ -1,23 +1,24 @@
-monkeysphere (0.8-1) UNRELEASED; urgency=low
+monkeysphere (0.8-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
   * debian/control: switched Vcs-Git to use "centralized" git repo instead
     of my own.
   * More monkeysphere-server diagnostics
   * monkeysphere --gen-subkey now guesses what KeyID you meant.
-  * added Recommends: ssh-askpass to ensure monkeysphere --gen-subkey works
+  * added Recommends: ssh-askpass to ensure monkeysphere --gen-subkey
+    works sensibly under X11
 
   [ Jameson Graef Rollins ]
-  * fix another bug for when ssh key files are missing.
+  * fix another bug when known_hosts files are missing.
   * sort processed keys so that "good" keys are processed after "bad"
     keys.  This will prevent malicious bad keys from causing good keys to
     be removed from key files.
   * enabled host key publication.
   * added checking of gpg.conf for keyserver
   * new functions to add/revoke host key user IDs
-  * improved list-certifiers function (now non-priviledged)
+  * improved list-certifiers function (now non-privileged)
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Fri, 15 Aug 2008 15:57:14 -0700
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 18 Aug 2008 12:43:37 -0400
 
 monkeysphere (0.7-1) experimental; urgency=low
 
