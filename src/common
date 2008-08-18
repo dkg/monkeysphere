@@ -83,6 +83,28 @@ gpg_escape() {
     sed 's/:/\\x3a/g'
 }
 
+# prompt for GPG-formatted expiration, and emit result on stdout
+get_gpg_expiration() {
+    local keyExpire=
+
+    cat >&2 <<EOF
+Please specify how long the key should be valid.
+         0 = key does not expire
+      <n>  = key expires in n days
+      <n>w = key expires in n weeks
+      <n>m = key expires in n months
+      <n>y = key expires in n years
+EOF
+    while [ -z "$keyExpire" ] ; do
+	read -p "Key is valid for? (0) " keyExpire
+	if ! test_gpg_expire ${keyExpire:=0} ; then
+	    echo "invalid value" >&2
+	    unset keyExpire
+	fi
+    done
+    echo "$keyExpire"
+}
+
 # remove all lines with specified string from specified file
 remove_line() {
     local file

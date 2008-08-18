@@ -4,6 +4,7 @@
 #
 # The monkeysphere scripts are written by:
 # Jameson Rollins <jrollins@fifthhorseman.net>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #
 # They are Copyright 2008, and are all released under the GPL, version 3
 # or later.
@@ -43,6 +44,7 @@ subcommands:
    --length (-l) BITS                  key length in bits (2048)
    --expire (-e) EXPIRE                date to expire
    --revoker (-r) FINGERPRINT          add a revoker
+ extend-key (e) EXPIRE                   extend expiration to EXPIRE
  add-hostname (n+) NAME[:PORT]       add hostname user ID to server key
  revoke-hostname (n-) NAME[:PORT]    revoke hostname user ID
  show-key (s)                        output all server host key information
@@ -296,22 +298,9 @@ gen_key() {
 
     # prompt about key expiration if not specified
     if [ -z "$keyExpire" ] ; then
-	cat <<EOF
-Please specify how long the key should be valid.
-         0 = key does not expire
-      <n>  = key expires in n days
-      <n>w = key expires in n weeks
-      <n>m = key expires in n months
-      <n>y = key expires in n years
-EOF
-	while [ -z "$keyExpire" ] ; do
-	    read -p "Key is valid for? (0) " keyExpire
-	    if ! test_gpg_expire ${keyExpire:=0} ; then
-		echo "invalid value"
-		unset keyExpire
-	    fi
-	done
-    elif ! test_gpg_expire "$keyExpire" ; then
+	keyExpire=$(get_gpg_expiration)
+    fi
+    if ! test_gpg_expire "$keyExpire" ; then
 	failure "invalid key expiration value '$keyExpire'."
     fi
 
@@ -371,6 +360,31 @@ EOF
 	gpg_host --export-secret-key "$fingerprint" | \
 	openpgp2ssh "$fingerprint" > "${VARLIB}/ssh_host_rsa_key")
     log "Private SSH host key output to file: ${VARLIB}/ssh_host_rsa_key"
+}
+
+# extend the lifetime of a host key:
+extend_key() {
+    local fpr=$(fingerprint_server_key)
+    local extendTo="$1"
+
+    if [ -z "$fpr" ] ; then
+	failure "You don't appear to have a MonkeySphere host key on this server.  Try 'monkeysphere-server gen-key' first."
+    fi
+
+    if [ -z "$extendTo" ]; then
+	extendTo=$(get_gpg_expiration)
+    fi
+    if ! test_gpg_expire "$extendTo" ; then
+	failure "invalid expiration value '$extendTo'."
+    fi
+
+    gpg_host --quiet --command-fd 0 --edit-key "$fpr" <<EOF 
+expire
+$extendTo
+save
+EOF
+    echo "NOTE: Host key expiration date adjusted, but not yet published."
+    echo "Run '$PGRM publish-key' to publish the new expiration date."
 }
 
 # add hostname user ID to server key
@@ -561,10 +575,10 @@ diagnostics() {
 	if [ "$expire" ]; then
 	    if (( "$expire"  < "$curdate" )); then
 		echo "! Host key is expired."
-		# FIXME: recommend a way to resolve this other than re-keying?
+		echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
 	    elif (( "$expire" < "$warndate" )); then
 		echo "! Host key expires in less than $warnwindow:" $(date -d "$(( $expire - $curdate )) seconds" +%F)
-		# FIXME: recommend a way to resolve this?
+		echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
 	    fi
 	fi
 
@@ -867,6 +881,10 @@ case $COMMAND in
 
     'gen-key'|'g')
 	gen_key "$@"
+	;;
+
+    'extend-key'|'e')
+	extend_key "$@"
 	;;
 
     'add-hostname'|'add-name'|'n+')

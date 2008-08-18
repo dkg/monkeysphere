@@ -1,9 +1,14 @@
 monkeysphere (0.9-1) experimental; urgency=low
 
+  [ Daniel Kahn Gillmor ]
+  * implemented "monkeysphere-server extend-key" to adjust expiration
+    dates.
+  
+  [ Jameson Graef Rollins ]
   * fixed bug in user id processing that prevented bad primary keys from
     being properly removed.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Mon, 18 Aug 2008 10:13:36 -0700
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 18 Aug 2008 14:59:56 -0400
 
 monkeysphere (0.8-1) experimental; urgency=low
 
