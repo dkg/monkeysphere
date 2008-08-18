@@ -2,13 +2,15 @@ monkeysphere (0.9-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
   * implemented "monkeysphere-server extend-key" to adjust expiration
-    dates.
+    date of host key.
+  * removed "monkeysphere-server fingerprint".  Use "monkeysphere-server
+    show-key" instead.
   
   [ Jameson Graef Rollins ]
   * fixed bug in user id processing that prevented bad primary keys from
     being properly removed.
 
- -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 18 Aug 2008 14:59:56 -0400
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 18 Aug 2008 15:42:12 -0400
 
 monkeysphere (0.8-1) experimental; urgency=low
 
