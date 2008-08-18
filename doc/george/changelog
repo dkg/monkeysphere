@@ -11,7 +11,10 @@
 	* moved monkeysphere apt repo entry to
 	  /etc/apt/sources.list.d/monkeysphere.list
 	* aptitude update && aptitude full-upgrade (including monkeysphere
-	  0.8-1)
+	  0.9-1)
+	* switched george's monkeysphere-server preferred keyserver to
+	  monkeysphere.info for the moment.  Both pgp.mit.edu and
+	  subkeys.pgp.net are sluggish right now :/
 	
 2008-08-16 - jrollins
 	* removed stale branches from jrollins from the master repo
