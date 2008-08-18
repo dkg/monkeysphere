@@ -1,0 +1,5 @@
+[[meta title="MonkeySphere 0.7-1 released!"]]
+
+MonkeySphere 0.8-1 has been released.  This release contains bugfixes,
+some UI re-arrangement, and new features for `monkeysphere-server`,
+among other things.  [[download]] it now!

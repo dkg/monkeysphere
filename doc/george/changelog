@@ -7,6 +7,12 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-08-18 - dkg
+	* moved monkeysphere apt repo entry to
+	  /etc/apt/sources.list.d/monkeysphere.list
+	* aptitude update && aptitude full-upgrade (including monkeysphere
+	  0.8-1)
+	
 2008-08-16 - jrollins
 	* removed stale branches from jrollins from the master repo
 	* aptitude update && aptitude full-upgrade
