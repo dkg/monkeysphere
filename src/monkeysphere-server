@@ -539,7 +539,7 @@ diagnostics() {
 
     # FIXME: what's the correct, cross-platform answer?
     sshd_config=/etc/ssh/sshd_config
-    seckey=$(gpg_host --list-secret-keys --with-colons --fixed-list-mode)
+    seckey=$(gpg_host --list-secret-keys --fingerprint --with-colons --fixed-list-mode)
     keysfound=$(echo "$seckey" | grep -c ^sec:)
     curdate=$(date +%s)
     # warn when anything is 2 months away from expiration
