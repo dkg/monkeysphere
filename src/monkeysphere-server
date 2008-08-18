@@ -48,7 +48,6 @@ subcommands:
  add-hostname (n+) NAME[:PORT]       add hostname user ID to server key
  revoke-hostname (n-) NAME[:PORT]    revoke hostname user ID
  show-key (s)                        output all server host key information
- fingerprint (f)                     output just the key fingerprint
  publish-key (p)                     publish server host key to keyserver
  diagnostics (d)                     report on server monkeysphere status
 
@@ -113,8 +112,20 @@ fingerprint_server_key() {
 # output key information
 show_server_key() {
     local fingerprint
+    local tmpkey
+
     fingerprint=$(fingerprint_server_key)
-    gpg_host --fingerprint --list-secret-key "$fingerprint"
+    gpg_authentication "--fingerprint --list-key $fingerprint"
+
+    # dumping to a file named ' ' so that the ssh-keygen output
+    # doesn't claim any potentially bogus hostname(s):
+    tmpkey=$(mktemp -d)
+    gpg_authentication "--export $fingerprint" | openpgp2ssh "$fingerprint" 2>/dev/null > "$tmpkey/ "
+    echo -n "ssh fingerprint: "
+    (cd "$tmpkey" && ssh-keygen -l -f ' ')
+    rm -rf "$tmpkey"
+    echo -n "OpenPGP fingerprint: "
+    echo "$fingerprint"
 }
 
 # update authorized_keys for users
@@ -897,10 +908,6 @@ case $COMMAND in
 
     'show-key'|'show'|'s')
 	show_server_key
-	;;
-
-    'show-fingerprint'|'fingerprint'|'f')
-	fingerprint_server_key
 	;;
 
     'publish-key'|'publish'|'p')
