@@ -425,7 +425,7 @@ process_user_id() {
 		# if the user ID does matches...
 		if [ "$(echo "$uidfpr" | gpg_unescape)" = "$userID" ] ; then
 		    # and the user ID validity is ok
-		    if [ "$validity" != 'u' -a "$validity" != 'f' ] ; then
+		    if [ "$validity" = 'u' -o "$validity" = 'f' ] ; then
 			# mark user ID acceptable
 			uidOK=true
 		    fi
