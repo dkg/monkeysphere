@@ -36,8 +36,8 @@ you keep them from getting the big scary warning messages?
 Have you ever wanted to allow a colleague key-based access to a
 machine, *without* needing to have a copy of their public key on hand?
 
-Have you ever wanted to be able to revoke the ability of a key to
-authenticate across the entire infrastructure you manage, without
+Have you ever wanted to be able to revoke the ability of a user's key
+to authenticate across the entire infrastructure you manage, without
 touching each host by hand?
 
 ## What's the connection? ##
