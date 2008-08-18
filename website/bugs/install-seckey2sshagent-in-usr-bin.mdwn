@@ -25,3 +25,19 @@ part about verifying you to a server. Then it could say: if you're really
 interested, you can run this hacky script but we make no guarantees.
 
 -- Sir Jam Jam
+
+---
+
+I just realized that i think i can test for the presence of [GNU-dummy
+support in
+GnuTLS](http://lists.gnu.org/archive/html/gnutls-devel/2008-08/msg00005.html),
+which means that we can cleanly test whether the proposed [handling of
+passphrase-locked secret
+keys](bugs/handle-passphrase-locked-secret-keys/) is functional.  With
+that in mind, I'd like to propose that we could resolve this bug
+simply by adding a new subcommand: `monkeysphere authkey-to-agent`,
+which would fail in the absence of a functionally-patched GnuTLS.
+
+Would this proposal be sufficient to resolve this bug?
+
+--dkg

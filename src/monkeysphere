@@ -39,7 +39,7 @@ MonkeySphere client tool.
 subcommands:
  update-known_hosts (k) [HOST]...    update known_hosts file
  update-authorized_keys (a)          update authorized_keys file
- gen-subkey (g) KEYID                generate an 'a' capable subkey
+ gen-subkey (g) [KEYID]              generate an authentication subkey
    --length (-l) BITS                  key length in bits (2048)
    --expire (-e) EXPIRE                date to expire
  help (h,?)                          this help
@@ -288,7 +288,7 @@ case $COMMAND in
 	gen_subkey "$@"
 	;;
 
-    'help'|'h'|'?')
+    '--help'|'help'|'-h'|'h'|'?')
         usage
         ;;
 
