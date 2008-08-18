@@ -76,19 +76,19 @@ seems to be doing it pretty consistently for me at the moment:
 	Run 'monkeysphere-server publish-key' to publish the revocation.
 	servo:~ 0$ 
 	
-Clearly this is unacceptable.  Because of more inadequacies in gpg,
-you can't specify a uid to revoke from the command line.  The uid
-revokation requires an edit-key script, which we have used before, but
-you have to specify by "number" which uid to revoke.  We currently try
-to guess the number from the ordering of the output of list-key.  This
-however is not always accurate.  I don't have a good solution for a
-fix at the moment.  Suggestions are most welcome.  It may just require
-some trial and error with edit-key to come up with something workable.
+Clearly this is unacceptable.  gpg does not let you can't specify a
+uid to revoke from the command line.  The uid revokation can only be
+done through edit-key.  We do edit-key scripting in other contexts,
+but to revoke a user id you have to specify the uid by "number".  We
+currently try to guess the number from the ordering of the output of
+list-key.  However, this output does not appear to coincide with the
+ordering in edit-key.  I don't have a good solution or fix at the
+moment.  Suggestions are most welcome.  It may just require some trial
+and error with edit-key to come up with something workable.
 
-This underlines the problem that gpg sucks ass as a tool for
-manipulating gpg keyrings non-interactively.  This is a big problem.
-We need something better that we can use.  I would gladly rewrite
-everything if there was a better tool out there, but I don't know of
-one.
+This underlines the problem that gpg is currently not very well suited
+for manipulating gpg keyrings non-interactively.  It's possible that I
+just haven't figured out how to do it yet, but it's not very clear if
+it is possible.  It would be nice to have some alternate tools to use.
 
 -- Big Jimmy.
