@@ -1,3 +1,10 @@
+monkeysphere (0.9-1) experimental; urgency=low
+
+  * fixed bug in user id processing that prevented bad primary keys from
+    being properly removed.
+
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Mon, 18 Aug 2008 10:13:36 -0700
+
 monkeysphere (0.8-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
