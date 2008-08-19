@@ -69,11 +69,40 @@ file_hash() {
     md5sum "$1" 2> /dev/null
 }
 
-# convert escaped characters from gpg output back into original
-# character
-# FIXME: undo all escape character translation in with-colons gpg output
-unescape() {
-    echo "$1" | sed 's/\\x3a/:/g'
+# convert escaped characters in pipeline from gpg output back into
+# original character
+# FIXME: undo all escape character translation in with-colons gpg
+# output
+gpg_unescape() {
+    sed 's/\\x3a/:/g'
+}
+
+# convert nasty chars into gpg-friendly form in pipeline
+# FIXME: escape everything, not just colons!
+gpg_escape() {
+    sed 's/:/\\x3a/g'
+}
+
+# prompt for GPG-formatted expiration, and emit result on stdout
+get_gpg_expiration() {
+    local keyExpire=
+
+    cat >&2 <<EOF
+Please specify how long the key should be valid.
+         0 = key does not expire
+      <n>  = key expires in n days
+      <n>w = key expires in n weeks
+      <n>m = key expires in n months
+      <n>y = key expires in n years
+EOF
+    while [ -z "$keyExpire" ] ; do
+	read -p "Key is valid for? (0) " keyExpire
+	if ! test_gpg_expire ${keyExpire:=0} ; then
+	    echo "invalid value" >&2
+	    unset keyExpire
+	fi
+    done
+    echo "$keyExpire"
 }
 
 # remove all lines with specified string from specified file
@@ -386,28 +415,23 @@ process_user_id() {
 		;;
 	    'uid') # user ids
 		if [ "$lastKey" != pub ] ; then
-		    log " - got a user ID after a sub key!  user IDs should only follow primary keys!"
-		    continue
-		fi
-		# don't bother with a uid if there is no valid or reasonable primary key.
-		if [ "$keyOK" != true ] ; then
+		    log " - got a user ID after a sub key?!  user IDs should only follow primary keys!"
 		    continue
 		fi
 		# if an acceptable user ID was already found, skip
-		if [ "$uidOK" ] ; then
+		if [ "$uidOK" = 'true' ] ; then
 		    continue
 		fi
-		# if the user ID does not match, skip
-		if [ "$(unescape "$uidfpr")" != "$userID" ] ; then
+		# if the user ID does matches...
+		if [ "$(echo "$uidfpr" | gpg_unescape)" = "$userID" ] ; then
+		    # and the user ID validity is ok
+		    if [ "$validity" = 'u' -o "$validity" = 'f' ] ; then
+			# mark user ID acceptable
+			uidOK=true
+		    fi
+		else
 		    continue
 		fi
-		# if the user ID validity is not ok, skip
-		if [ "$validity" != 'u' -a "$validity" != 'f' ] ; then
-		    continue
-		fi
-
-		# mark user ID acceptable
-		uidOK=true
 
 		# output a line for the primary key
 		# 0 = ok, 1 = bad

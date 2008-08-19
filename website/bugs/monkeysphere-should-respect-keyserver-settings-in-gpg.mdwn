@@ -16,3 +16,7 @@ following order instead:
  * default value of subkeys.pgp.net
 
 -- Sir Jam Jam
+
+---
+
+[[bugs/done]] 2008-08-15 in ab5cfab5be64cfb5e01c2b660587da43b3097cad

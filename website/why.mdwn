@@ -1,0 +1,126 @@
+[[meta title="Why should you be interested in the MonkeySphere?"]]
+
+# Why should you be interested in the MonkeySphere? #
+
+## As an `ssh` user ##
+
+Do you use `ssh` to connect to remote machines?  Are you tired of
+seeing messages like this?
+
+	The authenticity of host 'foo.example.org (192.0.2.3)' can't be established.
+	RSA key fingerprint is 17:f4:2b:22:90:d4:98:9a:a2:c5:95:4e:4a:89:be:90.
+	Are you sure you want to continue connecting (yes/no)?
+
+Do you actually tediously check the fingerprint against a
+cryptographically-signed message from the admin, or do you just cross
+your fingers and type "yes"?  Do you wish there was a better way to do
+it?  Shouldn't our tools be able to figure this out automatically?
+
+Do you use `ssh`'s public key authentication for convenience and/or
+added security?  Have you ever worried about what might happen if you
+lose control of your key?  (Or did you have a key that was compromised
+by [the OpenSSL debacle](http://bugs.debian.org/363516)?)  How many
+accounts/machines would you need to clean up to ensure that your old,
+bad key is no longer in use?  
+
+Have you ever wished you could phase out an old key and start using a
+new one without having to comb through every single account you have
+ever connected to?
+
+## As an `sshd` administrator ##
+
+If you are a system administrator, have you ever tried to re-key an
+SSH server?  How did you ease the change along to your users?  How did
+you keep them from getting the big scary warning messages?  
+
+Have you ever wanted to allow a colleague key-based access to a
+machine, *without* needing to have a copy of their public key on hand?
+
+Have you ever wanted to be able to revoke the ability of a user's key
+to authenticate across the entire infrastructure you manage, without
+touching each host by hand?
+
+## What's the connection? ##
+
+These questions all stem from rough edges we run up against in regular
+use of SSH that could be improved by a decent [Public Key
+Infrastructure (or
+PKI)](http://dictionary.die.net/public%20key%20infrastructure).  A PKI
+at its core is a mechanism to provide answers to a few basic
+questions:
+
+* Do we know who a key actually belongs to?  How do we know?
+* Is the key still valid for use?
+
+Given a clearly stated set of initial assumptions, functional
+cryptographic tools, and a PKI, these questions can be clearly
+answered in an automated fashion.  We should not need to ask humans to
+do complicated, error-prone things (e.g. checking host key
+fingerprints) except in relatively rare situations (e.g. when two
+people meet in person for the first time).
+
+The good news is that this is all possible, and available with free
+tools!
+
+## Examples ##
+
+Bob is an `ssh` user, and has just been given an account on
+`foo.example.org` by Alice, the `example.org` system administrator,
+who he knows.
+
+Bob already trusts Alice to properly identify all `example.org`
+servers.  Alice already knows who Bob is, and the new machine `foo`
+knows that it can rely on Alice's certifications because Alice is its
+administrator.
+
+Alice can set up the new `bob` account on `foo.example.org` without
+needing to give Bob a new passphrase to remember, and without needing
+to even know Bob's current SSH key.  She simply tells `foo` that `Bob
+<bob@example.net>` should have access to the `bob` account.
+
+Bob's first connection to his new `bob` account on `foo.example.org`
+is seamless, because all the steps are already in place!  Using the
+MonkeySphere, Bob never has to "accept" an unintelligible host key or
+type a password.
+
+When Bob decides to change the key he uses for SSH authentication, he
+can do so at once: he generates a new key, revokes his old key, and
+publishes these changes to the public keyservers.  The next time he's
+ready to log into `foo.example.org`, it accepts his new key -- and it
+*won't* accept his old key any longer.
+
+The same thing works for Alice when she decides to re-key
+`foo.example.org` (let's say Alice learned that Eve has compromised
+the old key).  Alice generates a new key, revokes the old one,
+publishes the changes, and the next time Bob connects, he connects as
+smoothly as ever.  And if Eve tries to use the old host key to
+masquerade as `foo`, Bob's SSH client will refuse to let him connect!
+
+Alice can even quit as `example.org` system administrator, and revoke
+her certifications of all `example.org` hosts.  As long as Bob knows
+and trusts the new `example.org` system administrator to identify
+hosts in that domain, there's no problem.
+
+## Why OpenPGP? ##
+
+We believe that OpenPGP is the right PKI to use for this project.  It
+allows a very flexible trust model, ranging all over the map, at the
+choice of the user:
+
+* individual per-host certifications by each client (much like the
+  stock OpenSSH behavior),
+
+* strict centralized Certificate Authorities (much like proposed X.509
+  models), and
+
+* a more human-centric model that recognizes individual differences in
+  ranges of trust and acceptance.
+
+Even if Bob *doesn't* trust Alice to identify *all* `example.org`
+hosts, his first connection to `foo.example.org` should give him more
+than an unintelligible string to accept or reject.  It should also
+give him the information that Alice (and perhaps her colleague
+Charles) have certified the key.  This is far more useful information
+than the current infrastructure allows, and is more meaningful to
+actual humans using these tools than some message like "Certified by
+GloboTrust".

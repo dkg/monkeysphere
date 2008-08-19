@@ -37,18 +37,17 @@ usage: $PGRM <subcommand> [options] [args]
 MonkeySphere client tool.
 
 subcommands:
-  update-known_hosts (k) [HOST]...  update known_hosts file
-  update-authorized_keys (a)        update authorized_keys file
-  gen-subkey (g) KEYID              generate an 'a' capable subkey
-    -l|--length BITS                  key length in bits (2048)
-    -e|--expire EXPIRE                date to expire
-  help (h,?)                        this help
+ update-known_hosts (k) [HOST]...    update known_hosts file
+ update-authorized_keys (a)          update authorized_keys file
+ gen-subkey (g) [KEYID]              generate an authentication subkey
+   --length (-l) BITS                  key length in bits (2048)
+   --expire (-e) EXPIRE                date to expire
+ help (h,?)                          this help
 
 EOF
 }
 
 # generate a subkey with the 'a' usage flags set
-# FIXME: this needs some tweaking to clean it up
 gen_subkey(){
     local keyLength
     local keyExpire
@@ -163,7 +162,18 @@ EOF
 )
 
     log "generating subkey..."
-    echo "$editCommands" | gpg --expert --command-fd 0 --edit-key "$keyID"
+    fifoDir=$(mktemp -d)
+    (umask 077 && mkfifo "$fifoDir/pass")
+    echo "$editCommands" | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
+    
+    if [ "$DISPLAY" ] && which ssh-askpass >/dev/null; then
+	ssh-askpass "Please enter your passphrase for $keyID: " > "$fifoDir/pass"
+    else
+	read -s -p "Please enter your passphrase for $keyID: " PASS
+	echo "$PASS" > "$fifoDir/pass"
+    fi
+    rm -rf "$fifoDir"
+    wait
     log "done."
 }
 
@@ -191,7 +201,16 @@ mkdir -p -m 0700 "$MONKEYSPHERE_HOME"
 # set empty config variables with ones from the environment, or from
 # config file, or with defaults
 GNUPGHOME=${MONKEYSPHERE_GNUPGHOME:=${GNUPGHOME:="${HOME}/.gnupg"}}
-KEYSERVER=${MONKEYSPHERE_KEYSERVER:=${KEYSERVER:="subkeys.pgp.net"}}
+KEYSERVER=${MONKEYSPHERE_KEYSERVER:="$KEYSERVER"}
+# if keyserver not specified in env or monkeysphere.conf,
+# look in gpg.conf
+if [ -z "$KEYSERVER" ] ; then
+    if [ -f "${GNUPGHOME}/gpg.conf" ] ; then
+	KEYSERVER=$(grep -e "^[[:space:]]*keyserver " "${GNUPGHOME}/gpg.conf" | tail -1 | awk '{ print $2 }')
+    fi
+fi
+# if it's still not specified, use the default
+KEYSERVER=${KEYSERVER:="subkeys.pgp.net"}
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
 KNOWN_HOSTS=${MONKEYSPHERE_KNOWN_HOSTS:=${KNOWN_HOSTS:="${HOME}/.ssh/known_hosts"}}
 HASH_KNOWN_HOSTS=${MONKEYSPHERE_HASH_KNOWN_HOSTS:=${HASH_KNOWN_HOSTS:="true"}}
@@ -269,7 +288,7 @@ case $COMMAND in
 	gen_subkey "$@"
 	;;
 
-    'help'|'h'|'?')
+    '--help'|'help'|'-h'|'h'|'?')
         usage
         ;;
 

@@ -35,3 +35,5 @@ probably prompt the administrator to re-publish the host key as well,
 to ensure that the new User IDs are published.
 
   --dkg
+
+[[bugs/done]] on 2008-08-15 15:00:02-0400 in 84b775ff0b36ec4b86e6708844ad2d678eced403

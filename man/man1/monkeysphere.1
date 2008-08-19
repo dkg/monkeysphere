@@ -52,12 +52,14 @@ ID, 1 if no matching keys were found at all, and 2 if matching keys
 were found but none were acceptable.  `a' may be used in place of
 `update-authorized_keys'.
 .TP
-.B gen-subkey KEYID
-Generate an authentication subkey.  For the primary key with the
-specified key ID, generate a subkey with "authentication" capability
-that can be used for monkeysphere transactions.  An expiration length
-can be specified with the `-e' or `--expire' option (prompt
-otherwise).  `g' may be used in place of `gen-subkey'.
+.B gen-subkey [KEYID]
+Generate an authentication subkey for a private key in your GnuPG
+keyring.  For the primary key with the specified key ID, generate a
+subkey with "authentication" capability that can be used for
+monkeysphere transactions.  An expiration length can be specified with
+the `-e' or `--expire' option (prompt otherwise).  If no key ID is
+specified, but only one key exists in the secret keyring, that key
+will be used.  `g' may be used in place of `gen-subkey'.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of

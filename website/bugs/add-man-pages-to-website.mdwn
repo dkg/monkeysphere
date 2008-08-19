@@ -1,0 +1,12 @@
+[[meta title="Add man pages to web site"]]
+
+We should publish the various monkeysphere man pages in browsable form
+somewhere under http://monkeysphere.info/.  Ideally, this would be
+updated automatically from the sources for the official man pages
+themselves.
+
+This strikes me as an ikiwiki subproject (implementing a man2html wiki
+compilation language perhaps?).
+
+Interestingly, [ikiwiki's own man page](http://ikiwiki.info/usage/)
+appears to be written in markdown and then converted to nroff.

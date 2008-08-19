@@ -1,0 +1,8 @@
+[[meta title="MonkeySphere 0.9-1 released!"]]
+
+# MonkeySphere 0.9-1 released! #
+
+MonkeySphere 0.9-1 has been released.  This release contains a serious
+bugfix related to host key expiration, and provides the ability for
+server administrators to extend the lifetime of their keys.
+[[download]] it now!

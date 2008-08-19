@@ -28,7 +28,7 @@ The git repo from this web site:
 
 [Jameson Graef Rollins](http://cmrg.fifthhorseman.net/wiki/jrollins):
 
-	git clone http://lair.fifthhorseman.net/~jrollins/git/monkeysphere.git monkeysphere
+	git clone git://lair.fifthhorseman.net/~jrollins/monkeysphere monkeysphere
 
 [Daniel Kahn Gillmor](http://cmrg.fifthhorseman.net/wiki/dkg):
 

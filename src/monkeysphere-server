@@ -4,6 +4,7 @@
 #
 # The monkeysphere scripts are written by:
 # Jameson Rollins <jrollins@fifthhorseman.net>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #
 # They are Copyright 2008, and are all released under the GPL, version 3
 # or later.
@@ -40,26 +41,27 @@ subcommands:
  update-users (u) [USER]...          update user authorized_keys files
 
  gen-key (g) [NAME[:PORT]]           generate gpg key for the server
-   -l|--length BITS                    key length in bits (2048)
-   -e|--expire EXPIRE                  date to expire
-   -r|--revoker FINGERPRINT            add a revoker
+   --length (-l) BITS                  key length in bits (2048)
+   --expire (-e) EXPIRE                date to expire
+   --revoker (-r) FINGERPRINT          add a revoker
+ extend-key (e) EXPIRE                   extend expiration to EXPIRE
  add-hostname (n+) NAME[:PORT]       add hostname user ID to server key
  revoke-hostname (n-) NAME[:PORT]    revoke hostname user ID
  show-key (s)                        output all server host key information
- fingerprint (f)                     output just the key fingerprint
  publish-key (p)                     publish server host key to keyserver
  diagnostics (d)                     report on server monkeysphere status
 
  add-id-certifier (c+) KEYID         import and tsign a certification key
-   -n|--domain DOMAIN                  limit ID certifications to DOMAIN
-   -t|--trust TRUST                    trust level of certifier (full)
-   -d|--depth DEPTH                    trust depth for certifier (1)
+   --domain (-n) DOMAIN                limit ID certifications to DOMAIN
+   --trust (-t) TRUST                  trust level of certifier (full)
+   --depth (-d) DEPTH                  trust depth for certifier (1)
  remove-id-certifier (c-) KEYID      remove a certification key
  list-id-certifiers (c)              list certification keys
 
  gpg-authentication-cmd CMD          gnupg-authentication command
 
- -h|--help|help (h,?)                this help
+ help (h,?)                          this help
+
 EOF
 }
 
@@ -100,15 +102,30 @@ gpg_authentication() {
     su_monkeysphere_user "gpg $@"
 }
 
-# output key information
-show_server_key() {
-    gpg_host --list-secret-keys --fingerprint
-}
-
 # output just key fingerprint
 fingerprint_server_key() {
-    gpg_host --list-secret-keys --fingerprint --with-colons --fixed-list-mode | \
+    gpg_host --list-secret-keys --fingerprint \
+	--with-colons --fixed-list-mode 2> /dev/null | \
 	grep '^fpr:' | head -1 | cut -d: -f10
+}
+
+# output key information
+show_server_key() {
+    local fingerprint
+    local tmpkey
+
+    fingerprint=$(fingerprint_server_key)
+    gpg_authentication "--fingerprint --list-key $fingerprint"
+
+    # dumping to a file named ' ' so that the ssh-keygen output
+    # doesn't claim any potentially bogus hostname(s):
+    tmpkey=$(mktemp -d)
+    gpg_authentication "--export $fingerprint" | openpgp2ssh "$fingerprint" 2>/dev/null > "$tmpkey/ "
+    echo -n "ssh fingerprint: "
+    (cd "$tmpkey" && ssh-keygen -l -f ' ')
+    rm -rf "$tmpkey"
+    echo -n "OpenPGP fingerprint: "
+    echo "$fingerprint"
 }
 
 # update authorized_keys for users
@@ -292,22 +309,9 @@ gen_key() {
 
     # prompt about key expiration if not specified
     if [ -z "$keyExpire" ] ; then
-	cat <<EOF
-Please specify how long the key should be valid.
-         0 = key does not expire
-      <n>  = key expires in n days
-      <n>w = key expires in n weeks
-      <n>m = key expires in n months
-      <n>y = key expires in n years
-EOF
-	while [ -z "$keyExpire" ] ; do
-	    read -p "Key is valid for? (0) " keyExpire
-	    if ! test_gpg_expire ${keyExpire:=0} ; then
-		echo "invalid value"
-		unset keyExpire
-	    fi
-	done
-    elif ! test_gpg_expire "$keyExpire" ; then
+	keyExpire=$(get_gpg_expiration)
+    fi
+    if ! test_gpg_expire "$keyExpire" ; then
 	failure "invalid key expiration value '$keyExpire'."
     fi
 
@@ -369,61 +373,179 @@ EOF
     log "Private SSH host key output to file: ${VARLIB}/ssh_host_rsa_key"
 }
 
+# extend the lifetime of a host key:
+extend_key() {
+    local fpr=$(fingerprint_server_key)
+    local extendTo="$1"
+
+    if [ -z "$fpr" ] ; then
+	failure "You don't appear to have a MonkeySphere host key on this server.  Try 'monkeysphere-server gen-key' first."
+    fi
+
+    if [ -z "$extendTo" ]; then
+	extendTo=$(get_gpg_expiration)
+    fi
+    if ! test_gpg_expire "$extendTo" ; then
+	failure "invalid expiration value '$extendTo'."
+    fi
+
+    gpg_host --quiet --command-fd 0 --edit-key "$fpr" <<EOF 
+expire
+$extendTo
+save
+EOF
+    echo "NOTE: Host key expiration date adjusted, but not yet published."
+    echo "Run '$PGRM publish-key' to publish the new expiration date."
+}
+
 # add hostname user ID to server key
 add_hostname() {
+    local userID
+    local fingerprint
+    local tmpuidMatch
+    local line
+    local adduidCommand
+
     if [ -z "$1" ] ; then
 	failure "You must specify a hostname to add."
     fi
 
     userID="ssh://${1}"
 
-    if [ "$(gpg_host --list-key "=${userID}")" ] ; then
+    fingerprint=$(fingerprint_server_key)
+
+    # match to only ultimately trusted user IDs
+    tmpuidMatch="u:$(echo $userID | gpg_escape)"
+
+    # find the index of the requsted user ID
+    # NOTE: this is based on circumstantial evidence that the order of
+    # this output is the appropriate index
+    if line=$(gpg_host --list-keys --with-colons --fixed-list-mode "0x${fingerprint}!" \
+	| egrep '^(uid|uat):' | cut -f2,10 -d: | grep -n -x -F "$tmpuidMatch") ; then
 	failure "Host userID '$userID' already exists."
     fi
 
-    fingerprint=$(fingerprint_server_key)
+    echo "The following user ID will be added to the host key:"
+    echo "  $userID"
+    read -p "Are you sure you would like to add this user ID? (y/N) " OK; OK=${OK:=N}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "User ID not added."
+    fi
 
+    # edit-key script command to add user ID
     adduidCommand=$(cat <<EOF
 adduid
 $userID
 
 
-O
 save
 EOF
 	)
 
-    # add uid
-    echo "$adduidCommand" | gpg_host --quiet --command-fd 0 --edit-key "$fingerprint"
+    # execute edit-key script
+    if echo "$adduidCommand" | \
+	gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
+        # update trust db
+	gpg_host --check-trustdb
 
-    echo "NOTE: new host userID has not been published."
-    echo "Use '$PGRM publish-key' to publish these changes."
+	show_server_key
+
+	echo "NOTE: User ID added to key, but key not published."
+	echo "Run '$PGRM publish-key' to publish the new user ID."
+    else
+	failure "Problem adding user ID."
+    fi
 }
 
 # revoke hostname user ID to server key
 revoke_hostname() {
+    local userID
+    local fingerprint
+    local tmpuidMatch
+    local line
+    local uidIndex
+    local message
+    local revuidCommand
+
     if [ -z "$1" ] ; then
 	failure "You must specify a hostname to revoke."
     fi
 
-    failure "Sorry, not yet implemented."
+    echo "WARNING: There is a known bug in this function."
+    echo "This function has been known to occasionally revoke the wrong user ID."
+    echo "Please see the following bug report for more information:"
+    echo "http://monkeysphere.info/bugs/revoke-hostname-revoking-wrong-userid/"
+    read -p "Are you sure you would like to proceed? (y/N) " OK; OK=${OK:=N}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "aborting."
+    fi
 
-    echo "NOTE: host userID revokation has not been published."
-    echo "Use '$PGRM publish-key' to publish these changes."
+    userID="ssh://${1}"
+
+    fingerprint=$(fingerprint_server_key)
+
+    # match to only ultimately trusted user IDs
+    tmpuidMatch="u:$(echo $userID | gpg_escape)"
+
+    # find the index of the requsted user ID
+    # NOTE: this is based on circumstantial evidence that the order of
+    # this output is the appropriate index
+    if line=$(gpg_host --list-keys --with-colons --fixed-list-mode "0x${fingerprint}!" \
+	| egrep '^(uid|uat):' | cut -f2,10 -d: | grep -n -x -F "$tmpuidMatch") ; then
+	uidIndex=${line%%:*}
+    else
+	failure "No non-revoked user ID '$userID' is found."
+    fi
+
+    echo "The following host key user ID will be revoked:"
+    echo "  $userID"
+    read -p "Are you sure you would like to revoke this user ID? (y/N) " OK; OK=${OK:=N}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "User ID not revoked."
+    fi
+
+    message="Hostname removed by monkeysphere-server $DATE"
+
+    # edit-key script command to revoke user ID
+    revuidCommand=$(cat <<EOF
+$uidIndex
+revuid
+y
+4
+$message
+
+y
+save
+EOF
+	)	
+
+    # execute edit-key script
+    if echo "$revuidCommand" | \
+	gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
+        # update trust db
+	gpg_host --check-trustdb
+
+	show_server_key
+
+	echo "NOTE: User ID revoked, but revocation not published."
+	echo "Run '$PGRM publish-key' to publish the revocation."
+    else
+	failure "Problem revoking user ID."
+    fi
 }
 
 # publish server key to keyserver
 publish_server_key() {
     read -p "Really publish host key to $KEYSERVER? (y/N) " OK; OK=${OK:=N}
     if [ ${OK/y/Y} != 'Y' ] ; then
-	failure "aborting."
+	failure "key not published."
     fi
 
     # find the key fingerprint
     fingerprint=$(fingerprint_server_key)
 
     # publish host key
-    gpg_authentication "--keyserver $KEYSERVER --send-keys $fingerprint"
+    gpg_authentication "--keyserver $KEYSERVER --send-keys '0x${fingerprint}!'"
 }
 
 diagnostics() {
@@ -438,8 +560,11 @@ diagnostics() {
     local uid
     local fingerprint
     local badhostkeys
+    local sshd_config
 
-    seckey=$(fingerprint_server_key)
+    # FIXME: what's the correct, cross-platform answer?
+    sshd_config=/etc/ssh/sshd_config
+    seckey=$(gpg_host --list-secret-keys --fingerprint --with-colons --fixed-list-mode)
     keysfound=$(echo "$seckey" | grep -c ^sec:)
     curdate=$(date +%s)
     # warn when anything is 2 months away from expiration
@@ -461,10 +586,10 @@ diagnostics() {
 	if [ "$expire" ]; then
 	    if (( "$expire"  < "$curdate" )); then
 		echo "! Host key is expired."
-		# FIXME: recommend a way to resolve this other than re-keying?
+		echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
 	    elif (( "$expire" < "$warndate" )); then
 		echo "! Host key expires in less than $warnwindow:" $(date -d "$(( $expire - $curdate )) seconds" +%F)
-		# FIXME: recommend a way to resolve this?
+		echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
 	    fi
 	fi
 
@@ -506,6 +631,7 @@ diagnostics() {
 #   have a way to do that after key generation?)
 
 	# Ensure that the ssh_host_rsa_key file is present and non-empty:
+	echo
 	echo "Checking host SSH key..."
 	if [ ! -s "${VARLIB}/ssh_host_rsa_key" ] ; then
 	    echo "! The host key as prepared for SSH (${VARLIB}/ssh_host_rsa_key) is missing or empty."
@@ -515,14 +641,14 @@ diagnostics() {
 	    fi
 
 	    # propose changes needed for sshd_config (if any)
-	    if ! grep -q "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$" /etc/ssh/sshd_config; then
-		echo "! /etc/ssh/sshd_config does not point to the monkeysphere host key (${VARLIB}/ssh_host_rsa_key)."
-		echo " - Recommendation: add a line to /etc/ssh/sshd_config: 'HostKey ${VARLIB}/ssh_host_rsa_key'"
+	    if ! grep -q "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$" "$sshd_config"; then
+		echo "! $sshd_config does not point to the monkeysphere host key (${VARLIB}/ssh_host_rsa_key)."
+		echo " - Recommendation: add a line to $sshd_config: 'HostKey ${VARLIB}/ssh_host_rsa_key'"
 	    fi
-	    if badhostkeys=$(grep -i '^HostKey' | grep -q -v "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$") ; then
-		echo "! /etc/sshd_config refers to some non-monkeysphere host keys:"
+	    if badhostkeys=$(grep -i '^HostKey' "$sshd_config" | grep -q -v "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$") ; then
+		echo "! $sshd_config refers to some non-monkeysphere host keys:"
 		echo "$badhostkeys"
-		echo " - Recommendation: remove the above HostKey lines from /etc/ssh/sshd_config"
+		echo " - Recommendation: remove the above HostKey lines from $sshd_config"
 	    fi
 	fi
     fi
@@ -536,16 +662,17 @@ diagnostics() {
 
 # FIXME:  make sure that at least one identity certifier exists
 
+    echo
     echo "Checking for MonkeySphere-enabled public-key authentication for users ..."
     # Ensure that User ID authentication is enabled:
-    if ! grep -q "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$" /etc/ssh/sshd_config; then
-	echo "! /etc/ssh/sshd_config does not point to monkeysphere authorized keys."
-	echo " - Recommendation: add a line to /etc/ssh/sshd_config: 'AuthorizedKeysFile ${VARLIB}/authorized_keys/%u'"
+    if ! grep -q "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$" "$sshd_config"; then
+	echo "! $sshd_config does not point to monkeysphere authorized keys."
+	echo " - Recommendation: add a line to $sshd_config: 'AuthorizedKeysFile ${VARLIB}/authorized_keys/%u'"
     fi
-    if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' | grep -q -v "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$") ; then
-	echo "! /etc/sshd_config refers to non-monkeysphere authorized_keys files:"
+    if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' "$sshd_config" | grep -q -v "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$") ; then
+	echo "! $sshd_config refers to non-monkeysphere authorized_keys files:"
 	echo "$badauthorizedkeys"
-	echo " - Recommendation: remove the above AuthorizedKeysFile lines from /etc/ssh/sshd_config"
+	echo " - Recommendation: remove the above AuthorizedKeysFile lines from $sshd_config"
     fi
 }
 
@@ -605,30 +732,35 @@ add_certifier() {
     export keyID
 
     # get the key from the key server
-    gpg_authentication "--keyserver $KEYSERVER --recv-key '$keyID'"
+    gpg_authentication "--keyserver $KEYSERVER --recv-key '0x${keyID}!'"
 
     # get the full fingerprint of a key ID
-    fingerprint=$(gpg_authentication "--list-key --with-colons --with-fingerprint $keyID" | \
+    fingerprint=$(gpg_authentication "--list-key --with-colons --with-fingerprint 0x${keyID}!" | \
 	grep '^fpr:' | grep "$keyID" | cut -d: -f10)
 
-    echo "key found:"
-    gpg_authentication "--fingerprint $fingerprint"
+    if [ -z "$fingerprint" ] ; then
+	failure "Key '$keyID' not found."
+    fi
 
-    echo "Are you sure you want to add this key as a certifier of"
-    read -p "users on this system? (y/N) " OK; OK=${OK:-N}
+    echo
+    echo "key found:"
+    gpg_authentication "--fingerprint 0x${fingerprint}!"
+
+    echo "Are you sure you want to add the above key as a"
+    read -p "certifier of users on this system? (y/N) " OK; OK=${OK:-N}
     if [ "${OK/y/Y}" != 'Y' ] ; then
-	failure "aborting."
+	failure "Identity certifier not added."
     fi
 
     # export the key to the host keyring
-    gpg_authentication "--export $keyID" | gpg_host --import
+    gpg_authentication "--export 0x${fingerprint}!" | gpg_host --import
 
     if [ "$trust" == marginal ]; then
 	trustval=1
     elif [ "$trust" == full ]; then
 	trustval=2
     else
-	failure "trust value requested ('$trust') was unclear (only 'marginal' or 'full' are supported)"
+	failure "Trust value requested ('$trust') was unclear (only 'marginal' or 'full' are supported)."
     fi
 
     # ltsign command
@@ -645,10 +777,17 @@ EOF
 	)
 
     # ltsign the key
-    echo "$ltsignCommand" | gpg_host --quiet --command-fd 0 --edit-key "$fingerprint"
+    if echo "$ltsignCommand" | \
+	gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
 
-    # update the trustdb for the authentication keyring
-    gpg_authentication "--check-trustdb"
+        # update the trustdb for the authentication keyring
+	gpg_authentication "--check-trustdb"
+
+	echo
+	echo "Identity certifier added."
+    else
+	failure "Problem adding identify certifier."
+    fi
 }
 
 # delete a certifiers key from the host keyring
@@ -661,16 +800,42 @@ remove_certifier() {
 	failure "You must specify the key ID of a key to remove."
     fi
 
-    # delete the requested key (with prompting)
-    gpg_host --delete-key "$keyID"
+    if gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key 0x${keyID}!" ; then
+	read -p "Really remove above listed identity certifier? (y/N) " OK; OK=${OK:-N}
+	if [ "${OK/y/Y}" != 'Y' ] ; then
+	    failure "Identity certifier not removed."
+	fi
+    else
+	failure
+    fi
 
-    # update the trustdb for the authentication keyring
-    gpg_authentication "--check-trustdb"
+    # delete the requested key
+    if gpg_authentication "--delete-key --batch --yes 0x${keyID}!" ; then
+	# delete key from host keyring as well
+	gpg_host --delete-key --batch --yes "0x${keyID}!"
+        # update the trustdb for the authentication keyring
+	gpg_authentication "--check-trustdb"
+
+	echo
+	echo "Identity certifier removed."
+    else
+	failure "Problem removing identity certifier."
+    fi
 }
 
 # list the host certifiers
 list_certifiers() {
-    gpg_host --list-keys
+    local keys
+    local key
+
+    # find trusted keys in authentication keychain
+    keys=$(gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-keys --with-colons --fingerprint" | \
+        grep ^pub: | cut -d: -f2,5 | egrep '^(u|f):' | cut -d: -f2)
+
+    # output keys
+    for key in $keys ; do
+        gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key --fingerprint $key"
+    done
 }
 
 # issue command to gpg-authentication keyring
@@ -729,6 +894,10 @@ case $COMMAND in
 	gen_key "$@"
 	;;
 
+    'extend-key'|'e')
+	extend_key "$@"
+	;;
+
     'add-hostname'|'add-name'|'n+')
 	add_hostname "$@"
 	;;
@@ -739,10 +908,6 @@ case $COMMAND in
 
     'show-key'|'show'|'s')
 	show_server_key
-	;;
-
-    'show-fingerprint'|'fingerprint'|'f')
-	fingerprint_server_key
 	;;
 
     'publish-key'|'publish'|'p')
