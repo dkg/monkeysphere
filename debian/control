@@ -3,7 +3,7 @@ Section: net
 Priority: extra
 Maintainer: Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>
 Uploaders: Jameson Rollins <jrollins@fifthhorseman.net>
-Build-Depends: debhelper (>= 7.0), libgnutls-dev (>= 2.4.0)
+Build-Depends: debhelper (>= 7.0), libgnutls-dev (>= 2.4.0), git-core
 Standards-Version: 3.8.0.1
 Homepage: http://monkeysphere.info/
 Vcs-Git: git://monkeysphere.info/monkeysphere
