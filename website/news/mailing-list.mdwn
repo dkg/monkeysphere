@@ -15,7 +15,7 @@ we could setup a system to distribute that), and a mailing list that
 people other than us could join and browse the archives (we've got
 some interesting ideas here too)... 
 
-So, although our all-distributed model has cracked a bit, its mostly
+So, although our all-distributed model has cracked a bit, it's mostly
 for want of tools to facilitate the process, and although we are eager
 to explore the mechanisms to make these things happen, we didn't want
 to keep the monkeysphere back while we did so.
