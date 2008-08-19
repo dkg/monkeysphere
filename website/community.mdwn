@@ -1,0 +1,13 @@
+[[meta title="Monkeysphere community"]]
+
+# Mailing list #
+
+The Monkeysphere project is a new project with just one mailing list
+at the moment. Its where we roll our sphere, discuss development
+issues, the project, and various complicated conundrums involving
+subjects around the web of trust.
+
+[Join us](https://lists.riseup.net/www/info/monkeysphere), we're a
+friendly bunch. You can also [look through our
+archives](https://lists.riseup.net/www/arc/monkeysphere) if you don't
+believe me.
