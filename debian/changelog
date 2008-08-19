@@ -1,8 +1,9 @@
 monkeysphere (0.10-1) experimental; urgency=low
 
-  * Fix bug in previous uid processing bug fix (stupid stupid).
+  [ Jameson Graef Rollins ]
+  * brown paper bag release: invert test on calculated validity of keys.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Mon, 18 Aug 2008 13:16:15 -0700
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 18 Aug 2008 16:22:34 -0400
 
 monkeysphere (0.9-1) experimental; urgency=low
 

@@ -14,12 +14,6 @@ Work out the details (and describe a full use case) for assigning a
    do we export it so it's available when a second-party revocation is
    needed?
 
-Actually enable server hostkey publication.
-
-Streamline host key generation, publication, verification.  See
-   doc/george/host-key-publication for what dkg went through on
-   2008-06-19
-
 Ensure that authorized_user_ids are under as tight control as ssh
    expects from authorized_keys: we don't want monkeysphere to be a
    weak link in the filesystem.
@@ -47,7 +41,7 @@ Create ssh2openpgp or convert to full-fledged keytrans.
 
 Resolve the bugs listed in openpgp2ssh(1):BUGS.
 
-Understand and document alternate trustdb models.
+Document alternate trustdb models.
 
 Understand and document the output of gpg --check-trustdb:
  gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
@@ -101,6 +95,3 @@ Fix behavior when add-identity-certifier fails to fetch a key from the
 
 Allow server administrators to add-identity-certifier from a key in
    the filesystem (or on stdin, etc)
-
-Add "monkeysphere-server diagnostics" subcommand to identify missing
-   pieces of monkeysphere server administration setup.
