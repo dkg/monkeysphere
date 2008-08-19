@@ -1,0 +1,22 @@
+# The monkeysphere has a mailing list! #
+
+We've been working with a relatively bulky CC list since the inception
+of the monkeysphere concept, but we now have a
+[mailing-list!](http://lists.riseup.net/www/info/monkeysphere) It even
+has [archives!](https://lists.riseup.net/www/arc/monkeysphere)
+
+We started off with this CC list because we were interested in
+exploring distributed models of collaboration, communication and
+organization. Using the [git VCS](http://git.or.cz/) we were able to
+set up our development infrastructure to be totally distributed, but
+we soon realized that other aspects of the monkeysphere project needed
+to be accessible to the public, such as a project home page (although
+we could setup a system to distribute that), and a mailing list that
+people other than us could join and browse the archives (we've got
+some interesting ideas here too)... 
+
+So, although our all-distributed model has cracked a bit, its mostly
+for want of tools to facilitate the process, and although we are eager
+to explore the mechanisms to make these things happen, we didn't want
+to keep the monkeysphere back while we did so.
+
