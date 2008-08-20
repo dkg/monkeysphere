@@ -44,7 +44,7 @@ subcommands:
    --length (-l) BITS                  key length in bits (2048)
    --expire (-e) EXPIRE                date to expire
    --revoker (-r) FINGERPRINT          add a revoker
- extend-key (e) EXPIRE                   extend expiration to EXPIRE
+ extend-key (e) EXPIRE               extend expiration to EXPIRE
  add-hostname (n+) NAME[:PORT]       add hostname user ID to server key
  revoke-hostname (n-) NAME[:PORT]    revoke hostname user ID
  show-key (s)                        output all server host key information
@@ -115,14 +115,14 @@ show_server_key() {
     local tmpkey
 
     fingerprint=$(fingerprint_server_key)
-    gpg_authentication "--fingerprint --list-key $fingerprint"
+    gpg_authentication "--fingerprint --list-key --list-options show-unusable-uids $fingerprint"
 
     # dumping to a file named ' ' so that the ssh-keygen output
     # doesn't claim any potentially bogus hostname(s):
     tmpkey=$(mktemp -d)
     gpg_authentication "--export $fingerprint" | openpgp2ssh "$fingerprint" 2>/dev/null > "$tmpkey/ "
     echo -n "ssh fingerprint: "
-    (cd "$tmpkey" && ssh-keygen -l -f ' ')
+    (cd "$tmpkey" && ssh-keygen -l -f ' ' | awk '{ print $2 }')
     rm -rf "$tmpkey"
     echo -n "OpenPGP fingerprint: "
     echo "$fingerprint"
@@ -394,6 +394,8 @@ expire
 $extendTo
 save
 EOF
+
+    echo
     echo "NOTE: Host key expiration date adjusted, but not yet published."
     echo "Run '$PGRM publish-key' to publish the new expiration date."
 }
@@ -445,11 +447,13 @@ EOF
     # execute edit-key script
     if echo "$adduidCommand" | \
 	gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
-        # update trust db
-	gpg_host --check-trustdb
+
+        # update the trustdb for the authentication keyring
+	gpg_authentication "--check-trustdb"
 
 	show_server_key
 
+	echo
 	echo "NOTE: User ID added to key, but key not published."
 	echo "Run '$PGRM publish-key' to publish the new user ID."
     else
@@ -522,11 +526,13 @@ EOF
     # execute edit-key script
     if echo "$revuidCommand" | \
 	gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
-        # update trust db
-	gpg_host --check-trustdb
+
+        # update the trustdb for the authentication keyring
+	gpg_authentication "--check-trustdb"
 
 	show_server_key
 
+	echo
 	echo "NOTE: User ID revoked, but revocation not published."
 	echo "Run '$PGRM publish-key' to publish the revocation."
     else
@@ -813,6 +819,7 @@ remove_certifier() {
     if gpg_authentication "--delete-key --batch --yes 0x${keyID}!" ; then
 	# delete key from host keyring as well
 	gpg_host --delete-key --batch --yes "0x${keyID}!"
+
         # update the trustdb for the authentication keyring
 	gpg_authentication "--check-trustdb"
 

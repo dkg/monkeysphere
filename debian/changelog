@@ -1,3 +1,9 @@
+monkeysphere (0.11-1) UNRELEASED; urgency=low
+
+  * fix bug in trustdb update on add/revoke-hostname.
+
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Tue, 19 Aug 2008 17:01:02 -0700
+
 monkeysphere (0.10-2) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
