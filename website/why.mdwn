@@ -13,43 +13,45 @@ seeing messages like this?
 
 Do you actually tediously check the fingerprint against a
 cryptographically-signed message from the admin, or do you just cross
-your fingers and type "yes"?  Do you wish there was a better way to do
-it?  Shouldn't our tools be able to figure this out automatically?
+your fingers and type "yes"?  Do you wish there was a better way to
+verify that the host your connecting to actually is the host you mean
+to connect to?  Shouldn't our tools be able to figure this out
+automatically?
 
 Do you use `ssh`'s public key authentication for convenience and/or
 added security?  Have you ever worried about what might happen if you
-lose control of your key?  (Or did you have a key that was compromised
+lost control of your key?  (Or did you have a key that was compromised
 by [the OpenSSL debacle](http://bugs.debian.org/363516)?)  How many
 accounts/machines would you need to clean up to ensure that your old,
-bad key is no longer in use?  
+bad key is no longer in use?
 
 Have you ever wished you could phase out an old key and start using a
 new one without having to comb through every single account you have
 ever connected to?
 
-## As an `sshd` administrator ##
+## As an system administrator ##
 
-If you are a system administrator, have you ever tried to re-key an
-SSH server?  How did you ease the change along to your users?  How did
-you keep them from getting the big scary warning messages?  
+As a system administrator, have you ever tried to re-key an SSH
+server?  How did you communicate the key change to your users?  How
+did you keep them from getting the big scary warning message that the
+host key had changed?
 
-Have you ever wanted to allow a colleague key-based access to a
+Have you ever wanted to allow a remote colleague key-based access to a
 machine, *without* needing to have a copy of their public key on hand?
 
-Have you ever wanted to be able to revoke the ability of a user's key
-to authenticate across the entire infrastructure you manage, without
-touching each host by hand?
+Have you ever wanted to be able to add or revoke the ability of a
+user's key to authenticate across an entire infrastructure you manage,
+without touching each host by hand?
 
 ## What's the connection? ##
 
-These questions all stem from rough edges we run up against in regular
-use of SSH that could be improved by a decent [Public Key
+All of these issues are related to a lack of a [Public Key
 Infrastructure (or
-PKI)](http://dictionary.die.net/public%20key%20infrastructure).  A PKI
-at its core is a mechanism to provide answers to a few basic
-questions:
+PKI)](http://dictionary.die.net/public%20key%20infrastructure) for
+SSH.  A PKI at its core is a mechanism to provide answers to a few
+basic questions:
 
-* Do we know who a key actually belongs to?  How do we know?
+* Do we know who (or what host) a key actually belongs to?  How do we know?
 * Is the key still valid for use?
 
 Given a clearly stated set of initial assumptions, functional
@@ -60,7 +62,7 @@ fingerprints) except in relatively rare situations (e.g. when two
 people meet in person for the first time).
 
 The good news is that this is all possible, and available with free
-tools!
+tools: welcome to the MonkeySphere!
 
 ## Examples ##
 
@@ -76,10 +78,14 @@ administrator.
 Alice can set up the new `bob` account on `foo.example.org` without
 needing to give Bob a new passphrase to remember, and without needing
 to even know Bob's current SSH key.  She simply tells `foo` that `Bob
-<bob@example.net>` should have access to the `bob` account.
+<bob@example.net>` should have access to the `bob` account.  The
+MonkeySphere on `foo` then verifies Bob's identity through the OpenPGP
+Web of Trust and automatically add's Bob's SSH key to the
+authorized_keys file for the `bob` account.
 
 Bob's first connection to his new `bob` account on `foo.example.org`
-is seamless, because all the steps are already in place!  Using the
+is seamless, because the MonkeySphere on Bob's computer automatically
+verifies the host key for `foo.example.org` for Bob.  Using the
 MonkeySphere, Bob never has to "accept" an unintelligible host key or
 type a password.
 
