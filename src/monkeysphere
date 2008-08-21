@@ -212,7 +212,7 @@ function subkey_to_ssh_agent() {
 	    gpg --quiet --passphrase-fd 3 3<"$workingdir/passphrase" \
 		--export-options export-reset-subkey-passwd,export-minimal,no-export-attributes \
 		--export-secret-subkeys "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname" &
-	    (cd "$workingdir" && unset -v DISPLAY && unset -v SSH_ASKPASS && /usr/bin/setsid ssh-add "$@" "$kname" </dev/null )&
+	    (cd "$workingdir" && DISPLAY=nosuchdisplay SSH_ASKPASS=/bin/false ssh-add "$@" "$kname" </dev/null )&
 
 	    passphrase_prompt "Enter passphrase for MonkeySphere Key $subkey: " "$workingdir/passphrase"
 	    wait
