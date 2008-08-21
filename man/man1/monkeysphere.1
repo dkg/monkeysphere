@@ -24,17 +24,20 @@ connection authentication.
 .B update-known_hosts [HOST]...
 Update the known_hosts file.  For each specified host, gpg will be
 queried for a key associated with the host URI (see HOST
-IDENTIFICATION in monkeysphere(5)), optionally querying a keyserver.
+IDENTIFICATION in
+.BR monkeysphere(5)),
+optionally querying a keyserver.
 If an acceptable key is found for the host (see KEY ACCEPTABILITY in
-monkeysphere(5)), the key is added to the user's known_hosts file.  If
-a key is found but is unacceptable for the host, any matching keys are
-removed from the user's known_hosts file.  If no gpg key is found for
-the host, nothing is done.  If no hosts are specified, all hosts
-listed in the known_hosts file will be processed.  This subcommand
-will exit with a status of 0 if at least one acceptable key was found
-for a specified host, 1 if no matching keys were found at all, and 2
-if matching keys were found but none were acceptable.  `k' may be used
-in place of `update-known_hosts'.
+.BR monkeysphere(5)),
+the key is added to the user's known_hosts file.  If a key is found
+but is unacceptable for the host, any matching keys are removed from
+the user's known_hosts file.  If no gpg key is found for the host,
+nothing is done.  If no hosts are specified, all hosts listed in the
+known_hosts file will be processed.  This subcommand will exit with a
+status of 0 if at least one acceptable key was found for a specified
+host, 1 if no matching keys were found at all, and 2 if matching keys
+were found but none were acceptable.  `k' may be used in place of
+`update-known_hosts'.
 .TP
 .B update-authorized_keys
 Update the authorized_keys file for the user executing the command
@@ -43,7 +46,8 @@ monkeysphere keys are cleared from the authorized_keys file.  Then, or
 each user ID in the user's authorized_user_ids file, gpg will be
 queried for keys associated with that user ID, optionally querying a
 keyserver.  If an acceptable key is found (see KEY ACCEPTABILITY in
-monkeysphere(5)), the key is added to the user's authorized_keys file.
+.BR monkeysphere (5)),
+the key is added to the user's authorized_keys file.
 If a key is found but is unacceptable for the user ID, any matching
 keys are removed from the user's authorized_keys file.  If no gpg key
 is found for the user ID, nothing is done.  This subcommand will exit
@@ -60,6 +64,15 @@ monkeysphere transactions.  An expiration length can be specified with
 the `-e' or `--expire' option (prompt otherwise).  If no key ID is
 specified, but only one key exists in the secret keyring, that key
 will be used.  `g' may be used in place of `gen-subkey'.
+.TP
+.B subkey-to-ssh-agent [ssh-add arguments]
+Push all authentication-capable subkeys in your GnuPG secret keyring
+into your running ssh-agent.  Additional arguments are passed through
+to
+.BR ssh-add (1).
+For example, to remove the authentication subkeys, pass an additional
+`-d' argument.  To require confirmation on each use of the key, pass
+`-c'.  `s' may be used in place of `subkey-to-ssh-agent'.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
@@ -112,4 +125,5 @@ Kahn Gillmor <dkg@fifthhorseman.net>
 .BR monkeysphere-server (8),
 .BR monkeysphere (5),
 .BR ssh (1),
+.BR ssh-add (1),
 .BR gpg (1)
