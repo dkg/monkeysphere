@@ -1,0 +1,13 @@
+[[meta title="MonkeySphere 0.11-1 released!"]]
+
+# MonkeySphere 0.11-1 released! #
+
+MonkeySphere 0.11-1 has been released.  This release includes bugfixes
+and a new `monkeysphere subkey-to-ssh-agent` subcommand.  
+
+Using the new subcommand requires that your system's [GnuTLS library
+can deal with the gnu-dummy S2K
+extension](http://lists.gnu.org/archive/html/gnutls-devel/2008-08/msg00005.html),
+but it should fail gracefully if that's not possible.
+
+[[download]] it now!
