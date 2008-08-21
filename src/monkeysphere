@@ -42,6 +42,7 @@ subcommands:
  gen-subkey (g) [KEYID]              generate an authentication subkey
    --length (-l) BITS                  key length in bits (2048)
    --expire (-e) EXPIRE                date to expire
+ subkey-to-ssh-agent (s)             store authentication subkey in ssh-agent
  help (h,?)                          this help
 
 EOF
@@ -165,16 +166,61 @@ EOF
     fifoDir=$(mktemp -d)
     (umask 077 && mkfifo "$fifoDir/pass")
     echo "$editCommands" | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
-    
-    if [ "$DISPLAY" ] && which ssh-askpass >/dev/null; then
-	ssh-askpass "Please enter your passphrase for $keyID: " > "$fifoDir/pass"
-    else
-	read -s -p "Please enter your passphrase for $keyID: " PASS
-	echo "$PASS" > "$fifoDir/pass"
-    fi
+
+    passphrase_prompt  "Please enter your passphrase for $keyID: " "$fifoDir/pass"
+
     rm -rf "$fifoDir"
     wait
     log "done."
+}
+
+function subkey_to_ssh_agent() {
+    # try to add all authentication subkeys to the agent:
+
+    local authsubkeys
+    local secretkeys
+    local subkey
+    local workingdir
+    local kname
+
+    # get list of secret keys (to work around https://bugs.g10code.com/gnupg/issue945):
+    secretkeys=$(gpg --list-secret-keys --with-colons --fixed-list-mode --fingerprint | grep '^fpr:' | cut -f10 -d: | awk '{ print "0x" $1 "!" }')
+    
+    authsubkeys=$(gpg --list-secret-keys --with-colons --fixed-list-mode --fingerprint --fingerprint $secretkeys | cut -f1,5,10,12 -d: | grep -A1 '^ssb:[^:]*::[^:]*a[^:]*$' | grep '^fpr::' | cut -f3 -d: | sort -u)
+
+    workingdir=$(mktemp -d)
+    umask 077
+    mkfifo "$workingdir/passphrase"
+
+    # FIXME: we're currently allowing any other options to get passed
+    # through to ssh-add.  should we limit it to known ones?  For
+    # example: -d or -c and/or -t <lifetime> 
+
+    # FIXME: how do we know if we succeeded or failed?  ssh-add gives
+    # weird return values under setsid, and if there are more than one 
+
+    for subkey in $authsubkeys; do 
+	kname="MonkeySphere Key $subkey"
+
+	if [ "$1" = '-d' ]; then
+	    # we're removing the subkey:
+	    gpg --export "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname"
+	    (cd "$workingdir" && ssh-add -d "$kname")
+	else
+	    # we're adding the subkey:
+	    mkfifo "$workingdir/$kname"
+	    gpg --quiet --passphrase-fd 3 3<"$workingdir/passphrase" \
+		--export-options export-reset-subkey-passwd,export-minimal,no-export-attributes \
+		--export-secret-subkeys "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname" &
+	    (cd "$workingdir" && unset -v DISPLAY && unset -v SSH_ASKPASS && /usr/bin/setsid ssh-add "$@" "$kname" </dev/null )&
+
+	    passphrase_prompt "Enter passphrase for MonkeySphere Key $subkey: " "$workingdir/passphrase"
+	    wait
+	fi
+	rm -f "$workingdir/$kname"
+    done
+
+    rm -rf "$workingdir"
 }
 
 ########################################################################
@@ -286,6 +332,10 @@ case $COMMAND in
 
     'gen-subkey'|'g')
 	gen_subkey "$@"
+	;;
+
+    'subkey-to-ssh-agent'|'s')
+	subkey_to_ssh_agent "$@"
 	;;
 
     '--help'|'help'|'-h'|'h'|'?')

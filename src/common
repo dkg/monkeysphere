@@ -105,6 +105,21 @@ EOF
     echo "$keyExpire"
 }
 
+passphrase_prompt() {
+    local prompt="$1"
+    local fifo="$2"
+    local PASS
+
+    if [ "$DISPLAY" ] && which "${SSH_ASKPASS:-ssh-askpass}" >/dev/null; then
+	"${SSH_ASKPASS:-ssh-askpass}" "$prompt" > "$fifo"
+    else
+	read -s -p "$prompt" PASS
+	# Uses the builtin echo, so should not put the passphrase into
+	# the process table.  I think. --dkg
+	echo "$PASS" > "$fifo"
+    fi
+}
+
 # remove all lines with specified string from specified file
 remove_line() {
     local file
