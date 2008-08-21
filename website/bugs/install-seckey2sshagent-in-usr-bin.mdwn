@@ -35,9 +35,17 @@ which means that we can cleanly test whether the proposed [handling of
 passphrase-locked secret
 keys](bugs/handle-passphrase-locked-secret-keys/) is functional.  With
 that in mind, I'd like to propose that we could resolve this bug
-simply by adding a new subcommand: `monkeysphere authkey-to-agent`,
+simply by adding a new subcommand: `monkeysphere subkey-to-ssh-agent`,
 which would fail in the absence of a functionally-patched GnuTLS.
 
 Would this proposal be sufficient to resolve this bug?
+
+--dkg
+
+---
+
+Version 0.11-1 now has the `monkeysphere subkey-to-ssh-agent`
+subcommand, which works cleanly in the presence of a
+functionally-patched GnuTLS.
 
 --dkg

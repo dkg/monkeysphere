@@ -1,4 +1,4 @@
-monkeysphere (0.11-1) UNRELEASED; urgency=low
+monkeysphere (0.11-1) experimental; urgency=low
 
   [ Jameson Graef Rollins ]
   * fix bug in trustdb update on add/revoke-hostname.
@@ -6,6 +6,9 @@ monkeysphere (0.11-1) UNRELEASED; urgency=low
   [ Daniel Kahn Gillmor ]
   * debian/control: added Build-Depends: git-core for the new packaging
     format
+  * new subcommand: monkeysphere subkey-to-ssh-agent (relies on a patched
+    GnuTLS to deal with GPG's gnu-dummy S2K extension, but fails cleanly
+    if not found).
   
  -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Wed, 20 Aug 2008 11:24:35 -0400
 
