@@ -1,0 +1,41 @@
+[[meta title="Modified GnuTLS 2.4.x available"]]
+
+The MonkeySphere project is now making available a patched version of
+[GnuTLS](http://gnutls.org/) version 2.4.x, which enhances the utility
+of the `monkeysphere` package by enabling it to read authentication
+subkeys emitted by [GnuPG](http://gnupg.org/) under certain
+circumstances.
+
+You can track this package in debian lenny by adding the following
+lines to `/etc/apt/sources.list`:
+
+	deb http://monkeysphere.info/debian experimental gnutls
+	deb-src http://monkeysphere.info/debian experimental gnutls
+
+Or you can patch and build the packages yourself with the patches and
+scripts provided in [the MonkeySphere git repo](/download).
+
+The only modification needed simply enables the library to parse a GNU
+extension to the String-to-key (S2K) mechanism as laid out in [RFC
+4880](http://tools.ietf.org/html/rfc4880#section-3.7).
+
+The specific S2K extension supported is known as gnu-dummy, and it
+simply allows a "secret" key block to be written *without* storing any
+of the secret key material.  This is used by GnuPG on the primary key
+when the `--export-secret-subkeys` argument is given.
+
+You can read notes about the GNU S2K extensions in DETAILS from GnuPG,
+which you can fetch this way:
+
+	svn co svn://cvs.gnupg.org/gnupg/trunk/doc
+	less doc/DETAILS
+
+A version of this patch was first proposed [on
+`gnutls-dev`](http://lists.gnu.org/archive/html/gnutls-devel/2008-08/msg00005.html),
+and looks like it will be adopted upstream in the GnuTLS 2.6.x series,
+at which point these packages will be unnecessary.
+
+Until that time, these packages are provided to tide over users of
+`monkeysphere` on debian lenny (or compatible systems) who want to be
+able to hand off the authentication-capable OpenPGP subkeys in their
+GnuPG keyring to their SSH agent.
