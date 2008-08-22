@@ -4,7 +4,11 @@
 # ability to parse and accept the GNU S2K extension known as
 # "gnu-dummy" (which doesn't have any secret key data at all)
 
-# Note: you probably want 
+# Note: you probably want to prepare your build system in the
+# following way:
+
+# apt-get build-dep libgnutls26
+# aptitude install devscripts fakeroot
 
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Date: 2008-08-22 00:11:05-0400
@@ -12,15 +16,19 @@
 # Note: please run this from the current directory, so it can find and
 # transfer the patch it needs.
 
-workingdir=$(mktemp -d)
+if ! dpkg -l devscripts fakeroot >/dev/null ; then
+    exit 1
+fi
+
+workingdir=$(mktemp -d -p .)
 
 (cd "$workingdir" && apt-get source libgnutls26)
 
 cp ./*.diff "$workingdir/gnutls26-2.4".*/debian/patches/
 
-(cd "$workingdir/gnutls26-2.4".* && \
-    dch --local .s2kext1 --distribution experimental 'added patch to handle GNU extensions to S2K' && \
-    debuild -uc -us -sa)
+cd "$workingdir/gnutls26-2.4".* 
+dch --local .s2kext --distribution experimental 'added patch to handle GNU extensions to S2K'
+debuild -uc -us -sa
 
 echo now you should:
 echo reprepro -C gnutls include experimental "$workingdir/"*.changes
