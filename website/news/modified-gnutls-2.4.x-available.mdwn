@@ -24,12 +24,27 @@ simply allows a "secret" key block to be written *without* storing any
 of the secret key material.  This is used by GnuPG on the primary key
 when the `--export-secret-subkeys` argument is given.
 
-You can read notes about the GNU S2K extensions in DETAILS from GnuPG,
-which you can fetch this way:
+GnuPG's [DETAILS
+file](http://cvs.gnupg.org/cgi-bin/viewcvs.cgi/trunk/doc/DETAILS?root=GnuPG)
+describes this extension this way:
 
-	svn co svn://cvs.gnupg.org/gnupg/trunk/doc
-	less doc/DETAILS
+	GNU extensions to the S2K algorithm
+	===================================
+	S2K mode 101 is used to identify these extensions.
+	After the hash algorithm the 3 bytes "GNU" are used to make
+	clear that these are extensions for GNU, the next bytes gives the
+	GNU protection mode - 1000.  Defined modes are:
+	  1001 - do not store the secret part at all
+	  1002 - a stub to access smartcards (not used in 1.2.x)
 
+And [`gpg(1)`](http://linux.die.net/man/1/gpg) says of `--export-secret-subkeys`:
+
+
+	\[This\] command has the special property to render the secret
+	part of the primary key useless; this is a GNU extension to
+	OpenPGP and other implementations can not be expected to
+	successfully import such a key.
+	
 A version of this patch was first proposed [on
 `gnutls-dev`](http://lists.gnu.org/archive/html/gnutls-devel/2008-08/msg00005.html),
 and looks like it will be adopted upstream in the GnuTLS 2.6.x series,
