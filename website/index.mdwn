@@ -9,7 +9,7 @@ yourself and the servers you administer or connect to.  OpenPGP keys
 are tracked via GnuPG, and managed in the `known_hosts` and
 `authorized_keys` files used by OpenSSH for connection authentication.
 
-[why?](/why) | [[news]] | [[download]] | [[documentation|doc]] | [[community]] | [[bugs]]
+[why?](why) | [[download]] | [[documentation|doc]] | [[news]] | [[community]] | [[bugs]]
 
 ## Conceptual overview ##
 
