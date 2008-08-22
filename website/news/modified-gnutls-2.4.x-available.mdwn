@@ -40,7 +40,7 @@ describes this extension this way:
 And [`gpg(1)`](http://linux.die.net/man/1/gpg) says of `--export-secret-subkeys`:
 
 
-	\[This\] command has the special property to render the secret
+	[This] command has the special property to render the secret
 	part of the primary key useless; this is a GNU extension to
 	OpenPGP and other implementations can not be expected to
 	successfully import such a key.
