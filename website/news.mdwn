@@ -1,4 +1,4 @@
-[[!template id="header"]]
+[[!template id="nav"]]
 
 Here are the latest announcements about the Monkeysphere.
 

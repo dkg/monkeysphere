@@ -1,4 +1,4 @@
-[[!template id="header"]]
+[[!template id="nav"]]
 
 The Monkeysphere project's goal is to extend the web of trust model
 and other features of OpenPGP to other areas of the Internet to help

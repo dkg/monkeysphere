@@ -1,5 +1,5 @@
 [[meta title="Monkeysphere community"]]
-[[!template id="header"]]
+[[!template id="nav"]]
 
 # Mailing list #
 

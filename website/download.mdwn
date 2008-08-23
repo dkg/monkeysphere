@@ -1,4 +1,4 @@
-[[!template id="header"]]
+[[!template id="nav"]]
 
 ## Downloading and Installing ##
 

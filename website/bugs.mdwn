@@ -1,4 +1,4 @@
-[[!template id="header"]]
+[[!template id="nav"]]
 
 This is Monkeysphere's bug list. Link bugs to [[bugs/done]] when done.
 
