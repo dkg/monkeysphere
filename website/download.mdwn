@@ -1,3 +1,5 @@
+[[!template id="header"]]
+
 ## Downloading and Installing ##
 
 If you are running a Debian system, you can install Monkeysphere

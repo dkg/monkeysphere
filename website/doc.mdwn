@@ -1,4 +1,7 @@
+[[!template id="header"]]
+
 # Monkeysphere Documentation #
+
 
 ## Dependencies ##
 

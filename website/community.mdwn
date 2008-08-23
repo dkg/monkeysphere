@@ -1,4 +1,5 @@
 [[meta title="Monkeysphere community"]]
+[[!template id="header"]]
 
 # Mailing list #
 
