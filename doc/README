@@ -85,17 +85,52 @@ by the type of key (e.g. 1024D) followed by a slash and then your keyid.
 Using your OpenPGP authentication key for SSH
 ---------------------------------------------
 
-Once you have created a OpenPGP authentication key, you can feed it to
-your ssh agent by running seckey2sshagent (currently this is found in
-the src directory). Please run:
+Once you have created an OpenPGP authentication key, you will need to
+feed it to your ssh agent.
 
-./seckey2sshagent --help
+Currently (2008-08-23), gnutls does not support this operation. In order
+to take this step, you will need to upgrade to a patched version of
+gnutls. You can easily upgrade a Debian system by adding the following
+to /etc/apt/sources.list.d/monkeysphere.list:
 
-And read the directions - particularly the part about being dropped into
-a gpg edit session. This is a work in progress!
+		deb http://monkeysphere.info/debian experimental gnutls
+		deb-src http://monkeysphere.info/debian experimental gnutls
 
-NOTE: the current version of openpgp2ssh does *not* deal well with
-encrypted keys (as of 2008-07-26)
+And then adding the following to /etc/apt/preferences:
+
+		Package: libgnutls26
+		Pin: release o=The MonkeySphere Project
+		Pin-Priority: 990
+
+		Package: libgnutls26-dbg
+		Pin: release o=The MonkeySphere Project
+		Pin-Priority: 990
+
+		Package: gnutls-bin
+		Pin: release o=The MonkeySphere Project
+		Pin-Priority: 990
+
+		Package: gnutls-doc
+		Pin: release o=The MonkeySphere Project
+		Pin-Priority: 990
+
+		Package: guile-gnutls
+		Pin: release o=The MonkeySphere Project
+		Pin-Priority: 990
+
+		Package: gnutls-dev
+		Pin: release o=The MonkeySphere Project
+		Pin-Priority: 990
+
+Next, run `aptitude update; aptitude install libgnuttls26`.
+
+With the patched gnutls installed, you can feed your authentication sub
+key to your ssh agent by running:
+
+		monkeysphere subkey-to-ssh-agent
+
+You may want to add this command to your ~/.xsession file so it is run
+automatically everytime you login.
 
 FIXME: using the key with a single session?
 
