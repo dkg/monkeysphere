@@ -2,15 +2,16 @@ Monkeysphere User README
 ========================
 
 You don't have to be an OpenSSH or OpenPGP expert to use the
-Monkeysphere. However, you should be comfortable using secure shell and
-you should already have GnuPG installed and an OpenPGP key pair before
-you begin.
+Monkeysphere.  However, you should be comfortable using secure shell
+(ssh), and you should already have GnuPG installed and an OpenPGP key
+pair before you begin.
 
 As a regular user on a system where the monkeysphere package is
 installed, you probably want to do a few things:
 
-Keeping your keyring up-to-date
--------------------------------
+
+Keep your keyring up-to-date
+----------------------------
 
 Regularly refresh your GnuPG keyring from the keyservers.  This can be
 done with a simple cronjob.  An example of crontab line to do this is:
@@ -66,6 +67,7 @@ can establish that they are setup correctly.
 The remaining steps will complete the second half: allow servers to
 verify you based on your OpenPGP key.
 
+
 Setting up an OpenPGP authentication key
 ----------------------------------------
 
@@ -81,6 +83,7 @@ gpg --list-secret-keys
 
 The first line (starting with sec) will include your key length followed
 by the type of key (e.g. 1024D) followed by a slash and then your keyid.
+
 
 Using your OpenPGP authentication key for SSH
 ---------------------------------------------
@@ -133,6 +136,7 @@ You may want to add this command to your ~/.xsession file so it is run
 automatically everytime you login.
 
 FIXME: using the key with a single session?
+
 
 Miscellaneous
 -------------

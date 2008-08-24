@@ -1,5 +1,6 @@
-[[meta title="Monkeysphere community"]]
 [[!template id="nav"]]
+
+[[meta title="Monkeysphere community"]]
 
 # Mailing list #
 
@@ -11,4 +12,4 @@ subjects around the web of trust.
 [Join us](https://lists.riseup.net/www/info/monkeysphere), we're a
 friendly bunch. You can also [look through our
 archives](https://lists.riseup.net/www/arc/monkeysphere) if you don't
-believe me.
+believe us.

@@ -1,6 +1,6 @@
 [[!template id="nav"]]
 
-This is Monkeysphere's bug list. Link bugs to [[bugs/done]] when done.
+This is Monkeysphere's bug list.  You can also browse our [completed bugs](done).
 
 [[inline pages="./bugs/* and !./bugs/done and !link(done) 
 and !*/Discussion" actions=yes postform=yes show=0]]

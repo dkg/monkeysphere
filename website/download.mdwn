@@ -46,17 +46,17 @@ any of the developer repositories, including:
 
 The git repo from this web site:
 
-	git clone git://monkeysphere.info/monkeysphere monkeysphere
-
-[Jameson Graef Rollins](http://cmrg.fifthhorseman.net/wiki/jrollins):
-
-	git clone git://lair.fifthhorseman.net/~jrollins/monkeysphere monkeysphere
+	git clone git://monkeysphere.info/monkeysphere
 
 [Daniel Kahn Gillmor](http://cmrg.fifthhorseman.net/wiki/dkg):
 
-	git clone git://lair.fifthhorseman.net/~dkg/monkeysphere monkeysphere
+	git clone git://lair.fifthhorseman.net/~dkg/monkeysphere
 
-[Micah Anderson]
+[Jameson Graef Rollins](http://cmrg.fifthhorseman.net/wiki/jrollins):
+
+	git clone git://lair.fifthhorseman.net/~jrollins/monkeysphere
+
+Micah Anderson
 	
 	git clone git://labs.riseup.net/~micah/monkeysphere
 
