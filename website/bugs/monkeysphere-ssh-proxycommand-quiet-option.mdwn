@@ -32,3 +32,54 @@ personally.  It's more in keeping with the model we've used in general
 so far.
 
 --dkg
+
+------
+
+I just completed this feature. I published it to a separate branch
+(called quiet-mode). I haven't committed it to my master branch for a
+couple reasons:
+
+ * I made some significant changes and wanted to ask Big Jimmy to take a
+ look since it's mostly his stuff I mucked about with.
+
+ * Sometime between starting my hacking and mid-way through, my
+ ~.ssh/known_hosts file got truncted to nothing. I recovered from a
+ backup. I couldn't figure out what caused that to happen and couldn't
+ replicate it. I was debugging my bash and what I was debugging involved
+ bash redirection, so it's reasonable to think that something I did
+ caused the problem. However, before committing we incorporate this, I
+ would appreciate another set of eyes on my code to make sure I'm not
+ doing something dangerous or just dumb :).
+
+Here's an overview of what I did: 
+
+There were two function defined in common that handle sending messages
+to the user: log and loge. They both echo the argument passed to
+standard error. The first one also echo's "ms: " (as a preface to the
+message).  loge was only called in two places and I think is left over
+cruft (let me know if I'm wrong please!). 
+
+I've added drop in replacement functions: notice, info, and
+debug. I've replaced all instances of log and loge with info. 
+
+If you use notice, your message will always be sent to standard error.
+If you use info, it will be sent to standard error if the env variable
+MONKEYSPHERE_OUTPUT_QUIET is set to off (it is off by default).  If you
+use debug, it will be sent to standard error only if
+MONKEYSPHERE_OUTPUT_DEBUG is set to on (it's off by default). 
+
+Lastly, in monkeysphere-ssh-proxycommand, I've set
+MONKEYSPHERE_QUIET_MODE to on by default. 
+
+So the result is: when using monkeysphere-ssh-proxycommand, you will not
+get any output unless you set MONEKYSPHERE_OUTPUT_QUIET to off or
+MONKEYSPHERE_OUTPUT_DEBUG to on. All other commands should work exactly
+like they did in the past.
+
+And... we can go through the code and change calls to the info function
+to either notice (if we want them to be sent regardless of the QUIET
+variable) or debug (if we want it only sent if DEBUG is set).
+
+I'm open to suggestions, problems, etc :).
+
+SJJ
