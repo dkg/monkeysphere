@@ -128,25 +128,7 @@ key before joining the monkeysphere. You can do this with:
 
     # set subkey defaults
     # prompt about key expiration if not specified
-    if [ -z "$keyExpire" ] ; then
-	cat <<EOF
-Please specify how long the key should be valid.
-         0 = key does not expire
-      <n>  = key expires in n days
-      <n>w = key expires in n weeks
-      <n>m = key expires in n months
-      <n>y = key expires in n years
-EOF
-	while [ -z "$keyExpire" ] ; do
-	    read -p "Key is valid for? (0) " keyExpire
-	    if ! test_gpg_expire ${keyExpire:=0} ; then
-		echo "invalid value"
-		unset keyExpire
-	    fi
-	done
-    elif ! test_gpg_expire "$keyExpire" ; then
-	failure "invalid key expiration value '$keyExpire'."
-    fi
+    keyExpire=$(get_gpg_expiration "$keyExpire")
 
     # generate the list of commands that will be passed to edit-key
     editCommands=$(cat <<EOF

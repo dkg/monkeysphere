@@ -13,7 +13,8 @@ And like this for a server participating:
 		ms:   * acceptable key found.
 		ms: known_hosts file updated.
 
-However, I have some batch scripts that run ssh that also provide output, so the monkeysphere output clutters things up.
+However, I have some batch scripts that run ssh that also provide
+output, so the monkeysphere output clutters things up.
 
 I would really like to either have a -q/--quiet option, or, preferable for me
 at least, would be for silent output to be the default and have a -v/--verbose
@@ -39,17 +40,17 @@ I just completed this feature. I published it to a separate branch
 (called quiet-mode). I haven't committed it to my master branch for a
 couple reasons:
 
- * I made some significant changes and wanted to ask Big Jimmy to take a
- look since it's mostly his stuff I mucked about with.
+ * I made some significant changes and wanted to ask Big Jimmy to take
+ a look since it's mostly his stuff I mucked about with.
 
  * Sometime between starting my hacking and mid-way through, my
  ~.ssh/known_hosts file got truncted to nothing. I recovered from a
  backup. I couldn't figure out what caused that to happen and couldn't
- replicate it. I was debugging my bash and what I was debugging involved
- bash redirection, so it's reasonable to think that something I did
- caused the problem. However, before committing we incorporate this, I
- would appreciate another set of eyes on my code to make sure I'm not
- doing something dangerous or just dumb :).
+ replicate it. I was debugging my bash and what I was debugging
+ involved bash redirection, so it's reasonable to think that something
+ I did caused the problem. However, before committing we incorporate
+ this, I would appreciate another set of eyes on my code to make sure
+ I'm not doing something dangerous or just dumb :).
 
 Here's an overview of what I did: 
 
@@ -57,29 +58,73 @@ There were two function defined in common that handle sending messages
 to the user: log and loge. They both echo the argument passed to
 standard error. The first one also echo's "ms: " (as a preface to the
 message).  loge was only called in two places and I think is left over
-cruft (let me know if I'm wrong please!). 
+cruft (let me know if I'm wrong please!).
 
 I've added drop in replacement functions: notice, info, and
-debug. I've replaced all instances of log and loge with info. 
+debug. I've replaced all instances of log and loge with info.
 
 If you use notice, your message will always be sent to standard error.
 If you use info, it will be sent to standard error if the env variable
-MONKEYSPHERE_OUTPUT_QUIET is set to off (it is off by default).  If you
-use debug, it will be sent to standard error only if
-MONKEYSPHERE_OUTPUT_DEBUG is set to on (it's off by default). 
+`MONKEYSPHERE_OUTPUT_QUIET` is set to off (it is off by default).  If
+you use debug, it will be sent to standard error only if
+`MONKEYSPHERE_OUTPUT_DEBUG` is set to on (it's off by default).
 
 Lastly, in monkeysphere-ssh-proxycommand, I've set
-MONKEYSPHERE_QUIET_MODE to on by default. 
+`MONKEYSPHERE_QUIET_MODE` to on by default.
 
-So the result is: when using monkeysphere-ssh-proxycommand, you will not
-get any output unless you set MONEKYSPHERE_OUTPUT_QUIET to off or
-MONKEYSPHERE_OUTPUT_DEBUG to on. All other commands should work exactly
-like they did in the past.
+So the result is: when using monkeysphere-ssh-proxycommand, you will
+not get any output unless you set `MONEKYSPHERE_OUTPUT_QUIET` to off
+or `MONKEYSPHERE_OUTPUT_DEBUG` to on. All other commands should work
+exactly like they did in the past.
 
-And... we can go through the code and change calls to the info function
-to either notice (if we want them to be sent regardless of the QUIET
-variable) or debug (if we want it only sent if DEBUG is set).
+And... we can go through the code and change calls to the info
+function to either notice (if we want them to be sent regardless of
+the `QUIET` variable) or debug (if we want it only sent if `DEBUG` is
+set).
 
 I'm open to suggestions, problems, etc :).
 
-SJJ
+-- SJJ
+
+------
+
+Hey, your Royal Highness, push your branch where you did this work to
+your public repo so that I can pull it and check out the changes you
+made.  I think it's good that I look over these changes, because there
+is definitely some stuff (ie. key processing) that requires that
+things go to standard error and definitely not to standard out.  I can
+see that if that were changed, it's possible that things could go
+wrong (ie. cause a `known_hosts` file to get truncated maybe).
+
+I have to say that I'm still not sure I totally see why it's necessary
+to implement such nuanced output switches.  All of the stuff you were
+worried about when you reported this bug, and all the stuff that
+starts with "ms:", goes to stderr.  If you didn't want to see it, can
+you not just redirect stderr to /dev/null?
+
+For what it's worth, I'm not sure *I* can ever imagine *not* wanting
+to see that stuff, since it effectively reports on whether the host
+you're connecting to is acceptable or not.  I feel like I would always
+want to see that.  I guess that's neither here nor there, though,
+cause if a user thinks it would be a good switch to have, and it's not
+too difficult to implement (as this is), then it's worth implementing.
+
+I think before we really start trying to tackle this, though, we
+should outline what is the behavior we ultimately want.  What output
+do we want to go to stdout, and do we want to be able to turn that off
+or on?  What output do we want to go to stderr, and do we want to be
+able to turn that off or on?  At the moment, most output is really
+just info for the user, which is why I was sending it all to stderr.
+Should all output then just go to stderr, with a switch to either turn
+it off or on?
+
+I should point out that we're sort of hitting a bit of a bash
+limitation here.  Some monkeysphere internal functions pass info on to
+other stuff via stdout, but also need to report stuff to the user as
+well, which means this stuff can only be passed to the user via
+stderr.
+
+In any event, I just want to outline a straightforward policy about
+output so we can know how to best handle it.
+
+-- Big Jimmy.

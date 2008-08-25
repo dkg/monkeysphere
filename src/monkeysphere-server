@@ -308,12 +308,7 @@ gen_key() {
     fi
 
     # prompt about key expiration if not specified
-    if [ -z "$keyExpire" ] ; then
-	keyExpire=$(get_gpg_expiration)
-    fi
-    if ! test_gpg_expire "$keyExpire" ; then
-	failure "invalid key expiration value '$keyExpire'."
-    fi
+    keyExpire=$(get_gpg_expiration "$keyExpire")
 
     # set key parameters
     keyParameters=$(cat <<EOF
@@ -382,12 +377,8 @@ extend_key() {
 	failure "You don't appear to have a MonkeySphere host key on this server.  Try 'monkeysphere-server gen-key' first."
     fi
 
-    if [ -z "$extendTo" ]; then
-	extendTo=$(get_gpg_expiration)
-    fi
-    if ! test_gpg_expire "$extendTo" ; then
-	failure "invalid expiration value '$extendTo'."
-    fi
+    # get the new expiration date
+    extendTo=$(get_gpg_expiration "$extendTo")
 
     gpg_host --quiet --command-fd 0 --edit-key "$fpr" <<EOF 
 expire
