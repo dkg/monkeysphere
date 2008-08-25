@@ -126,3 +126,41 @@ In any event, I just want to outline a straightforward policy about
 output so we can know how to best handle it.
 
 -- Big Jimmy.
+
+-----
+
+I think it's important to be able to suppress "normal operation,
+everything is fine" messages *without* directing stderr to
+`/dev/null`.  This is the normal state of UNIX-style tools, especially
+tools like SSH which are used as piece of a larger toolchain.  If
+every tool in a toolchain emitted some output during successful
+operation, many scripts would be hopeless seas of noise, as it's not
+unusual for even a simple backup script to make use of a half-dozen
+separate tools.
+
+What you really want is to see some output from when a tool knows
+something is wrong.  With the proxycommand, the job of complaining
+will often be left up to `ssh` itself, after `~/.ssh/known_hosts` has
+been appropriately modified.  But sometimes, the proxycommand itself
+will fail, and if you've already directed stderr to `/dev/null` you
+won't get any reasonable information about the failure at the time it
+happens.
+
+As for the interface to adjust the verbosity, HRH SJJ's current
+proposal with a large number of environment variables seems confusing
+and overly-complex to me.
+
+i think we should follow OpenSSH's lead (since all monkeysphere users
+are likely to be somewhat familiar with it) and use a single variable
+that is set to a level.  For example, see `LogLevel` in
+`ssh_config(5)`.  It should probably default to `INFO`, same as
+`/usr/bin/ssh`.  If there was a way to extract this value from the
+user's SSH configuration/invocation itself and adopt it in the
+ProxyCommand, that would be even better, but i don't think that's a
+possibility with OpenSSH 5.1p1 at this point.
+
+Also, i agree with HRH SJJ that the distinction in the monkeysphere
+source between `log` and `loge` is unclear, and one of them should be
+dropped (or they should be better-documented in `/src/common`).
+
+	--dkg
