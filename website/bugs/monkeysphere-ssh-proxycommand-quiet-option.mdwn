@@ -88,13 +88,11 @@ I'm open to suggestions, problems, etc :).
 
 ------
 
-Hey, your Royal Highness, push your branch where you did this work to
-your public repo so that I can pull it and check out the changes you
-made.  I think it's good that I look over these changes, because there
-is definitely some stuff (ie. key processing) that requires that
-things go to standard error and definitely not to standard out.  I can
-see that if that were changed, it's possible that things could go
-wrong (ie. cause a `known_hosts` file to get truncated maybe).
+Hey, your Royal Highness.  I do think it's good that I look over these
+changes, because there are definitely some stuff (ie. key processing)
+that requires that things go to stderr and definitely not to stdout.
+I can see that if that were changed, it's possible that things could
+go wrong (ie. cause a `known_hosts` file to get truncated maybe).
 
 I have to say that I'm still not sure I totally see why it's necessary
 to implement such nuanced output switches.  All of the stuff you were
