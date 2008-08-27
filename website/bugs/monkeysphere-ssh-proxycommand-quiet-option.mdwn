@@ -164,3 +164,36 @@ source between `log` and `loge` is unclear, and one of them should be
 dropped (or they should be better-documented in `/src/common`).
 
 	--dkg
+
+----
+
+Thanks Big Jimmy and dkg all for the good feedback.
+
+I think you're right Big Jimmy about the sterr/stout. I may have
+accidentally output to stout instead of sterr. In any event - I think
+all of the logging should go to sterr to avoid that.
+
+Here's a proposed fix based on both of your responses - it tries to make
+my changes a bit simpler and more consistent with ssh behavior:
+
+ * Use on environmental variable: MONKEYSPHERE_LOG_LEVEL that can be set
+ to ERROR or INFO, with the default being INFO.
+ monkeysphere-ssh-proxycommand, however, will set the
+ MONKEYSPHERE_LOG_LEVEL to ERROR unless the user overrides that setting.
+
+ * Use two functions for reporting messages to the user via sterr that
+ will replace the existing log/loge functions: info (for outputting
+ "normal operation, everything's fine" messages) and error (for
+ outputting messages that indicate a problem that we think a user should
+ know about). Reporting a message to the user with the info function
+ will only be sent if the MONKEYSPHERE_LOG_LEVEL setting is INFO.
+ Reporting a message to the user with the error function will always be
+ output regardless of the MONKEYSPHERE_LOG_LEVEL value.
+
+ * Go through the code and, for each use of the current log/loge
+ function, determine if they should be replaced with info or error 
+ depending on how critical we think the message is.
+
+How does that sound? 
+
+  --Sir Jam Jam
