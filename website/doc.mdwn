@@ -32,7 +32,7 @@ it, so widespread adoption is important.
 [openssh-gpg](http://www.red-bean.com/~nemo/openssh-gpg/) is a patch
 against OpenSSH to support OpenPGP certificates.  According to its
 documentation, it is intended to support [`pgp-sign-rsa` and
-`pgp-sign-dss` public key algorithms, as specified by the
+`pgp-sign-dss` public key algorithms for hosts, as specified by the
 IETF](http://tools.ietf.org/html/rfc4253#section-6.6).
 
 Some concerns with `openssh-gpg`:
@@ -41,7 +41,25 @@ Some concerns with `openssh-gpg`:
    maintained beyond OpenSSH 3.6p1.  As of this writing, OpenSSH is on
    version 5.1p1.
 
+ * It only provides infrastructure in one direction: the user
+   authenticating the host by name.  There doesn't seem to be a
+   mechanism for dealing with identifying users by name, or allowing
+   users to globally revoke or update keys.
+
+ * The choice of User ID (`anything goes here (and here!)
+   <ssh@foo.example.net>`) for host keys overlaps with the current use
+   of the User ID space.  While it's unlikely that someone actually
+   uses this e-mail address in the web of trust, it would be a nasty
+   collision, as the holder of that key could impersonate the server
+   in question.  The monkeysphere uses [User IDs of the form
+   `ssh://foo.example.net`](http://tools.ietf.org/wg/secsh/draft-ietf-secsh-scp-sftp-ssh-uri/)
+   to avoid collisions with existing use.
+
+ * It's not clear that `openssh-gpg` acknowledges or respects the
+   usage flags on the host keys.
+
  * It requires patching OpenSSH.
+
 
 ### Perspectives OpenSSH client ###
 
@@ -66,6 +84,11 @@ Some concerns with the Perspectives OpenSSH client:
    notaries during your verification.  Who are the notaries?  How
    could they be compromised?
 
+ * It only provides infrastructure in one direction: the user
+   authenticating the host by name.  There is no mechanism for dealing
+   with identifying users by name, or allowing users to globally
+   revoke or change keys.
+
  * It requires patching OpenSSH
 
 ### OpenSSH with X.509v3 certificates ###
@@ -88,7 +111,8 @@ Some concerns about OpenSSH with X.509v3:
 
    Depending on how you declare your trust relationships, OpenPGP is
    capable of providing the same hierarchical structure as X.509, but
-   it is not limited to it.  The Web of Trust model is more flexible
-   and more adaptable than X.509.
+   it is not limited to such a structure.  The OpenPGP Web of Trust
+   model is more flexible and more adaptable to represent real-world
+   trust than X.509's rigid hierarchy.
 
  * It requires patching OpenSSH.
