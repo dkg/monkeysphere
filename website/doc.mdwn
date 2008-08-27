@@ -16,5 +16,79 @@
 
 ## Similar Projects ##
 
- * [openssh-gpg](http://www.red-bean.com/~nemo/openssh-gpg/)
- * [openssh with network notaries](http://www.cs.cmu.edu/~perspectives/openssh.html)
+The monkeysphere isn't the only project intending to implement a PKI
+for OpenSSH.  We provide links to these other projects because they're
+interesting, though we have concerns with their approaches.
+
+All of the other projects we've found so far require a patched version
+of OpenSSH, which makes adoption more difficult.  Most people don't
+build their own software, and simply overlaying a patched binary is
+associated with significant maintenance (and therefore security)
+problems.  A PKI becomes more useful the more people participate in
+it, so widespread adoption is important.
+
+### `openssh-gpg` ###
+
+[openssh-gpg](http://www.red-bean.com/~nemo/openssh-gpg/) is a patch
+against OpenSSH to support OpenPGP certificates.  According to its
+documentation, it is intended to support [`pgp-sign-rsa` and
+`pgp-sign-dss` public key algorithms, as specified by the
+IETF](http://tools.ietf.org/html/rfc4253#section-6.6).
+
+Some concerns with `openssh-gpg`:
+
+ * This patch is significantly old; it doesn't appear to have been
+   maintained beyond OpenSSH 3.6p1.  As of this writing, OpenSSH is on
+   version 5.1p1.
+
+ * It requires patching OpenSSH.
+
+### Perspectives OpenSSH client ###
+
+[The Perspectives project](http://www.cs.cmu.edu/~perspectives/) at
+CMU has released an [openssh client that uses network
+notaries](http://www.cs.cmu.edu/~perspectives/openssh.html) to bolster
+your confidence in new keys.  This offers a defense against a narrow
+MITM attack (e.g. by someone who controls your local gateway) by
+simply verifying that other machines from around the network see the
+same keys for the remote host that you're seeing.
+
+This is quite useful, but doesn't take the system as far as it could
+go, and doesn't tie into the existing web of trust.
+
+Some concerns with the Perspectives OpenSSH client:
+
+ * This client won't help if you are connecting to machines behind
+   firewalls, on NAT'ed LANs, with source IP filtering, or otherwise
+   in a restricted network state.
+
+ * There is still a question of why you should trust these particular
+   notaries during your verification.  Who are the notaries?  How
+   could they be compromised?
+
+ * It requires patching OpenSSH
+
+### OpenSSH with X.509v3 certificates ###
+
+Roumen Petrov [maintains a patch to OpenSSH that works with the X.509
+PKI model](http://www.roumenpetrov.info/openssh/).  This is the
+certificate hierarchy commonly used by TLS (and SSL before that).
+
+Some concerns about OpenSSH with X.509v3:
+
+ * the X.509 certificate specification itself [encourages corporate
+   consolidation and centralized global "trust" because of its
+   single-issuer architectural
+   limitation](http://lair.fifthhorseman.net/~dkg/tls-centralization/).
+   This results in an expensive and cumbersome system for smaller
+   players, and it also doesn't correspond to the true distributed
+   nature of human-to-human trust.  Furthermore, centralized global
+   "trusted authorities" create a tempting target for attack, and a
+   single-point-of-failure if an attack is successful.
+
+   Depending on how you declare your trust relationships, OpenPGP is
+   capable of providing the same hierarchical structure as X.509, but
+   it is not limited to it.  The Web of Trust model is more flexible
+   and more adaptable than X.509.
+
+ * It requires patching OpenSSH.
