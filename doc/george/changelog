@@ -9,6 +9,8 @@
 
 2008-08-26 - dkg
 	* aptitude update && aptitude full-upgrade
+	* added account 'daniel' for Dan Scott, and set him up with a way
+	  to publish to http://daniel.monkeysphere.info
 	
 2008-08-20 - dkg
 	* aptitude update && aptitude dist-upgrade: this includes
