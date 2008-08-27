@@ -176,19 +176,19 @@ all of the logging should go to sterr to avoid that.
 Here's a proposed fix based on both of your responses - it tries to make
 my changes a bit simpler and more consistent with ssh behavior:
 
- * Use on environmental variable: MONKEYSPHERE_LOG_LEVEL that can be set
- to ERROR or INFO, with the default being INFO.
- monkeysphere-ssh-proxycommand, however, will set the
- MONKEYSPHERE_LOG_LEVEL to ERROR unless the user overrides that setting.
+ * Use on environmental variable: `MONKEYSPHERE_LOG_LEVEL` that can be set
+ to `ERROR` or `INFO`, with the default being `INFO`.
+ `monkeysphere-ssh-proxycommand`, however, will set the
+ `MONKEYSPHERE_LOG_LEVEL` to `ERROR` unless the user overrides that setting.
 
  * Use two functions for reporting messages to the user via sterr that
  will replace the existing log/loge functions: info (for outputting
  "normal operation, everything's fine" messages) and error (for
  outputting messages that indicate a problem that we think a user should
  know about). Reporting a message to the user with the info function
- will only be sent if the MONKEYSPHERE_LOG_LEVEL setting is INFO.
+ will only be sent if the `MONKEYSPHERE_LOG_LEVEL` setting is `INFO`.
  Reporting a message to the user with the error function will always be
- output regardless of the MONKEYSPHERE_LOG_LEVEL value.
+ output regardless of the `MONKEYSPHERE_LOG_LEVEL` value.
 
  * Go through the code and, for each use of the current log/loge
  function, determine if they should be replaced with info or error 
@@ -197,3 +197,20 @@ my changes a bit simpler and more consistent with ssh behavior:
 How does that sound? 
 
   --Sir Jam Jam
+
+-----
+
+Sir Jam Jam's proposal sounds good to me, but why make it two separate
+functions?  Given the number of log levels used by OpenSSH, i'd prefer
+to make a single function that takes two arguments: the first argument
+is the level of the log, and the second argument is the data to be
+logged itself.  So you'd say:
+
+  log error "This is really terrible and broken!"
+  log info "The fuzzy bunny just smiled at you and nodded."
+
+Is that a reasonable amendment?  It seems like it will make it easier
+to add more levels if we find we need them, and it makes it easy to
+find every single log message in the source code at the same time.
+
+  --dkg
