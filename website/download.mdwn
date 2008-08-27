@@ -62,5 +62,6 @@ Micah Anderson
 
 ## Contact ##
 
-Please feel free to contact any of the Monkeysphere developers with
-any questions, comments, bug reports, requests, etc.
+Please feel free to contact any of the Monkeysphere developers or post
+to [the monkeysphere mailing list](/community) with any questions,
+comments, bug reports, requests, etc.
