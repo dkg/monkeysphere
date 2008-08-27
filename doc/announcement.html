@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-15">
+<title>Announcing the Monkeysphere</title>
+</head>
+
+<!-- This is a draft of a wider announcement for the Monkeysphere.
+     dkg will probably post the final version in his blog at
+     https://www.debian-administration.org/users/dkg/weblog
+
+     Edits are welcome! -->
+
+<body>
+<h1>Monkeysphere: an OpenPGP-based PKI for SSH</h1>
+
+<p>Ever thought that there should be an automated way to handle ssh
+keys?  Do you know the administrators of your servers, and wish that
+SSH could verify new host keys from them automatically, based on your
+personal connections to the web-of-trust?  Do you wish you could
+revoke and rotate your old SSH authentication keys without having to
+log into every single machine?</p>
+
+<p>Do you administer servers, and wish you could re-key them without
+sowing massive pain and confusion among your users (or worse,
+encouraging bad security habits among them)?  Do you wish you could
+identify the users to grant access by name, instead of by opaque
+string?  Do you wish you could rapidly grant or revoke access to a
+user across a group of machines by enabling or disabling
+authentication for that user?</p>
+
+<p>A group of us have been working on a public key infrastructure for
+SSH. <a href="http://monkeysphere.info">Monkeysphere</a> makes use of
+the existing OpenPGP web-of-trust to fetch and cryptographically
+validate (and revoke!) keys.  This works in either directions: both
+<code>authorized_keys</code> <em>and</em> <code>known_hosts</code> are
+handled.  Monkeysphere gives users and admins tools to deal with SSH
+keys by thinking about the people and machines to whom the keys
+belong, instead of requiring humans to do tedious (and error-prone)
+manual key verification.</p>
+
+<p>We have <a href="http://monkeysphere.info/download">debian packages
+available</a> which should install against lenny, <a
+href="https://lists.riseup.net/www/info/monkeysphere">a mailing
+list</a>, and open ears for good questions, suggestions and
+criticism.</p>
+
+<p>If you have a chance to give it a try (<a href="???">as a user</a>
+or <a href="???">as an admin</a>), it would be great to <a
+href="https://lists.riseup.net/www/info/monkeysphere">get
+feedback</a>.</p>
+
+</body> </html>
