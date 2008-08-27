@@ -7,6 +7,9 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-08-26 - dkg
+	* aptitude update && aptitude full-upgrade
+	
 2008-08-20 - dkg
 	* aptitude update && aptitude dist-upgrade: this includes
 	  monkeysphere 0.11-1 and OpenSSH 5.1p1-2
