@@ -2,5 +2,8 @@
 
 This is Monkeysphere's bug list.  You can also browse our [completed bugs](done).
 
+If you don't have commit access to the public repo, we'd appreciate
+you reporting bugs on [/community the monkeysphere mailing list].
+
 [[inline pages="./bugs/* and !./bugs/done and !link(done) 
 and !*/Discussion" actions=yes postform=yes show=0]]
