@@ -13,3 +13,38 @@ subjects around the web of trust.
 friendly bunch. You can also [look through our
 archives](https://lists.riseup.net/www/arc/monkeysphere) if you don't
 believe us.
+
+# Development #
+
+The Monkeysphere uses a distributed development model with
+[git](http://git.or.cz/).  Once you've [installed
+git](http://www.spheredev.org/wiki/Git_for_the_lazy), you can [git
+clone](http://www.kernel.org/pub/software/scm/git/docs/git-clone.html)
+from this web site:
+
+	git clone git://monkeysphere.info/monkeysphere
+
+## Individual developer repositories ##
+
+You might also be interested in the repositories of individual
+developers, which may contain branches or features not yet in the main
+offering:
+
+[Daniel Kahn Gillmor](http://cmrg.fifthhorseman.net/wiki/dkg):
+
+	git clone git://lair.fifthhorseman.net/~dkg/monkeysphere
+
+[Jameson Graef Rollins](http://cmrg.fifthhorseman.net/wiki/jrollins):
+
+	git clone git://lair.fifthhorseman.net/~jrollins/monkeysphere
+
+Micah Anderson
+	
+	git clone git://labs.riseup.net/~micah/monkeysphere
+ 
+
+# Contact #
+
+Please feel free to contact any of the Monkeysphere developers or post
+to the mailing list with questions, comments, bug reports, requests,
+etc.

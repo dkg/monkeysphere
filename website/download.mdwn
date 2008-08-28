@@ -19,6 +19,10 @@ key to your apt
 configuration](http://cmrg.fifthhorseman.net/wiki/apt/importing-keys
 "Instructions for adding dkg's key to apt")
 
+Once you've installed the packages, you might want to read up on how
+to get started [as a regular user](/getting-started-user) or [as a
+systems administrator](/getting-started-admin).
+
 ### Enhancements ###
 
 As of 2008-08-22, If you run debian lenny you're very close to being
@@ -34,34 +38,3 @@ include the `gnutls` component.  So they'd look like this instead:
 	deb-src http://monkeysphere.info/debian experimental monkeysphere gnutls
 
 You can [read more about this offering](/news/modified-gnutls-2.4.x-available.mdwn).
-
-## git repositories ##
-
-The Monkeysphere is attempting to use a completely distributed
-development model with [git](http://git.or.cz/).  Once you've
-[installed git](http://www.spheredev.org/wiki/Git_for_the_lazy), you
-can [git
-clone](http://www.kernel.org/pub/software/scm/git/docs/git-clone.html)
-any of the developer repositories, including:
-
-The git repo from this web site:
-
-	git clone git://monkeysphere.info/monkeysphere
-
-[Daniel Kahn Gillmor](http://cmrg.fifthhorseman.net/wiki/dkg):
-
-	git clone git://lair.fifthhorseman.net/~dkg/monkeysphere
-
-[Jameson Graef Rollins](http://cmrg.fifthhorseman.net/wiki/jrollins):
-
-	git clone git://lair.fifthhorseman.net/~jrollins/monkeysphere
-
-Micah Anderson
-	
-	git clone git://labs.riseup.net/~micah/monkeysphere
-
-## Contact ##
-
-Please feel free to contact any of the Monkeysphere developers or post
-to [the monkeysphere mailing list](/community) with any questions,
-comments, bug reports, requests, etc.
