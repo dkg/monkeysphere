@@ -214,3 +214,13 @@ to add more levels if we find we need them, and it makes it easy to
 find every single log message in the source code at the same time.
 
   --dkg
+
+-----
+
+I just implemented the proposal (incorporating dkg's suggestion about
+only having one function). It's committed in my quiet-mode branch (still
+not merged with master - pending review). 
+
+Thanks for all the feedback!
+
+-- SJJ
