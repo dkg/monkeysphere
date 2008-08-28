@@ -224,3 +224,10 @@ not merged with master - pending review).
 Thanks for all the feedback!
 
 -- SJJ
+
+----
+
+Ok, this plans makes sense.  I'll merge SJJ's patches as soon as I get
+the chance.
+
+-- BJ
