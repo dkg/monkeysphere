@@ -8,16 +8,16 @@ server service publication
 --------------------------
 To publish a server host key:
 
-# monkeysphere-server gen-key
-# monkeysphere-server publish-key
+		# monkeysphere-server gen-key
+		# monkeysphere-server publish-key
 
 This will generate the key for server with the service URI
 (ssh://server.hostname).  The server admin should now sign the server
 key so that people in the admin's web of trust can authenticate the
 server without manual host key checking:
 
-$ gpg --search ='ssh://server.hostname'
-$ gpg --sign-key ='ssh://server.hostname'
+		$ gpg --search ='ssh://server.hostname'
+		$ gpg --sign-key ='ssh://server.hostname'
 
 
 Update OpenSSH configuration files
@@ -27,7 +27,7 @@ To use the newly-generated host key for ssh connections, put the
 following line in /etc/ssh/sshd_config (be sure to remove references
 to any other key):
 
-HostKey /var/lib/monkeysphere/ssh_host_rsa_key
+		HostKey /var/lib/monkeysphere/ssh_host_rsa_key
 
 FIXME: should we just suggest symlinks in the filesystem here instead?
 
@@ -37,9 +37,7 @@ To enable users to use the monkeysphere to authenticate against the
 web-of-trust, add this line to /etc/ssh/sshd_config (again, making
 sure that no other AuthorizedKeysFile directive exists):
 
-AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
-
-
+		AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
 
 MonkeySphere authorized_keys maintenance
 ----------------------------------------
@@ -50,7 +48,7 @@ users.
 For each user account on the server, the userids of people authorized
 to log into that account would be placed in:
 
-  ~/.config/monkeysphere/authorized_user_ids
+		~/.config/monkeysphere/authorized_user_ids
 
 However, in order for users to become authenticated, the server must
 determine that the user keys have "full" validity.  This means that
@@ -59,17 +57,17 @@ connecting user's key would validate the user.  This would generally be
 the server admin.  If the server admin's keyid is XXXXXXXX, then on
 the server run:
 
-# monkeysphere-server add-identity-certifier XXXXXXXX
+		# monkeysphere-server add-identity-certifier XXXXXXXX
 
 To update the monkeysphere authorized_keys file for user "bob", the
 system would then run the following:
 
-# monkeysphere-server update-users bob
+		# monkeysphere-server update-users bob
 
 To update the monkeysphere authorized_keys file for all users on the
 the system, run the same command with no arguments:
 
-# monkeysphere-server update-users
+		# monkeysphere-server update-users
 
 You probably want to set up a regularly scheduled job (e.g. with cron)
 to take care of this regularly.

@@ -1,4 +1,4 @@
-Monkeysphere User README
+#Monkeysphere User README
 ========================
 
 You don't have to be an OpenSSH or OpenPGP expert to use the
@@ -16,7 +16,7 @@ Keep your keyring up-to-date
 Regularly refresh your GnuPG keyring from the keyservers.  This can be
 done with a simple cronjob.  An example of crontab line to do this is:
 
-0 12 * * * /usr/bin/gpg --refresh-keys > /dev/null 2>&1
+		0 12 * * * /usr/bin/gpg --refresh-keys > /dev/null 2>&1
 
 This would refresh your keychain every day at noon.
 
@@ -29,7 +29,7 @@ still see the most recent trusted information about who the various
 hosts are.  This can be done with the monkeysphere-ssh-proxycommand
 (see next section) or with the update-known_hosts command:
 
-$ monkeysphere update-known_hosts
+		$ monkeysphere update-known_hosts
 
 This command will check to see if there is an OpenPGP key for
 each (non-hashed) host listed in the known_hosts file, and then add
@@ -46,13 +46,13 @@ up-to-date for the host you are connecting to with ssh.  The best way
 to integrate this is to add the following line to the "Host *" section
 of your ~/.ssh/config file:
 
-ProxyCommand monkeysphere-ssh-proxycommand %h %p
+		ProxyCommand monkeysphere-ssh-proxycommand %h %p
 
 The "Host *" section specifies what ssh options to use for all
 connections. If you don't already have a "Host *" line, you can add it
 by entering:
 
-Host *
+		Host *
 
 On a line by itself. Add the ProxyCommand line just below it.
 
@@ -75,11 +75,11 @@ First things first: you'll need to create a new subkey for your
 current key, if you don't already have one.  If your OpenPGP key is
 keyid $GPGID, you can set up such a subkey relatively easily with:
 
-$ monkeysphere gen-subkey $GPGID
+		$ monkeysphere gen-subkey $GPGID
 
 Typically, you can find out what your keyid is by running:
 
-gpg --list-secret-keys
+		$ gpg --list-secret-keys
 
 The first line (starting with sec) will include your key length followed
 by the type of key (e.g. 1024D) followed by a slash and then your keyid.
@@ -104,10 +104,9 @@ Next, run `aptitude update; aptitude install libgnuttls26`.
 With the patched gnutls installed, you can feed your authentication sub
 key to your ssh agent by running:
 
-		monkeysphere subkey-to-ssh-agent
+		$ monkeysphere subkey-to-ssh-agent
 
 FIXME: using the key with a single session?
-
 
 Miscellaneous
 -------------
@@ -121,7 +120,7 @@ is the case for your host, ask your system administrator.
 If you want to do this as a regular user, use the
 update-authorized_keys command:
 
-$ monkeysphere update-authorized_keys
+		$ monkeysphere update-authorized_keys
 
 This command will take all the user IDs listed in the
 ~/.config/monkeysphere/authorized_user_ids file and check to see if
