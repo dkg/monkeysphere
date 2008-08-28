@@ -4,6 +4,7 @@ Monkeysphere Server Administrator README
 FIXME: distinguish between publishing a new monkeysphere-enabled host
 key and accepting user identification via the web-of-trust.
 
+
 server service publication
 --------------------------
 To publish a server host key:
@@ -38,6 +39,7 @@ web-of-trust, add this line to /etc/ssh/sshd_config (again, making
 sure that no other AuthorizedKeysFile directive exists):
 
 		AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
+
 
 MonkeySphere authorized_keys maintenance
 ----------------------------------------
