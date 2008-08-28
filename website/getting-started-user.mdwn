@@ -1,4 +1,4 @@
-#Monkeysphere User README
+Monkeysphere User README
 ========================
 
 You don't have to be an OpenSSH or OpenPGP expert to use the
