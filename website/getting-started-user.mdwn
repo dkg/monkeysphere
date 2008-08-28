@@ -16,20 +16,20 @@ Keep your keyring up-to-date
 Regularly refresh your GnuPG keyring from the keyservers.  This can be
 done with a simple cronjob.  An example of crontab line to do this is:
 
-		0 12 * * * /usr/bin/gpg --refresh-keys > /dev/null 2>&1
+	0 12 * * * /usr/bin/gpg --refresh-keys > /dev/null 2>&1
 
 This would refresh your keychain every day at noon.
 
 
-Keeping your known_hosts file in sync with your keyring
--------------------------------------------------------
+Keeping your `known_hosts` file in sync with your keyring
+-----------------------------------------------------------
 
 With your keyring updated, you want to make sure that OpenSSH can
 still see the most recent trusted information about who the various
 hosts are.  This can be done with the monkeysphere-ssh-proxycommand
 (see next section) or with the update-known_hosts command:
 
-		$ monkeysphere update-known_hosts
+	$ monkeysphere update-known_hosts
 
 This command will check to see if there is an OpenPGP key for
 each (non-hashed) host listed in the known_hosts file, and then add
@@ -37,22 +37,22 @@ the key for that host to the known_hosts file if one is found.  This
 command could be added to a crontab as well, if desired.
 
 
-Using monkeysphere-ssh-proxycommand(1)
---------------------------------------
+Using `monkeysphere-ssh-proxycommand`(1)
+----------------------------------------
 
 The best way to handle host keys is to use the monkeysphere ssh proxy
 command.  This command will make sure the known_hosts file is
 up-to-date for the host you are connecting to with ssh.  The best way
 to integrate this is to add the following line to the "Host *" section
-of your ~/.ssh/config file:
+of your `~/.ssh/config` file:
 
-		ProxyCommand monkeysphere-ssh-proxycommand %h %p
+	ProxyCommand monkeysphere-ssh-proxycommand %h %p
 
 The "Host *" section specifies what ssh options to use for all
 connections. If you don't already have a "Host *" line, you can add it
 by entering:
 
-		Host *
+	Host *
 
 On a line by itself. Add the ProxyCommand line just below it.
 
@@ -72,17 +72,13 @@ Setting up an OpenPGP authentication key
 ----------------------------------------
 
 First things first: you'll need to create a new subkey for your
-current key, if you don't already have one.  If your OpenPGP key is
-keyid $GPGID, you can set up such a subkey relatively easily with:
+current key, if you don't already have one.  If you already have a GPG
+key, you can add a subkey with:
 
-		$ monkeysphere gen-subkey $GPGID
+	$ monkeysphere gen-subkey
 
-Typically, you can find out what your keyid is by running:
-
-		$ gpg --list-secret-keys
-
-The first line (starting with sec) will include your key length followed
-by the type of key (e.g. 1024D) followed by a slash and then your keyid.
+If you have more than one secret key, you'll need to specify the key
+you want to add a subkey to on the command line.
 
 
 Using your OpenPGP authentication key for SSH
@@ -94,43 +90,43 @@ feed it to your ssh agent.
 Currently (2008-08-23), gnutls does not support this operation. In order
 to take this step, you will need to upgrade to a patched version of
 gnutls. You can easily upgrade a Debian system by adding the following
-to /etc/apt/sources.list.d/monkeysphere.list:
+to `/etc/apt/sources.list.d/monkeysphere.list`:
 
-		deb http://monkeysphere.info/debian experimental gnutls
-		deb-src http://monkeysphere.info/debian experimental gnutls
+	deb http://monkeysphere.info/debian experimental gnutls
+	deb-src http://monkeysphere.info/debian experimental gnutls
 
-Next, run `aptitude update; aptitude install libgnuttls26`.
+Next, run `aptitude update; aptitude install libgnutls26`.
 
-With the patched gnutls installed, you can feed your authentication sub
-key to your ssh agent by running:
+With the patched gnutls installed, you can feed your authentication
+subkey to your ssh agent by running:
 
-		$ monkeysphere subkey-to-ssh-agent
+	$ monkeysphere subkey-to-ssh-agent
 
-FIXME: using the key with a single session?
+FIXME: using the key with a single ssh connection?
 
 
 Miscellaneous
 -------------
 
-Users can also maintain their own authorized_keys files, for users
-that would be logging into their accounts.  This is primarily useful
-for accounts on hosts that are not already systematically using the
-monkeysphere for user authentication.  If you're not sure whether this
-is the case for your host, ask your system administrator.
+Users can also maintain their own `~/.ssh/authorized_keys` files with
+the Monkeysphere.  This is primarily useful for accounts on hosts that
+are not already systematically using the monkeysphere for user
+authentication.  If you're not sure whether this is the case for your
+host, ask your system administrator.
 
 If you want to do this as a regular user, use the
 update-authorized_keys command:
 
-		$ monkeysphere update-authorized_keys
+	$ monkeysphere update-authorized_keys
 
 This command will take all the user IDs listed in the
-~/.config/monkeysphere/authorized_user_ids file and check to see if
+`~/.config/monkeysphere/authorized_user_ids` file and check to see if
 there are acceptable keys for those user IDs available.  If so, they
-will be added to the ~/.ssh/authorized_keys file.
+will be added to the `~/.ssh/authorized_keys` file.
 
 You must have indicated reasonable ownertrust in some key for this
 account, or no keys will be found with trusted certification paths.
 
-If you find this useful, you might want to place a job like this in
-your crontab so that revocations and rekeyings can take place
+If you find this useful, you might want to place this command in your
+crontab so that revocations and rekeyings can take place
 automatically.
