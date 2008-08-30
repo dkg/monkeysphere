@@ -37,4 +37,4 @@ include the `gnutls` component.  So they'd look like this instead:
 	deb http://monkeysphere.info/debian experimental monkeysphere gnutls
 	deb-src http://monkeysphere.info/debian experimental monkeysphere gnutls
 
-You can [read more about this offering](/news/modified-gnutls-2.4.x-available.mdwn).
+You can [read more about this offering](/news/modified-gnutls-2.4.x-available).
