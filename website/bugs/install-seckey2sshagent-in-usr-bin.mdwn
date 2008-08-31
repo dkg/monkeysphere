@@ -49,3 +49,11 @@ subcommand, which works cleanly in the presence of a
 functionally-patched GnuTLS.
 
 --dkg
+
+---
+
+I'm marking this bug as [[bugs/done]] - I no longer think we should install
+seckey2sshagent in bin now that we have a clean way of accomplishing that task.
+Nice work dkg!
+
+--sjj

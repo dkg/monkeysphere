@@ -41,7 +41,7 @@ While ultimately contributing a patch to
 not a bad thing, we hope to be able to better establish the use of a
 PKI without resorting to source modification.
 
-### `openssh-gpg` ###
+### openssh-gpg ###
 
 [openssh-gpg](http://www.red-bean.com/~nemo/openssh-gpg/) is a patch
 against OpenSSH to support OpenPGP certificates.  According to its
