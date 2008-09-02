@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # monkeysphere-ssh-proxycommand: MonkeySphere ssh ProxyCommand hook
 #
