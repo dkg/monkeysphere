@@ -1,59 +1,23 @@
 THE MONKEYSPHERE
 ================
 
-AGENDA
-======
-[x] clowning
-[ ] work
-[x] jrollins will talk and gesture - in progress
+Monkeysphere is authentication layer that allows the sysadmin to
+perform authorization on OpenPGP user identities instead of on keys.
+It also allows end users to authenticate/identify the ssh server they
+are connecting to by checking the sysadmin's certification.
 
-MONKEYNAMES
-===========
+* GENERAL GOAL - use openpgp web-of-trust to authenticate ppl for SSH
+* SPECIFIC GOAL - allow openssh to tie into pgp web-of-trust without
+  modifying the openpgp spec, gpg or openssh 
+* DESIGN GOALS - authentication, use the existing generic OpenSSH
+  client, the admin can make it default, although end-user should be
+  decide to use monkeysphere or not 
+* DESIGN GOAL - use of monkeysphere should not radically change
+  connecting-to-server experience
 
-rhesus, marmoset, howler, langur, tamarin, barbary
+Host identity piece of monkeysphere could be used without buying into
+the user authentication component.
 
-COMPONENTS
-==========
-
-(names in "" are code names until we think of better ones.)
-
-common components
------------------
-* "rhesus": update known_hosts/authorized_keys files:
-  - be responsible for removing keys from the file as key revocation
-    happens
-  - be responsible for updating a key in the file where there is a key
-    replacement
-  - must result in a file that is parsable by the existing ssh client
-    without errors
-  - manual management must be allowed without stomping on it
-  - provide a simple, intelligible, clear policy for key acceptance
-
-* "langur": policy-editor for viewing/editing policies
-
-* gpg2ssh: utility to convert gpg keys to ssh
-  known_hosts/authorized_keys lines
-
-* ssh2gpg: create openpgp keypair from ssh keypair
-
-server-side components
-----------------------
-* "howler": server gpg maintainer
-  - generate gpg keys for the server
-  - publish server gpg keys
-  - give owner trust to keys for user authentication
-
-* "tamarin": concept - how to trigger or schedule rhesus at admin defined 
-	points (e.g. via cron or during ssh connections).
-
-client-side components
-----------------------
-* "marmoset": concept - how to trigger rhesus during attempt to initiate
-  connection to server
-  - runs on connection to a certain host
-  - triggers update to known_hosts file then makes connection
-  - proxy-command | pre-hook script | wrapper script
-  - (ssh_config "LocalCommand" is only run *after* connection)
 
 USE CASE
 ========
@@ -69,93 +33,49 @@ their personal gpg keys to the web of trust, and being good friends,
 have both signed each other's keys and marked each others keys with
 "full" ownertrust.
 
-When Alice set up mangabey initially, she used howler to publish a gpg
-key for the machine with the special userid of
-"ssh://mangabey.example.org".  She also signed mangabey's gpg key and
-published this certification to commonly-used keyservers.  Alice also
-configured mangabey to treat her own key with full ownertrust (could
-this be done as part of the howler invocation?)
+When Alice set up mangabey initially, she published an OpenPGP key for
+the machine with the special userid of "ssh://mangabey.example.org".
+She also signed mangabey's OpenPGP key and published this
+certification to commonly-used keyservers.  Alice also configured
+mangabey to treat her own key with full ownertrust, so that it knows
+how to identify connecting users.
 
 Now, Alice creates a user account "bob" on mangabey, and puts Bob's
 userid ("Bob <bob@example.org>") in the authorized_user_ids file for
-user bob on mangabey.  tamarin triggers on mangabey either by a
-cronjob or an inotify hook, and invokes rhesus for the "bob" account.
-rhesus automatically takes each userid in bob's authorized_user_ids
-file, and looks on a keyserver to find all public keys associated with
-that user ID, with the goal of populating the authorized_keys file for
-bob@mangabey.  
+user bob on mangabey.  The monkeysphere automatically (via cron or
+inotify hook) takes each userid in bob's authorized_user_ids file, and
+looks on a keyserver to find all public keys associated with that user
+ID, with the goal of populating the authorized_keys file for
+bob@mangabey.
 
 In particular: for each key found, the server evaluates the calculated
 validity of the specified user ID based on the ownertrust rules it has
 configured ("trust alice's certifications fully", in this example).
 For each key for which the user ID in question is fully-valid, it
 extracts all DSA- or RSA-based primary or secondary keys marked with
-usage flags for encrypted communications and authentication, and
-converts these gpg public keys into ssh public keys.  Finally, rhesus
-inserts these calculated public keys into the authorized_keys file for
-bob.
+the authentication usage flag, and converts these OpenPGP public keys
+into ssh public keys.  These keys are automatically placed into the
+authorized_keys file for bob.
 
 Bob now attempts to connect, by firing up a terminal and invoking:
 "ssh bob@mangabey.example.org".  Bob's monkeysphere-enabled ssh client
 notices that mangabey.example.org isn't already available in bob's
-known_hosts file, and triggers rhesus (on Bob's computer) to fetch the
-key for mangabey, with the goal of populating Bob's local known_hosts
+known_hosts file, and fetches the host key for mangabey from the
+public keyservers, with the goal of populating Bob's local known_hosts
 file.
 
-In particular: rhesus queries its configured keyservers to find all
-public keys with User ID ssh://mangabey.example.org.  For each public
-key found, rhesus checks the relevant User ID's validity, converts any
-"encrypted comms, authentication" gpg public keys into ssh public keys
-if the User ID validity is acceptable, and finally insert those keys
-into Bob's known_hosts file.
+In particular: the monkeysphere queries its configured keyservers to
+find all public keys with User ID ssh://mangabey.example.org.  For
+each public key found, it checks the relevant User ID's validity,
+converts any authentication-capable OpenPGP public keys into ssh
+public keys if the User ID validity is acceptable, and finally insert
+those keys into Bob's known_hosts file.
 
 On Bob's side, since mangabey's key had "full" validity (it was signed
-by Alice whom he fully trusts), Bob's ssh client deems mangabey
+by Alice, whom he fully trusts), Bob's ssh client deems mangabey
 "known" and no further host key checking is required.
 
 On mangabey's side, since Bob's key has "full" validity (it had been
 signed by Alice, mangabey's trusted administrator), Bob is
 authenticated and therefore authorized to log into his account.
 
-NOTES
-=====
-
-* Daniel and Elliot lie. <check>
-* We will use a distributed VCS, each developer will create their own
-  git repository and publish it publicly for others to pull from, mail
-  out 
-* public project page doesn't perhaps make sense yet
-* approximate goal - using the web of trust to authenticate ppl for
-  SSH 
-* outline of various components of monkeysphere
-* M: what does it mean to be in the monkeysphere?  not necessarily a
-  great coder.
-* J: interested in seeing project happen, not in actually doing it.
-  anybody can contribute as much as they want. 
-* J: if we put the structure in place to work on monkeysphere then we
-  don't have to do anything 
-* D: we are not creating 
-* understand gpg's keyring better, understanding tools better,
-  building scripts 
-* Some debian packages allow automated configuration of config files.
-
-* GENERAL GOAL - use openpgp web-of-trust to authenticate ppl for SSH
-* SPECIFIC GOAL - allow openssh to tie into pgp web-of-trust without
-  modifying either openpgp and openssh 
-* DESIGN GOALS - authentication, use the existing generic OpenSSH
-  client, the admin can make it default, although end-user should be
-  decide to use monkeysphere or not 
-* DESIGN GOAL - use of monkeysphere should not radically change
-  connecting-to-server experience 
-* GOAL - pick a monkey-related name for each component 
-
-Host identity piece of monkeysphere could be used without buying into
-the authorization component.
-
-Monkeysphere is authentication layer that allows the sysadmin to
-perform authorization on user identities instead of on keys, it
-additionally allows the sysadmin also to authenticate the server to
-the end-user.
-
-see doc/git-init for more detail on how to pull from the distributed
-repositories.

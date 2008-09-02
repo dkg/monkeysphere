@@ -413,7 +413,7 @@ gpg_fetch_userid() {
 
     userID="$1"
 
-    log verbose " checking keyserver $KEYSERVER... "
+    log info " checking keyserver $KEYSERVER... "
     echo 1,2,3,4,5 | \
 	gpg --quiet --batch --with-colons \
 	--command-fd 0 --keyserver "$KEYSERVER" \
