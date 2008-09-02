@@ -50,6 +50,7 @@ table.sitenav {
  border-bottom: 2px solid black;
  padding: 0px;
  width: 100%;
+ font-size: larger;
 }
 
 table.sitenav img.logo { 
@@ -58,8 +59,3 @@ table.sitenav img.logo {
  vertical-align: bottom;
 }
 
-table.sitenav li { 
- display: inline;
- margin: 1em;
- font-size: larger;
-}
