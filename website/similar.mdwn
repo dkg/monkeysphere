@@ -5,6 +5,8 @@ The monkeysphere isn't the only project intending to implement a PKI
 for OpenSSH.  We provide links to these other projects because they're
 interesting, though we have concerns with their approaches.
 
+[[toc ]]
+
 All of the other projects we've found so far require a patched version
 of OpenSSH, which makes adoption more difficult.  Most people don't
 build their own software, and simply overlaying a patched binary is
