@@ -855,7 +855,7 @@ unset MONKEYSPHERE_USER
 
 # set empty config variable with ones from the environment, or with
 # defaults
-LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=${LOG_LEVEL:="info"}}
+LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=${LOG_LEVEL:="INFO"}}
 KEYSERVER=${MONKEYSPHERE_KEYSERVER:=${KEYSERVER:="subkeys.pgp.net"}}
 AUTHORIZED_USER_IDS=${MONKEYSPHERE_AUTHORIZED_USER_IDS:=${AUTHORIZED_USER_IDS:="%h/.config/monkeysphere/authorized_user_ids"}}
 RAW_AUTHORIZED_KEYS=${MONKEYSPHERE_RAW_AUTHORIZED_KEYS:=${RAW_AUTHORIZED_KEYS:="%h/.ssh/authorized_keys"}}

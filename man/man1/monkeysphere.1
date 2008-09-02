@@ -83,6 +83,10 @@ Output a brief usage summary.  `h' or `?' may be used in place of
 The following environment variables will override those specified in
 the monkeysphere.conf configuration file (defaults in parentheses):
 .TP
+MONKEYSPHERE_LOG_LEVEL
+Set the log level.  Can be SILENT, ERROR, INFO, DEBUG, in increasing
+order of verbosity.
+.TP
 MONKEYSPHERE_GNUPGHOME, GNUPGHOME
 GnuPG home directory (~/.gnupg).
 .TP

@@ -1,10 +1,10 @@
 monkeysphere (0.12-1) UNRELEASED; urgency=low
 
-  * Improved output handling.
+  * Improved output handling.  New LOG_LEVEL variable.
   * debian/control: switched Homepage: and Vcs-Git: to canonicalized
     upstream hostnames.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sun, 24 Aug 2008 23:49:23 -0700
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Mon, 01 Sep 2008 23:55:56 -0700
 
 monkeysphere (0.11-1) experimental; urgency=low
 

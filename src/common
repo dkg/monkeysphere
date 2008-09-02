@@ -26,15 +26,40 @@ failure() {
     exit ${2:-'255'}
 }
 
-# write output to stderr
+# write output to stderr based on specified LOG_LEVEL the first
+# parameter is the priority of the output, and everything else is what
+# is echoed to stderr
 log() {
+    local priority
     local level
+    local output
 
-    level="$1"
+    # translate lowers to uppers in global log level
+    LOG_LEVEL=$(echo "$LOG_LEVEL" | tr "[:lower:]" "[:upper:]")
+
+    # just go ahead and return if the log level is silent
+    if [ "$LOG_LEVEL" = 'SILENT' ] ; then
+	return
+    fi
+
+    # get priority from first parameter, translating all lower to
+    # uppers
+    priority=$(echo "$1" | tr "[:lower:]" "[:upper:]")
     shift
 
-    echo -n "ms: " >&2
-    echo "$@" >&2
+    # scan over available levels
+    # list in decreasing verbosity (all caps)
+    for level in DEBUG INFO ERROR ; do
+	# output if the log level matches, set output to true
+	# this will output for all subsequenty loops as well.
+	if [ "$LOG_LEVEL" = "$level" ] ; then
+	    output=true
+	fi
+	if [ "$priority" = "$level" -a "$output" = 'true' ] ; then
+	    echo -n "ms: " >&2
+	    echo "$@" >&2
+	fi
+    done
 }
 
 # cut out all comments(#) and blank lines from standard input
