@@ -45,3 +45,7 @@ pre {
 	padding: 3px 3px 3px 3px;
 	margin-left: 2em;
 }
+
+div.sitehead { 
+ border-bottom: 1px solid black;
+ }

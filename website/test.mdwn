@@ -1,0 +1,3 @@
+[[!template id="sitehead"]]
+
+A test page.
