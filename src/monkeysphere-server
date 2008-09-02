@@ -157,7 +157,7 @@ update_users() {
     for uname in $unames ; do
 	# check all specified users exist
 	if ! getent passwd "$uname" >/dev/null ; then
-	    log verbose "----- unknown user '$uname' -----"
+	    log error "----- unknown user '$uname' -----"
 	    continue
 	fi
 
