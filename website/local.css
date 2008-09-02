@@ -1,29 +1,42 @@
-body {
-	font-family: "Liberation Sans",sans-serif;
-	font-size:1em;
-	margin-left: 5%;
-	margin-right:20%;
-}
-
-h1 {
-	font-size: 1.5em;
-}
-
 h2 {
-	font-size: 1.2em;
+-moz-border-radius-topleft:4px;
+-moz-border-radius-topright:4px;
+background-color:#B67B4E;
+color:black;
+display:block;
+font-weight:bold;
+padding:0 0 0 10px;
 }
 
-h3 {
-	font-size: 1em;
+body {
+color:#3F403F;
+font-family:"Liberation Sans",sans-serif;
+font-size:0.95em;
 }
 
-h4 {
-	font-size: 1em;
+*|*:visited 
+color:#f6a464;
 }
 
-.header span {
-	font-size: 1.5em;
-	color: #aaaaaa;
+*|*:-moz-any-link {
+text-decoration:none;
+}
+
+:-moz-any-link {
+cursor:pointer;
+}
+
+a:link { 
+  color: #CC6600;
+  text-deoration: none;
+}
+
+a:visited { 
+  color: #c2772b;
+}
+
+a:hover { 
+  text-decoration: underline;
 }
 
 pre {
