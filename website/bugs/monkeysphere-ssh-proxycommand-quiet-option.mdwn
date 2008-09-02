@@ -231,3 +231,17 @@ Ok, this plans makes sense.  I'll merge SJJ's patches as soon as I get
 the chance.
 
 -- BJ
+
+----
+
+I implemented a variant of SJJ's proposed changes in
+bb2427c28bf40179c4881b22c23f23f9bea78f55 (0.12 pre).  I tried to make
+it so that we could more easily expand the number of levels if need
+be.  I made a first pass at specifying which output is what priority,
+but folks should please speak up if they think the priority of any
+particular output should be changed.
+
+I'll leave the bug open for a bit until it get more tested and 0.12
+gets pushed out.
+
+-- BJ
