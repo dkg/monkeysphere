@@ -61,7 +61,6 @@ table.sitenav img.logo {
 
 table.sitenav a { 
   font-weight: bold;
-  text-decoration: none;
   margin-right: 1em;
 }
 
@@ -69,11 +68,6 @@ table.sitenav span.selflink {
   font-weight: bold;
   text-decoration: underline;
   margin-right: 1em;
-}
-
-table.sitenav a:hover { 
-  font-weight: bold;
-  text-decoration: underline;
 }
 
 div.header { 
