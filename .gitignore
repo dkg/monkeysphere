@@ -5,3 +5,6 @@ debian/monkeysphere.debhelper.log
 debian/monkeysphere.substvars
 debian/monkeysphere/
 src/keytrans/openpgp2ssh
+repo/db
+repo/dists
+repo/pool
