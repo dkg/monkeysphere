@@ -11,13 +11,12 @@ You can add this repo to your system by putting the following lines in
 	deb http://archive.monkeysphere.info/debian experimental monkeysphere
 	deb-src http://archive.monkeysphere.info/debian experimental monkeysphere
 
-The repository is currently signed by [Daniel Kahn Gillmor's OpenPGP
-key](http://fifthhorseman.net/dkg.gpg "dkg's key"), key id D21739E9
-(fingerprint: `0EE5 BE97 9282 D80B 9F75 40F1 CCD2 ED94 D217 39E9`).
-To cryptographically verify the packages, you'll want to [add `dkg`'s
-key to your apt
-configuration](http://cmrg.fifthhorseman.net/wiki/apt/importing-keys
-"Instructions for adding dkg's key to apt")
+The repository is currently signed by [The Monkeysphere archive
+signing key](/archive-key), key id EB8AF314 (fingerprint: `2E8D
+D26C 53F1 197D DF40 3E61 18E6 67F1 EB8A F314`).  To cryptographically
+verify the packages, you'll want to [add this key to your apt
+configuration after verifying its
+integrity](http://wiki.debian.org/SecureApt).
 
 Once you've installed the packages, you might want to read up on how
 to get started [as a regular user](/getting-started-user) or [as a
