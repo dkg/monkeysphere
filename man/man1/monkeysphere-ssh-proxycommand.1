@@ -37,7 +37,7 @@ connection to the host itself.
 .SH KEYSERVER CHECKING
 
 The proxy command has a fairly nuanced policy for when keyservers are
-queried when processing host.  If the host userID is not found in
+queried when processing a host.  If the host userID is not found in
 either the user's keyring or in the known_hosts file, then the
 keyserver is queried for the host userID.  If the host userID is found
 in the user's keyring, then the keyserver is not checked.  This
