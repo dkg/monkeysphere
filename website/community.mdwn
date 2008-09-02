@@ -38,7 +38,7 @@ offering:
 
 	git clone git://lair.fifthhorseman.net/~jrollins/monkeysphere
 
-Micah Anderson
+Micah Anderson:
 	
 	git clone git://labs.riseup.net/~micah/monkeysphere
  

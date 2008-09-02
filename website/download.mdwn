@@ -20,7 +20,7 @@ configuration](http://cmrg.fifthhorseman.net/wiki/apt/importing-keys
 "Instructions for adding dkg's key to apt")
 
 Once you've installed the packages, you might want to read up on how
-to get started [as a regular user](/getting-started-user) or [as a
+to get started [as a regular user](/getting-started-user), or [as a
 systems administrator](/getting-started-admin).
 
 ### Enhancements ###
