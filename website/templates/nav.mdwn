@@ -1,3 +1,6 @@
-<div class="sitehead">
-[[!img /logo.png alt="monkeysphere"]] [[overview|index]] | [[why?|why]] | [[download]] | [[documentation|doc]] | [[news]] | [[community]] | [[bugs]]
-</div>
+<table class="sitenav" cellpadding="0" cellspacing="0">
+<tbody><tr><td>
+<img src="/logo.png" alt="monkeysphere" width="343" height="85" /></td>
+<td>
+ [[overview|index]] | [[why?|why]] | [[download]] | [[documentation|doc]] | [[news]] | [[community]] | [[bugs]]
+</td></tr></tbody></table>
