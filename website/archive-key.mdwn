@@ -1,5 +1,6 @@
 [[meta title="Monkeysphere archive signing key"]]
 [[!template id="nav"]]
+[[toc ]]
 
 ## Verifying the key ##
 
@@ -99,10 +100,11 @@ tag `$TAG` on architecture `$ARCH`, do:
 	cd repo
 	reprepro -C monkeysphere include experimental ../$TAG_$ARCH.changes
 
-When you get a package from a separate architecture `$NEWARCH`, do:
+When you get a binary package built from a separate architecture
+`$NEWARCH` that you want to include with the archive, do:
 
 	cd repo
-	reprepro -C monkeysphere includedeb experimental ../$TAG_NEWARCH.deb
+	reprepro -C monkeysphere includedeb experimental ../$TAG_$NEWARCH.deb
 
 To publish the archive, make sure you have access to
 `archivemaster@george.riseup.net`, and then do:
