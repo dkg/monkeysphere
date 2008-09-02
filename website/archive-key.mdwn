@@ -1,0 +1,86 @@
+[[meta title="Monkeysphere archive signing key"]]
+[[!template id="nav"]]
+
+## Verifying the key ##
+
+The [Monkeysphere apt repository](/download) is signed by this key, so
+you can verify that the packages come from the right place and have
+not been tampered with.
+
+This key is certified by several of the Monkeysphere developers, and
+should be able to be found from the public keyservers with:
+
+	gpg --keyserver $KEYSERVER --recv EB8AF314
+
+You should be able to verify the fingerprint like this:
+
+	[0 dkg@squeak ~]$ gpg --list-key --fingerprint http://archive.monkeysphere.info/debian
+	pub   4096R/EB8AF314 2008-09-02 [expires: 2009-09-02]
+	      Key fingerprint = 2E8D D26C 53F1 197D DF40  3E61 18E6 67F1 EB8A F314
+	uid       [  full  ] Monkeysphere Archive Signing Key (http://archive.monkeysphere.info/debian)
+	
+	[0 dkg@squeak ~]$ 
+
+And you can verify the fingerprints with:
+ 
+	gpg --list-sigs http://archive.monkeysphere.info/debian
+
+If you believe that the repository has been tampered with, please [let
+us know](/community)!
+
+## The key itself ##
+
+<pre>
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+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
+=Xex0
+-----END PGP PUBLIC KEY BLOCK-----
+</pre>
+
+## Management of the key ##
+
+The archive signing key is currently under the control of [Daniel Kahn
+Gillmor](http://cmrg.fifthhorseman.net/dkg), though the task of being
+the archive maintainer may be taken over by a different developer in
+the future.
+
+In the event of a new archive maintainer, the entire archive will be
+rebuilt from signed tags in [the monkeysphere git
+repository](/community), rather than trying to piece together 
