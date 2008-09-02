@@ -1,0 +1,10 @@
+Origin: The MonkeySphere Project
+Label: MonkeySphere/Debian
+Suite: experimental
+Codename: experimental
+Architectures: i386 powerpc amd64 arm source
+Components: monkeysphere gnutls
+Description: Packages implementing the monkeysphere for debian
+SignWith: 2E8DD26C53F1197DDF403E6118E667F1EB8AF314
+DscIndices: Sources Release . .gz
+DebIndices: Packages Release . .gz

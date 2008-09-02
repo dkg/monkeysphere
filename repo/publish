@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# simple reminder script to publish the repository to the usual spot:
+
+rsync -avz --delete dists pool root@george.riseup.net:/srv/apt/
