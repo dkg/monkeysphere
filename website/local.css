@@ -65,6 +65,12 @@ table.sitenav a {
   margin-left: 1em;
 }
 
+table.sitenav span.selflink { 
+  font-weight: bold;
+  text-decoration: underline;
+  margin-left: 1em;
+}
+
 table.sitenav a:hover { 
   font-weight: bold;
   text-decoration: underline;
