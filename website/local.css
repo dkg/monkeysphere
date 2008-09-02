@@ -62,13 +62,13 @@ table.sitenav img.logo {
 table.sitenav a { 
   font-weight: bold;
   text-decoration: none;
-  margin-left: 1em;
+  margin-right: 1em;
 }
 
 table.sitenav span.selflink { 
   font-weight: bold;
   text-decoration: underline;
-  margin-left: 1em;
+  margin-right: 1em;
 }
 
 table.sitenav a:hover { 
