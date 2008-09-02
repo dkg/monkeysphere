@@ -75,3 +75,11 @@ table.sitenav a:hover {
   font-weight: bold;
   text-decoration: underline;
 }
+
+div.header { 
+ text-align: right;
+}
+
+div.actions { 
+ text-align: right;
+}
