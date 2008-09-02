@@ -12,6 +12,8 @@
 	  with ikiwiki updates
 	* moved apt repository over to http://archive.monkeysphere.info/
 	* aptitude update && aptitude dist-upgrade
+	* canonicalizing hostname for normal web access to
+	  http://web.monkeysphere.info
 	
 2008-08-26 - dkg
 	* aptitude update && aptitude full-upgrade
