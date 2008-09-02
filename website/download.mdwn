@@ -23,7 +23,7 @@ Once you've installed the packages, you might want to read up on how
 to get started [as a regular user](/getting-started-user) or [as a
 systems administrator](/getting-started-admin).
 
-### Enhancements ###
+## Enhancements ##
 
 As of 2008-08-22, If you run debian lenny you're very close to being
 able to run a fully monkeysphere-enabled system.  One gap in the
