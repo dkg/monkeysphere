@@ -9,8 +9,8 @@ circumstances.
 You can track this package in debian lenny by adding the following
 lines to `/etc/apt/sources.list`:
 
-	deb http://monkeysphere.info/debian experimental gnutls
-	deb-src http://monkeysphere.info/debian experimental gnutls
+	deb http://archive.monkeysphere.info/debian experimental gnutls
+	deb-src http://archive.monkeysphere.info/debian experimental gnutls
 
 Or you can patch and build the packages yourself with the patches and
 scripts provided in [the MonkeySphere git repo](/download).

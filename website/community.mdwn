@@ -1,8 +1,8 @@
 [[!template id="nav"]]
 
-[[meta title="Monkeysphere community"]]
+[[meta title="Community"]]
 
-# Mailing list #
+## Mailing list ##
 
 The Monkeysphere project is a new project with just one mailing list
 at the moment. Its where we roll our sphere, discuss development
@@ -14,7 +14,7 @@ friendly bunch. You can also [look through our
 archives](https://lists.riseup.net/www/arc/monkeysphere) if you don't
 believe us.
 
-# Development #
+## Development ##
 
 The Monkeysphere uses a distributed development model with
 [git](http://git.or.cz/).  Once you've [installed
@@ -22,9 +22,9 @@ git](http://www.spheredev.org/wiki/Git_for_the_lazy), you can [git
 clone](http://www.kernel.org/pub/software/scm/git/docs/git-clone.html)
 from this web site:
 
-	git clone git://monkeysphere.info/monkeysphere
+	git clone git://git.monkeysphere.info/monkeysphere
 
-## Individual developer repositories ##
+### Individual developer repositories ###
 
 You might also be interested in the repositories of individual
 developers, which may contain branches or features not yet in the main
@@ -43,7 +43,7 @@ Micah Anderson:
 	git clone git://labs.riseup.net/~micah/monkeysphere
  
 
-# Contact #
+## Contact ##
 
 Please feel free to contact any of the Monkeysphere developers or post
 to the mailing list with questions, comments, bug reports, requests,

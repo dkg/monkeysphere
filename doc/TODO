@@ -95,3 +95,7 @@ Fix behavior when add-identity-certifier fails to fetch a key from the
 
 Allow server administrators to add-identity-certifier from a key in
    the filesystem (or on stdin, etc)
+
+Think about packaging monkeysphere for other (non-apt-based) operating
+   systems.  RPM-based linux systems, FreeBSD ports, and Mac OS X seem
+   like the most likely candidates.

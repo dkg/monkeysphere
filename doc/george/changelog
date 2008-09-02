@@ -7,6 +7,14 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-09-01 - dkg
+	* set up http://dkg.monkeysphere.info so that i could play around
+	  with ikiwiki updates
+	* moved apt repository over to http://archive.monkeysphere.info/
+	* aptitude update && aptitude dist-upgrade
+	* canonicalizing hostname for normal web access to
+	  http://web.monkeysphere.info
+	
 2008-08-26 - dkg
 	* aptitude update && aptitude full-upgrade
 	* added account 'daniel' for Dan Scott, and set him up with a way

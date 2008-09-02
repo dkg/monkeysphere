@@ -1,7 +1,7 @@
 [[!template id="nav"]]
 [[meta title="Documentation"]]
 
-# Dependencies #
+## Dependencies ##
 
 Monkeysphere relies on:
 
@@ -9,15 +9,18 @@ Monkeysphere relies on:
  * [OpenSSH](http://openssh.com/)
  * [GnuPG](http://gnupg.org/)
 
-# Getting started #
+## Getting started ##
 
  * Getting started as a [user](/getting-started-user)
  * Getting started as a [server admin](/getting-started-admin)
 
-# References #
+## References ##
 
  * [Initial specifications at CMRG](http://cmrg.fifthhorseman.net/wiki/OpenPGPandSSH)
  * [OpenPGP (RFC 4880)](http://tools.ietf.org/html/rfc4880)
  * [Secure Shell Authentication Protocol (RFC 4252)](http://tools.ietf.org/html/rfc4252)
    * [URI scheme for SSH, RFC draft](http://tools.ietf.org/wg/secsh/draft-ietf-secsh-scp-sftp-ssh-uri/)
- * [Other similar projects](/others)
+
+## Other ##
+
+ * [Similar Projects](/similar) (other attempts at a PKI for SSH)

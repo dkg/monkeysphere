@@ -2,7 +2,7 @@
 
 [[meta title="Why should you be interested in the MonkeySphere?"]]
 
-# Why should you be interested in the MonkeySphere? #
+[[toc ]]
 
 ## As an `ssh` user ##
 
@@ -31,6 +31,8 @@ Have you ever wished you could phase out an old key and start using a
 new one without having to comb through every single account you have
 ever connected to?
 
+[Get started with the monkeysphere as a user!](/getting-started-user)
+
 ## As an system administrator ##
 
 As a system administrator, have you ever tried to re-key an SSH
@@ -44,6 +46,8 @@ machine, *without* needing to have a copy of their public key on hand?
 Have you ever wanted to be able to add or revoke the ability of a
 user's key to authenticate across an entire infrastructure you manage,
 without touching each host by hand?
+
+[Get started with the monkeysphere as an administrator!](/getting-started-admin)
 
 ## What's the connection? ##
 

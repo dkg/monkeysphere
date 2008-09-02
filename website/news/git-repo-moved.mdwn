@@ -1,0 +1,9 @@
+[[meta title="git repository moved"]]
+
+The monkeysphere git repository has been moved from
+`git://monkeysphere.info/monkeysphere` to
+`git://git.monkeysphere.info/monkeysphere`.  You'll probably want to
+update your `.git/config` to match the [official clone
+target](/community).
+
+Apologies for any confusion or hassle this causes!

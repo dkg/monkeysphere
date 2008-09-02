@@ -1,7 +1,7 @@
 [[meta title="Add man pages to web site"]]
 
 We should publish the various monkeysphere man pages in browsable form
-somewhere under http://monkeysphere.info/.  Ideally, this would be
+somewhere under http://web.monkeysphere.info/.  Ideally, this would be
 updated automatically from the sources for the official man pages
 themselves.
 
