@@ -22,7 +22,7 @@ git](http://www.spheredev.org/wiki/Git_for_the_lazy), you can [git
 clone](http://www.kernel.org/pub/software/scm/git/docs/git-clone.html)
 from this web site:
 
-	git clone git://monkeysphere.info/monkeysphere
+	git clone git://git.monkeysphere.info/monkeysphere
 
 ### Individual developer repositories ###
 

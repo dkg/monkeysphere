@@ -5,8 +5,8 @@ Maintainer: Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>
 Uploaders: Jameson Rollins <jrollins@fifthhorseman.net>
 Build-Depends: debhelper (>= 7.0), libgnutls-dev (>= 2.4.0), git-core
 Standards-Version: 3.8.0.1
-Homepage: http://monkeysphere.info/
-Vcs-Git: git://monkeysphere.info/monkeysphere
+Homepage: http://web.monkeysphere.info/
+Vcs-Git: git://git.monkeysphere.info/monkeysphere
 Dm-Upload-Allowed: yes
 Format: 3.0 (git)
 
