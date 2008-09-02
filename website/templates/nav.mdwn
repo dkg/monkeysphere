@@ -2,5 +2,5 @@
 <tbody><tr><td>
 <a class="logo" href="/"><img class="logo" src="/logo.png" alt="monkeysphere" width="343" height="85" /></a>
 </td><td>
-[[why?|why]] | [[download]] | [[documentation|doc]] | [[news]] | [[community]] | [[bugs]]
+[[WHY?|why]] | [[DOWNLOAD|download]] | [[DOCUMENTATION|doc]] | [[NEWS|news]] | [[COMMUNITY|community]] | [[BUGS|bugs]]
 </td></tr></tbody></table>
