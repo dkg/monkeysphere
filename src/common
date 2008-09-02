@@ -28,11 +28,12 @@ failure() {
 
 # write output to stderr
 log() {
-    echo -n "ms: " >&2
-    echo "$@" >&2
-}
+    local level
 
-loge() {
+    level="$1"
+    shift
+
+    echo -n "ms: " >&2
     echo "$@" >&2
 }
 
@@ -368,13 +369,12 @@ gpg_fetch_userid() {
 
     userID="$1"
 
-    log -n " checking keyserver $KEYSERVER... "
+    log info " checking keyserver $KEYSERVER... "
     echo 1,2,3,4,5 | \
 	gpg --quiet --batch --with-colons \
 	--command-fd 0 --keyserver "$KEYSERVER" \
 	--search ="$userID" > /dev/null 2>&1
     returnCode="$?"
-    loge "done."
 
     # if the user is the monkeysphere user, then update the
     # monkeysphere user's trustdb
@@ -396,10 +396,13 @@ gpg_fetch_userid() {
 # (see /usr/share/doc/gnupg/DETAILS.gz)
 # output is one line for every found key, in the following format:
 #
-# flag:fingerprint
+# flag:sshKey
 #
 # "flag" is an acceptability flag, 0 = ok, 1 = bad
-# "fingerprint" is the fingerprint of the key
+# "sshKey" is the translated gpg key
+#
+# all log output must go to stderr, as stdout is used to pass the
+# flag:sshKey to the calling function.
 #
 # expects global variable: "MODE"
 process_user_id() {
@@ -438,7 +441,7 @@ process_user_id() {
 
     # if the gpg query return code is not 0, return 1
     if [ "$?" -ne 0 ] ; then
-        log " no primary keys found."
+        log error " no primary keys found."
         return 1
     fi
 
@@ -455,21 +458,21 @@ process_user_id() {
 		lastKeyOK=
 		fingerprint=
 
-		log " primary key found: $keyid"
+		log error " primary key found: $keyid"
 
 		# if overall key is not valid, skip
 		if [ "$validity" != 'u' -a "$validity" != 'f' ] ; then
-		    log "  - unacceptable primary key validity ($validity)."
+		    log error "  - unacceptable primary key validity ($validity)."
 		    continue
 		fi
 		# if overall key is disabled, skip
 		if check_capability "$usage" 'D' ; then
-		    log "  - key disabled."
+		    log error "  - key disabled."
 		    continue
 		fi
 		# if overall key capability is not ok, skip
 		if ! check_capability "$usage" $requiredPubCapability ; then
-		    log "  - unacceptable primary key capability ($usage)."
+		    log error "  - unacceptable primary key capability ($usage)."
 		    continue
 		fi
 
@@ -483,7 +486,7 @@ process_user_id() {
 		;;
 	    'uid') # user ids
 		if [ "$lastKey" != pub ] ; then
-		    log " - got a user ID after a sub key?!  user IDs should only follow primary keys!"
+		    log error " - got a user ID after a sub key?!  user IDs should only follow primary keys!"
 		    continue
 		fi
 		# if an acceptable user ID was already found, skip
@@ -504,16 +507,16 @@ process_user_id() {
 		# output a line for the primary key
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
-		    log "  * acceptable primary key."
+		    log error "  * acceptable primary key."
 		    if [ -z "$sshKey" ] ; then
-			log "    ! primary key could not be translated (not RSA or DSA?)."
+			log error "    ! primary key could not be translated (not RSA or DSA?)."
 		    else
 			echo "0:${sshKey}"
 		    fi
 		else
-		    log "  - unacceptable primary key."
+		    log error "  - unacceptable primary key."
 		    if [ -z "$sshKey" ] ; then
-			log "   ! primary key could not be translated (not RSA or DSA?)."
+			log error "   ! primary key could not be translated (not RSA or DSA?)."
 		    else
 			echo "1:${sshKey}"
 		    fi
@@ -560,16 +563,16 @@ process_user_id() {
 		# output a line for the sub key
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
-		    log "  * acceptable sub key."
+		    log error "  * acceptable sub key."
 		    if [ -z "$sshKey" ] ; then
-			log "    ! sub key could not be translated (not RSA or DSA?)."
+			log error "    ! sub key could not be translated (not RSA or DSA?)."
 		    else
 			echo "0:${sshKey}"
 		    fi
 		else
-		    log "  - unacceptable sub key."
+		    log error "  - unacceptable sub key."
 		    if [ -z "$sshKey" ] ; then
-			log "    ! sub key could not be translated (not RSA or DSA?)."
+			log error "    ! sub key could not be translated (not RSA or DSA?)."
 		    else
 			echo "1:${sshKey}"
 		    fi
@@ -595,7 +598,7 @@ process_host_known_hosts() {
     host="$1"
     userID="ssh://${host}"
 
-    log "processing: $host"
+    log info "processing: $host"
 
     nKeys=0
     nKeysOK=0
@@ -696,7 +699,7 @@ update_known_hosts() {
 
     # note if the known_hosts file was updated
     if [ "$(file_hash "$KNOWN_HOSTS")" != "$fileCheck" ] ; then
-	log "known_hosts file updated."
+	log info "known_hosts file updated."
     fi
 
     # if an acceptable host was found, return 0
@@ -719,12 +722,12 @@ update_known_hosts() {
 process_known_hosts() {
     local hosts
 
-    log "processing known_hosts file..."
+    log info "processing known_hosts file..."
 
     hosts=$(meat "$KNOWN_HOSTS" | cut -d ' ' -f 1 | grep -v '^|.*$' | tr , ' ' | tr '\n' ' ')
 
     if [ -z "$hosts" ] ; then
-	log "no hosts to process."
+	log error "no hosts to process."
 	return
     fi
 
@@ -744,7 +747,7 @@ process_uid_authorized_keys() {
 
     userID="$1"
 
-    log "processing: $userID"
+    log info "processing: $userID"
 
     nKeys=0
     nKeysOK=0
@@ -839,7 +842,7 @@ update_authorized_keys() {
 
     # note if the authorized_keys file was updated
     if [ "$(file_hash "$AUTHORIZED_KEYS")" != "$fileCheck" ] ; then
-	log "authorized_keys file updated."
+	log info "authorized_keys file updated."
     fi
 
     # if an acceptable id was found, return 0
@@ -866,10 +869,10 @@ process_authorized_user_ids() {
 
     authorizedUserIDs="$1"
 
-    log "processing authorized_user_ids file..."
+    log info "processing authorized_user_ids file..."
 
     if ! meat "$authorizedUserIDs" > /dev/null ; then
-	log "no user IDs to process."
+	log error "no user IDs to process."
 	return
     fi
 

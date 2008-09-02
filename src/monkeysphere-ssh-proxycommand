@@ -13,15 +13,22 @@
 # established.  Can be added to ~/.ssh/config as follows:
 #  ProxyCommand monkeysphere-ssh-proxycommand %h %p
 
+########################################################################
+SHARE=${MONKEYSPHERE_SHARE:-"/usr/share/monkeysphere"}
+. "${SHARE}/common" || exit 1
+
+########################################################################
+
 usage() {
 cat <<EOF >&2
 usage: ssh -o ProxyCommand="$(basename $0) %h %p" ...
 EOF
 }
 
-log() {
-    echo "$@" >&2
-}
+########################################################################
+
+# export the monkeysphere log level
+export MONKEYSPHERE_LOG_LEVEL
 
 if [ "$1" = '--no-connect' ] ; then
     NO_CONNECT='true'
@@ -34,9 +41,9 @@ PORT="$2"
 MS_HOME=${MS_HOME:-"${HOME}/.config/monkeysphere"}
 
 if [ -z "$HOST" ] ; then
-    log "host must be specified."
+    echo "Host not specified." >&2
     usage
-    exit 1
+    exit 255
 fi
 if [ -z "$PORT" ] ; then
     PORT=22
@@ -88,7 +95,7 @@ if [ -z "$NO_CONNECT" ] ; then
     elif (which socat 2>/dev/null >/dev/null); then
 	exec socat STDIO "TCP:$HOST:$PORT"
     else
-	log "Neither netcat nor socat found -- could not complete monkeysphere-ssh-proxycommand connection to $HOST:$PORT"
-	exit 1
+	echo "Neither netcat nor socat found -- could not complete monkeysphere-ssh-proxycommand connection to $HOST:$PORT" >&2
+	exit 255
     fi
 fi

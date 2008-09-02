@@ -33,7 +33,7 @@ umask 077
 ########################################################################
 
 usage() {
-    cat <<EOF
+    cat <<EOF >&2
 usage: $PGRM <subcommand> [options] [args]
 MonkeySphere client tool.
 
@@ -145,7 +145,7 @@ save
 EOF
 )
 
-    log "generating subkey..."
+    log info "generating subkey..."
     fifoDir=$(mktemp -d)
     (umask 077 && mkfifo "$fifoDir/pass")
     echo "$editCommands" | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
@@ -154,7 +154,7 @@ EOF
 
     rm -rf "$fifoDir"
     wait
-    log "done."
+    log info "done."
 }
 
 function subkey_to_ssh_agent() {
@@ -280,6 +280,7 @@ mkdir -p -m 0700 "$MONKEYSPHERE_HOME"
 
 # set empty config variables with ones from the environment, or from
 # config file, or with defaults
+LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=${LOG_LEVEL:="INFO"}}
 GNUPGHOME=${MONKEYSPHERE_GNUPGHOME:=${GNUPGHOME:="${HOME}/.gnupg"}}
 KEYSERVER=${MONKEYSPHERE_KEYSERVER:="$KEYSERVER"}
 # if keyserver not specified in env or monkeysphere.conf,
@@ -305,6 +306,7 @@ REQUIRED_USER_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_USER_KEY_CAPABILITY:="a"}
 # permissions
 export GNUPGHOME
 mkdir -p -m 0700 "$GNUPGHOME"
+export LOG_LEVEL
 
 # get subcommand
 COMMAND="$1"
@@ -331,7 +333,7 @@ case $COMMAND in
 	else
 	    # exit if the known_hosts file does not exist
 	    if [ ! -e "$KNOWN_HOSTS" ] ; then
-		log "known_hosts file '$KNOWN_HOSTS' does not exist."
+		log error "known_hosts file '$KNOWN_HOSTS' does not exist."
 		exit
 	    fi
 
@@ -355,7 +357,7 @@ case $COMMAND in
 
         # exit if the authorized_user_ids file is empty
 	if [ ! -e "$AUTHORIZED_USER_IDS" ] ; then
-	    log "authorized_user_ids file '$AUTHORIZED_USER_IDS' does not exist."
+	    log error "authorized_user_ids file '$AUTHORIZED_USER_IDS' does not exist."
 	    exit
 	fi
 

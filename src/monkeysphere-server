@@ -33,7 +33,7 @@ RETURN=0
 ########################################################################
 
 usage() {
-    cat <<EOF
+    cat <<EOF >&2
 usage: $PGRM <subcommand> [options] [args]
 MonkeySphere server admin tool.
 
@@ -156,7 +156,7 @@ update_users() {
     for uname in $unames ; do
 	# check all specified users exist
 	if ! getent passwd "$uname" >/dev/null ; then
-	    log "----- unknown user '$uname' -----"
+	    log info "----- unknown user '$uname' -----"
 	    continue
 	fi
 
@@ -172,17 +172,17 @@ update_users() {
 	    fi
 	fi
 
-	log "----- user: $uname -----"
+	log info "----- user: $uname -----"
 
         # exit if the authorized_user_ids file is empty
 	if ! check_key_file_permissions "$uname" "$AUTHORIZED_USER_IDS" ; then
-	    log "Improper permissions on authorized_user_ids file path."
+	    log error "Improper permissions on authorized_user_ids file path."
 	    continue
 	fi
 
 	# check permissions on the authorized_keys file path
 	if ! check_key_file_permissions "$uname" "$RAW_AUTHORIZED_KEYS" ; then
-	    log "Improper permissions on authorized_keys file path path."
+	    log error "Improper permissions on authorized_keys file path path."
 	    continue
 	fi
 
@@ -226,9 +226,8 @@ update_users() {
 
 	# add user-controlled authorized_keys file path if specified
 	if [ "$rawAuthorizedKeys" != '-' -a -s "$rawAuthorizedKeys" ] ; then
-	    log -n "adding raw authorized_keys file... "
+	    log info "adding raw authorized_keys file... "
 	    cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
-	    loge "done."
 	fi
 
 	# openssh appears to check the contents of the
@@ -346,7 +345,7 @@ EOF
 EOF
 )
 
-    log "generating server key..."
+    log info "generating server key..."
     echo "$keyParameters" | gpg_host --batch --gen-key
 
     # output the server fingerprint
@@ -356,7 +355,7 @@ EOF
     fingerprint=$(fingerprint_server_key)
 
     # export host ownertrust to authentication keyring
-    log "setting ultimate owner trust for server key..."
+    log info "setting ultimate owner trust for server key..."
     echo "${fingerprint}:6:" | gpg_authentication "--import-ownertrust"
 
     # translate the private key to ssh format, and export to a file
@@ -365,7 +364,7 @@ EOF
     (umask 077 && \
 	gpg_host --export-secret-key "$fingerprint" | \
 	openpgp2ssh "$fingerprint" > "${VARLIB}/ssh_host_rsa_key")
-    log "Private SSH host key output to file: ${VARLIB}/ssh_host_rsa_key"
+    log info "Private SSH host key output to file: ${VARLIB}/ssh_host_rsa_key"
 }
 
 # extend the lifetime of a host key:
@@ -856,6 +855,7 @@ unset MONKEYSPHERE_USER
 
 # set empty config variable with ones from the environment, or with
 # defaults
+LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=${LOG_LEVEL:="info"}}
 KEYSERVER=${MONKEYSPHERE_KEYSERVER:=${KEYSERVER:="subkeys.pgp.net"}}
 AUTHORIZED_USER_IDS=${MONKEYSPHERE_AUTHORIZED_USER_IDS:=${AUTHORIZED_USER_IDS:="%h/.config/monkeysphere/authorized_user_ids"}}
 RAW_AUTHORIZED_KEYS=${MONKEYSPHERE_RAW_AUTHORIZED_KEYS:=${RAW_AUTHORIZED_KEYS:="%h/.ssh/authorized_keys"}}
@@ -871,6 +871,7 @@ GNUPGHOME_AUTHENTICATION=${MONKEYSPHERE_GNUPGHOME_AUTHENTICATION:="${VARLIB}/gnu
 export DATE
 export MODE
 export MONKEYSPHERE_USER
+export LOG_LEVEL
 export KEYSERVER
 export CHECK_KEYSERVER
 export REQUIRED_USER_KEY_CAPABILITY
