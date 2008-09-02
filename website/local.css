@@ -62,6 +62,7 @@ table.sitenav img.logo {
 table.sitenav a { 
   font-weight: bold;
   text-decoration: none;
+  margin-left: 1em;
 }
 
 table.sitenav a:hover { 
