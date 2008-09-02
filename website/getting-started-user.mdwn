@@ -92,8 +92,8 @@ to take this step, you will need to upgrade to a patched version of
 gnutls. You can easily upgrade a Debian system by adding the following
 to `/etc/apt/sources.list.d/monkeysphere.list`:
 
-	deb http://monkeysphere.info/debian experimental gnutls
-	deb-src http://monkeysphere.info/debian experimental gnutls
+	deb http://archive.monkeysphere.info/debian experimental gnutls
+	deb-src http://archive.monkeysphere.info/debian experimental gnutls
 
 Next, run `aptitude update; aptitude install libgnutls26`.
 

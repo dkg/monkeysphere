@@ -1,0 +1,8 @@
+[[meta title="APT repository moved"]]
+
+The monkeysphere APT repository has been moved from
+`http://monkeysphere.info/debian` to
+`http://archive.monkeysphere.info/debian`.  You'll probably want to
+update your `sources.list` to match the [official lines](/download).
+
+Apologies for any confusion or hassle this causes!
