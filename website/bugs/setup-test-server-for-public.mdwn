@@ -75,3 +75,10 @@ and I'm not really willing to maintain it myself, but if someone else
 wants to handle that, that would be fine with me.
 
 -- jgr
+
+---
+
+i'm not really willing to maintain anything extra either, so i'm
+[closing this ticket as completed](/bugs/done).
+
+--dkg
