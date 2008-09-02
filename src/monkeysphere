@@ -146,7 +146,7 @@ save
 EOF
 )
 
-    log info "generating subkey..."
+    log verbose "generating subkey..."
     fifoDir=$(mktemp -d)
     (umask 077 && mkfifo "$fifoDir/pass")
     echo "$editCommands" | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
@@ -155,7 +155,7 @@ EOF
 
     rm -rf "$fifoDir"
     wait
-    log info "done."
+    log verbose "done."
 }
 
 function subkey_to_ssh_agent() {
