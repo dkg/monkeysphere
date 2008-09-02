@@ -35,10 +35,14 @@ log() {
     local priority
     local level
     local output
-    # don't include SILENT in alllevels: it's handled separately
-    # list in decreasing verbosity (all caps)
-    local alllevels="DEBUG INFO ERROR"
+    local alllevels
     local found=
+
+    # don't include SILENT in alllevels: it's handled separately
+    # list in decreasing verbosity (all caps).
+    # separate with $IFS explicitly, since we do some fancy footwork
+    # elsewhere.
+    alllevels="DEBUG${IFS}INFO${IFS}ERROR"
 
     # translate lowers to uppers in global log level
     LOG_LEVEL=$(echo "$LOG_LEVEL" | tr "[:lower:]" "[:upper:]")
@@ -48,7 +52,7 @@ log() {
 	return
     fi
 
-    for level in $alllevels; do 
+    for level in $alllevels ; do 
 	if [ "$LOG_LEVEL" = "$level" ] ; then
 	    found=true
 	fi
@@ -481,7 +485,7 @@ process_user_id() {
 
     # if the gpg query return code is not 0, return 1
     if [ "$?" -ne 0 ] ; then
-        log error " no primary keys found."
+        log info " no primary keys found."
         return 1
     fi
 
@@ -498,7 +502,7 @@ process_user_id() {
 		lastKeyOK=
 		fingerprint=
 
-		log error " primary key found: $keyid"
+		log info " primary key found: $keyid"
 
 		# if overall key is not valid, skip
 		if [ "$validity" != 'u' -a "$validity" != 'f' ] ; then
@@ -547,7 +551,7 @@ process_user_id() {
 		# output a line for the primary key
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
-		    log error "  * acceptable primary key."
+		    log info "  * acceptable primary key."
 		    if [ -z "$sshKey" ] ; then
 			log error "    ! primary key could not be translated (not RSA or DSA?)."
 		    else
@@ -603,7 +607,7 @@ process_user_id() {
 		# output a line for the sub key
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
-		    log error "  * acceptable sub key."
+		    log info "  * acceptable sub key."
 		    if [ -z "$sshKey" ] ; then
 			log error "    ! sub key could not be translated (not RSA or DSA?)."
 		    else
