@@ -33,6 +33,10 @@ log() {
     local priority
     local level
     local output
+    # don't include SILENT in alllevels: it's handled separately
+    # list in decreasing verbosity (all caps)
+    local alllevels="DEBUG INFO ERROR"
+    local found=
 
     # translate lowers to uppers in global log level
     LOG_LEVEL=$(echo "$LOG_LEVEL" | tr "[:lower:]" "[:upper:]")
@@ -42,16 +46,25 @@ log() {
 	return
     fi
 
+    for level in $alllevels; do 
+	if [ "$LOG_LEVEL" = "$level" ] ; then
+	    found=true
+	fi
+    done
+    if [ -z "$found" ] ; then
+	# default to INFO:
+	LOG_LEVEL=INFO
+    fi
+
     # get priority from first parameter, translating all lower to
     # uppers
     priority=$(echo "$1" | tr "[:lower:]" "[:upper:]")
     shift
 
     # scan over available levels
-    # list in decreasing verbosity (all caps)
-    for level in DEBUG INFO ERROR ; do
+    for level in $alllevels ; do
 	# output if the log level matches, set output to true
-	# this will output for all subsequenty loops as well.
+	# this will output for all subsequent loops as well.
 	if [ "$LOG_LEVEL" = "$level" ] ; then
 	    output=true
 	fi
