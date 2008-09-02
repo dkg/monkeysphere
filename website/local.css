@@ -59,3 +59,12 @@ table.sitenav img.logo {
  vertical-align: bottom;
 }
 
+table.sitenav a { 
+  font-weight: bold;
+  text-decoration: none;
+}
+
+table.sitenav a:hover { 
+  font-weight: bold;
+  text-decoration: underline;
+}
