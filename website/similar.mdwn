@@ -71,7 +71,8 @@ Some concerns with the Perspectives OpenSSH client:
 
  * This client won't help if you are connecting to machines behind
    firewalls, on NAT'ed LANs, with source IP filtering, or otherwise
-   in a restricted network state.
+   in a restricted network state, because the notaries won't be able
+   to reach it.
 
  * There is still a question of why you should trust these particular
    notaries during your verification.  Who are the notaries?  How
@@ -84,6 +85,17 @@ Some concerns with the Perspectives OpenSSH client:
 
  * It doesn't provide any mechanism for key rotation or revocation:
    Perspectives won't help you if you need to re-key your machine.
+
+ * The most common threat which Perspectives protects against (a
+   narrow MITM attack, e.g. the attacker controls your gateway) often
+   coincides with the ability of the attacker to filter arbitrary
+   traffic to your node.  But in this case, the attacker could filter
+   out your traffic to the notaries (or the responses from the
+   notaries).  Such filtering (rejecting unknown UDP traffic, as
+   Perspectives appears to use UDP port 15217) is unfortunately
+   common, particuarly on public networks, even when the gateway is
+   not malicious.  This reduces the utility of the Perspectives
+   approach.
 
 ## OpenSSH with X.509v3 certificates ##
 
