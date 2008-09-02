@@ -1,7 +1,7 @@
 [[!template id="nav"]]
 [[meta title="Documentation"]]
 # Monkeysphere Documentation #
-[[!toc]]
+[[toc ]]
 
 ## Dependencies ##
 
