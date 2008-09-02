@@ -79,6 +79,6 @@ wants to handle that, that would be fine with me.
 ---
 
 i'm not really willing to maintain anything extra either, so i'm
-[closing this ticket as completed](/bugs/done).
+closing this ticket as [[bugs/done]].
 
 --dkg
