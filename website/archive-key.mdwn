@@ -83,4 +83,29 @@ the future.
 
 In the event of a new archive maintainer, the entire archive will be
 rebuilt from signed tags in [the monkeysphere git
-repository](/community), rather than trying to piece together 
+repository](/community), rather than trying to re-verify the entire
+old archive.
+
+## Maintaining the archive ##
+
+To create a new archive including a single monkeysphere package from
+tag `$TAG` on architecture `$ARCH`, do:
+
+	git clone git://git.monkeysphere.info/monkeysphere
+	cd monkeysphere
+	git tag -v $TAG
+	git checkout $TAG
+	debuild -uc -us
+	cd repo
+	reprepro -C monkeysphere include experimental ../$TAG_$ARCH.changes
+
+When you get a package from a separate architecture `$NEWARCH`, do:
+
+	cd repo
+	reprepro -C monkeysphere includedeb experimental ../$TAG_NEWARCH.deb
+
+To publish the archive, make sure you have access to
+`archivemaster@george.riseup.net`, and then do:
+
+	cd repo
+	./publish
