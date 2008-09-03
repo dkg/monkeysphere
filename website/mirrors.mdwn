@@ -11,36 +11,36 @@ opted for a method that uses ssh.
 The steps for creating a new mirror are:
 
  * Add etch-backports to your /etc/apt/sources.list:
-		deb http://www.backports.org/debian etch-backports main contrib non-free
+    deb http://www.backports.org/debian etch-backports main contrib non-free
  * Add the following lines to your /etc/apt/preferences file:
-		Package: ikiwiki
-		Pin: release a=etch-backports
-		Pin-Priority: 999
+    Package: ikiwiki
+    Pin: release a=etch-backports
+    Pin-Priority: 999
 
-		# needed by ikiwiki
-		Package: libcgi-formbuilder-perl
-		Pin: release a=etch-backports
-		Pin-Priority: 999
-		
-		Package: git-core 
-		Pin: release a=etch-backports
-		Pin-Priority: 999
+    # needed by ikiwiki
+    Package: libcgi-formbuilder-perl
+    Pin: release a=etch-backports
+    Pin-Priority: 999
+    
+    Package: git-core 
+    Pin: release a=etch-backports
+    Pin-Priority: 999
 	* Install git-core and ikiwiki
-		aptitude update; aptitutde install git-core ikiwiki
+    aptitude update; aptitutde install git-core ikiwiki
 	* Create a new user. Change the new users shell to git-shell:
-		adduser -s /usr/bin/git-shell <username>
+    adduser -s /usr/bin/git-shell <username>
 	* Add webmaster@george's public key to this user's ~/.ssh/authorized_keys file
 	* Add web site configuration that the user has write access to. If you are using Apache, include the following rewrite:
-		RewriteEngine On
-		RewriteCond %{HTTP_HOST} !^(YOURHOSTNAME|web)\.monkeysphere\.info$ [NC]
-		RewriteCond %{HTTP_HOST} !^$
-		RewriteRule ^/(.*) http://web.monkeysphere.info/$1 [L,R]
+    RewriteEngine On
+    RewriteCond %{HTTP_HOST} !^(YOURHOSTNAME|web)\.monkeysphere\.info$ [NC]
+    RewriteCond %{HTTP_HOST} !^$
+    RewriteRule ^/(.*) http://web.monkeysphere.info/$1 [L,R]
 	* Upload and edit ikiwiki.setup.sample from the docs directory
 	* As the new user, create two new git repos
-		mkdir monkeysphere.git; cd monkeysphere.git; git init --bare; cd ../
-		git clone monkeysphere.git # this will create a second git repo called monkeysphere
+    mkdir monkeysphere.git; cd monkeysphere.git; git init --bare; cd ../
+    git clone monkeysphere.git # this will create a second git repo called monkeysphere
 	* Change the mode of monkeysphere.git/hooks/post-receive to 755
-		chmod 755 monkesphere.git/hooks/post-receive
+    chmod 755 monkesphere.git/hooks/post-receive
 	* Edit the file so that it executes the post-receive hook ikiwiki
 	generates (as you specified in the ikiwiki.setup file)
 
@@ -51,10 +51,10 @@ following steps should be taken by a Monkeysphere admin user:
  * Test the ssh connection by logging in as webmaster@george.riseup.net
  * Add the new server as a remote on
  webmaster@george.riseup.net:monkeysphere.git
-		cd ~/monkeysphere.git
-		git add remote SERVERNAME USER@SERVERNAME.monkeysphere.info:/path/to/repo
+    cd ~/monkeysphere.git
+    git add remote SERVERNAME USER@SERVERNAME.monkeysphere.info:/path/to/repo
  * Test:
-		git push SERVERNAME
+    git push SERVERNAME
 
 
-		
+    
