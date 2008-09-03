@@ -1,4 +1,3 @@
-[[!template id="nav"]]
 [[meta title="Similar Projects"]]
 
 The monkeysphere isn't the only project intending to implement a PKI

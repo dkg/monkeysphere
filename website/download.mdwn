@@ -1,4 +1,4 @@
-[[!template id="nav"]]
+[[meta title="Download"]]
 
 ## Downloading and Installing ##
 
@@ -6,7 +6,7 @@ If you are running a Debian system, you can install Monkeysphere
 by following these directions:
 
 You can add this repo to your system by putting the following lines in
-/etc/apt/sources.list.d/monkeysphere.list:
+`/etc/apt/sources.list.d/monkeysphere.list`:
 
 	deb http://archive.monkeysphere.info/debian experimental monkeysphere
 	deb-src http://archive.monkeysphere.info/debian experimental monkeysphere

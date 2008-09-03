@@ -1,5 +1,4 @@
 [[meta title="Monkeysphere archive signing key"]]
-[[!template id="nav"]]
 [[toc ]]
 
 ## Verifying the key ##
@@ -70,8 +69,21 @@ ly087Guvw8G8TdQcubteFYQDIxIc2atZkjEn3oCjtZgk8mdDlCjLQYgHV1/o+eWd
 S31RCBx16I7tJya0fwJJRC7qZWf7hrPdi7eqcecqyr26X5upV+Irjv5qYu/6HAGb
 59W6n+8KTfMxEMaBQI6qZXxhaBr3HzEaSrz7jtkl+xxym2TGkbarXcm7e7MP66Hu
 GD5UCC3svhAAxKXf4K/8v7WhwBpekF9mXtgpq72Du2JG9q+OAWhxzZXbZku+RY7T
-a83wKc1TaPvzK2WZlhNGjcCYSUXcfQOSn5noVTUukW3DNEKP5BmwkvVd
-=Xex0
+a83wKc1TaPvzK2WZlhNGjcCYSUXcfQOSn5noVTUukW3DNEKP5BmwkvVdiEYEEBEC
+AAYFAki9wXQACgkQ9n4qXRzy1ioXYwCgmzCV+o+Ai0gNx0pt9shofcjfJoAAoInV
+mhn36lBeDh/E6cigrUlkdDGWiQIcBBABAgAGBQJIvdcSAAoJEO00zqvie6q8sB4Q
+AKDLTKqtiONf4FkMCZFcMxQyiALcy76zTW9L2oK90zKRhKSt5RPnVmDVyiinBcRJ
+h0lEkpxoqSrs+0XvASWC3RzWLEbW6XXsuHO1RXFsC3FNbe0HkHenirenFkitPMDX
+Q5gHmCJ6yiq2ssuzXAG9vZ4HjkUINBgkeMASiTRC7o0we7jFSRzOTCs4WWdsavrx
+7bhCadeC35ISldTSo6nOP3laPctPcLD83cJszzQyHr/LjF6KYr6n85NAwIt/oxHh
+EUxmezx+lMwWHdr9TQzXzU8cxLSBZ+c+PuZ/NuHz9fOv87eaFDNEqKli9zhzh4eA
+EMeiWKQXHYlmEUUWnZoea46jdjBrvHphogqlCjzMDHtg/pWOsYrGeXjjZ352SGN4
+vyinkdxwUppGQATz55WyiWIzCY1Kt7lqaQHfAM1NgVdoCQ0stlulIO4LVepHRiAY
+HO4EPeQO6pVGGHWCzJyEcMcaBsYGpr9DndSNd66O+Gyeq8QobKnvTH25kwVt/8t1
+9nS+7NLwBrqXCISeDrOQYq5XeCdvpAuJy4CEN5muQWRdUPekE2dh7qcVUdROepq0
+1wMemkmgTLlA0Md7ZdZqsllKhVQ7/HOFzshEaj/VcFrQshuIAjDZFN/OrGLX/NcL
+tcaBmD9lZSQ3CyxnBUTeMdJCOLOK050jNvsEsM89FL+g
+=bJWl
 -----END PGP PUBLIC KEY BLOCK-----
 </pre>
 
@@ -94,17 +106,17 @@ tag `$TAG` on architecture `$ARCH`, do:
 
 	git clone git://git.monkeysphere.info/monkeysphere
 	cd monkeysphere
-	git tag -v $TAG
-	git checkout $TAG
+	git tag -v "$TAG"
+	git checkout "$TAG"
 	debuild -uc -us
 	cd repo
-	reprepro -C monkeysphere include experimental ../$TAG_$ARCH.changes
+	reprepro -C monkeysphere include experimental "../$TAG_$ARCH.changes"
 
 When you get a binary package built from a separate architecture
 `$NEWARCH` that you want to include with the archive, do:
 
 	cd repo
-	reprepro -C monkeysphere includedeb experimental ../$TAG_$NEWARCH.deb
+	reprepro -C monkeysphere includedeb experimental "../$TAG_$NEWARCH.deb"
 
 To publish the archive, make sure you have access to
 `archivemaster@george.riseup.net`, and then do:

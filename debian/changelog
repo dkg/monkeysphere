@@ -1,10 +1,22 @@
-monkeysphere (0.12-1) UNRELEASED; urgency=low
+monkeysphere (0.13~pre-1) UNRELEASED; urgency=low
 
+  [ Daniel Kahn Gillmor ]
+  * tweaks in /usr/bin/monkeysphere to handle odd secret keyrings.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 02 Sep 2008 21:28:51 -0400
+
+monkeysphere (0.12-1) experimental; urgency=low
+
+  [ Jameson Graef Rollins ]
   * Improved output handling.  New LOG_LEVEL variable.
+  
+  [ Daniel Kahn Gillmor ]
   * debian/control: switched Homepage: and Vcs-Git: to canonicalized
     upstream hostnames.
+  * updated documentation for new release.
+  * changed my associated e-mail address for this package.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Mon, 01 Sep 2008 23:55:56 -0700
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 02 Sep 2008 18:54:29 -0400
 
 monkeysphere (0.11-1) experimental; urgency=low
 

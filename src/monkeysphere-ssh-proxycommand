@@ -14,10 +14,6 @@
 #  ProxyCommand monkeysphere-ssh-proxycommand %h %p
 
 ########################################################################
-SHARE=${MONKEYSPHERE_SHARE:-"/usr/share/monkeysphere"}
-. "${SHARE}/common" || exit 1
-
-########################################################################
 
 usage() {
 cat <<EOF >&2
@@ -38,8 +34,6 @@ fi
 HOST="$1"
 PORT="$2"
 
-MS_HOME=${MS_HOME:-"${HOME}/.config/monkeysphere"}
-
 if [ -z "$HOST" ] ; then
     echo "Host not specified." >&2
     usage
@@ -56,6 +50,12 @@ else
     HOSTP="${HOST}"
 fi
 URI="ssh://${HOSTP}"
+
+# specify keyserver checking.  the behavior of this proxy command is
+# intentionally different than that of running monkeyesphere normally,
+# and keyserver checking is intentionally done under certain
+# circumstances.  This can be overridden by setting the
+# MONKEYSPHERE_CHECK_KEYSERVER environment variable.
 
 # if the host is in the gpg keyring...
 if gpg --list-key ="${URI}" 2>&1 >/dev/null ; then
@@ -81,7 +81,7 @@ else
 	CHECK_KEYSERVER="true"
     fi
 fi
-
+# set and export the variable for use by monkeysphere
 MONKEYSPHERE_CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="$CHECK_KEYSERVER"}
 export MONKEYSPHERE_CHECK_KEYSERVER
 

@@ -42,7 +42,7 @@ log() {
     # list in decreasing verbosity (all caps).
     # separate with $IFS explicitly, since we do some fancy footwork
     # elsewhere.
-    alllevels="DEBUG${IFS}INFO${IFS}ERROR"
+    alllevels="DEBUG${IFS}VERBOSE${IFS}INFO${IFS}ERROR"
 
     # translate lowers to uppers in global log level
     LOG_LEVEL=$(echo "$LOG_LEVEL" | tr "[:lower:]" "[:upper:]")
@@ -485,7 +485,7 @@ process_user_id() {
 
     # if the gpg query return code is not 0, return 1
     if [ "$?" -ne 0 ] ; then
-        log info " no primary keys found."
+        log verbose " no primary keys found."
         return 1
     fi
 
@@ -502,7 +502,7 @@ process_user_id() {
 		lastKeyOK=
 		fingerprint=
 
-		log info " primary key found: $keyid"
+		log verbose " primary key found: $keyid"
 
 		# if overall key is not valid, skip
 		if [ "$validity" != 'u' -a "$validity" != 'f' ] ; then
@@ -551,7 +551,7 @@ process_user_id() {
 		# output a line for the primary key
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
-		    log info "  * acceptable primary key."
+		    log verbose "  * acceptable primary key."
 		    if [ -z "$sshKey" ] ; then
 			log error "    ! primary key could not be translated (not RSA or DSA?)."
 		    else
@@ -607,7 +607,7 @@ process_user_id() {
 		# output a line for the sub key
 		# 0 = ok, 1 = bad
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
-		    log info "  * acceptable sub key."
+		    log verbose "  * acceptable sub key."
 		    if [ -z "$sshKey" ] ; then
 			log error "    ! sub key could not be translated (not RSA or DSA?)."
 		    else
@@ -642,7 +642,7 @@ process_host_known_hosts() {
     host="$1"
     userID="ssh://${host}"
 
-    log info "processing: $host"
+    log verbose "processing: $host"
 
     nKeys=0
     nKeysOK=0
@@ -743,7 +743,7 @@ update_known_hosts() {
 
     # note if the known_hosts file was updated
     if [ "$(file_hash "$KNOWN_HOSTS")" != "$fileCheck" ] ; then
-	log info "known_hosts file updated."
+	log verbose "known_hosts file updated."
     fi
 
     # if an acceptable host was found, return 0
@@ -766,7 +766,7 @@ update_known_hosts() {
 process_known_hosts() {
     local hosts
 
-    log info "processing known_hosts file..."
+    log verbose "processing known_hosts file..."
 
     hosts=$(meat "$KNOWN_HOSTS" | cut -d ' ' -f 1 | grep -v '^|.*$' | tr , ' ' | tr '\n' ' ')
 
@@ -791,7 +791,7 @@ process_uid_authorized_keys() {
 
     userID="$1"
 
-    log info "processing: $userID"
+    log verbose "processing: $userID"
 
     nKeys=0
     nKeysOK=0
@@ -886,7 +886,7 @@ update_authorized_keys() {
 
     # note if the authorized_keys file was updated
     if [ "$(file_hash "$AUTHORIZED_KEYS")" != "$fileCheck" ] ; then
-	log info "authorized_keys file updated."
+	log verbose "authorized_keys file updated."
     fi
 
     # if an acceptable id was found, return 0
@@ -913,7 +913,7 @@ process_authorized_user_ids() {
 
     authorizedUserIDs="$1"
 
-    log info "processing authorized_user_ids file..."
+    log verbose "processing authorized_user_ids file..."
 
     if ! meat "$authorizedUserIDs" > /dev/null ; then
 	log error "no user IDs to process."

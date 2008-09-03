@@ -157,7 +157,7 @@ update_users() {
     for uname in $unames ; do
 	# check all specified users exist
 	if ! getent passwd "$uname" >/dev/null ; then
-	    log info "----- unknown user '$uname' -----"
+	    log error "----- unknown user '$uname' -----"
 	    continue
 	fi
 
@@ -173,17 +173,17 @@ update_users() {
 	    fi
 	fi
 
-	log info "----- user: $uname -----"
+	log verbose "----- user: $uname -----"
 
         # exit if the authorized_user_ids file is empty
 	if ! check_key_file_permissions "$uname" "$AUTHORIZED_USER_IDS" ; then
-	    log error "Improper permissions on authorized_user_ids file path."
+	    log error "Improper permissions on path '$AUTHORIZED_USER_IDS'."
 	    continue
 	fi
 
 	# check permissions on the authorized_keys file path
 	if ! check_key_file_permissions "$uname" "$RAW_AUTHORIZED_KEYS" ; then
-	    log error "Improper permissions on authorized_keys file path path."
+	    log error "Improper permissions on path '$RAW_AUTHORIZED_KEYS'."
 	    continue
 	fi
 
@@ -227,7 +227,7 @@ update_users() {
 
 	# add user-controlled authorized_keys file path if specified
 	if [ "$rawAuthorizedKeys" != '-' -a -s "$rawAuthorizedKeys" ] ; then
-	    log info "adding raw authorized_keys file... "
+	    log verbose "adding raw authorized_keys file... "
 	    cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
 	fi
 
@@ -346,7 +346,7 @@ EOF
 EOF
 )
 
-    log info "generating server key..."
+    log verbose "generating server key..."
     echo "$keyParameters" | gpg_host --batch --gen-key
 
     # output the server fingerprint
@@ -356,7 +356,7 @@ EOF
     fingerprint=$(fingerprint_server_key)
 
     # export host ownertrust to authentication keyring
-    log info "setting ultimate owner trust for server key..."
+    log verbose "setting ultimate owner trust for server key..."
     echo "${fingerprint}:6:" | gpg_authentication "--import-ownertrust"
 
     # translate the private key to ssh format, and export to a file

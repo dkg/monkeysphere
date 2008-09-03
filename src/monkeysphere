@@ -93,7 +93,7 @@ gen_subkey(){
 
     if [ -z "$1" ] ; then
 	# find all secret keys
-	keyID=$(gpg --with-colons --list-secret-keys | grep ^sec | cut -f5 -d:)
+	keyID=$(gpg --with-colons --list-secret-keys | grep ^sec | cut -f5 -d: | sort -u)
 	# if multiple sec keys exist, fail
 	if (( $(echo "$keyID" | wc -l) > 1 )) ; then
 	    echo "Multiple secret keys found:"
@@ -115,7 +115,7 @@ key before joining the monkeysphere. You can do this with:
 
     # fail if multiple sec lines are returned, which means the id
     # given is not unique
-    if [ $(echo "$gpgOut" | grep '^sec:' | wc -l) -gt '1' ] ; then
+    if [ $(echo "$gpgOut" | grep -c '^sec:') -gt '1' ] ; then
 	failure "Key ID '$keyID' is not unique."
     fi
 
@@ -146,7 +146,7 @@ save
 EOF
 )
 
-    log info "generating subkey..."
+    log verbose "generating subkey..."
     fifoDir=$(mktemp -d)
     (umask 077 && mkfifo "$fifoDir/pass")
     echo "$editCommands" | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
@@ -155,7 +155,7 @@ EOF
 
     rm -rf "$fifoDir"
     wait
-    log info "done."
+    log verbose "done."
 }
 
 function subkey_to_ssh_agent() {

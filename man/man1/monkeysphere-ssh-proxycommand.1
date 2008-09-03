@@ -37,7 +37,7 @@ connection to the host itself.
 .SH KEYSERVER CHECKING
 
 The proxy command has a fairly nuanced policy for when keyservers are
-queried when processing host.  If the host userID is not found in
+queried when processing a host.  If the host userID is not found in
 either the user's keyring or in the known_hosts file, then the
 keyserver is queried for the host userID.  If the host userID is found
 in the user's keyring, then the keyserver is not checked.  This
@@ -53,11 +53,6 @@ will be properly checked.
 
 All environment variables defined in monkeysphere(1) can also be used
 for the proxy command, with one note:
-
-.TP
-MONKEYSPHERE_LOG_LEVEL
-Set the log level.  Can be SILENT, ERROR, INFO, DEBUG, in increasing
-order of verbosity.
 
 .TP
 MONKEYSPHERE_CHECK_KEYSERVER
