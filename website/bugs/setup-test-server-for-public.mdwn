@@ -63,7 +63,7 @@ I envision a script you'd invoke like:
 	root@george# addmsuser foo 'Foo T. Bar <foo@example.org>'
 
 Which would create the `foo` account, populate
-`~foo/.config/monkeysphere/authorized_user_ids`, make a note in a log
+`~foo/.monkeysphere/authorized_user_ids`, make a note in a log
 someplace, and send a welcome letter.
 
 --dkg
