@@ -3,7 +3,10 @@ monkeysphere (0.13~pre-1) UNRELEASED; urgency=low
   [ Daniel Kahn Gillmor ]
   * tweaks in /usr/bin/monkeysphere to handle odd secret keyrings.
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 02 Sep 2008 21:28:51 -0400
+  [ Jameson Graef Rollins ]
+  * move location of user config directory to ~/.monkeysphere.
+
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Wed, 03 Sep 2008 13:35:23 -0700
 
 monkeysphere (0.12-1) experimental; urgency=low
 

@@ -57,7 +57,7 @@ users with the Monkeysphere.
 For each user account on the server, the userids of people authorized
 to log into that account would be placed in:
 
-	~/.config/monkeysphere/authorized_user_ids
+	~/.monkeysphere/authorized_user_ids
 
 However, in order for users to become authenticated, the server must
 determine that the user IDs on their keys have "full" validity.  This

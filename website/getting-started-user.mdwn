@@ -120,7 +120,7 @@ update-authorized_keys command:
 	$ monkeysphere update-authorized_keys
 
 This command will take all the user IDs listed in the
-`~/.config/monkeysphere/authorized_user_ids` file and check to see if
+`~/.monkeysphere/authorized_user_ids` file and check to see if
 there are acceptable keys for those user IDs available.  If so, they
 will be added to the `~/.ssh/authorized_keys` file.
 

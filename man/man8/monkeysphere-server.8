@@ -154,8 +154,8 @@ Remote user's will then be granted access to a local user account
 based on the appropriately signed and valid keys associated with user
 IDs listed in the authorized_user_ids file of the local user.  By
 default, the authorized_user_ids file for local users is found in
-~/.config/monkeysphere/authorized_user_ids.  This can be changed in
-the monkeysphere-server.conf file.
+~/.monkeysphere/authorized_user_ids.  This can be changed in the
+monkeysphere-server.conf file.
 
 The \fBupdate-users\fP command can then be used to generate
 authorized_keys file for local users based on the authorized user IDs
@@ -191,7 +191,7 @@ OpenPGP keyserver to use (subkeys.pgp.net).
 .TP
 MONKEYSPHERE_AUTHORIZED_USER_IDS
 Path to user authorized_user_ids file
-(%h/.config/monkeysphere/authorized_user_ids).
+(%h/.monkeysphere/authorized_user_ids).
 .TP
 MONKEYSPHERE_RAW_AUTHORIZED_KEYS
 Path to user-controlled authorized_keys file.  `-' means not to add
