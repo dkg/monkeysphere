@@ -8,9 +8,7 @@ We're mirrored on several servers. Rather than using ikiwiki's [pinger/pingee
 approach to distribution](http://ikiwiki.info/tips/distributed_wikis/), we've
 opted for a method that uses ssh.
 
-The steps for creating a new mirror are:
-
-## Steps to take on the mirror server ##
+## Initial steps to take on the mirror server ##
 
 Add etch-backports to your /etc/apt/sources.list:
 
@@ -50,19 +48,12 @@ Add web site configuration that the user has write access to. If you are using A
 
 Upload and edit ikiwiki.setup.sample from the docs directory
 
-As the new user, create two new git repos
+As the new user, create a git repo
 
-    mkdir monkeysphere.git; cd monkeysphere.git; git init --bare; cd ../
-    git clone monkeysphere.git # this will create a second git repo called monkeysphere
+    mkdir monkeysphere.git; cd monkeysphere.git; git init --bare;
 
-Change the mode of monkeysphere.git/hooks/post-receive to 755
 
-    chmod 755 monkesphere.git/hooks/post-receive
-
-Edit the file so that it executes the post-receive hook ikiwiki generates (as
-you specified in the ikiwiki.setup file)
-
-## Admin steps to take to enable the configuration ##
+## Initial Admin steps to take to enable the configuration ##
 
 Add a new dns record for SERVERNAME.monkeysphere.info. 
 
@@ -73,9 +64,35 @@ Add the new server as a remote on webmaster@george.riseup.net:monkeysphere.git
     cd ~/monkeysphere.git
     git add remote SERVERNAME USER@SERVERNAME.monkeysphere.info:/path/to/repo
 
+Modify ~/monkeysphere.git/config, so the new repo stanza looks like this:
+
+    [remote "SERVERNAME"]
+		url = USER@SERVERNAME.monkeysphere.info:monkeysphere.git
+		push = +refs/heads/master
+		skipDefaultUpdate = true
+
 Test:
 
     git push SERVERNAME
 
 
-    
+## Final steps to take on mirror server ##
+
+At this point, you should have a populated git repo in your
+monkeyshere.git directory. 
+
+Change the mode of monkeysphere.git/hooks/post-receive to 755
+
+    chmod 755 monkesphere.git/hooks/post-receive
+
+Edit the file so that it executes the post-receive hook ikiwiki generates (as
+you specified in the ikiwiki.setup file)
+
+Next, clone the repository:
+
+    clone monkeysphere.git monkeysphere
+
+And lastly, run ikiwiki manually to generate the post-receive hook:
+
+    ikiwiki --setup ikiwiki.setup
+
