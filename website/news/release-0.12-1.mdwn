@@ -1,0 +1,9 @@
+[[meta title="MonkeySphere 0.12-1 released!"]]
+
+# MonkeySphere 0.12-1 released! #
+
+MonkeySphere 0.12-1 has been released.  This release includes
+documentation updates, and a re-organized logging subsystem with
+various levels of verbosity, modeled after LogLevel in OpenSSH.
+
+[[download]] it now!

@@ -245,3 +245,7 @@ I'll leave the bug open for a bit until it get more tested and 0.12
 gets pushed out.
 
 -- BJ
+
+---
+
+I think this is [[/bugs/done]] as of version 0.12-1.

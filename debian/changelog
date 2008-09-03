@@ -1,4 +1,4 @@
-monkeysphere (0.12-1) UNRELEASED; urgency=low
+monkeysphere (0.12-1) experimental; urgency=low
 
   [ Jameson Graef Rollins ]
   * Improved output handling.  New LOG_LEVEL variable.
