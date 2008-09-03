@@ -79,10 +79,9 @@ div.actions {
 }
 
 #sidebar {
-	line-height: ;
-	width: ;
-	float: ;
-	margin-left: ;
-	margin-bottom: ;
-	padding: ;
+	line-height: normal;
+	width: 100%;
+	float: none;
+	margin: 0;
+	padding: 0;
 }
