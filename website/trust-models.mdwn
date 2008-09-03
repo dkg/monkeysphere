@@ -1,0 +1,21 @@
+[[meta title
+You can see your trust database parameters like this:
+
+	gpg --with-colons --list-key bogusgarbagehere 2>/dev/null | head -n1
+
+for me, it looks like this:
+
+	tru::1:1220401097:1220465006:3:1:5
+
+These colon-delimited records say (in order):
+
+ * `tru`: this is a trust database record
+ * `<empty>`: the trust database is not stale (might be 'o' for old, or 't' for "built with different trust model and not yet updated")
+ * `1`: uses new "PGP" trust model: this is just the old trust model plus trust signatures.  I'll go into trust signatures later.
+ * `1220401097`: seconds since the epoch that i created the trust db.
+ * `1220465006`: seconds after the epoch that the trustdb will need to be rechecked (usually due to the closest pending expiration, etc)
+ * `3`: Either 3 certifications from keys with marginal ownertrust are needed for full User ID+Key validity
+ * `1`: Or 1 certification from a key with full ownertrust is needed for full User ID+Key validity
+ * `5`: max_cert_depth (not sure exactly how this is used)
+
+
