@@ -1,0 +1,13 @@
+<table class="sitenav" cellpadding="0" cellspacing="0">
+<tbody><tr><td>
+<a class="logo" href="/"><img class="logo" src="/logo.png" alt="monkeysphere" width="343" height="85" /></a>
+</td><td>
+
+[[WHY?|why]]
+[[DOWNLOAD|download]]
+[[DOCUMENTATION|doc]] 
+[[NEWS|news]]
+[[COMMUNITY|community]]
+[[BUGS|bugs]]
+
+</td></tr></tbody></table>
