@@ -1,4 +1,3 @@
-[[!template id="nav"]]
 [[meta title="Documentation"]]
 
 ## Dependencies ##

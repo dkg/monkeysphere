@@ -1,5 +1,3 @@
-[[!template id="nav"]]
-
 [[toc ]]
 
 The Monkeysphere project's goal is to extend OpenPGP's web of trust to

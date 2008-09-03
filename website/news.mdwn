@@ -1,4 +1,3 @@
-[[!template id="nav"]]
 [[meta title="News"]]
 Here are the latest announcements about the Monkeysphere.
 

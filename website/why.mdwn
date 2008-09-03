@@ -1,5 +1,3 @@
-[[!template id="nav"]]
-
 [[meta title="Why should you be interested in the MonkeySphere?"]]
 
 [[toc ]]

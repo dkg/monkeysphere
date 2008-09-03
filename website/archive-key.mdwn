@@ -1,5 +1,4 @@
 [[meta title="Monkeysphere archive signing key"]]
-[[!template id="nav"]]
 [[toc ]]
 
 ## Verifying the key ##

@@ -1,4 +1,4 @@
-[[!template id="nav"]]
+[[meta title="Completed Bugs"]]
 
 Recently fixed [[bugs]].
 
