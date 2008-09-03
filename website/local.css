@@ -72,10 +72,12 @@ table.sitenav span.selflink {
 
 div.header { 
  text-align: right;
+ display: none;
 }
 
 div.actions { 
  text-align: right;
+ display: none;
 }
 
 #sidebar {
