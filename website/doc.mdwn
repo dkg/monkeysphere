@@ -10,8 +10,10 @@ Monkeysphere relies on:
 
 ## Getting started ##
 
+ * [Downloading and installing](/download)
  * Getting started as a [user](/getting-started-user)
  * Getting started as a [server admin](/getting-started-admin)
+ * [Developing the monkeysphere](/community)
 
 ## References ##
 
