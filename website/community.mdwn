@@ -39,10 +39,11 @@ offering:
 Micah Anderson:
 	
 	git clone git://labs.riseup.net/~micah/monkeysphere
- 
 
 ## Contact ##
 
 Please feel free to contact any of the Monkeysphere developers or post
 to the mailing list with questions, comments, bug reports, requests,
-etc.
+etc.  If you contact a developer individually, please indicate if
+there is any part of your note that can be made public (we might want
+to post it to the web here).
