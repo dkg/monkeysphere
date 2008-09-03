@@ -273,7 +273,7 @@ unset AUTHORIZED_KEYS
 [ -r "${ETC}/monkeysphere.conf" ] && . "${ETC}/monkeysphere.conf"
 
 # set monkeysphere home directory
-MONKEYSPHERE_HOME=${MONKEYSPHERE_HOME:="${HOME}/.config/monkeysphere"}
+MONKEYSPHERE_HOME=${MONKEYSPHERE_HOME:="${HOME}/.monkeysphere"}
 mkdir -p -m 0700 "$MONKEYSPHERE_HOME"
 
 # load local config
