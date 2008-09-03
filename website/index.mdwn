@@ -1,17 +1,20 @@
 [[!template id="nav"]]
 
+[[toc ]]
+
 The Monkeysphere project's goal is to extend OpenPGP's web of trust to
-many areas of the Internet to help us securely identify each other
+new areas of the Internet to help us securely identify each other
 while we work online.
 
 Specifically, monkeysphere currently offers a framework to leverage
 the OpenPGP web of trust for OpenSSH authentication.
 
-In other words, it allows you to use your OpenPGP keys when using
-secure shell to both identify yourself and the servers you administer
-or connect to.  OpenPGP keys are tracked via GnuPG, and managed in the
-`known_hosts` and `authorized_keys` files used by OpenSSH for
-connection authentication.
+In other words, it allows you to use secure shell as you normally do,
+but to identify yourself and the servers you administer or connect to
+with your OpenPGP keys.  OpenPGP keys are tracked via GnuPG, and
+monkeysphere manages the `known_hosts` and `authorized_keys` files
+used by OpenSSH for authentication, checking them for cryptographic
+validity.
 
 ## Conceptual overview ##
 
