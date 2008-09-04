@@ -7,6 +7,11 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-09-04 - dkg
+	* added two mime-type declarations in /etc/mathopd.conf so .debs
+	  and .tar.gz files come out reasonably; restarted mathopd for the
+	  re-read.
+	
 2008-09-03 - micah
 	* migrated /home/*/.config/monkeysphere/authorized_user_ids to new
 	agreed location: /home/*/.monkeysphere/authorized_user_ids and created
