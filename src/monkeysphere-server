@@ -568,6 +568,10 @@ diagnostics() {
     warnwindow='2 months'
     warndate=$(date +%s -d "$warnwindow")
 
+    if ! id monkeysphere >/dev/null ; then
+	echo "! No monkeysphere user found!  Please create a monkeysphere system user."
+    fi
+
     echo "Checking host GPG key..."
     if (( "$keysfound" < 1 )); then
 	echo "! No host key found."
