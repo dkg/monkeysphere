@@ -14,8 +14,8 @@ seeing messages like this?
 Do you actually tediously check the fingerprint against a
 cryptographically-signed message from the admin, or do you just cross
 your fingers and type "yes"?  Do you wish there was a better way to
-verify that the host your connecting to actually is the host you mean
-to connect to?  Shouldn't our tools be able to figure this out
+verify that the host you are connecting to actually is the host you
+mean to connect to?  Shouldn't our tools be able to figure this out
 automatically?
 
 Do you use `ssh`'s public key authentication for convenience and/or
