@@ -62,9 +62,9 @@ validity*:
 
  *  Given that:
 
-        * the key itself is valid, in the first narrow sense used above, and
-        * given the UserID's set of cryptographically-correct certifications, and
-        * given your personal subjective declarations about who you trust to make certifications (and *how much* you trust them to do this), 
+    * the key itself is valid, in the first narrow sense used above, and
+    * given the UserID's set of cryptographically-correct certifications, and
+    * given your personal subjective declarations about who you trust to make certifications (and *how much* you trust them to do this), 
 
     is this User ID bound to its key with an acceptable trust path?
 
