@@ -1,12 +1,14 @@
-monkeysphere (0.13~pre-1) UNRELEASED; urgency=low
+monkeysphere (0.13-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
   * tweaks in /usr/bin/monkeysphere to handle odd secret keyrings.
+  * updated makefile to reflect the package building technique we've been
+    using for a month now.
 
   [ Jameson Graef Rollins ]
   * move location of user config directory to ~/.monkeysphere.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Wed, 03 Sep 2008 13:35:23 -0700
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 03 Sep 2008 17:26:10 -0400
 
 monkeysphere (0.12-1) experimental; urgency=low
 

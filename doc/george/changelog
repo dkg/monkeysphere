@@ -7,6 +7,25 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-09-03 - micah
+	* migrated /home/*/.config/monkeysphere/authorized_user_ids to new
+	agreed location: /home/*/.monkeysphere/authorized_user_ids and created
+	a symlink in the original location for transition purposes. Also,
+	did /root's as well. I used this hackish mechanism:
+	$ for user in `find . -wholename './*/.config/monkeysphere/authorized_user_ids' \
+	| cut -d/ -f2`; do mkdir -v ${user}/.monkeysphere; chown ${user}:${user} \
+	${user}/.monkeysphere; mv -v ${user}/.config/monkeysphere/authorized_user_ids \
+	${user}/.monkeysphere; ln -s /home/${user}/.monkeysphere/authorized_user_ids \
+	${user}/.config/monkeysphere/authorized_user_ids; done
+
+	   - dkg
+	* added the monkeysphere archive repository signing key
+	* aptitude update && aptitude full-upgrade (brings in monkeysphere 0.13-1)
+	* cleaned up /etc/skel to reflect correct location of the
+	  monkeysphere config directory.
+	* micah moved all the existing config stuff over, and left
+	  symlinks so people aren't disoriented.
+	
 2008-09-01 - dkg
 	* set up http://dkg.monkeysphere.info so that i could play around
 	  with ikiwiki updates
