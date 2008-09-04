@@ -1,0 +1,45 @@
+[[meta title="MonkeySphere 0.14-1 released!"]]
+
+# MonkeySphere 0.14-1 released! #
+
+MonkeySphere 0.14-1 has been released.  
+
+This release introduces packaging and distribution changes only, so
+that we can offer a clean tarball to non-debian users who might be
+interested.
+
+Debian users, please [[download]] it now!
+
+-----
+
+For non-debian users, or folks who just want to look at the source,
+the
+[tarball](http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_0.14.orig.tar.gz)
+has this sha1sum:
+
+<pre>
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+sha1sum for the monkeysphere 0.14 release:
+
+8b05fec041cec7f86ddde92fa72c8aabf8af0b3b  monkeysphere_0.14.orig.tar.gz
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQIVAwUBSMAaEhjmZ/HrivMUAQIgIg/+NyMdTzpnxfR+PRaN74uz/vcrDoS3DN+v
+f7h+af1nNfoqJzj7nk+/J8fj3Kukei27Ur/KYiyd0OKoucW80Ajm3A+QCTu/uGLJ
+/uT6L60ERyfBearf4CrIb0IesISZLqzxs1bA0+IswxueYy0GBXcVSuS7v0GIWmHb
+bOJ4yHELYo53Bc/vrtZVW4D4hEiShgesbTFtLYUFTrtALODQqbwEN+shWRo6DzjB
+lttuJV0T6KB5z4tLACbAoTGFQoamfTbJ/1WAxyQg6pIzdRUCnLIwmFjaQ7Xjv6b1
+Td8YR+KhkTjPq/gjQCiEBN9xjozOm0sLUnpTgJNOpRcR+ktQ84eT3mvu3AQnRrVh
+7nX2NSp1RRU5qMWMv3cdTkGWKGi6WfixZarTuMSPwLjDkwAoto7XItV+XDZa4eTc
+7QYwssL+rh5sq61Vq8x0g7Pm7LfA+u2AU79PWYPBc5VsMWyxhmYVsm/JwmLYp/An
+Ak0zWUwd6993/s8qi827/J5b86TXN+OeAONvP5dd+ugiFNDqjfCoiUC6gMCi/V5j
+ptLhnnd2frcNKJLlhYp1dit61IMXuQZkLow6y+2ao/jfXNIPQ/koRJo0bxaFAgBc
+CeivTZkWjINVSN630L8y4uQnx9ag0pybrYTarmICM41QhtVS4M09s6rSPEjY6ppZ
+okLO90tgcpQ=
+=rrij
+-----END PGP SIGNATURE-----
+</pre>
+
