@@ -18,29 +18,29 @@
 keys?  Do you know the administrators of your servers, and wish that
 SSH could verify new host keys from them automatically, based on your
 personal connections to the web-of-trust?  Do you wish you could
-revoke and rotate your old SSH authentication keys without having to
-log into every single machine?</p>
+revoke and/or rotate your old SSH authentication keys without having
+to log into every single machine you have an account on?</p>
 
 <p>Do you administer servers, and wish you could re-key them without
-sowing massive pain and confusion among your users (or worse,
-encouraging bad security habits among them)?  Do you wish you could
-grant access to your users by name, instead of by opaque string?  Do
-you wish you could rapidly revoke access to a user (or compromised
-key) across a group of machines by disabling authentication for that
-user?</p>
+sowing massive confusion among your users (or worse, encouraging bad
+security habits among them)?  Do you wish you could grant access to
+your users by name, instead of by opaque string?  Do you wish you
+could rapidly revoke access to a user (or compromised key) across a
+group of machines by disabling authentication for that user?</p>
 
 <p>A group of us have been working on a public key infrastructure for
 SSH. <a href="http://web.monkeysphere.info">Monkeysphere</a> makes use
 of the existing OpenPGP web-of-trust to fetch and cryptographically
-validate (and revoke!) keys.  This works in either directions: both
+validate (and revoke!) keys.  This works in both direction:
 <code>authorized_keys</code> <em>and</em> <code>known_hosts</code> are
 handled.  Monkeysphere gives users and admins tools to deal with SSH
 keys by thinking about the people and machines to whom the keys
 belong, instead of requiring humans to do tedious (and error-prone)
 manual key verification.</p>
 
-<p>We have <a href="http://web.monkeysphere.info/download">debian packages
-available</a> which should install against lenny, <a
+<p>We have <a href="http://web.monkeysphere.info/download">debian
+packages available</a> which should install against lenny (for i386,
+amd64, powerpc, and arm architectures at the moment), <a
 href="https://lists.riseup.net/www/info/monkeysphere">a mailing
 list</a>, and open ears for good questions, suggestions and
 criticism.</p>
