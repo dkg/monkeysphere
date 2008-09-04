@@ -17,6 +17,6 @@ These colon-delimited records say (in order):
  * `1220465006`: seconds after the epoch that the trustdb will need to be rechecked (usually due to the closest pending expiration, etc)
  * `3`: Either 3 certifications from keys with marginal ownertrust are needed for full User ID+Key validity
  * `1`: Or 1 certification from a key with full ownertrust is needed for full User ID+Key validity
- * `5`: max_cert_depth (not sure exactly how this is used)
+ * `5`: `max_cert_depth` (not sure exactly how this is used, though the name is certainly suggestive)
 
 
