@@ -19,8 +19,8 @@ the first time you log in to a new server, asking if you want to trust
 the server's key by verifying the key fingerprint.  Unfortunately,
 unless you have access to the server's key fingerprint through a
 secure out-of-band channel, there is no way to verify that the
-fingerprint you are presented with is in fact that of the server your
-really trying to connect to.
+fingerprint you are presented with is in fact that of the server
+you're really trying to connect to.
 
 Many users also take advantage of OpenSSH's ability to use RSA or DSA
 keys for authenticating to a server (known as
@@ -42,7 +42,7 @@ expected.
 The basic idea of the Monkeysphere is to create a framework that uses
 [GnuPG](http://www.gnupg.org/)'s keyring manipulation capabilities and
 public keyserver communication to manage the keys that OpenSSH uses
-for connection authentication.  
+for connection authentication.
 
 The Monkeysphere therefore provides an effective PKI for OpenSSH,
 including the possibility for key transitions, transitive
@@ -55,11 +55,11 @@ Under the Monkeysphere, both parties to an OpenSSH connection (client
 and server) explicitly designate who they trust to certify the
 identity of the other party.  These trust designations are explicitly
 indicated with traditional GPG keyring trust models.  Monkeysphere
-then manages the keys in the `known_hosts` and `authorized_keys`
-files directly, in such a way that is completely transparent to SSH.
-No modification is made to the SSH protocol on the wire (it continues
-to use raw RSA public keys), and no modification is needed to the
-OpenSSH software.
+then manages the keys in the `known_hosts` and `authorized_keys` files
+directly, in such a way that is completely transparent to `ssh`.  No
+modification is made to the SSH protocol on the wire (it continues to
+use raw RSA public keys), and no modification is needed to the OpenSSH
+software.
 
 To emphasize: ***no modifications to SSH are required to use the
 Monkeysphere***.  OpenSSH can be used as is; completely unpatched and

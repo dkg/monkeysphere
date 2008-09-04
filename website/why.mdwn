@@ -118,10 +118,10 @@ allows a very flexible trust model, ranging all over the map, at the
 choice of the user:
 
 * individual per-host certifications by each client (much like the
-  stock OpenSSH behavior),
+  stock OpenSSH behavior), or
 
 * strict centralized Certificate Authorities (much like proposed X.509
-  models), and
+  models), or
 
 * a more human-centric model that recognizes individual differences in
   ranges of trust and acceptance.
