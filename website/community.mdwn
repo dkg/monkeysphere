@@ -12,6 +12,12 @@ friendly bunch. You can also [look through our
 archives](https://lists.riseup.net/www/arc/monkeysphere) if you don't
 believe us.
 
+## Internet Relay Chat ##
+
+We're currently holding down an IRC channel on the `irc.oftc.net`
+network.  You can find us in `#monkeysphere` if you prefer to
+communicate this way.
+
 ## Development ##
 
 The Monkeysphere uses a distributed development model with
