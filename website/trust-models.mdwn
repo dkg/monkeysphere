@@ -85,7 +85,7 @@ These colon-delimited records say (in order):
  * `1`: uses new "PGP" trust model (0 would be the "Classic trust model") -- see below
  * `1220401097`: seconds since the epoch that I created the trust db.
  * `1220465006`: seconds after the epoch that the trustdb will need to be rechecked (usually due to the closest pending expiration, etc)
- * `3`: Either 3 certifications from keys with marginal ownertrust are needed for full User ID+Key validity
+ * `3`: Either 3 certifications from keys with marginal ownertrust ...
  * `1`: Or 1 certification from a key with full ownertrust is needed for full User ID+Key validity
  * `5`: `max_cert_depth` (i'm not sure exactly how this is used, though the name is certainly suggestive)
 
