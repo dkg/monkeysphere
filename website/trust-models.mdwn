@@ -1,4 +1,74 @@
-[[meta title="PGP Trust Models"]]
+[[meta title="OpenPGP Trust Models"]]
+
+# OpenPGP Trust Models #
+
+Monkeysphere relies on GPG's definition of the OpenPGP web of trust,
+so it's important to understand how GPG calculates User ID validity
+for a key.
+
+The basic question asked is: For a given User ID on a specific key,
+given some set of valid certifications (signatures), and some explicit
+statements about whose certifications you think are trustworthy
+(ownertrust), should we consider this User ID to be legitimately
+attached to this key (a "valid" User ID)?
+
+It's worth noting that there are two integral parts in this
+calculation:
+
+ *  the certifications themselves -- this is the objective part: the
+    correctness of these signatures can be calculated with a known
+    algorithm which everyone knows and agrees on, based on the public
+    keys involved.
+
+ *  the ownertrust -- this is the subjective part: Who do you trust to
+    identify other entities on the network?  And *how much* do you
+    trust them to make these identifications correctly?  Everyone could
+    (and should!) answer this question differently, based on their
+    values and their relationships to the entities in question.
+
+    I might trust my sister's certifications because we've talked about
+    what sorts of certifications we feel comfortable making, and i
+    agree with her choices ("full" or "complete" ownertrust).  You
+    might not know her at all, and have no reason to treat her
+    certifications as valid (no ownertrust).
+
+    I might decide that the local municipality's procedures for
+    obtaining identity documents are a joke, and not trust their
+    certifications at all (no ownertrust), while you might feel that
+    their certifications are helpful as corroboration, but not to be
+    trusted on their own ("marginal" or "partial" ownertrust).  (Note:
+    I wish my municipality actually made cryptographic certifications
+    of identity, regardless of the ownertrust i'd put in them!)
+
+## What does "validity" mean anyway? ##
+
+You see the term "validity" a lot in this context, but it has several
+subtly different meanings:
+
+First of all, someone might speak of the validity of a key itself,
+which could mean two things:
+
+ *  The key is cryptographically well-formed, not revoked, not expired,
+    and has reasonable self-signatures on its User ID packets.
+
+ *  It is *also* sometimes used to mean something like "the maximum
+    validity of any associated User ID or [User
+    Attribute](http://tools.ietf.org/html/rfc4880#section-5.12)".  This
+    definition is often not very useful; because if you care about User
+    IDs at all, you usually care about a *specific* User ID.
+
+So the more useful definition of validity is actually *User ID
+validity*:
+
+ *  Given that:
+
+        * the key itself is valid, in the first narrow sense used above, and
+        * given the UserID's set of cryptographically-correct certifications, and
+        * given your personal subjective declarations about who you trust to make certifications (and *how much* you trust them to do this), 
+
+    is this User ID bound to its key with an acceptable trust path?
+
+## Examining your GPG trust database ##
 
 You can see your trust database parameters like this:
 
@@ -12,11 +82,122 @@ These colon-delimited records say (in order):
 
  * `tru`: this is a trust database record
  * `<empty>`: the trust database is not stale (might be 'o' for old, or 't' for "built with different trust model and not yet updated")
- * `1`: uses new "PGP" trust model: this is just the old trust model plus trust signatures.  I'll go into trust signatures later.
- * `1220401097`: seconds since the epoch that i created the trust db.
+ * `1`: uses new "PGP" trust model (0 would be the "Classic trust model") -- see below
+ * `1220401097`: seconds since the epoch that I created the trust db.
  * `1220465006`: seconds after the epoch that the trustdb will need to be rechecked (usually due to the closest pending expiration, etc)
  * `3`: Either 3 certifications from keys with marginal ownertrust are needed for full User ID+Key validity
  * `1`: Or 1 certification from a key with full ownertrust is needed for full User ID+Key validity
- * `5`: `max_cert_depth` (not sure exactly how this is used, though the name is certainly suggestive)
+ * `5`: `max_cert_depth` (i'm not sure exactly how this is used, though the name is certainly suggestive)
 
 
+## Classic trust model ##
+
+As far as i can tell, the basic trust model is just the `3` and `1`
+from the above description:
+
+ *  how many certifications from keys with marginal ownertrust are
+    needed to grant full validity to a User ID on a key?
+
+ *  how many certifications from keys with full ownertrust are needed
+    to grant full validity for a User ID on a key?
+
+If either of these are satisfied, the User ID is considered to be
+legitimately attached to its key (it is "fully" valid).
+
+If there are no certifications from anyone you trust, the User ID is
+considered to have unknown validity, which basically means "not
+valid".
+
+If there are *some* certifications from people who you trust, but not
+enough to satisfy either condition above, the User ID has "marginal
+validity".
+
+## PGP trust model (Classic trust model + trust signatures) ##
+
+Note that so far, your ability to express ownertrust is relatively
+clumsy.  You can say "i trust the certifications made by this
+keyholder completely", or "a little bit", or "not at all".  And these
+decisions about ownertrust are an entirely private matter.  You have
+no formal way to declare it, or to automatically interpret and act on
+others' declarations.  There is also no way to limit the scope of this
+ownertrust (e.g. "I trust my co-worker to properly identify anyone in
+our company, but would prefer not to trust him to identify my bank").
+
+[Trust
+signatures](http://tools.ietf.org/html/rfc4880#section-5.2.3.13) are a
+way to address these concerns.  With a trust signature, I can announce
+to the world that i think my sister's certifications are legitimate.
+She is a "trusted introducer".  If i use "trust level 1", this is
+equivalent to my ownertrust declaration, except that i can now make it
+formally public by publishing the trust signature to any keyserver.
+
+If you trust my judgement in this area ([the
+spec](http://tools.ietf.org/html/rfc4880#section-5.2.3.13) calls my
+role in this scenario a "meta introducer"), then you should be able to
+automatically accept certifications made by my sister by creating a
+level 2 trust signature on my key.  You can choose whether to publish
+this trust signature or not, but as long as your `gpg` instance knows
+about it, my sister's certifications will be treated as legitimate.
+
+Combining trust signatures with [regular
+expressions](http://tools.ietf.org/html/rfc4880#section-5.2.3.14)
+allows you to scope your trust declarations.  So, for example, if you
+work at ExampleCo, you might indicate in a standard level 1 trust
+signature on your co-worker's key that you trust them to identify any
+User ID within the `example.com` domain.
+
+### Problems and Questions with Chained Trust ###
+
+How do partial/marginal ownertrust and chained trust connections
+interact?  That is, if:
+
+ * `A` privately grants "marginal" ownertrust for `B`, and
+ * `B` issues a "marginal" trust signature at level 1 for `C`, and
+ * `C` certifies `D`'s User ID and key, 
+
+Then what should `A` see as the calculated validity for `D`'s User ID?
+Surely nothing more than "marginal", but if `A` marginally trusts two
+other certifications on `D`, should that add up to full validity?
+
+What if the chain goes out more levels than above?  Does "marginal"
+get more attenuated somehow as a chain of marginals gets deeper?  And
+how exactly does `max_cert_depth` play into all this?  
+
+What about regex-scoped trust signatures of level > 1?  Does the
+scoping apply to all dependent trust signatures?  Has this sort of
+thing been tested?
+
+
+## "ultimate" ownertrust in GnuPG ##
+
+Note that for a key under your sole control, which you expect to use
+to certify other people's User IDs, you would typically give that key
+"ultimate" ownertrust, which for the purposes of the calculations
+described here is very similar to "full".
+
+The difference appears to be this: If a key with "full" ownertrust
+*but with no valid User IDs* makes a certification, that certification
+will not be considered.  But if the certifying key has "ultimate"
+ownertrust, then its certifications *are* considered.
+
+So "full" ownertrust on a key is only meaningful as long as there is a
+trust path to some User ID on that key already.  "ultimate" ownertrust
+is meaningful anyway, because presumably you control that key.
+
+## Other references ##
+
+ * Much of this was gathered from experimenting with
+   [GnuPG](http://gnupg.org/), and reading [gpg's
+   `DETAILS`](http://cvs.gnupg.org/cgi-bin/viewcvs.cgi/trunk/doc/DETAILS?root=GnuPG&view=markup).
+   Unfortunately, `DETAILS` seems to often conflate the ideas of trust
+   and validity, which can make it confusing to read.
+
+ * [RFC 4880](http://tools.ietf.org/html/rfc4880) is the canonical
+   modern OpenPGP reference.  If you want to understand the pieces to
+   this puzzle in detail, this is the place to go.  However, it
+   doesn't describe the trust model calculations discussed here
+   directly, but only points at them obliquely, through [the
+   definition of trust
+   signatures](http://tools.ietf.org/html/rfc4880#section-5.2.3.13).
+   How your particular OpenPGP client chooses to calculate User ID
+   validity is therefore implementation-specific.
