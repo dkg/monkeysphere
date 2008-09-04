@@ -1,0 +1,9 @@
+[[meta title="MonkeySphere 0.13-1 released!"]]
+
+# MonkeySphere 0.13-1 released! #
+
+MonkeySphere 0.13-1 has been released.  In this release we moved the
+user config directory from ~/.config/monkeysphere to ~/.monkeysphere,
+over concerns that the old location is not quite standard enough.
+
+[[download]] it now!
