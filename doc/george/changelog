@@ -11,6 +11,13 @@
 	* added two mime-type declarations in /etc/mathopd.conf so .debs
 	  and .tar.gz files come out reasonably; restarted mathopd for the
 	  re-read.
+	* built monkeyshell (from src/monkeyshell) and installed as
+	  /usr/local/bin/monkeyshell, added to /etc/shells.
+	* created new account "monkey" which has monkeyshell as the shell
+	  for non-privileged test access.  To let someone test this out,
+	  make sure they're well-connected to george's web of trust, and
+	  then add their User ID to
+	  ~monkey/.monkeysphere/authorized_user_ids
 	
 2008-09-03 - micah
 	* migrated /home/*/.config/monkeysphere/authorized_user_ids to new
