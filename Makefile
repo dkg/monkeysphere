@@ -5,7 +5,7 @@ all: keytrans
 keytrans:
 	$(MAKE) -C src/keytrans
 
-release: clean
+tarball: clean
 	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
 	mkdir -p monkeysphere-$(MONKEYSPHERE_VERSION)/doc
 	ln -s ../../website/getting-started-user.mdwn ../../website/getting-started-admin.mdwn ../../doc/TODO ../../doc/MonkeySpec monkeysphere-$(MONKEYSPHERE_VERSION)/doc
@@ -13,7 +13,7 @@ release: clean
 	tar -ch monkeysphere-$(MONKEYSPHERE_VERSION) | gzip -n > monkeysphere_$(MONKEYSPHERE_VERSION).orig.tar.gz
 	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
 
-debian-package: release
+debian-package: tarball
 	tar xzf monkeysphere_$(MONKEYSPHERE_VERSION).orig.tar.gz
 	cp -a debian monkeysphere-$(MONKEYSPHERE_VERSION)
 	(cd monkeysphere-$(MONKEYSPHERE_VERSION) && debuild -uc -us)
@@ -24,4 +24,4 @@ clean:
 	# clean up old monkeysphere packages lying around as well.
 	rm -f monkeysphere_*
 
-.PHONY: all clean release debian-package
+.PHONY: all clean tarball debian-package

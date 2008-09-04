@@ -1,3 +1,11 @@
+monkeysphere (0.14-1) experimental; urgency=low
+
+  * changing debian packaging back to format 1.0 so we get automatic
+    tarballs, and easier inclusion in other build networks.
+  * no other source changes.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 04 Sep 2008 13:03:35 -0400
+
 monkeysphere (0.13-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
