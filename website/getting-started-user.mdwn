@@ -27,13 +27,13 @@ Keeping your `known_hosts` file in sync with your keyring
 With your keyring updated, you want to make sure that OpenSSH can
 still see the most recent trusted information about who the various
 hosts are.  This can be done with the monkeysphere-ssh-proxycommand
-(see next section) or with the update-known_hosts command:
+(see next section) or with the `update-known_hosts` command:
 
 	$ monkeysphere update-known_hosts
 
-This command will check to see if there is an OpenPGP key for
-each (non-hashed) host listed in the known_hosts file, and then add
-the key for that host to the known_hosts file if one is found.  This
+This command will check to see if there is an OpenPGP key for each
+(non-hashed) host listed in the `known_hosts` file, and then add the
+key for that host to the `known_hosts` file if one is found.  This
 command could be added to a crontab as well, if desired.
 
 
@@ -41,7 +41,7 @@ Using `monkeysphere-ssh-proxycommand`(1)
 ----------------------------------------
 
 The best way to handle host keys is to use the monkeysphere ssh proxy
-command.  This command will make sure the known_hosts file is
+command.  This command will make sure the `known_hosts` file is
 up-to-date for the host you are connecting to with ssh.  The best way
 to integrate this is to add the following line to the "Host *" section
 of your `~/.ssh/config` file:
@@ -64,28 +64,28 @@ FIXME: We should setup a way for someone to download a test gpg key and
 then connect to a test server that is signed by this gpg key so users
 can establish that they are setup correctly.
 
-The remaining steps will complete the second half: allow servers to
+The remaining steps will complete the second half: allowing servers to
 verify you based on your OpenPGP key.
 
 
 Setting up an OpenPGP authentication key
 ----------------------------------------
 
-First things first: you'll need to create a new subkey for your
-current key, if you don't already have one.  If you already have a GPG
-key, you can add a subkey with:
+First things first: you'll need to create an "authentication" subkey
+for your current key, if you don't already have one.  If you already
+have a GPG key, you can add an authentication subkey with:
 
 	$ monkeysphere gen-subkey
 
 If you have more than one secret key, you'll need to specify the key
-you want to add a subkey to on the command line.
+you want to add the subkey to on the command line.
 
 
 Using your OpenPGP authentication key for SSH
 ---------------------------------------------
 
-Once you have created an OpenPGP authentication key, you will need to
-feed it to your ssh agent.
+Once you have created an OpenPGP authentication subkey, you will need
+to feed it to your ssh agent.
 
 Currently (2008-08-23), gnutls does not support this operation. In order
 to take this step, you will need to upgrade to a patched version of
@@ -110,12 +110,12 @@ Miscellaneous
 
 Users can also maintain their own `~/.ssh/authorized_keys` files with
 the Monkeysphere.  This is primarily useful for accounts on hosts that
-are not already systematically using the monkeysphere for user
+are not already systematically using the Monkeysphere for user
 authentication.  If you're not sure whether this is the case for your
 host, ask your system administrator.
 
 If you want to do this as a regular user, use the
-update-authorized_keys command:
+`update-authorized_keys` command:
 
 	$ monkeysphere update-authorized_keys
 
