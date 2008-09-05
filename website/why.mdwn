@@ -2,6 +2,8 @@
 
 # Why should you be interested in the Monkeysphere? #
 
+[[!toc levels=2]]
+
 ## As an `ssh` user ##
 
 Do you use `ssh` to connect to remote machines?  Are you tired of
