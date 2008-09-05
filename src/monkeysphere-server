@@ -20,7 +20,7 @@ export SHARE
 VARLIB="/var/lib/monkeysphere"
 export VARLIB
 
-# date in UTF format if needed
+# UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
 
 # unset some environment variables that could screw things up
@@ -570,6 +570,10 @@ diagnostics() {
 
     if ! id monkeysphere >/dev/null ; then
 	echo "! No monkeysphere user found!  Please create a monkeysphere system user."
+    fi
+
+    if ! [ -d "$VARLIB" ] ; then
+	echo "! no $VARLIB directory found.  Please create it."
     fi
 
     echo "Checking host GPG key..."

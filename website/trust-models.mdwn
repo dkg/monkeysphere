@@ -6,11 +6,11 @@ Monkeysphere relies on GPG's definition of the OpenPGP web of trust,
 so it's important to understand how GPG calculates User ID validity
 for a key.
 
-The basic question asked is: For a given User ID on a specific key,
-given some set of valid certifications (signatures), and some explicit
-statements about whose certifications you think are trustworthy
-(ownertrust), should we consider this User ID to be legitimately
-attached to this key (a "valid" User ID)?
+The basic question that a trust model tries to answer is: For a given
+User ID on a specific key, given some set of valid certifications
+(signatures), and some explicit statements about whose certifications
+you think are trustworthy (ownertrust), should we consider this User
+ID to be legitimately attached to this key (a "valid" User ID)?
 
 It's worth noting that there are two integral parts in this
 calculation:

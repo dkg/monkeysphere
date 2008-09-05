@@ -17,7 +17,7 @@ SHARE=${MONKEYSPHERE_SHARE:-"/usr/share/monkeysphere"}
 export SHARE
 . "${SHARE}/common" || exit 1
 
-# date in UTF format if needed
+# UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
 
 # unset some environment variables that could screw things up

@@ -208,7 +208,7 @@ int emit_public_openssh_from_pgp(const gnutls_openpgp_crt_t* pgp_crt, const unsi
   /* variables for the output conversion: */
   int pipestatus;
   int pipefd, child_pid;
-  char* const b64args[] = {"base64", "--wrap=0", NULL};
+  char* const b64args[] = {"sh", "-c", "base64 | tr -c -d '[A-Za-z0-9=+/]'", NULL};
 
   init_datum(&m);
   init_datum(&e);

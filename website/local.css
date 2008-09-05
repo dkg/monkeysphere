@@ -52,6 +52,7 @@ pre {
   border: 1px solid #aaa;
   padding: 3px 3px 3px 3px;
   margin-left: 2em;
+  overflow: auto;
 }
 
 table.sitenav { 
@@ -70,12 +71,14 @@ table.sitenav img.logo {
 table.sitenav a { 
   font-weight: bold;
   margin-right: 1em;
+  font-variant: small-caps;
 }
 
 table.sitenav span.selflink { 
   font-weight: bold;
   text-decoration: underline;
   margin-right: 1em;
+  font-variant: small-caps;
 }
 
 div.header { 

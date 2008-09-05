@@ -14,34 +14,13 @@ Work out the details (and describe a full use case) for assigning a
    do we export it so it's available when a second-party revocation is
    needed?
 
-Ensure that authorized_user_ids are under as tight control as ssh
-   expects from authorized_keys: we don't want monkeysphere to be a
-   weak link in the filesystem.
-
-Consider the default permissions for
-   /var/lib/monkeysphere/authorized_keys/* (and indeed the whole
-   directory path leading up to that)
-
-Make sure alternate ports are handled for known_hosts.
-
-Script to import private key into ssh agent.
-
 Provide a friendly interactive UI for marginal or failing client-side
    hostkey verifications.  Handle the common cases smoothly, and
    provide good debugging info for the unusual cases.
 
-Make sure onak properly escapes user IDs with colons in them.
-
-Indicate on web site how to report trouble or concerns, and how to
-   join the project.
-
-Clean up the style for the web site (pages, icons, etc).
-
 Create ssh2openpgp or convert to full-fledged keytrans.
 
 Resolve the bugs listed in openpgp2ssh(1):BUGS.
-
-Document alternate trustdb models.
 
 Understand and document the output of gpg --check-trustdb:
  gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model

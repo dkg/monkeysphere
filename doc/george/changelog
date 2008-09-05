@@ -18,6 +18,7 @@
 	  make sure they're well-connected to george's web of trust, and
 	  then add their User ID to
 	  ~monkey/.monkeysphere/authorized_user_ids
+	* more mime types for mathopd: image/png image/x-icon
 	
 2008-09-03 - micah
 	* migrated /home/*/.config/monkeysphere/authorized_user_ids to new
