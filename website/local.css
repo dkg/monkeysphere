@@ -74,6 +74,10 @@ table.sitenav a {
   font-size: smaller;
 }
 
+td#sitenav { 
+  vertical-align: bottom;
+}
+
 table.sitenav span.selflink { 
   font-weight: bold;
   text-decoration: underline;
