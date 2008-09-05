@@ -1,6 +1,6 @@
 [[meta title="Download"]]
 
-## Downloading and Installing ##
+# Downloading and Installing #
 
 If you are running a Debian system, you can install Monkeysphere
 by following these directions:

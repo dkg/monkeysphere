@@ -1,3 +1,12 @@
+h1 {
+  -moz-border-radius: 4px;
+  background-color: #B67B4E;
+  color: black;
+  display: block;
+  font-weight: bold;
+  padding: 0 0 0 10px;
+}
+
 h2 {
   -moz-border-radius: 4px;
   background-color: #B67B4E;

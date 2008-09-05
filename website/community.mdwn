@@ -1,5 +1,7 @@
 [[meta title="Community"]]
 
+# The MonkeySphere Community #
+
 ## Mailing list ##
 
 The Monkeysphere project is a new project with just one mailing list

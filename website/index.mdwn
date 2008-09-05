@@ -1,3 +1,7 @@
+[[meta title="The MonkeySphere Project"]]
+
+# The MonkeySphere Project #
+
 The Monkeysphere project's goal is to extend OpenPGP's web of trust to
 new areas of the Internet to help us securely identify each other
 while we work online.

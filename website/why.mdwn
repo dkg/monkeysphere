@@ -1,5 +1,7 @@
 [[meta title="Why should you be interested in the MonkeySphere?"]]
 
+# Why should you be interested in the MonkeySphere? #
+
 [[toc ]]
 
 ## As an `ssh` user ##

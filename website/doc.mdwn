@@ -1,5 +1,7 @@
 [[meta title="Documentation"]]
 
+# Documentation #
+
 ## Dependencies ##
 
 Monkeysphere relies on:

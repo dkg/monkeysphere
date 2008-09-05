@@ -1,4 +1,7 @@
 [[meta title="Open Bugs"]]
+
+# Bugs #
+
 This is Monkeysphere's bug list.  You can also browse our [completed bugs](done).
 
 If you don't have commit access to the public repo, we'd appreciate
