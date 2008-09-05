@@ -132,7 +132,7 @@ lock() {
 	*)
 	    failure "bad argument for lock subfunction '$action'"
     esac
-
+}
 
 # check that characters are in a string (in an AND fashion).
 # used for checking key capability
