@@ -74,8 +74,10 @@ table.sitenav a {
   font-size: smaller;
 }
 
+/* trying to align the sitenav links roughly with the text in the monkeysphere logo */
 td#sitenav { 
   vertical-align: bottom;
+  padding-bottom: 30px;
 }
 
 table.sitenav span.selflink { 
