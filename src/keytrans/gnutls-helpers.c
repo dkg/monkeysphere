@@ -387,7 +387,7 @@ int create_writing_pipe(pid_t* pid, const char* path, char* const argv[]) {
       err(0,"Failed to transfer reading file descriptor to stdin (error: %d \"%s\")\n", errno, strerror(errno));
       exit(1);
     }
-    execv(path, argv);
+    execvp(path, argv);
     err(0,"exec %s failed (error: %d \"%s\")\n", path, errno, strerror(errno));
     /* close the open file descriptors */
     close(p[0]);
