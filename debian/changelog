@@ -2,6 +2,7 @@ monkeysphere (0.15~pre-1) UNRELEASED; urgency=low
 
   * porting work: clarifying makefiles, pruning dependencies, etc.
   * added tests to monkeysphere-server diagnostics
+  * moved monkeysphere(5) to section 7 of the manual
 
  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 04 Sep 2008 19:08:40 -0400
 
