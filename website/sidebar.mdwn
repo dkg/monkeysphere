@@ -3,11 +3,11 @@
 <a class="logo" href="/"><img class="logo" src="/logo.png" alt="monkeysphere" width="343" height="85" /></a>
 </td><td>
 
-[[Why?|why]]
-[[Download|download]]
-[[Documentation|doc]] 
-[[News|news]]
-[[Community|community]]
-[[Bugs|bugs]]
+[[why?|why]]
+[[download]]
+[[documentation|doc]] 
+[[news]]
+[[community]]
+[[bugs]]
 
 </td></tr></tbody></table>

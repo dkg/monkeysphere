@@ -99,3 +99,8 @@ div.actions {
   padding: 0;
 }
 
+/* align main paragraphs to the right side of the monkey's finger */
+body > p { 
+  margin-left: 18px;
+  margin-right: 5em;
+}
