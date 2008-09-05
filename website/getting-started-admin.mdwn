@@ -19,8 +19,8 @@ This will generate the key for server with the service URI
 server key so that people in the admin's web of trust can identify the
 server without manual host key checking:
 
-	$ gpg --search ='ssh://server.example.net'
-	$ gpg --sign-key ='ssh://server.example.net'
+	$ gpg --search '=ssh://server.example.net'
+	$ gpg --sign-key '=ssh://server.example.net'
 
 
 Update OpenSSH configuration files
