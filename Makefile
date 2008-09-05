@@ -1,4 +1,9 @@
-MONKEYSPHERE_VERSION=`head -n1 debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/'`
+MONKEYSPHERE_VERSION = `head -n1 debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/'`
+
+# these defaults are for debian.  porters should probably adjust them
+# before calling make install
+ETCPREFIX ?= 
+PREFIX ?= /usr
 
 all: keytrans
 
@@ -24,4 +29,19 @@ clean:
 	# clean up old monkeysphere packages lying around as well.
 	rm -f monkeysphere_*
 
-.PHONY: all clean tarball debian-package
+# this target is to be called from the tarball, not from the git
+# working dir!
+install: all
+	mkdir -p $(DESTDIR)/$(PREFIX)/bin $(DESTDIR)/$(PREFIX)/sbin $(DESTDIR)/$(PREFIX)/share/monkeysphere
+	mkdir -p $(DESTDIR)/$(PREFIX)/share/man/man1 $(DESTDIR)/$(PREFIX)/share/man/man7 $(DESTDIR)/$(PREFIX)/share/man/man8
+	mkdir -p $(DESTDIR)/$(ETCPREFIX)/etc
+	mkdir -p $(DESTDIR)/$(PREFIX)/var/lib/monkeysphere/authorized_keys
+	install src/monkeysphere src/monkeysphere-ssh-proxycommand src/keytrans/openpgp2ssh $(DESTDIR)/$(PREFIX)/bin
+	install src/monkeysphere-server $(DESTDIR)/$(PREFIX)/sbin
+	install src/common $(DESTDIR)/$(PREFIX)/share/monkeysphere
+	install man/man1/* $(DESTDIR)$(PREFIX)/share/man/man1
+	install man/man7/* $(DESTDIR)$(PREFIX)/share/man/man7
+	install man/man8/* $(DESTDIR)$(PREFIX)/share/man/man8
+	install etc/* $(DESTDIR)$(ETCPREFIX)/etc
+
+.PHONY: all clean tarball debian-package install
