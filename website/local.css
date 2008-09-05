@@ -61,12 +61,14 @@ table.sitenav img.logo {
 table.sitenav a { 
   font-weight: bold;
   margin-right: 1em;
+  font-variant: small-caps;
 }
 
 table.sitenav span.selflink { 
   font-weight: bold;
   text-decoration: underline;
   margin-right: 1em;
+  font-variant: small-caps;
 }
 
 div.header { 
