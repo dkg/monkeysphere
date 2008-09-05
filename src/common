@@ -222,6 +222,7 @@ vnQCFl3+QFSe4zinqykHnLwGPMXv428d/ZjkIc2ju8dRsn4=
 remove_line() {
     local file
     local string
+    local tempfile
 
     file="$1"
     string="$2"
@@ -236,8 +237,13 @@ remove_line() {
 
     # if the string is in the file...
     if grep -q -F "$string" "$file" 2> /dev/null ; then
+	tempfile=$(mktemp "${file}.XXXXXXX") || \
+	    failure "Unable to make temp file '${file}.XXXXXXX'"
+	
 	# remove the line with the string, and return 0
-	grep -v -F "$string" "$file" | sponge "$file"
+	grep -v -F "$string" "$file" >"$tempfile"
+	cat "$tempfile" > "$file"
+	rm "$tempfile"
 	return 0
     # otherwise return 1
     else
@@ -248,6 +254,7 @@ remove_line() {
 # remove all lines with MonkeySphere strings in file
 remove_monkeysphere_lines() {
     local file
+    local tempfile
 
     file="$1"
 
@@ -259,8 +266,13 @@ remove_monkeysphere_lines() {
 	return 1
     fi
 
+    tempfile=$(mktemp "${file}.XXXXXXX") || \
+	failure "Could not make temporary file '${file}.XXXXXXX'."
+
     egrep -v '^MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2}$' \
-	"$file" | sponge "$file"
+	"$file" >"$tempfile"
+    cat "$tempfile" > "$file"
+    rm "$tempfile"
 }
 
 # translate ssh-style path variables %h and %u
