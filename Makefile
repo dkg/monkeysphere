@@ -45,4 +45,7 @@ install: all
 	install man/man8/* $(DESTDIR)$(PREFIX)/share/man/man8
 	install -m 0644 etc/* $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
 
-.PHONY: all clean tarball debian-package install
+releasenote:
+	./utils/build-releasenote
+
+.PHONY: all clean tarball debian-package install releasenote
