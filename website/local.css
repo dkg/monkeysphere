@@ -43,7 +43,7 @@ pre {
   border: 1px solid #aaa;
   padding: 3px 3px 3px 3px;
   margin-left: 2em;
-  overflow: scroll;
+  overflow: auto;
 }
 
 table.sitenav { 
