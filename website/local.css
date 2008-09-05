@@ -100,7 +100,7 @@ div.actions {
 }
 
 /* align main paragraphs to the right side of the monkey's finger */
-body > p { 
+div#content > p { 
   margin-left: 18px;
   margin-right: 5em;
 }
