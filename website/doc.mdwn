@@ -25,3 +25,4 @@ Monkeysphere relies on:
 ## Other ##
 
  * [Similar Projects](/similar) (other attempts at a PKI for SSH)
+ * [Mirroring the website](/mirrors)

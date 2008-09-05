@@ -6,93 +6,41 @@ stored in our git repositories and converted into html by
 
 We're mirrored on several servers. Rather than using ikiwiki's [pinger/pingee
 approach to distribution](http://ikiwiki.info/tips/distributed_wikis/), we've
-opted for a method that uses ssh.
+opted for a simpler rsync of the ikiwiki-produced html files. 
 
 ## Initial steps to take on the mirror server ##
 
-Add etch-backports to your /etc/apt/sources.list:
+Create a new user. 
 
-    deb http://www.backports.org/debian etch-backports main contrib non-free
-
-Add the following lines to your /etc/apt/preferences file:
-
-    Package: ikiwiki
-    Pin: release a=etch-backports
-    Pin-Priority: 999
-
-    # needed by ikiwiki
-    Package: libcgi-formbuilder-perl
-    Pin: release a=etch-backports
-    Pin-Priority: 999
-    
-    Package: git-core 
-    Pin: release a=etch-backports
-    Pin-Priority: 999
-
-Install git-core and ikiwiki
-
-    aptitude update; aptitutde install git-core ikiwiki
-
-Create a new user. Change the new users shell to git-shell:
-
-    adduser -s /usr/bin/git-shell <username>
-
-Add webmaster@george's public key to this user's ~/.ssh/authorized_keys file
-
-Add web site configuration that the user has write access to. If you are using Apache, include the following rewrite:
+Add web site configuration that the user has write access to. If you are
+using Apache, include the following rewrite:
 
     RewriteEngine On
     RewriteCond %{HTTP_HOST} !^(YOURHOSTNAME|web)\.monkeysphere\.info$ [NC]
     RewriteCond %{HTTP_HOST} !^$
     RewriteRule ^/(.*) http://web.monkeysphere.info/$1 [L,R]
 
-Upload and edit ikiwiki.setup.sample from the docs directory
+Add webmaster@george's public key to this user's ~/.ssh/authorized_keys
+file, restricting that user to rsync (modify path to web directory as
+needed):
 
-As the new user, create a git repo
-
-    mkdir monkeysphere.git; cd monkeysphere.git; git init --bare;
+    command="/usr/bin/rsync --server -vlogDtprz --delete . web/",no-pty,no-agent-forwarding,no-port-forwarding ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA0SCD6tAh7g1yyuelIm5zyh5OFX89NNbpNzyp+BxXNxMc/C1BS9SN5KlNDT30WdDbw3X0St0dBBC69TZWYbSUn4+/6BNmYpLH2orhedBv4w2jBLmtVEfnMWa3a11CnIagMEkEz7rBIWpl76WOqzoueQbAAa/7GziVmv+2qdjcDFxHluO+VL/+gEw8BqZc587oiDYkIw3oBnOLaxUWDtaMFKiL8sgdBmPxzc8PgHxL5ezVDJExw5krR4FK7hG7KpBOlSwKQPFy2pPhHSb1ZuFJmp2kr2wfJ0RO7By5s/GbrkJbnGoiJ5W0fUC9YoI82U3svC5saowvoSo19yToJW4QUw== webmaster@george
 
 
-## Initial Admin steps to take to enable the configuration ##
+## Admin steps to take to enable the configuration ##
 
 Add a new dns record for SERVERNAME.monkeysphere.info. 
 
-Test the ssh connection by logging in as webmaster@george.riseup.net
+If the mirror server is not participating in the monkeysphere, add the
+server to webmaster's known host file.
 
-Add the new server as a remote on webmaster@george.riseup.net:monkeysphere.git
+Add the new server to ~/mirrors file on george in the format:
 
-    cd ~/monkeysphere.git
-    git add remote SERVERNAME USER@SERVERNAME.monkeysphere.info:/path/to/repo
+    username@server:directory
 
-Modify ~/monkeysphere.git/config, so the new repo stanza looks like this:
+Test by manually running the git post-receive hook:
 
-    [remote "SERVERNAME"]
-		url = USER@SERVERNAME.monkeysphere.info:monkeysphere.git
-		push = +refs/heads/master
-		skipDefaultUpdate = true
-
-Test:
-
-    git push SERVERNAME
+    ~monkeysphere.git/hooks/post-receive
 
 
-## Final steps to take on mirror server ##
-
-At this point, you should have a populated git repo in your
-monkeyshere.git directory. 
-
-Change the mode of monkeysphere.git/hooks/post-receive to 755
-
-    chmod 755 monkesphere.git/hooks/post-receive
-
-Edit the file so that it executes the post-receive hook ikiwiki generates (as
-you specified in the ikiwiki.setup file)
-
-Next, clone the repository:
-
-    clone monkeysphere.git monkeysphere
-
-And lastly, run ikiwiki manually to generate the post-receive hook:
-
-    ikiwiki --setup ikiwiki.setup
 
