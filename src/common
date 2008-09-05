@@ -103,6 +103,7 @@ lock() {
     if ! ( which lockfile-create >/dev/null 2>/dev/null ) ; then
 	if ! ( which lockfile >/dev/null ); then
 	    failure "Neither lockfile-create nor lockfile are in the path!"
+	fi
 	use_lockfileprogs=
     fi
     
@@ -116,9 +117,9 @@ lock() {
 	    ;;
 	touch)	
 	    if [ -n "$use_lockfileprogs" ] ; then
-		lockfile-touch "$file"
+		lockfile-touch --oneshot "$file"
 	    else
-		# Nothing to do here
+		: Nothing to do here
 	    fi
 	    ;;
 	remove)
@@ -131,7 +132,7 @@ lock() {
 	*)
 	    failure "bad argument for lock subfunction '$action'"
     esac
-}
+
 
 # check that characters are in a string (in an AND fashion).
 # used for checking key capability
@@ -788,7 +789,7 @@ update_known_hosts() {
 	esac
 
 	# touch the lockfile, for good measure.
-	lock touch --oneshot "$KNOWN_HOSTS"
+	lock touch "$KNOWN_HOSTS"
     done
 
     # remove the lockfile and the trap
@@ -931,7 +932,7 @@ update_authorized_keys() {
 	esac
 
 	# touch the lockfile, for good measure.
-	lock touch --oneshot "$AUTHORIZED_KEYS"
+	lock touch "$AUTHORIZED_KEYS"
     done
 
     # remove the lockfile and the trap
