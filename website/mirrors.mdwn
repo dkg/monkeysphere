@@ -1,6 +1,8 @@
-[[meta title="Mirroring the web site"]]
+[[meta title="Mirroring the Monkeysphere web site"]]
 
-In keeping with the philosophy of distributed development, our web site is
+# Mirroring the Monkeysphere web site #
+
+In keeping with the distributed philosophy of distributed development, our web site is
 stored in our git repositories and converted into html by
 [ikiwiki](http://ikiwiki.info/).
 
@@ -20,12 +22,11 @@ using Apache, include the following rewrite:
     RewriteCond %{HTTP_HOST} !^$
     RewriteRule ^/(.*) http://web.monkeysphere.info/$1 [L,R]
 
-Add webmaster@george's public key to this user's ~/.ssh/authorized_keys
-file, restricting that user to rsync (modify path to web directory as
-needed):
+Add `webmaster@george`'s public key to this user's
+`~/.ssh/authorized_keys` file, restricting that user to rsync (modify
+path to web directory as needed):
 
     command="/usr/bin/rsync --server -vlogDtprz --delete . web/",no-pty,no-agent-forwarding,no-port-forwarding ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA0SCD6tAh7g1yyuelIm5zyh5OFX89NNbpNzyp+BxXNxMc/C1BS9SN5KlNDT30WdDbw3X0St0dBBC69TZWYbSUn4+/6BNmYpLH2orhedBv4w2jBLmtVEfnMWa3a11CnIagMEkEz7rBIWpl76WOqzoueQbAAa/7GziVmv+2qdjcDFxHluO+VL/+gEw8BqZc587oiDYkIw3oBnOLaxUWDtaMFKiL8sgdBmPxzc8PgHxL5ezVDJExw5krR4FK7hG7KpBOlSwKQPFy2pPhHSb1ZuFJmp2kr2wfJ0RO7By5s/GbrkJbnGoiJ5W0fUC9YoI82U3svC5saowvoSo19yToJW4QUw== webmaster@george
-
 
 ## Admin steps to take to enable the configuration ##
 
@@ -34,13 +35,13 @@ Add a new dns record for SERVERNAME.monkeysphere.info.
 If the mirror server is not participating in the monkeysphere, add the
 server to webmaster's known host file.
 
-Add the new server to ~/mirrors file on george in the format:
+Add the new server to `webmaster@george:~/mirrors` in the format:
 
     username@server:directory
 
-Test by manually running the git post-receive hook:
+Test by manually running the git post-receive hook as
+`webmaster@george`:
 
-    ~monkeysphere.git/hooks/post-receive
+    ~/monkeysphere.git/hooks/post-receive
 
-
-
+Add a new `A` record into the `web.monkeysphere.info` round robin.
