@@ -71,7 +71,7 @@ table.sitenav img.logo {
 table.sitenav a { 
   font-weight: bold;
   margin-right: 1em;
-  font-variant: small-caps;
+  font-size: smaller;
 }
 
 table.sitenav span.selflink { 
