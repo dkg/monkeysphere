@@ -27,7 +27,7 @@ specified account, the user ID's listed in the account's
 authorized_user_ids file are processed.  For each user ID, gpg will be
 queried for keys associated with that user ID, optionally querying a
 keyserver.  If an acceptable key is found (see KEY ACCEPTABILITY in
-monkeysphere(5)), the key is added to the account's
+monkeysphere(7)), the key is added to the account's
 monkeysphere-controlled authorized_keys file.  If the
 RAW_AUTHORIZED_KEYS variable is set, then a separate authorized_keys
 file (usually ~USER/.ssh/authorized_keys) is appended to the
@@ -230,6 +230,6 @@ Gillmor <dkg@fifthhorseman.net>
 .SH SEE ALSO
 
 .BR monkeysphere (1),
-.BR monkeysphere (5),
+.BR monkeysphere (7),
 .BR gpg (1),
 .BR ssh (1)

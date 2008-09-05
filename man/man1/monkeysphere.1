@@ -25,10 +25,10 @@ connection authentication.
 Update the known_hosts file.  For each specified host, gpg will be
 queried for a key associated with the host URI (see HOST
 IDENTIFICATION in
-.BR monkeysphere(5)),
+.BR monkeysphere(7)),
 optionally querying a keyserver.
 If an acceptable key is found for the host (see KEY ACCEPTABILITY in
-.BR monkeysphere(5)),
+.BR monkeysphere(7)),
 the key is added to the user's known_hosts file.  If a key is found
 but is unacceptable for the host, any matching keys are removed from
 the user's known_hosts file.  If no gpg key is found for the host,
@@ -46,7 +46,7 @@ monkeysphere keys are cleared from the authorized_keys file.  Then, or
 each user ID in the user's authorized_user_ids file, gpg will be
 queried for keys associated with that user ID, optionally querying a
 keyserver.  If an acceptable key is found (see KEY ACCEPTABILITY in
-.BR monkeysphere (5)),
+.BR monkeysphere (7)),
 the key is added to the user's authorized_keys file.
 If a key is found but is unacceptable for the user ID, any matching
 keys are removed from the user's authorized_keys file.  If no gpg key
@@ -127,7 +127,7 @@ Kahn Gillmor <dkg@fifthhorseman.net>
 
 .BR monkeysphere-ssh-proxycommand (1),
 .BR monkeysphere-server (8),
-.BR monkeysphere (5),
+.BR monkeysphere (7),
 .BR ssh (1),
 .BR ssh-add (1),
 .BR gpg (1)
