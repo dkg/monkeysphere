@@ -46,7 +46,7 @@ look at the source, we recommend [using git](/community).
 But if you want a tarball of the most recent release, we publish those
 too.  The [latest
 tarball](http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_0.14.orig.tar.gz)
-has this sha1sum:
+has these checksums:
 
 <pre>
 -----BEGIN PGP SIGNED MESSAGE-----
