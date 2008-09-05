@@ -34,10 +34,12 @@ clean:
 install: all
 	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/sbin $(DESTDIR)$(PREFIX)/share/monkeysphere
 	mkdir -p $(DESTDIR)$(PREFIX)/share/man/man1 $(DESTDIR)$(PREFIX)/share/man/man7 $(DESTDIR)$(PREFIX)/share/man/man8
+	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
 	mkdir -p $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
 	install src/monkeysphere src/monkeysphere-ssh-proxycommand src/keytrans/openpgp2ssh $(DESTDIR)/$(PREFIX)/bin
 	install src/monkeysphere-server $(DESTDIR)/$(PREFIX)/sbin
-	install src/common $(DESTDIR)/$(PREFIX)/share/monkeysphere
+	install -m 0644 src/common $(DESTDIR)/$(PREFIX)/share/monkeysphere
+	install doc/* $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
 	install man/man1/* $(DESTDIR)$(PREFIX)/share/man/man1
 	install man/man7/* $(DESTDIR)$(PREFIX)/share/man/man7
 	install man/man8/* $(DESTDIR)$(PREFIX)/share/man/man8
