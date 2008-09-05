@@ -572,6 +572,10 @@ diagnostics() {
 	echo "! No monkeysphere user found!  Please create a monkeysphere system user."
     fi
 
+    if ! [ -d "$VARLIB" ] ; then
+	echo "! no $VARLIB directory found.  Please create it."
+    fi
+
     echo "Checking host GPG key..."
     if (( "$keysfound" < 1 )); then
 	echo "! No host key found."
