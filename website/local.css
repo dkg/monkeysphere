@@ -5,6 +5,7 @@ h1 {
   display: block;
   font-weight: bold;
   padding: 0 0 0 10px;
+  font-size: 1.4em;
 }
 
 h2 {
@@ -14,6 +15,7 @@ h2 {
   display: block;
   font-weight: bold;
   padding: 0 0 0 10px;
+  font-size: 1.1em;
 }
 
 body {
