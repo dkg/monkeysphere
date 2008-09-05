@@ -30,7 +30,7 @@ system is that lenny's GnuTLS can't support the `monkeysphere
 subkey-to-ssh-agent` subcommand.
 
 You can install a patched version of GnuTLS to enable this feature of
-the MonkeySphere by adjusting the monkeysphere `sources.list` lines to
+the Monkeysphere by adjusting the monkeysphere `sources.list` lines to
 include the `gnutls` component.  So they'd look like this instead:
 
 	deb http://archive.monkeysphere.info/debian experimental monkeysphere gnutls

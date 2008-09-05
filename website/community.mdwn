@@ -1,6 +1,6 @@
-[[meta title="Community"]]
+[[meta title="The Monkeysphere Community"]]
 
-# The MonkeySphere Community #
+# The Monkeysphere Community #
 
 ## Mailing list ##
 

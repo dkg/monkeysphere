@@ -1,6 +1,6 @@
-[[meta title="Why should you be interested in the MonkeySphere?"]]
+[[meta title="Why should you be interested in the Monkeysphere?"]]
 
-# Why should you be interested in the MonkeySphere? #
+# Why should you be interested in the Monkeysphere? #
 
 ## As an `ssh` user ##
 
@@ -66,7 +66,7 @@ fingerprints) except in relatively rare situations (e.g. when two
 people meet in person for the first time).
 
 The good news is that this is all possible, and available with free
-tools: welcome to the MonkeySphere!
+tools: welcome to the Monkeysphere!
 
 ## Examples ##
 
@@ -83,14 +83,14 @@ Alice can set up the new `bob` account on `foo.example.org` without
 needing to give Bob a new passphrase to remember, and without needing
 to even know Bob's current SSH key.  She simply tells `foo` that `Bob
 <bob@example.net>` should have access to the `bob` account.  The
-MonkeySphere on `foo` then verifies Bob's identity through the OpenPGP
+Monkeysphere on `foo` then verifies Bob's identity through the OpenPGP
 Web of Trust and automatically add's Bob's SSH key to the
 authorized_keys file for the `bob` account.
 
 Bob's first connection to his new `bob` account on `foo.example.org`
-is seamless, because the MonkeySphere on Bob's computer automatically
+is seamless, because the Monkeysphere on Bob's computer automatically
 verifies the host key for `foo.example.org` for Bob.  Using the
-MonkeySphere, Bob never has to "accept" an unintelligible host key or
+Monkeysphere, Bob never has to "accept" an unintelligible host key or
 type a password.
 
 When Bob decides to change the key he uses for SSH authentication, he
