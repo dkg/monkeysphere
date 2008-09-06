@@ -20,3 +20,35 @@ I had no luck with google and the error message being output.
 This isn't a huge priority (it's not hard to disable the
 monkeysphere-ssh-proxycommand before running cssh), however, it would be
 nice to figure out why it's not working.
+
+---
+
+What do you mean by "produced some private data" when you set the log
+level to DEBUG?  Monkeysphere does not output any "private" data in
+the sense of private keys or passwords or anything like that.  Maybe
+you mean the cssh debug mode outputs private data?  or do you just
+mean "info that you don't want to post here"?  It might be useful to
+see some output, so maybe you could just block out the nasty bits?
+But I'm not sure it will help.
+
+The problem may be due to the locking of the known\_hosts file while
+the proxycommand is running.  At the moment, the
+monkeysphere-ssh-proxycommand can only be run serially, since each
+invocation will lock the known\_hosts file while it updates it.  I
+think this is required, since we obviously can't have two invocations
+modifying the file at the same time.  However, it's probably possible
+to decrease the amount of time it takes to update the file.  It's not
+done very efficiently at the moment.  The file is locked basically at
+the very begining, and is locked while all gpg interactions are done,
+which are slow.  I think it should be possible to take the gpg
+interactions out of the loop.
+
+I just tried cssh and it doesn't seem to work very well with my ssh
+setup at all.  For instance, the simultaneous ssh connections cause
+simultaneous calls to the agent to get my permission to use the key,
+which don't interact very well with each other.  This of course is not
+a monkeysphere problem but a general problem with trying to make
+simultaneous ssh connections with an agent that want key use
+confirmation.
+
+-- jrollins
