@@ -1,4 +1,4 @@
-monkeysphere (0.15~pre-1) UNRELEASED; urgency=low
+monkeysphere (0.15-1) experimental; urgency=low
 
   * porting work and packaging simplification: clarifying makefiles,
     pruning dependencies, etc.

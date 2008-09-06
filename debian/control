@@ -11,7 +11,7 @@ Dm-Upload-Allowed: yes
 
 Package: monkeysphere
 Architecture: any
-Depends: openssh-client, gnupg | gnupg2, coreutils (>= 6), lockfile-progs, adduser, ${shlibs:Depends}
+Depends: openssh-client, gnupg, coreutils (>= 6) | base64, lockfile-progs | procfile, adduser, ${shlibs:Depends}
 Recommends: netcat | socat, ssh-askpass
 Enhances: openssh-client, openssh-server
 Description: use the OpenPGP web of trust to verify ssh connections

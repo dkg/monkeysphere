@@ -1,0 +1,40 @@
+#!/bin/bash
+
+VERSION=`head -n1 debian/changelog | sed 's/.*(\([^)]*\)).*/\1/'`
+
+{ 
+    sed "s/__VERSION__/$VERSION/g" < utils/releasenote.header
+    head -n$(( $(grep -n '^ --' debian/changelog  | head -n1 | cut -f1 -d:) - 2 )) debian/changelog | tail -n+3
+    sed "s/__VERSION__/$VERSION/g" < utils/releasenote.footer
+} > "website/news/release-$VERSION.mdwn"
+
+git add "website/news/release-$VERSION.mdwn"
+
+checksums() {
+    echo "checksums for the monkeysphere ${VERSION%%-*} release:"
+    echo
+    echo "MD5:"
+    md5sum "monkeysphere_${VERSION%%-*}.orig.tar.gz"
+    echo
+    echo "SHA1:"
+    sha1sum "monkeysphere_${VERSION%%-*}.orig.tar.gz"
+    echo
+    echo "SHA256:"
+    sha256sum "monkeysphere_${VERSION%%-*}.orig.tar.gz"
+} 
+
+checksums
+
+temprelease=$(mktemp)
+trap "rm -f $temprelease" EXIT
+set -e
+head -n$(( $(grep -n '^-----BEGIN PGP SIGNED MESSAGE-----$' website/download.mdwn | head -n1 | cut -f1 -d:) - 1 )) website/download.mdwn >$temprelease
+checksums | gpg --no-tty --clearsign --default-key EB8AF314 >>$temprelease
+cat utils/download.mdwn.footer >>$temprelease
+mv "$temprelease" website/download.mdwn
+trap - EXIT
+set +e
+
+git add website/download.mdwn
+
+gpg --verify website/download.mdwn

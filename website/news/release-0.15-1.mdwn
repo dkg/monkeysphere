@@ -1,0 +1,17 @@
+[[meta title="MonkeySphere 0.15-1 released!"]]
+
+# MonkeySphere 0.15-1 released! #
+
+MonkeySphere 0.15-1 has been released.  
+
+From the changelog:
+
+<pre>
+  * porting work and packaging simplification: clarifying makefiles,
+    pruning dependencies, etc.
+  * added tests to monkeysphere-server diagnostics
+  * moved monkeysphere(5) to section 7 of the manual
+  * now shipping TODO in /usr/share/doc/monkeysphere
+</pre>
+
+[[Download]] it now!

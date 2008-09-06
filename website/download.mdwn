@@ -46,31 +46,37 @@ look at the source, we recommend [using git](/community).
 But if you want a tarball of the most recent release, we publish those
 too.  The [latest
 tarball](http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_0.14.orig.tar.gz)
-has this sha1sum:
+has these checksums:
 
 <pre>
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-sha1sum for the monkeysphere 0.14 release:
+checksums for the monkeysphere 0.15 release:
 
-8b05fec041cec7f86ddde92fa72c8aabf8af0b3b  monkeysphere_0.14.orig.tar.gz
+MD5:
+8be275e5b5119921a536d8a67d3bfe24  monkeysphere_0.15.orig.tar.gz
+
+SHA1:
+65da0a047d935e856e2a0d7032dbbb339a3ce20a  monkeysphere_0.15.orig.tar.gz
+
+SHA256:
+44f3feb6e9f6921d2ed0406af4e3862f67da9261c8f00c7ea37cfea5031cbc77  monkeysphere_0.15.orig.tar.gz
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (GNU/Linux)
 
-iQIVAwUBSMBhXhjmZ/HrivMUAQJTmw//XB8y7UXAg2GD4A1wHS/lczQLlzN3fVmT
-MGzLVdlRtATQgnL1Zd2CbKEEswSDpok9h+meZxMUvBXnpGV3iUouNo7q6vkt9Dp6
-Y5B+mgSe1vlxtkHPRCpLFvnLch2+x9zk+OhfHK+85zu6yPd2KqN0uFMpx6xLDWNq
-iIx3KzEOqLNe5WjJoKbGDvBohxgPePDLkAQtz+6Bnvor+H5gR4Mg3enPCRUtndKs
-sxyfw40ZCCZQV8Hma1YzP8jRrTNhXy3jY57cJ966FgWANPxDWzQh3k0W9ZTp4KP7
-3xcxSxKGMCFtfkNFhC6vcry4TRh/f33snGhwvPX2sAfWTsDP3PPeY4bK2rtVynZm
-bHl6IT1ZEdFVtS9IwWz51SAW5nDjffQnjSUM6TWtviRAc+acCHBCWVaGCRea7PLt
-7BJ/chJUf48gSIYStH/rFVcGJGOQD8CYQeUrKPBZu/CHowJziYfYcBQ0zydPEz9A
-5Lvs7pUhBVB+YYRqx62LqOMxX+qbUGCNRa3xJHRbOq8j+qqwTTh2W/fAlT1ziez+
-VqmKwX5Fnxd9q0wEEn3NGNbV8SrhHtN0LxmVHwxPrk5uo5d9mfuLBFnA93vWacDd
-M0bZHHnV7w6CuR4ReGPh1HJFAPRf42S3HM9JooFV6hWlEci2iomInba691PMQOJv
-nd+N0oSL47A=
-=uAHY
+iQIVAwUBSMG2fxjmZ/HrivMUAQJ40RAAjb4Rh9qJQztp+tAOxpvXKmItRTFyBTeB
+QQWjl/gNSWbAOvZX9t+F63P8Dp/ET9XoE2iXUnClvCtkkKvwbKISHyM4C9tgu0z9
+Yggb6lFPt/Qz2fD/HTMxkeN+n0p/FVjLW9WlLPyKF++u/o8JelyuiXocHORzjtc/
+9HyQfdbZuUPA16ZsAb9D66aIC2pWR21EiXHj95EvUkm6AO53Sy9G5gzzveflRrLm
+UdrcwCnbXiZklbs9wXxeZTa4qLAhv31RmkCzbE3/lNwFSBfzFFfi2HXZqQdRmIgu
+xuV/wmi8xgxUbv7dbB7yhhqwFmRnzeuV3rvuvSdjqGjFu6R0fqorIOtLtBkG1m0Q
+RP5gs5mU+DreYkdeLWpFFFVjaJkz0cNUcnT22EJ5JgfeH3fkoAPpjlUMvgh8apGq
+CbtqmBfYVOLyifiwptCSwlQvfY2guBVmsW+C60g78vMlCa0Tezp79I5H1KdsXKlY
+cw1eLt3HhEy39yojmcD5EI293tfWTIYvULXvMIZjqEFnkFvoAogtinfd8fDoH15j
+8yqXOUfkuuSeGmPReyiZZkbBTMXOdM6JsXmjEMI5T9dnZcC0CClnDGfcxE2UfPQZ
+v9tneWXZzFmnWaAqH+T+SJJ4gpMhD+i0vXgQ7xOhUUCF+tiY8Qh1eltR2Kf+VeYW
+d+MRglTs/Z4=
+=AmW6
 -----END PGP SIGNATURE-----
 </pre>
-

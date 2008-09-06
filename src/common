@@ -91,6 +91,49 @@ cutline() {
     head --line="$1" "$2" | tail -1
 }
 
+# this is a wrapper for doing lock functions.
+#
+# it lets us depend on either lockfile-progs (preferred) or procmail's
+# lockfile, and should
+lock() {
+    local use_lockfileprogs=true
+    local action="$1"
+    local file="$file"
+
+    if ! ( which lockfile-create >/dev/null 2>/dev/null ) ; then
+	if ! ( which lockfile >/dev/null ); then
+	    failure "Neither lockfile-create nor lockfile are in the path!"
+	fi
+	use_lockfileprogs=
+    fi
+    
+    case "$action" in
+	create)
+	    if [ -n "$use_lockfileprogs" ] ; then
+		lockfile-create "$file" || failure "unable to lock '$file'"
+	    else
+		lockfile -r 20 "${file}.lock" || failure "unable to lock '$file'"
+	    fi
+	    ;;
+	touch)	
+	    if [ -n "$use_lockfileprogs" ] ; then
+		lockfile-touch --oneshot "$file"
+	    else
+		: Nothing to do here
+	    fi
+	    ;;
+	remove)
+	    if [ -n "$use_lockfileprogs" ] ; then
+		lockfile-remove "$file"
+	    else
+		rm -f "${file}.lock"
+	    fi
+	    ;;
+	*)
+	    failure "bad argument for lock subfunction '$action'"
+    esac
+}
+
 # check that characters are in a string (in an AND fashion).
 # used for checking key capability
 # check_capability capability a [b...]
@@ -724,11 +767,10 @@ update_known_hosts() {
     nHostsOK=0
     nHostsBAD=0
 
-    # set the trap to remove any lockfiles on exit
-    trap "lockfile-remove $KNOWN_HOSTS" EXIT
-
-    # create a lockfile on known_hosts
-    lockfile-create "$KNOWN_HOSTS"
+    # create a lockfile on known_hosts:
+    lock create "$KNOWN_HOSTS"
+    # FIXME: we're discarding any pre-existing EXIT trap; is this bad?
+    trap "lock remove $KNOWN_HOSTS" EXIT
 
     # note pre update file checksum
     fileCheck="$(file_hash "$KNOWN_HOSTS")"
@@ -747,11 +789,12 @@ update_known_hosts() {
 	esac
 
 	# touch the lockfile, for good measure.
-	lockfile-touch --oneshot "$KNOWN_HOSTS"
+	lock touch "$KNOWN_HOSTS"
     done
 
-    # remove the lockfile
-    lockfile-remove "$KNOWN_HOSTS"
+    # remove the lockfile and the trap
+    lock remove "$KNOWN_HOSTS"
+    trap - EXIT
 
     # note if the known_hosts file was updated
     if [ "$(file_hash "$KNOWN_HOSTS")" != "$fileCheck" ] ; then
@@ -862,11 +905,10 @@ update_authorized_keys() {
     nIDsOK=0
     nIDsBAD=0
 
-    # set the trap to remove any lockfiles on exit
-    trap "lockfile-remove $AUTHORIZED_KEYS" EXIT
-
     # create a lockfile on authorized_keys
-    lockfile-create "$AUTHORIZED_KEYS"
+    lock create "$AUTHORIZED_KEYS"
+    # FIXME: we're discarding any pre-existing EXIT trap; is this bad?
+    trap "lock remove $AUTHORIZED_KEYS" EXIT
 
     # note pre update file checksum
     fileCheck="$(file_hash "$AUTHORIZED_KEYS")"
@@ -890,11 +932,12 @@ update_authorized_keys() {
 	esac
 
 	# touch the lockfile, for good measure.
-	lockfile-touch --oneshot "$AUTHORIZED_KEYS"
+	lock touch "$AUTHORIZED_KEYS"
     done
 
-    # remove the lockfile
-    lockfile-remove "$AUTHORIZED_KEYS"
+    # remove the lockfile and the trap
+    lock remove "$AUTHORIZED_KEYS"
+    trap - EXIT
 
     # note if the authorized_keys file was updated
     if [ "$(file_hash "$AUTHORIZED_KEYS")" != "$fileCheck" ] ; then
