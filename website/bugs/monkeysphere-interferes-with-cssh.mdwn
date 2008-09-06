@@ -1,0 +1,22 @@
+[[meta title="Monkeysphere interferes with clusterssh"]]
+
+clusterssh is a package that allows you to control multiple ssh xterm
+sessions at the same time.
+
+When the monkeysphere-ssh-proxycommand is enabled and I launch 5 or more
+cssh sessions, intermittently one or two out of every five will fail
+with: Connection timed out during banner exchange.
+
+I tried to debug by running:
+
+    MONKEYSPHERE_LOG_LEVEL=debug cssh -D -d <server1> <server2> etc.
+
+However, while it produced some private data, it didn't give me any
+insight into what was going wrong. Also, it didn't output any
+Monkeysphere debugging info.
+
+I had no luck with google and the error message being output.
+
+This isn't a huge priority (it's not hard to disable the
+monkeysphere-ssh-proxycommand before running cssh), however, it would be
+nice to figure out why it's not working.
