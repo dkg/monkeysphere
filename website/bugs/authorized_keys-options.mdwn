@@ -1,0 +1,18 @@
+[[meta title="Monkeysphere support for options in authorized_keys"]]
+
+# Monkeysphere support for options within `authorized_keys` #
+
+OpenSSH [allows users to control the capabilities granted to remote
+key-based
+logins](http://www.hackinglinuxexposed.com/articles/20030109.html) by
+supplying options that should limit the use of the key.
+
+For example, specifying `no-pty` means that `sshd` should not allocate
+a pseudo-terminal for sessions created based on an authentication with
+that key.
+
+It is unclear if it is possible to do this sort of limiting in
+`~/.monkeysphere/authorized_user_ids`, and if it is possible, how
+you'd actually do it.
+
+ --dkg
