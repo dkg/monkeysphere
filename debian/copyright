@@ -1,10 +1,10 @@
-Format-Specification: http://wiki.debian.org/Proposals/CopyrightFormat
+Format-Specification: http://wiki.debian.org/Proposals/CopyrightFormat?action=recall&rev=226
 Debianized-By: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 Debianized-Date: Fri Jun 13 10:19:16 EDT 2008
-Original-Source: http://lair.fifthhorseman.net/~dkg/git/monkeysphere.git/
+Original-Source: http://web.monkeysphere.info/download
 
 Files: *
-Copyright: 2008 Jameson Rollins <jrollins@fifthhorseman.net>, 
+Copyright:  Copyright 2008 Jameson Rollins <jrollins@fifthhorseman.net>,
  Daniel Kahn Gillmor <dkg@fifthhorseman.net>,
  Jamie McClelland <jamie@mayfirst.org>,
  Micah Anderson <micah@riseup.net>,
