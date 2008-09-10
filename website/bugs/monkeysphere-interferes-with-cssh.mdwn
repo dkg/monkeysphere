@@ -52,3 +52,22 @@ simultaneous ssh connections with an agent that want key use
 confirmation.
 
 -- jrollins
+
+---
+
+I can get cssh to work fine with a confirmation-required agent if i
+turn off the monkeysphere proxycommand:
+
+    cssh -l username -o '-oProxyCommand=none' $(cat hostlist.txt)
+
+with the proxycommand, i definitely get the "Connection timed out
+during banner exchange" message.
+
+However, i'm also able to get the cssh connection to work if i assert
+that a longer connection timeout is acceptable:
+
+    cssh -l username -o '-oConnectTimeout=30' $(cat hostlist.txt)
+
+Perhaps this is an acceptable workaround?
+
+-- dkg
