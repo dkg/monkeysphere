@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# a package removal script for monkeysphere (borrowing from
+# monkeysphere's debian/monkeysphere.postrm)
+
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Copyright 2008
+
+# FIXME: is /var/lib/monkeysphere the right place for this stuff on
+# FreeBSD?
+VARLIB="/var/lib/monkeysphere"
+
+
+# FIXME: This needs to be filled in!  Under what circumstances do we
+# want to actually purge all of /var/lib/monkeysphere?
+
+# (note: FreeBSD does not seem to want the package-specific user to be
+# purged at package removal)

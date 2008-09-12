@@ -1,0 +1,123 @@
+#!/bin/sh
+
+# an installation script for monkeysphere (borrowing liberally from
+# Wnn6's port and from monkeysphere's debian/monkeysphere.postinst)
+
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Copyright 2008
+
+# FIXME: is /var/lib/monkeysphere the right place for this stuff on
+# FreeBSD?
+VARLIB="/var/lib/monkeysphere"
+
+check_pw()
+{
+    if which -s pw; then
+	:
+    else
+	cat <<EOF
+
+This system looks like a pre-2.2 version of FreeBSD.  We see that it
+is missing the "pw" utility.  We need this utility.  Please get and
+install it, and try again.  You can get the source from:
+
+  ftp://ftp.freebsd.org/pub/FreeBSD/FreeBSD-current/src/usr.sbin/pw.tar.gz
+
+EOF
+	exit 1
+    fi
+}
+
+ask() {
+    local question default answer
+
+    question=$1
+    default=$2
+    if [ -z "${PACKAGE_BUILDING}" ]; then
+	read -p "${question} (y/n) [${default}]? " answer
+    fi
+    if [ x${answer} = x ]; then
+	answer=${default}
+    fi
+    echo ${answer}
+}
+
+yesno() {
+    local dflt question answer
+
+    question=$1
+    dflt=$2
+    while :; do
+	answer=$(ask "${question}" "${dflt}")
+	case "${answer}" in
+	[Yy]*)		return 0;;
+	[Nn]*)		return 1;;
+	esac
+	echo "Please answer yes or no."
+    done
+}
+
+failure() {
+    local retval badgroups badusers
+    retval=$1
+    badgroups=`getent group monkeysphere 641`
+    badusers=`getent passwd monkeysphere 641`
+
+    if [ X"$badgroups" != X ]; then
+	badgroups="
+Conflicting group(s):
+
+$badgroups"
+    fi
+
+    if [ X"$badusers" != X ]; then
+	badusers="Conflicting user(s):
+
+$badusers"
+    fi
+    
+    cat <<EOF
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+This port or package assumes that the ID number of 'monkeysphere' will
+be 641.  But this system has:
+$badgroups
+$badusers
+
+Please correct these conflict(s) and try again.
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+EOF
+    exit $retval
+}
+
+case $2 in
+POST-INSTALL)
+
+    # make sure that the correct user and group are present:
+    id_monkeysphere=`id -u monkeysphere 2> /dev/null`
+    gid_monkeysphere=`getent group monkeysphere | cut -f3 -d: 2> /dev/null`
+    if [ X"$id_monkeysphere" = X641 ] && [ X"$gid_monkeysphere" = X641 ];then
+	exit 0
+    else
+    # add an account 'monkeysphere' to this system
+	echo ""
+	echo "You need an account 'monkeysphere' whose ID number is 641, with group 'monkeysphere' (GID 641)"
+	if yesno "Would you like to create it automatically?" y; then
+	# We need a command 'pw(8)'
+	    check_pw
+	    pw groupadd monkeysphere -g 641 || failure $?
+	    pw useradd monkeysphere -u 641 -g 641 -h - -d "$VARLIB" \
+		-s /bin/sh -c 'monkeysphere authentication user,,,' || failure $?
+	# FIXME: should we really be using a real shell?  Convention
+	# (/usr/ports/UIDs) seems to indicate /nonexistent is
+	# preferred
+	else
+	    echo "Please create it, and try again."
+	    exit 1
+	fi
+    fi
+    # FIXME: we should create $VARLIB and chown the relevant subdirs
+    # (see debian/monkeysphere.postinst)
+    
+    ;;
+esac
