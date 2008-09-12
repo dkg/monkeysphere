@@ -134,6 +134,54 @@ lock() {
     esac
 }
 
+
+# for portability, between gnu date and BSD date.
+# arguments should be:  number longunits format
+
+# e.g. advance_date 20 seconds +%F
+advance_date() {
+    local gnutry
+    local number="$1"
+    local longunits="$2"
+    local format="$3"
+    local shortunits
+
+    # try things the GNU way first 
+    if date -d "$number $longunits" "$format" >&/dev/null ; then
+	date -d "$number $longunits" "$format"
+    else
+	# otherwise, convert to (a limited version of) BSD date syntax:
+	case "$longunits" in
+	    years)
+		shortunits=y
+		;;
+	    months)
+		shortunits=m
+		;;
+	    weeks)
+		shortunits=w
+		;;
+	    days)
+		shortunits=d
+		;;
+	    hours)
+		shortunits=H
+		;;
+	    minutes)
+		shortunits=M
+		;;
+	    seconds)
+		shortunits=S
+		;;
+	    *)
+		# this is a longshot, and will likely fail; oh well.
+		shortunits="$longunits"
+	esac
+	date "-v+${number}${shortunits}" "$format"
+    fi
+}
+
+
 # check that characters are in a string (in an AND fashion).
 # used for checking key capability
 # check_capability capability a [b...]

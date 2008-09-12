@@ -545,6 +545,7 @@ publish_server_key() {
     gpg_authentication "--keyserver $KEYSERVER --send-keys '0x${fingerprint}!'"
 }
 
+
 diagnostics() {
 #  * check on the status and validity of the key and public certificates
     local seckey
@@ -566,7 +567,7 @@ diagnostics() {
     curdate=$(date +%s)
     # warn when anything is 2 months away from expiration
     warnwindow='2 months'
-    warndate=$(date +%s -d "$warnwindow")
+    warndate=$(advance_date $warnwindow +%s)
 
     if ! id monkeysphere >/dev/null ; then
 	echo "! No monkeysphere user found!  Please create a monkeysphere system user."
@@ -593,7 +594,7 @@ diagnostics() {
 		echo "! Host key is expired."
 		echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
 	    elif (( "$expire" < "$warndate" )); then
-		echo "! Host key expires in less than $warnwindow:" $(date -d "$(( $expire - $curdate )) seconds" +%F)
+		echo "! Host key expires in less than $warnwindow:" $(advance_date $(( $expire - $curdate )) seconds +%F)
 		echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
 	    fi
 	fi
@@ -619,7 +620,7 @@ diagnostics() {
 		    echo "! User ID '$uid' is expired."
 			# FIXME: recommend a way to resolve this
 		elif (( "$expire" < "$warndate" )); then
-		    echo "! User ID '$uid' expires in less than $warnwindow:" $(date -d "$(( $expire - $curdate )) seconds" +%F)		
+		    echo "! User ID '$uid' expires in less than $warnwindow:" $(advance_date $(( $expire - $curdate )) seconds +%F)		
 		    # FIXME: recommend a way to resolve this
 		fi
 	    fi
