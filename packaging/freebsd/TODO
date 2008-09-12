@@ -1,0 +1,31 @@
+This port is not ready yet. Upstream needs to change a few things (or we
+need patches) to work around some dependencies, most notably:
+
+ * lockfile-progs (they may use procmail's lockfile prog)
+ * moreutils (for sponge)
+ * an install target that also respects PREFIX
+
+We also need to create the monkeysphere user in the pkg-install and
+remove it in pkg-deinstall. To do this, this page has useful tips:
+
+http://www.freebsd.org/doc/en/books/porters-handbook/dads-uid-and-gids.html
+
+and we'll have to copy scripts from existing ports that are suggested
+above, see:
+
+http://www.freebsd.org/cgi/cvsweb.cgi/ports/japanese/Wnn6/pkg-install
+http://www.freebsd.org/cgi/cvsweb.cgi/ports/net/cvsup-mirror/pkg-install
+
+or just look around the ports tree for pkg-install files, they are
+usually for adding users.
+
+There is also the usual crappy work involved with installing a .defaults
+file instead of straight files in /usr/local/etc:
+
+http://www.freebsd.org/doc/en/books/porters-handbook/plist-config.html
+
+Finally the pkg-plist needs to be checked. The package hasn't been
+installed at all once yet, it only patches and builds.
+
+The port is therefore marked as IGNORE, which makes it unusable, comment
+out the IGNORE line in the Makefile to test.

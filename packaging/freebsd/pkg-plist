@@ -1,0 +1,19 @@
+sbin/monkeysphere-server
+share/doc/monkeysphere/MonkeySpec
+share/doc/monkeysphere/getting-started-user.mdwn
+share/doc/monkeysphere/getting-started-admin.mdwn
+share/man/man5/monkeysphere.5.gz
+share/man/man1/openpgp2ssh.1.gz
+share/man/man1/monkeysphere-ssh-proxycommand.1.gz
+share/man/man1/monkeysphere.1.gz
+share/man/man8/monkeysphere-server.8.gz
+bin/openpgp2ssh
+bin/monkeysphere-ssh-proxycommand
+bin/monkeysphere
+etc/monkeysphere/monkeysphere-server.conf
+etc/monkeysphere/monkeysphere.conf
+@dirrm share/doc/monkeysphere
+@dirrm share/monkeysphere/common
+@dirrm etc/monkeysphere
+#@dirrm var/lib/monkeysphere
+#lib/monkeysphere/authorized_keys
