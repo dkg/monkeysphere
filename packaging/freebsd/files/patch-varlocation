@@ -55,10 +55,10 @@ index e590f3c..f46e8bb 100755
  export VARLIB
  
  # UTC date in ISO 8601 format if needed
-diff --git website/getting-started-admin.mdwn website/getting-started-admin.mdwn
+diff --git doc/getting-started-admin.mdwn doc/getting-started-admin.mdwn
 index 6c8ad53..67fdda1 100644
---- website/getting-started-admin.mdwn
-+++ website/getting-started-admin.mdwn
+--- doc/getting-started-admin.mdwn
++++ doc/getting-started-admin.mdwn
 @@ -30,7 +30,7 @@ To use the newly-generated host key for ssh connections, put the
  following line in `/etc/ssh/sshd_config` (be sure to remove references
  to any other keys):

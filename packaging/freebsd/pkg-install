@@ -49,12 +49,12 @@ POST-INSTALL)
 
 	## set up the cache directories:
 
-	install --owner root --group monkeysphere --mode 750 -d "$VARLIB"/gnupg-host
+	install -d -o root -g monkeysphere -m 750 "$VARLIB"/gnupg-host
 	cat <<EOF > "$VARLIB"/gnupg-host/gpg.conf
 list-options show-uid-validity
 EOF
 
-	install --owner monkeysphere --group monkeysphere --mode 700 -d "$VARLIB"/gnupg-authentication
+	install -d -o monkeysphere -g monkeysphere -m 700 "$VARLIB"/gnupg-authentication
 # install authentication gpg.conf
 	cat <<EOF > "$VARLIB"/gnupg-authentication/gpg.conf
 list-options show-uid-validity

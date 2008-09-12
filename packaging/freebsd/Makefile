@@ -31,6 +31,10 @@ MANCOMPRESSED= yes
 
 MAKE_ARGS= ETCPREFIX=/usr/local MANPREFIX=/usr/local/man ETCSUFFIX=.sample
 
+# get rid of cruft after the patching:
+post-patch:
+	find . -iname '*.orig' -delete
+
 post-install:
 	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere.conf ]; then \
 		${CP} -p ${PREFIX}/etc/monkeysphere/monkeysphere.conf.sample ${PREFIX}/etc/monkeysphere/monkeysphere.conf ; \

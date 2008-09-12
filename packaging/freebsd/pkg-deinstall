@@ -13,12 +13,17 @@ VARLIB="/var/monkeysphere"
 
 case $2 in
 POST-DEINSTALL)
-# FIXME: This needs to be filled in!  Under what circumstances do we
-# want to actually purge all of /var/monkeysphere?
+        USER=monkeysphere
+# FIXME: This doesn't do anything!  Under what circumstances do we
+# want to actually automatically purge all of /var/monkeysphere?
 
 # (note: FreeBSD does not seem to want the package-specific user to be
 # purged at package removal)
-	echo "Warning: If you will *NOT* use this package anymore, please remove the monkeysphere user manually."
-	echo "         You may also want to remove the cached authentication data and keyrings in $VARLIB"
+	if pw user show "${USER}" 2>/dev/null; then
+	    echo "Warning: If you will *NOT* use this package anymore, please remove the monkeysphere user manually."
+	fi
+	if [ -d "$VARLIB" ] ; then
+	    echo "Warning: You may want to remove monkeysphere's cached authentication data and keyrings in $VARLIB"
+	fi
 ;;
 esac
