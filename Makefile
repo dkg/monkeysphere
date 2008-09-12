@@ -26,6 +26,9 @@ debian-package: tarball
 	(cd monkeysphere-$(MONKEYSPHERE_VERSION) && debuild -uc -us)
 	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
 
+freebsd-distinfo: tarball
+	./utils/build-freebsd-distinfo
+
 clean:
 	$(MAKE) -C src/keytrans clean
 	# clean up old monkeysphere packages lying around as well.

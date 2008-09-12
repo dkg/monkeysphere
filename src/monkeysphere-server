@@ -299,7 +299,7 @@ gen_key() {
 	esac
     done
 
-    hostName=${1:-$(hostname --fqdn)}
+    hostName=${1:-$(hostname -f)}
     userID="ssh://${hostName}"
 
     # check for presense of key with user ID
