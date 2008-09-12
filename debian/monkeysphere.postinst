@@ -3,14 +3,14 @@
 # postinst script for monkeysphere
 
 # Author: Jameson Rollins <jrollins@fifthhorseman.net>
-# (c) 2008
+# Copyright 2008
 
 VARLIB="/var/lib/monkeysphere"
 
 if ! getent passwd monkeysphere >/dev/null ; then
     echo "adding monkeysphere user..."
     adduser --quiet --system --no-create-home --group \
-	--home '/var/lib/monkeysphere' \
+	--home "$VARLIB" \
 	--shell '/bin/sh' \
 	--gecos 'monkeysphere authentication user,,,' \
 	monkeysphere

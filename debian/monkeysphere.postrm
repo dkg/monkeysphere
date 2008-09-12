@@ -3,7 +3,7 @@
 # postrm script for monkeysphere
 
 # Author: Jameson Rollins <jrollins@fifthhorseman.net>
-# (c) 2008
+# Copyright 2008
 
 case $1 in
     purge)
