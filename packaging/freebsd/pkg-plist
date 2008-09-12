@@ -7,8 +7,12 @@ bin/openpgp2ssh
 bin/monkeysphere-ssh-proxycommand
 bin/monkeysphere
 share/monkeysphere/common
-etc/monkeysphere/monkeysphere-server.conf
-etc/monkeysphere/monkeysphere.conf
+@unexec if cmp -s %D/etc/monkeysphere/monkeysphere.conf.sample %D/etc/monkeysphere/monkeysphere.conf; then rm -f %D/etc/monkeysphere/monkeysphere.conf; fi
+etc/monkeysphere/monkeysphere.conf.sample
+@exec if [ ! -f %D/etc/monkeysphere/monkeysphere.conf ] ; then cp -p %D/%F %B/monkeysphere.conf; fi
+@unexec if cmp -s %D/etc/monkeysphere/monkeysphere-server.conf.sample %D/etc/monkeysphere/monkeysphere-server.conf; then rm -f %D/etc/monkeysphere/monkeysphere-server.conf; fi
+etc/monkeysphere/monkeysphere-server.conf.sample
+@exec if [ ! -f %D/etc/monkeysphere/monkeysphere-server.conf ] ; then cp -p %D/%F %B/monkeysphere-server.conf; fi
 @dirrm share/doc/monkeysphere
 @dirrm share/monkeysphere
 @dirrm etc/monkeysphere

@@ -3,6 +3,7 @@ MONKEYSPHERE_VERSION = `head -n1 debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/'`
 # these defaults are for debian.  porters should probably adjust them
 # before calling make install
 ETCPREFIX ?= 
+ETCSUFFIX ?= 
 PREFIX ?= /usr
 MANPREFIX ?= $(PREFIX)/share/man
 
@@ -40,7 +41,8 @@ install: all installman
 	install src/monkeysphere-server $(DESTDIR)$(PREFIX)/sbin
 	install -m 0644 src/common $(DESTDIR)$(PREFIX)/share/monkeysphere
 	install doc/* $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
-	install -m 0644 etc/* $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
+	install -m 0644 etc/monkeysphere.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere$(ETCSUFFIX)
+	install -m 0644 etc/monkeysphere-server.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/monkeysphere-server.conf$(ETCSUFFIX)
 
 installman:
 	mkdir -p $(DESTDIR)$(MANPREFIX)/man1 $(DESTDIR)$(MANPREFIX)/man7 $(DESTDIR)$(MANPREFIX)/man8

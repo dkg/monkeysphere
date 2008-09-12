@@ -14,11 +14,6 @@ http://www.freebsd.org/cgi/cvsweb.cgi/ports/net/cvsup-mirror/pkg-install
 or just look around the ports tree for pkg-install files, they are
 usually for adding users.
 
-There is also the usual crappy work involved with installing a .defaults
-file instead of straight files in /usr/local/etc:
-
-http://www.freebsd.org/doc/en/books/porters-handbook/plist-config.html
-
 Finally the pkg-plist needs to be checked. The package hasn't been
 installed at all once yet, it only patches and builds.
 
