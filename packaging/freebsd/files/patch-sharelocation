@@ -1,0 +1,26 @@
+diff --git src/monkeysphere src/monkeysphere
+index 512d608..44f2b17 100755
+--- src/monkeysphere
++++ src/monkeysphere
+@@ -13,7 +13,7 @@
+ ########################################################################
+ PGRM=$(basename $0)
+ 
+-SHARE=${MONKEYSPHERE_SHARE:-"/usr/share/monkeysphere"}
++SHARE=${MONKEYSPHERE_SHARE:-"/usr/local/share/monkeysphere"}
+ export SHARE
+ . "${SHARE}/common" || exit 1
+ 
+diff --git src/monkeysphere-server src/monkeysphere-server
+index 4cda008..e359be7 100755
+--- src/monkeysphere-server
++++ src/monkeysphere-server
+@@ -13,7 +13,7 @@
+ ########################################################################
+ PGRM=$(basename $0)
+ 
+-SHARE=${MONKEYSPHERE_SHARE:="/usr/share/monkeysphere"}
++SHARE=${MONKEYSPHERE_SHARE:="/usr/local/share/monkeysphere"}
+ export SHARE
+ . "${SHARE}/common" || exit 1
+ 
