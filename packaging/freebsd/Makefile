@@ -21,6 +21,7 @@ COMMENT=       use the OpenPGP web of trust to verify ssh connections
 LIB_DEPENDS=	gnutls.26:${PORTSDIR}/security/gnutls
 RUN_DEPENDS=    base64:${PORTSDIR}/converters/base64 \
 		gpg:${PORTSDIR}/security/gnupg \
+		lockfile:${PORTSDIR}/mail/procmail \
 		bash:${PORTSDIR}/shells/bash
 
 MAN1=		monkeysphere.1 openpgp2ssh.1 monkeysphere-ssh-proxycommand.1

@@ -98,7 +98,7 @@ cutline() {
 lock() {
     local use_lockfileprogs=true
     local action="$1"
-    local file="$file"
+    local file="$2"
 
     if ! ( which lockfile-create >/dev/null 2>/dev/null ) ; then
 	if ! ( which lockfile >/dev/null ); then
