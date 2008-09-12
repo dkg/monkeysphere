@@ -31,4 +31,12 @@ MANCOMPRESSED= yes
 
 MAKE_ARGS= ETCPREFIX=/usr/local MANPREFIX=/usr/local/man ETCSUFFIX=.sample
 
+post-install:
+	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere.conf ]; then \
+		${CP} -p ${PREFIX}/etc/monkeysphere/monkeysphere.conf.sample ${PREFIX}/etc/monkeysphere/monkeysphere.conf ; \
+	fi
+	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere-server.conf ]; then \
+		${CP} -p ${PREFIX}/etc/monkeysphere/monkeysphere-server.conf.sample ${PREFIX}/etc/monkeysphere/monkeysphere-server.conf ; \
+	fi
+
 .include <bsd.port.mk>
