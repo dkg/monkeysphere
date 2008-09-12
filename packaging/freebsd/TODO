@@ -1,9 +1,4 @@
-This port is not ready yet. Upstream needs to change a few things (or we
-need patches) to work around some dependencies, most notably:
-
- * lockfile-progs (they may use procmail's lockfile prog)
- * moreutils (for sponge)
- * an install target that also respects PREFIX
+This port is not ready yet. 
 
 We also need to create the monkeysphere user in the pkg-install and
 remove it in pkg-deinstall. To do this, this page has useful tips:

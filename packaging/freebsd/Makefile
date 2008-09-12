@@ -1,12 +1,12 @@
-# New ports collection makefile for:   oneko
-# Date created:        5 December 1994
-# Whom:                asami
+# New ports collection makefile for:   monkeysphere
+# Date created:        2008-09-11 23:38:27-0400
+# Whom:                Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #
 # $FreeBSD$
 #
 
 PORTNAME=      monkeysphere
-PORTVERSION=   0.14
+PORTVERSION=   0.15
 CATEGORIES=    security
 MASTER_SITES=  http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
 # hack for debian orig tarballs
@@ -15,7 +15,7 @@ DISTFILES=      ${PORTNAME}_${DISTVERSION}.orig.tar.gz
 # comment this out to test the port
 IGNORE=			this port is not finished yet
 
-MAINTAINER=    anarcat@anarcat.ath.cx
+MAINTAINER=    dkg@fifthhorseman.net
 COMMENT=       use the OpenPGP web of trust to verify ssh connections
 
 LIB_DEPENDS=	gnutls.26:${PORTSDIR}/security/gnutls
@@ -25,9 +25,8 @@ RUN_DEPENDS=    base64:${PORTSDIR}/converters/base64 \
 		bash:${PORTSDIR}/shells/bash
 
 MAN1=		monkeysphere.1 openpgp2ssh.1 monkeysphere-ssh-proxycommand.1
-MAN5=		monkeysphere.5
+MAN7=		monkeysphere.7
 MAN8=		monkeysphere-server.8
 MANCOMPRESSED= yes
-USE_GMAKE=     yes
 
 .include <bsd.port.mk>
