@@ -6,7 +6,7 @@
 #
 
 PORTNAME=      monkeysphere
-PORTVERSION=   0.15
+PORTVERSION=   0.16~pre
 CATEGORIES=    security
 MASTER_SITES=  http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
 # hack for debian orig tarballs
