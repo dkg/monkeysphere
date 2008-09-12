@@ -1,4 +1,4 @@
-monkeysphere (0.16-1) UNRELEASED; urgency=low
+monkeysphere (0.16~pre-1) UNRELEASED; urgency=low
 
   [ Daniel Kahn Gillmor ]
   * replaced "#!/bin/bash" with "#!/usr/bin/env bash" for better
