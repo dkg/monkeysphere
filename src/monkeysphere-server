@@ -267,7 +267,7 @@ gen_key() {
     revoker=
 
     # get options
-    TEMP=$(getopt -o e:l:r -l expire:,length:,revoker: -n "$PGRM" -- "$@")
+    TEMP=$(PATH="/usr/local/bin:$PATH" getopt -o e:l:r -l expire:,length:,revoker: -n "$PGRM" -- "$@") || failure "getopt failed!  Does your getopt support GNU-style long options?"
 
     if [ $? != 0 ] ; then
 	exit 1
@@ -699,7 +699,7 @@ add_certifier() {
     depth=1
 
     # get options
-    TEMP=$(getopt -o n:t:d: -l domain:,trust:,depth: -n "$PGRM" -- "$@")
+    TEMP=$(PATH="/usr/local/bin:$PATH" getopt -o n:t:d: -l domain:,trust:,depth: -n "$PGRM" -- "$@") || failure "getopt failed!  Does your getopt support GNU-style long options?"
 
     if [ $? != 0 ] ; then
 	exit 1

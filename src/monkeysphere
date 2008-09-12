@@ -63,7 +63,7 @@ gen_subkey(){
     keyExpire=
 
     # get options
-    TEMP=$(getopt -o l:e: -l length:,expire: -n "$PGRM" -- "$@")
+    TEMP=$(PATH="/usr/local/bin:$PATH" getopt -o l:e: -l length:,expire: -n "$PGRM" -- "$@") || failure "getopt failed!  Does your getopt support GNU-style long options?"
 
     if [ $? != 0 ] ; then
 	exit 1

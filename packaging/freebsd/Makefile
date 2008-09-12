@@ -22,6 +22,7 @@ LIB_DEPENDS=	gnutls.26:${PORTSDIR}/security/gnutls
 RUN_DEPENDS=    base64:${PORTSDIR}/converters/base64 \
 		gpg:${PORTSDIR}/security/gnupg \
 		lockfile:${PORTSDIR}/mail/procmail \
+		getopt:${PORTSDIR}/misc/getopt \
 		bash:${PORTSDIR}/shells/bash
 
 MAN1=		monkeysphere.1 openpgp2ssh.1 monkeysphere-ssh-proxycommand.1
