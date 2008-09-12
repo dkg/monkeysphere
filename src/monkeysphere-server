@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # monkeysphere-server: MonkeySphere server admin tool
 #

@@ -1,3 +1,11 @@
+monkeysphere (0.16-1) UNRELEASED; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * replaced "#!/bin/bash" with "#!/usr/bin/env bash" for better
+    portability.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 11 Sep 2008 23:16:31 -0400
+
 monkeysphere (0.15-1) experimental; urgency=low
 
   * porting work and packaging simplification: clarifying makefiles,
