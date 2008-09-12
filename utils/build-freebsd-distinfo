@@ -1,0 +1,11 @@
+#!/bin/bash
+
+VERSION=`head -n1 debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/'`
+
+{
+echo "MD5 (monkeysphere_${VERSION}.orig.tar.gz) =" $(md5sum "monkeysphere_${VERSION}.orig.tar.gz" | cut -f1 -d\ )
+echo "SHA256 (monkeysphere_${VERSION}.orig.tar.gz) =" $(sha256sum "monkeysphere_${VERSION}.orig.tar.gz" | cut -f1 -d\ )
+echo "SIZE (monkeysphere_${VERSION}.orig.tar.gz) =" $(stat -c %s "monkeysphere_${VERSION}.orig.tar.gz")
+} > packaging/freebsd/distinfo
+
+sed -i~ 's/^PORTVERSION=.*$/PORTVERSION=   '"${VERSION}"/ packaging/freebsd/Makefile
