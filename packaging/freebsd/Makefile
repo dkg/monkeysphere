@@ -28,6 +28,6 @@ MAN7=		monkeysphere.7
 MAN8=		monkeysphere-server.8
 MANCOMPRESSED= yes
 
-ETCPREFIX = /usr/local
+MAKE_ARGS= ETCPREFIX=/usr/local MANPREFIX=/usr/local/man
 
 .include <bsd.port.mk>

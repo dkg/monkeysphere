@@ -4,6 +4,7 @@ MONKEYSPHERE_VERSION = `head -n1 debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/'`
 # before calling make install
 ETCPREFIX ?= 
 PREFIX ?= /usr
+MANPREFIX ?= $(PREFIX)/share/man
 
 all: keytrans
 
@@ -31,7 +32,7 @@ clean:
 
 # this target is to be called from the tarball, not from the git
 # working dir!
-install: all
+install: all installman
 	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/sbin $(DESTDIR)$(PREFIX)/share/monkeysphere
 	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
 	mkdir -p $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
@@ -42,10 +43,12 @@ install: all
 	install -m 0644 etc/* $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
 
 installman:
-	mkdir -p $(DESTDIR)$(PREFIX)/share/man/man1 $(DESTDIR)$(PREFIX)/share/man/man7 $(DESTDIR)$(PREFIX)/share/man/man8
-	install man/man1/* $(DESTDIR)$(PREFIX)/share/man/man1
-	install man/man7/* $(DESTDIR)$(PREFIX)/share/man/man7
-	install man/man8/* $(DESTDIR)$(PREFIX)/share/man/man8
+	mkdir -p $(DESTDIR)$(MANPREFIX)/man1 $(DESTDIR)$(MANPREFIX)/man7 $(DESTDIR)$(MANPREFIX)/man8
+	gzip -n man/*/*
+	install man/man1/* $(DESTDIR)$(MANPREFIX)/man1
+	install man/man7/* $(DESTDIR)$(MANPREFIX)/man7
+	install man/man8/* $(DESTDIR)$(MANPREFIX)/man8
+	gzip -d man/*/*
 
 releasenote:
 	./utils/build-releasenote
