@@ -8,11 +8,17 @@
 
 # FIXME: is /var/lib/monkeysphere the right place for this stuff on
 # FreeBSD?
-VARLIB="/var/lib/monkeysphere"
+VARLIB="/var/monkeysphere"
 
 
+case $2 in
+POST-DEINSTALL)
 # FIXME: This needs to be filled in!  Under what circumstances do we
-# want to actually purge all of /var/lib/monkeysphere?
+# want to actually purge all of /var/monkeysphere?
 
 # (note: FreeBSD does not seem to want the package-specific user to be
 # purged at package removal)
+	echo "Warning: If you will *NOT* use this package anymore, please remove the monkeysphere user manually."
+	echo "         You may also want to remove the cached authentication data and keyrings in $VARLIB"
+;;
+esac
