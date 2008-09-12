@@ -726,7 +726,7 @@ process_host_known_hosts() {
 	    if [ "$HASH_KNOWN_HOSTS" = 'true' ] ; then
 		# FIXME: this is really hackish cause ssh-keygen won't
 		# hash from stdin to stdout
-		tmpfile=$(mktemp)
+		tmpfile=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
 		ssh2known_hosts "$host" "$sshKey" > "$tmpfile"
 		ssh-keygen -H -f "$tmpfile" 2> /dev/null
 		cat "$tmpfile" >> "$KNOWN_HOSTS"

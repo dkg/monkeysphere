@@ -120,7 +120,7 @@ show_server_key() {
 
     # dumping to a file named ' ' so that the ssh-keygen output
     # doesn't claim any potentially bogus hostname(s):
-    tmpkey=$(mktemp -d)
+    tmpkey=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
     gpg_authentication "--export $fingerprint" | openpgp2ssh "$fingerprint" 2>/dev/null > "$tmpkey/ "
     echo -n "ssh fingerprint: "
     (cd "$tmpkey" && ssh-keygen -l -f ' ' | awk '{ print $2 }')
@@ -188,7 +188,7 @@ update_users() {
 	fi
 
         # make temporary directory
-        TMPDIR=$(mktemp -d)
+        TMPDIR=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
 
 	# trap to delete temporary directory on exit
 	trap "rm -rf $TMPDIR" EXIT

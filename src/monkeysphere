@@ -147,7 +147,7 @@ EOF
 )
 
     log verbose "generating subkey..."
-    fifoDir=$(mktemp -d)
+    fifoDir=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
     (umask 077 && mkfifo "$fifoDir/pass")
     echo "$editCommands" | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
 
@@ -210,7 +210,7 @@ You might want to run 'gpg --gen-key'."
 You might want to 'monkeysphere gen-subkey'"
     fi
 
-    workingdir=$(mktemp -d)
+    workingdir=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
     umask 077
     mkfifo "$workingdir/passphrase"
     keysuccess=1

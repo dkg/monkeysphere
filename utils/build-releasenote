@@ -25,7 +25,7 @@ checksums() {
 
 checksums
 
-temprelease=$(mktemp)
+temprelease=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
 trap "rm -f $temprelease" EXIT
 set -e
 head -n$(( $(grep -n '^-----BEGIN PGP SIGNED MESSAGE-----$' website/download.mdwn | head -n1 | cut -f1 -d:) - 1 )) website/download.mdwn >$temprelease
