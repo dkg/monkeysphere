@@ -665,7 +665,7 @@ diagnostics() {
 		echo " - Recommendation: add a line to $sshd_config: 'HostKey ${VARLIB}/ssh_host_rsa_key'"
 		problemsfound=$(($problemsfound+1))
 	    fi
-	    if badhostkeys=$(grep -i '^HostKey' "$sshd_config" | grep -q -v "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$") ; then
+	    if badhostkeys=$(grep -i '^HostKey' "$sshd_config" | grep -v "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$") ; then
 		echo "! $sshd_config refers to some non-monkeysphere host keys:"
 		echo "$badhostkeys"
 		echo " - Recommendation: remove the above HostKey lines from $sshd_config"
@@ -689,8 +689,9 @@ diagnostics() {
     if ! grep -q "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$" "$sshd_config"; then
 	echo "! $sshd_config does not point to monkeysphere authorized keys."
 	echo " - Recommendation: add a line to $sshd_config: 'AuthorizedKeysFile ${VARLIB}/authorized_keys/%u'"
+	problemsfound=$(($problemsfound+1))
     fi
-    if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' "$sshd_config" | grep -q -v "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$") ; then
+    if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' "$sshd_config" | grep -v "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$") ; then
 	echo "! $sshd_config refers to non-monkeysphere authorized_keys files:"
 	echo "$badauthorizedkeys"
 	echo " - Recommendation: remove the above AuthorizedKeysFile lines from $sshd_config"
@@ -698,7 +699,7 @@ diagnostics() {
     fi
 
     if [ "$problemsfound" -gt 0 ]; then
-	echo "When the above $problemsfound problem"$([ "$problemsfound" -eq 1 ] || echo "s")" are resolved, please re-run:"
+	echo "When the above $problemsfound issue"$(if [ "$problemsfound" -eq 1 ] ; then echo " is" ; else echo "s are" ; fi)" resolved, please re-run:"
 	echo "  monkeysphere-server diagnostics"
     fi
 }
