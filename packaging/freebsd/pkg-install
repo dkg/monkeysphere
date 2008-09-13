@@ -63,5 +63,6 @@ keyring $VARLIB/gnupg-host/pubring.gpg
 EOF
 	chown monkeysphere:monkeysphere "$VARLIB"/gnupg-authentication/gpg.conf
 
+	monkeysphere-server diagnostics
         ;;
 esac
