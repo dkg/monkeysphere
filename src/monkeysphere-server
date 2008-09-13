@@ -67,7 +67,7 @@ EOF
 }
 
 su_monkeysphere_user() {
-    su --preserve-environment "$MONKEYSPHERE_USER" -- -c "$@"
+    su -m "$MONKEYSPHERE_USER" -c "$@"
 }
 
 # function to interact with the host gnupg keyring
@@ -642,7 +642,7 @@ diagnostics() {
 	if [ ! -s "${VARLIB}/ssh_host_rsa_key" ] ; then
 	    echo "! The host key as prepared for SSH (${VARLIB}/ssh_host_rsa_key) is missing or empty."
 	else
-	    if [ $(stat -c '%a' "${VARLIB}/ssh_host_rsa_key") != 600 ] ; then
+	    if [ $(ls -l "${VARLIB}/ssh_host_rsa_key" | cut -f1 -d\ ) != '-rw-------' ] ; then
 		echo "! Permissions seem wrong for ${VARLIB}/ssh_host_rsa_key -- should be 0600."
 	    fi
 

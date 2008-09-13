@@ -399,9 +399,9 @@ check_key_file_permissions() {
     local gAccess
     local oAccess
 
-    # function to check that an octal corresponds to writability
+    # function to check that the given permission corresponds to writability
     is_write() {
-	[ "$1" -eq 2 -o "$1" -eq 3 -o "$1" -eq 6 -o "$1" -eq 7 ]
+	[ "$1" = "w" ]
     }
 
     user="$1"
@@ -410,10 +410,9 @@ check_key_file_permissions() {
     # return 0 is path does not exist
     [ -e "$path" ] || return 0
 
-    owner=$(stat --format '%U' "$path")
-    access=$(stat --format '%a' "$path")
-    gAccess=$(echo "$access" | cut -c2)
-    oAccess=$(echo "$access" | cut -c3)
+    owner=$(ls -l "$path" | awk '{ print $3 }')
+    gAccess=$(ls -l "$path" | cut -c6)
+    oAccess=$(ls -l "$path" | cut -c9)
 
     # check owner
     if [ "$owner" != "$user" -a "$owner" != 'root' ] ; then
