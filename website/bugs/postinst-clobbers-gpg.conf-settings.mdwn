@@ -1,0 +1,28 @@
+[[ meta title="debian packaging postinst script clobbers gpg.conf settings in /var/lib/monkeysphere" ]]
+
+Do we want to allow the system administrator to make adjustments to
+the `gpg.conf` config files found in `/var/lib/monkeysphere`?  At the
+moment, there are two such files:
+
+ * `/var/lib/monkeysphere/gnupg-authentication/gpg.conf`
+ * `/var/lib/monkeysphere/gnupg-host/gpg.conf`
+
+In the debian postinst scripts (`debian/monkeysphere.postinst`), the
+contents of those files are overwritten on every upgrade/reinstall,
+effectively clobbering any changes made by the local admin.
+
+Maybe we *do* want to do this clobbering, though.  Stuff in `/var` is
+generally not expected to be modified by hand.  I see two possible
+resolutions to this:
+
+ * when we clobber those files, include a comment along the lines of:
+    # do not make changes to this file!  It is overwritten on each upgrade!
+
+ * Avoid clobbering the files, and treat them as config files.
+
+the latter approach suggests that they should be more properly stored
+in `/etc/`, though.  This would give us all the conf-file tracking
+apparatus, which is nice.  If we do want to do that, I guess we'd
+symlink to them from the monkeysphere-specific `$GNUPGHOME`s in
+`/var/lib/monkeysphere`, since `gpg` does not seem to allow for
+overriding the location of the `gpg.conf` independent of `$GNUPGHOME`.
