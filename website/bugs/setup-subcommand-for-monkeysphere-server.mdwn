@@ -1,0 +1,29 @@
+[[ meta title="proposed new monkeysphere-server subcommand: setup" ]]
+
+What if everything that's done in the package post-installation
+scripts (aside from maybe the creation of the monkeysphere user
+itself) was done with a single call to something like
+
+    monkeysphere-server setup
+
+This would make things more obvious to folks installing from source
+directly, and put less maintenance load on porters.  The end of
+`monkeysphere-server setup` could also invoke `monkeysphere-server
+diagnostics` to get the admin pointed in the right direction.
+
+Think of this as a sort of automated "Getting Started" documentation.
+
+Of course, a hypothetical *full* setup command would do things like
+`gen-key`, auto-modify `sshd_config`, etc.  We wouldn't want to do
+those things automatically without the guiding hand of the local
+sysadmin.
+
+But perhaps we could even smooth that process with:
+
+    monkeysphere-server setup --full
+
+I'd like to know what other folks think about these possibilities.
+Would either of these be useful?  Are they confusing?  Could they be
+clarified?
+
+--dkg
