@@ -67,7 +67,7 @@ EOF
 }
 
 su_monkeysphere_user() {
-    su -m "$MONKEYSPHERE_USER" -c "$@"
+    su "$MONKEYSPHERE_USER" -c "$@"
 }
 
 # function to interact with the host gnupg keyring
@@ -571,7 +571,7 @@ diagnostics() {
     warndate=$(advance_date $warnwindow +%s)
 
     if ! id monkeysphere >/dev/null ; then
-	echo "! No monkeysphere user found!  Please create a monkeysphere system user."
+	echo "! No monkeysphere user found!  Please create a monkeysphere system user with bash as its shell."
 	problemsfound=$(($problemsfound+1))
     fi
 

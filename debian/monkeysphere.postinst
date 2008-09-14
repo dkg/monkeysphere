@@ -11,7 +11,7 @@ if ! getent passwd monkeysphere >/dev/null ; then
     echo "adding monkeysphere user..."
     adduser --quiet --system --no-create-home --group \
 	--home "$VARLIB" \
-	--shell '/bin/sh' \
+	--shell '/bin/bash' \
 	--gecos 'monkeysphere authentication user,,,' \
 	monkeysphere
 fi
