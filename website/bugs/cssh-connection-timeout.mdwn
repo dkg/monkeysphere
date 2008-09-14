@@ -71,3 +71,21 @@ that a longer connection timeout is acceptable:
 Perhaps this is an acceptable workaround?
 
 -- dkg
+
+---
+
+Sorry for not being more clear. Monkeysphere debug does not reveal personal
+information - but cluster cssh -d -D exposes the hosts in my ssh config file.
+
+dkg's approach seems to work. His suggestion, as written, didn't work for me.
+But that's because I ran cssh -u > $HOME/.csshrc, which generates a default
+cssh config file (that specifies ConnectTimeout=10). That file seems to
+override the command linke (perhaps a cssh bug?). I changed the ConnectTimeout
+to 30 in my ~/.csshrc file and now everything works. 
+
+I think jrollins' assessment is probably right - the extra delay due to locking
+causes the timeout. I think tweaking ConnectTimeout parameter via the .csshrc
+file or via the command line is a reasonable fix for this bug, so I'm closing
+as [[bugs/done]].
+
+-- Sir Jam Jam
