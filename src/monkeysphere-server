@@ -188,25 +188,25 @@ update_users() {
 	fi
 
         # make temporary directory
-        TMPDIR=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+        TMPLOC=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
 
 	# trap to delete temporary directory on exit
-	trap "rm -rf $TMPDIR" EXIT
+	trap "rm -rf $TMPLOC" EXIT
 
         # create temporary authorized_user_ids file
-        TMP_AUTHORIZED_USER_IDS="${TMPDIR}/authorized_user_ids"
+        TMP_AUTHORIZED_USER_IDS="${TMPLOC}/authorized_user_ids"
         touch "$TMP_AUTHORIZED_USER_IDS"
 
         # create temporary authorized_keys file
-        AUTHORIZED_KEYS="${TMPDIR}/authorized_keys"
+        AUTHORIZED_KEYS="${TMPLOC}/authorized_keys"
         touch "$AUTHORIZED_KEYS"
 
         # set restrictive permissions on the temporary files
 	# FIXME: is there a better way to do this?
-        chmod 0700 "$TMPDIR"
+        chmod 0700 "$TMPLOC"
         chmod 0600 "$AUTHORIZED_KEYS"
         chmod 0600 "$TMP_AUTHORIZED_USER_IDS"
-        chown -R "$MONKEYSPHERE_USER" "$TMPDIR"
+        chown -R "$MONKEYSPHERE_USER" "$TMPLOC"
 
 	# if the authorized_user_ids file exists...
 	if [ -s "$authorizedUserIDs" ] ; then
@@ -243,7 +243,7 @@ update_users() {
 	mv -f "$AUTHORIZED_KEYS" "${VARLIB}/authorized_keys/${uname}"
 
 	# destroy temporary directory
-	rm -rf "$TMPDIR"
+	rm -rf "$TMPLOC"
     done
 }
 
@@ -701,6 +701,8 @@ diagnostics() {
     if [ "$problemsfound" -gt 0 ]; then
 	echo "When the above $problemsfound issue"$(if [ "$problemsfound" -eq 1 ] ; then echo " is" ; else echo "s are" ; fi)" resolved, please re-run:"
 	echo "  monkeysphere-server diagnostics"
+    else
+	echo "Everything seems to be in order!"
     fi
 }
 
@@ -755,12 +757,38 @@ add_certifier() {
 
     keyID="$1"
     if [ -z "$keyID" ] ; then
-	failure "You must specify the key ID of a key to add."
+	failure "You must specify the key ID of a key to add, or specify a file to read the key from."
     fi
+    if [ -f "$keyID" ] ; then
+	echo "Reading key from file '$keyID':"
+	importinfo=$(gpg_authentication "--import" < "$keyID" 2>&1) || failure "could not read key from '$keyID'"
+	# FIXME: if this is tried when the key database is not
+	# up-to-date, i got these errors (using set -x):
+
+# ++ su -m monkeysphere -c '\''gpg --import'\''
+# Warning: using insecure memory!
+# gpg: key D21739E9: public key "Daniel Kahn Gillmor <dkg@fifthhorseman.net>" imported
+# gpg: Total number processed: 1
+# gpg:               imported: 1  (RSA: 1)
+# gpg: can'\''t create `/var/monkeysphere/gnupg-host/pubring.gpg.tmp'\'': Permission denied
+# gpg: failed to rebuild keyring cache: Permission denied
+# gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+# gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+# gpg: next trustdb check due at 2009-01-10'
+# + failure 'could not read key from '\''/root/dkg.gpg'\'''
+# + echo 'could not read key from '\''/root/dkg.gpg'\'''
+
+	keyID=$(echo "$importinfo" | grep '^gpg: key ' | cut -f2 -d: | cut -f3 -d\ )
+	if [ -z "$keyID" ] || [ $(echo "$keyID" | wc -l) -ne 1 ] ; then
+	    failure "Expected there to be a single gpg key in the file."
+	fi
+    else
+        # get the key from the key server
+	gpg_authentication "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" || failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
+    fi
+
     export keyID
 
-    # get the key from the key server
-    gpg_authentication "--keyserver $KEYSERVER --recv-key '0x${keyID}!'"
 
     # get the full fingerprint of a key ID
     fingerprint=$(gpg_authentication "--list-key --with-colons --with-fingerprint 0x${keyID}!" | \
