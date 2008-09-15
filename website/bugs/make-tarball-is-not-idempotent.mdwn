@@ -1,0 +1,12 @@
+[[ meta title="make tarball is not idempotent" ]]
+
+The current monkeysphere Makefile has a "tarball" target, which
+produces the "upstream tarball".  Unfortunately, it is not idempotent.
+That is, if you run it twice in a row (without changing any other
+source), the second .orig.tar.gz file is bytewise different from the
+first.
+
+We should fix this so that the tarball generated is the same at least
+as long as no local file has been touched.
+
+--dkg
