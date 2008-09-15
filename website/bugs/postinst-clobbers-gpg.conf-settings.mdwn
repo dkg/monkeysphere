@@ -1,4 +1,4 @@
-[[ meta title="debian packaging postinst script clobbers gpg.conf settings in /var/lib/monkeysphere" ]]
+[[meta title="debian packaging postinst script clobbers gpg.conf settings in /var/lib/monkeysphere" ]]
 
 Do we want to allow the system administrator to make adjustments to
 the `gpg.conf` config files found in `/var/lib/monkeysphere`?  At the

@@ -1,4 +1,4 @@
-[[ meta title="make tarball is not idempotent" ]]
+[[meta title="make tarball is not idempotent" ]]
 
 The current monkeysphere Makefile has a "tarball" target, which
 produces the "upstream tarball".  Unfortunately, it is not idempotent.
