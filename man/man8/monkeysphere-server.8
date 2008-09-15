@@ -185,6 +185,9 @@ The following environment variables will override those specified in
 the monkeysphere-server.conf configuration file (defaults in
 parentheses):
 .TP
+MONKEYSPHERE_MONKEYSPHERE_USER
+User to control authentication keychain (monkeysphere).
+.TP
 MONKEYSPHERE_LOG_LEVEL
 Set the log level (INFO).  Can be SILENT, ERROR, INFO, VERBOSE, DEBUG, in
 increasing order of verbosity.
@@ -199,9 +202,6 @@ Path to user authorized_user_ids file
 MONKEYSPHERE_RAW_AUTHORIZED_KEYS
 Path to user-controlled authorized_keys file.  `-' means not to add
 user-controlled file (%h/.ssh/authorized_keys).
-.TP
-MONKEYSPHERE_MONKEYSPHERE_USER
-User to control authentication keychain (monkeysphere).
 
 .SH FILES
 
@@ -211,6 +211,12 @@ System monkeysphere-server config file.
 .TP
 /etc/monkeysphere/monkeysphere.conf
 System-wide monkeysphere config file.
+.TP
+/etc/monkeysphere/gnupg-host.conf
+Monkeysphere host GNUPG home gpg.conf
+.TP
+/etc/monkeysphere/gnupg-authentication.conf
+Monkeysphere authentication GNUPG home gpg.conf
 .TP
 /var/lib/monkeysphere/authorized_keys/USER
 Monkeysphere-generated user authorized_keys files.

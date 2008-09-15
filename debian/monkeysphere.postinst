@@ -5,6 +5,7 @@
 # Author: Jameson Rollins <jrollins@fifthhorseman.net>
 # Copyright 2008
 
+ETC="/etc/monkeysphere"
 VARLIB="/var/lib/monkeysphere"
 
 if ! getent passwd monkeysphere >/dev/null ; then
@@ -18,17 +19,10 @@ fi
 
 # install host gnupg home directory
 install --owner root --group monkeysphere --mode 750 -d "$VARLIB"/gnupg-host
-# install host gpg.conf
-cat <<EOF > "$VARLIB"/gnupg-host/gpg.conf
-list-options show-uid-validity
-EOF
+# link in the gpg.conf
+ln -s "$ETC"/gnupg-host.conf "$VARLIB"/gnupg-host/gpg.conf
 
 # install authentication gnupg home directory
 install --owner monkeysphere --group monkeysphere --mode 700 -d "$VARLIB"/gnupg-authentication
-# install authentication gpg.conf
-cat <<EOF > "$VARLIB"/gnupg-authentication/gpg.conf
-list-options show-uid-validity
-primary-keyring $VARLIB/gnupg-authentication/pubring.gpg
-keyring $VARLIB/gnupg-host/pubring.gpg
-EOF
-chown monkeysphere:monkeysphere "$VARLIB"/gnupg-authentication/gpg.conf
+# link in the gpg.conf
+ln -s "$ETC"/gnupg-authentication.conf "$VARLIB"/gnupg-authentication/gpg.conf
