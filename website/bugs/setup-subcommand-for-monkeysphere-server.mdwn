@@ -1,4 +1,4 @@
-[[ meta title="proposed new monkeysphere-server subcommand: setup" ]]
+[[meta title="proposed new monkeysphere-server subcommand: setup" ]]
 
 What if everything that's done in the package post-installation
 scripts (aside from maybe the creation of the monkeysphere user

@@ -26,7 +26,9 @@ debian-package: tarball
 	(cd monkeysphere-$(MONKEYSPHERE_VERSION) && debuild -uc -us)
 	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
 
-freebsd-distinfo: tarball
+# don't explicitly depend on the tarball, since our tarball
+# (re)generation is not idempotent even when no source changes.
+freebsd-distinfo: 
 	./utils/build-freebsd-distinfo
 
 clean:

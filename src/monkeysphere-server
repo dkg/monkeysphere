@@ -67,7 +67,7 @@ EOF
 }
 
 su_monkeysphere_user() {
-    su -m "$MONKEYSPHERE_USER" -c "$@"
+    su "$MONKEYSPHERE_USER" -c "$@"
 }
 
 # function to interact with the host gnupg keyring
@@ -188,25 +188,25 @@ update_users() {
 	fi
 
         # make temporary directory
-        TMPDIR=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+        TMPLOC=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
 
 	# trap to delete temporary directory on exit
-	trap "rm -rf $TMPDIR" EXIT
+	trap "rm -rf $TMPLOC" EXIT
 
         # create temporary authorized_user_ids file
-        TMP_AUTHORIZED_USER_IDS="${TMPDIR}/authorized_user_ids"
+        TMP_AUTHORIZED_USER_IDS="${TMPLOC}/authorized_user_ids"
         touch "$TMP_AUTHORIZED_USER_IDS"
 
         # create temporary authorized_keys file
-        AUTHORIZED_KEYS="${TMPDIR}/authorized_keys"
+        AUTHORIZED_KEYS="${TMPLOC}/authorized_keys"
         touch "$AUTHORIZED_KEYS"
 
         # set restrictive permissions on the temporary files
 	# FIXME: is there a better way to do this?
-        chmod 0700 "$TMPDIR"
+        chmod 0700 "$TMPLOC"
         chmod 0600 "$AUTHORIZED_KEYS"
         chmod 0600 "$TMP_AUTHORIZED_USER_IDS"
-        chown -R "$MONKEYSPHERE_USER" "$TMPDIR"
+        chown -R "$MONKEYSPHERE_USER" "$TMPLOC"
 
 	# if the authorized_user_ids file exists...
 	if [ -s "$authorizedUserIDs" ] ; then
@@ -243,7 +243,7 @@ update_users() {
 	mv -f "$AUTHORIZED_KEYS" "${VARLIB}/authorized_keys/${uname}"
 
 	# destroy temporary directory
-	rm -rf "$TMPDIR"
+	rm -rf "$TMPLOC"
     done
 }
 
@@ -559,6 +559,7 @@ diagnostics() {
     local fingerprint
     local badhostkeys
     local sshd_config
+    local problemsfound=0
 
     # FIXME: what's the correct, cross-platform answer?
     sshd_config=/etc/ssh/sshd_config
@@ -570,20 +571,24 @@ diagnostics() {
     warndate=$(advance_date $warnwindow +%s)
 
     if ! id monkeysphere >/dev/null ; then
-	echo "! No monkeysphere user found!  Please create a monkeysphere system user."
+	echo "! No monkeysphere user found!  Please create a monkeysphere system user with bash as its shell."
+	problemsfound=$(($problemsfound+1))
     fi
 
     if ! [ -d "$VARLIB" ] ; then
 	echo "! no $VARLIB directory found.  Please create it."
+	problemsfound=$(($problemsfound+1))
     fi
 
     echo "Checking host GPG key..."
     if (( "$keysfound" < 1 )); then
 	echo "! No host key found."
 	echo " - Recommendation: run 'monkeysphere-server gen-key'"
+	problemsfound=$(($problemsfound+1))
     elif (( "$keysfound" > 1 )); then
 	echo "! More than one host key found?"
 	# FIXME: recommend a way to resolve this
+	problemsfound=$(($problemsfound+1))
     else
 	create=$(echo "$seckey" | grep ^sec: | cut -f6 -d:)
 	expire=$(echo "$seckey" | grep ^sec: | cut -f7 -d:)
@@ -593,9 +598,11 @@ diagnostics() {
 	    if (( "$expire"  < "$curdate" )); then
 		echo "! Host key is expired."
 		echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
+		problemsfound=$(($problemsfound+1))
 	    elif (( "$expire" < "$warndate" )); then
 		echo "! Host key expires in less than $warnwindow:" $(advance_date $(( $expire - $curdate )) seconds +%F)
 		echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
+		problemsfound=$(($problemsfound+1))
 	    fi
 	fi
 
@@ -603,6 +610,7 @@ diagnostics() {
 	if [ "$create" ] && (( "$create" > "$curdate" )); then
 	    echo "! Host key was created in the future(?!). Is your clock correct?"
 	    echo " - Recommendation: Check clock ($(date +%F_%T)); use NTP?"
+	    problemsfound=$(($problemsfound+1))
 	fi
 
         # check for UserID expiration:
@@ -614,14 +622,17 @@ diagnostics() {
 	    if [ "$create" ] && (( "$create" > "$curdate" )); then
 		echo "! User ID '$uid' was created in the future(?!).  Is your clock correct?"
 		echo " - Recommendation: Check clock ($(date +%F_%T)); use NTP?"
+		problemsfound=$(($problemsfound+1))
 	    fi
 	    if [ "$expire" ] ; then
 		if (( "$expire" < "$curdate" )); then
 		    echo "! User ID '$uid' is expired."
-			# FIXME: recommend a way to resolve this
+		    # FIXME: recommend a way to resolve this
+		    problemsfound=$(($problemsfound+1))
 		elif (( "$expire" < "$warndate" )); then
 		    echo "! User ID '$uid' expires in less than $warnwindow:" $(advance_date $(( $expire - $curdate )) seconds +%F)		
 		    # FIXME: recommend a way to resolve this
+		    problemsfound=$(($problemsfound+1))
 		fi
 	    fi
 	done
@@ -641,20 +652,24 @@ diagnostics() {
 	echo "Checking host SSH key..."
 	if [ ! -s "${VARLIB}/ssh_host_rsa_key" ] ; then
 	    echo "! The host key as prepared for SSH (${VARLIB}/ssh_host_rsa_key) is missing or empty."
+	    problemsfound=$(($problemsfound+1))
 	else
 	    if [ $(ls -l "${VARLIB}/ssh_host_rsa_key" | cut -f1 -d\ ) != '-rw-------' ] ; then
 		echo "! Permissions seem wrong for ${VARLIB}/ssh_host_rsa_key -- should be 0600."
+		problemsfound=$(($problemsfound+1))
 	    fi
 
 	    # propose changes needed for sshd_config (if any)
 	    if ! grep -q "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$" "$sshd_config"; then
 		echo "! $sshd_config does not point to the monkeysphere host key (${VARLIB}/ssh_host_rsa_key)."
 		echo " - Recommendation: add a line to $sshd_config: 'HostKey ${VARLIB}/ssh_host_rsa_key'"
+		problemsfound=$(($problemsfound+1))
 	    fi
-	    if badhostkeys=$(grep -i '^HostKey' "$sshd_config" | grep -q -v "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$") ; then
+	    if badhostkeys=$(grep -i '^HostKey' "$sshd_config" | grep -v "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$") ; then
 		echo "! $sshd_config refers to some non-monkeysphere host keys:"
 		echo "$badhostkeys"
 		echo " - Recommendation: remove the above HostKey lines from $sshd_config"
+		problemsfound=$(($problemsfound+1))
 	    fi
 	fi
     fi
@@ -668,17 +683,29 @@ diagnostics() {
 
 # FIXME:  make sure that at least one identity certifier exists
 
+# FIXME: look at the timestamps on the monkeysphere-generated
+# authorized_keys files -- warn if they seem out-of-date.
+
     echo
     echo "Checking for MonkeySphere-enabled public-key authentication for users ..."
     # Ensure that User ID authentication is enabled:
     if ! grep -q "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$" "$sshd_config"; then
 	echo "! $sshd_config does not point to monkeysphere authorized keys."
 	echo " - Recommendation: add a line to $sshd_config: 'AuthorizedKeysFile ${VARLIB}/authorized_keys/%u'"
+	problemsfound=$(($problemsfound+1))
     fi
-    if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' "$sshd_config" | grep -q -v "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$") ; then
+    if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' "$sshd_config" | grep -v "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$") ; then
 	echo "! $sshd_config refers to non-monkeysphere authorized_keys files:"
 	echo "$badauthorizedkeys"
 	echo " - Recommendation: remove the above AuthorizedKeysFile lines from $sshd_config"
+	problemsfound=$(($problemsfound+1))
+    fi
+
+    if [ "$problemsfound" -gt 0 ]; then
+	echo "When the above $problemsfound issue"$(if [ "$problemsfound" -eq 1 ] ; then echo " is" ; else echo "s are" ; fi)" resolved, please re-run:"
+	echo "  monkeysphere-server diagnostics"
+    else
+	echo "Everything seems to be in order!"
     fi
 }
 
@@ -733,12 +760,38 @@ add_certifier() {
 
     keyID="$1"
     if [ -z "$keyID" ] ; then
-	failure "You must specify the key ID of a key to add."
+	failure "You must specify the key ID of a key to add, or specify a file to read the key from."
     fi
+    if [ -f "$keyID" ] ; then
+	echo "Reading key from file '$keyID':"
+	importinfo=$(gpg_authentication "--import" < "$keyID" 2>&1) || failure "could not read key from '$keyID'"
+	# FIXME: if this is tried when the key database is not
+	# up-to-date, i got these errors (using set -x):
+
+# ++ su -m monkeysphere -c '\''gpg --import'\''
+# Warning: using insecure memory!
+# gpg: key D21739E9: public key "Daniel Kahn Gillmor <dkg@fifthhorseman.net>" imported
+# gpg: Total number processed: 1
+# gpg:               imported: 1  (RSA: 1)
+# gpg: can'\''t create `/var/monkeysphere/gnupg-host/pubring.gpg.tmp'\'': Permission denied
+# gpg: failed to rebuild keyring cache: Permission denied
+# gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+# gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+# gpg: next trustdb check due at 2009-01-10'
+# + failure 'could not read key from '\''/root/dkg.gpg'\'''
+# + echo 'could not read key from '\''/root/dkg.gpg'\'''
+
+	keyID=$(echo "$importinfo" | grep '^gpg: key ' | cut -f2 -d: | cut -f3 -d\ )
+	if [ -z "$keyID" ] || [ $(echo "$keyID" | wc -l) -ne 1 ] ; then
+	    failure "Expected there to be a single gpg key in the file."
+	fi
+    else
+        # get the key from the key server
+	gpg_authentication "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" || failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
+    fi
+
     export keyID
 
-    # get the key from the key server
-    gpg_authentication "--keyserver $KEYSERVER --recv-key '0x${keyID}!'"
 
     # get the full fingerprint of a key ID
     fingerprint=$(gpg_authentication "--list-key --with-colons --with-fingerprint 0x${keyID}!" | \

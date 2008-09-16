@@ -1,0 +1,24 @@
+[[meta title="Problems with root-owned gpg keyrings"]]
+
+`/var/lib/monkeysphere/gnupg-host/` is root-owned, and the public
+keyring in that directory is controlled by the superuser.
+
+We currently expect the `monkeysphere` user to read from (but not
+write to) that keyring.  But using a keyring in a directory that you
+don't control appears to trigger [a subtle bug in
+gpg](http://bugs.debian.org/361539) that has been unresolved for quite
+a long time.
+
+With some of the new error checking i'm doing in
+`monkeysphere-server`, typical operations that involve both keyrings
+as the non-privileged user can fail with an error message like:
+
+    gpg: failed to rebuild keyring cache: file open error
+
+Running the relevant operation a second time as the same user usually
+lets things go through without a failure, but this seems like it would
+be hiding a bug, rather than getting it fixed correctly.
+
+Are there other ways we can deal with this problem?
+
+--dkg
