@@ -89,3 +89,5 @@ file or via the command line is a reasonable fix for this bug, so I'm closing
 as [[bugs/done]].
 
 -- Sir Jam Jam
+
+I just [posted the cssh bug in debian](http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=498968).
