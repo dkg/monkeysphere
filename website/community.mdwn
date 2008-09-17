@@ -30,6 +30,14 @@ from this web site:
 
 	git clone git://git.monkeysphere.info/monkeysphere
 
+If you would like to build a deb package from the latest release, you can type
+the following from inside the monkeysphere top level directory:
+
+	make debian-package
+
+This command will build an upstream tarball, attach the debian packaging
+directory, and build a sample deb.
+
 ### Individual developer repositories ###
 
 You might also be interested in the repositories of individual
