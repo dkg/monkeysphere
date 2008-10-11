@@ -13,7 +13,12 @@ monkeysphere (0.16~pre-1) UNRELEASED; urgency=low
   * monkeysphere-server diagnostics now counts problems and suggests a
     re-run after they have been resolved.
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 11 Sep 2008 23:16:31 -0400
+  [ Jameson Graef Rollins ]
+  * Genericize fs location variables.
+  * break out gpg.conf files into SYSCONFIGDIR, and not auto-generated at
+    install.
+
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sat, 11 Oct 2008 14:27:17 -0400
 
 monkeysphere (0.15-1) experimental; urgency=low
 

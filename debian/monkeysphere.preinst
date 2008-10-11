@@ -1,0 +1,18 @@
+#!/bin/sh -e
+
+# preinst script for monkeysphere
+
+# Author: Jameson Rollins <jrollins@fifthhorseman.net>
+# Copyright 2008
+
+ETC="/etc/monkeysphere"
+VARLIB="/var/lib/monkeysphere"
+
+# move the gpg.conf files from the GNUPGHOMEs if they're there to
+# /etc, where they will be linked back into the GNUPGHOMEs later
+if [ -f "$VARLIB"/gnupg-host/gpg.conf -a ! -L "$VARLIB"/gnupg-host/gpg.conf ] ; then
+    mv "$VARLIB"/gnupg-host/gpg.conf "$ETC"/gpg-host.conf
+fi
+if [ -f "$VARLIB"/gnupg-authentication/gpg.conf -a ! -L "$VARLIB"/gnupg-authentication/gpg.conf ] ; then
+    mv "$VARLIB"/gnupg-authentication/gpg.conf "$ETC"/gnupg-authentication.conf 
+fi
