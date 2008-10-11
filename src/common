@@ -16,8 +16,8 @@
 ### COMMON VARIABLES
 
 # managed directories
-ETC="/etc/monkeysphere"
-export ETC
+SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"/etc/monkeysphere"}
+export SYSCONFIGDIR
 
 ########################################################################
 ### UTILITY FUNCTIONS
