@@ -26,3 +26,10 @@ apparatus, which is nice.  If we do want to do that, I guess we'd
 symlink to them from the monkeysphere-specific `$GNUPGHOME`s in
 `/var/lib/monkeysphere`, since `gpg` does not seem to allow for
 overriding the location of the `gpg.conf` independent of `$GNUPGHOME`.
+
+---
+
+All the gpg.conf files now reside in /etc/monkeysphere, and are linked
+in into the GNUPGHOMEs in /var/lib/monkeysphere.
+
+[[bugs/done]] on 2008-10-11

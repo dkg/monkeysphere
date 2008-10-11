@@ -26,3 +26,7 @@ I guess i'm proposing something like:
 Thoughts?
 
 --dkg
+
+---
+
+[[bugs/done]] on 2008-10-11
