@@ -20,9 +20,9 @@ fi
 # install host gnupg home directory
 install --owner root --group monkeysphere --mode 750 -d "$VARLIB"/gnupg-host
 # link in the gpg.conf
-ln -sf "$ETC"/gnupg-host.conf "$VARLIB"/gnupg-host/gpg.conf
+ln -sTf "$ETC"/gpg-host.conf "$VARLIB"/gnupg-host/gpg.conf
 
 # install authentication gnupg home directory
 install --owner monkeysphere --group monkeysphere --mode 700 -d "$VARLIB"/gnupg-authentication
 # link in the gpg.conf
-ln -sf "$ETC"/gnupg-authentication.conf "$VARLIB"/gnupg-authentication/gpg.conf
+ln -sTf "$ETC"/gpg-authentication.conf "$VARLIB"/gnupg-authentication/gpg.conf

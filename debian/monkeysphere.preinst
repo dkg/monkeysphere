@@ -12,7 +12,11 @@ VARLIB="/var/lib/monkeysphere"
 # /etc, where they will be linked back into the GNUPGHOMEs later
 if [ -f "$VARLIB"/gnupg-host/gpg.conf -a ! -L "$VARLIB"/gnupg-host/gpg.conf ] ; then
     mv "$VARLIB"/gnupg-host/gpg.conf "$ETC"/gpg-host.conf
+    chown root:root "$ETC"/gpg-host.conf
+    ln -s "$ETC"/gpg-host.conf "$VARLIB"/gnupg-host/gpg.conf
 fi
 if [ -f "$VARLIB"/gnupg-authentication/gpg.conf -a ! -L "$VARLIB"/gnupg-authentication/gpg.conf ] ; then
-    mv "$VARLIB"/gnupg-authentication/gpg.conf "$ETC"/gnupg-authentication.conf 
+    mv "$VARLIB"/gnupg-authentication/gpg.conf "$ETC"/gpg-authentication.conf
+    chown root:root "$ETC"/gpg-authentication.conf
+    ln -s "$ETC"/gpg-authentication.conf "$VARLIB"/gnupg-authentication/gpg.conf
 fi
