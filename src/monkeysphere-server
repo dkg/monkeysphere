@@ -13,12 +13,12 @@
 ########################################################################
 PGRM=$(basename $0)
 
-SHARE=${MONKEYSPHERE_SHARE:="/usr/share/monkeysphere"}
+SHARE=${MONKEYSPHERE_SHARE:-"/usr/share/monkeysphere"}
 export SHARE
 . "${SHARE}/common" || exit 1
 
-VARLIB="/var/lib/monkeysphere"
-export VARLIB
+SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"
+export SYSDATADIR
 
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
@@ -914,7 +914,7 @@ unset RAW_AUTHORIZED_KEYS
 unset MONKEYSPHERE_USER
 
 # load configuration file
-[ -e ${MONKEYSPHERE_SERVER_CONFIG:="${ETC}/monkeysphere-server.conf"} ] && . "$MONKEYSPHERE_SERVER_CONFIG"
+[ -e ${MONKEYSPHERE_SERVER_CONFIG:="${SYSCONFIGDIR}/monkeysphere-server.conf"} ] && . "$MONKEYSPHERE_SERVER_CONFIG"
 
 # set empty config variable with ones from the environment, or with
 # defaults

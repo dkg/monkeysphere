@@ -53,10 +53,6 @@ File bug against ssh-keygen to see if we can get it to write to hash a
 When using ssh-proxycommand, if only host keys found are expired or
    revoked, then output loud warning with prompt, or fail hard.
 
-File bug against seahorse about how, when creating new primary keys,
-   it presents option for "RSA (sign only)" but then creates an "esca"
-   key.
-
 File bug against enigmail about lack of ability to create subkeys.
 
 Test and document what happens when any filesystem that the

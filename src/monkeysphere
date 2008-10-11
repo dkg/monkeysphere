@@ -270,7 +270,7 @@ unset HASH_KNOWN_HOSTS
 unset AUTHORIZED_KEYS
 
 # load global config
-[ -r "${ETC}/monkeysphere.conf" ] && . "${ETC}/monkeysphere.conf"
+[ -r "${SYSCONFIGDIR}/monkeysphere.conf" ] && . "${SYSCONFIGDIR}/monkeysphere.conf"
 
 # set monkeysphere home directory
 MONKEYSPHERE_HOME=${MONKEYSPHERE_HOME:="${HOME}/.monkeysphere"}
