@@ -13,9 +13,9 @@
 ########################################################################
 PGRM=$(basename $0)
 
-SHARE=${MONKEYSPHERE_SHARE:-"/usr/share/monkeysphere"}
-export SHARE
-. "${SHARE}/common" || exit 1
+SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
+export SYSSHAREDIR
+. "${SYSSHAREDIR}/common" || exit 1
 
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
@@ -36,7 +36,7 @@ umask 077
 usage() {
     cat <<EOF >&2
 usage: $PGRM <subcommand> [options] [args]
-MonkeySphere client tool.
+Monkeysphere client tool.
 
 subcommands:
  update-known_hosts (k) [HOST]...    update known_hosts file

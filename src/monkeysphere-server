@@ -13,9 +13,9 @@
 ########################################################################
 PGRM=$(basename $0)
 
-SHARE=${MONKEYSPHERE_SHARE:-"/usr/share/monkeysphere"}
-export SHARE
-. "${SHARE}/common" || exit 1
+SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
+export SYSSHAREDIR
+. "${SYSSHAREDIR}/common" || exit 1
 
 SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"
 export SYSDATADIR
@@ -36,7 +36,7 @@ RETURN=0
 usage() {
     cat <<EOF >&2
 usage: $PGRM <subcommand> [options] [args]
-MonkeySphere server admin tool.
+Monkeysphere server admin tool.
 
 subcommands:
  update-users (u) [USER]...          update user authorized_keys files
@@ -151,7 +151,7 @@ update_users() {
     fi
 
     # make sure the authorized_keys directory exists
-    mkdir -p "${VARLIB}/authorized_keys"
+    mkdir -p "${SYSDATADIR}/authorized_keys"
 
     # loop over users
     for uname in $unames ; do
@@ -221,7 +221,7 @@ update_users() {
 	    # process authorized_user_ids file, as monkeysphere
 	    # user
 	    su_monkeysphere_user \
-		". ${SHARE}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
+		". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
 	    RETURN="$?"
 	fi
 
@@ -240,7 +240,7 @@ update_users() {
 	chmod g+r "$AUTHORIZED_KEYS"
 
 	# move the resulting authorized_keys file into place
-	mv -f "$AUTHORIZED_KEYS" "${VARLIB}/authorized_keys/${uname}"
+	mv -f "$AUTHORIZED_KEYS" "${SYSDATADIR}/authorized_keys/${uname}"
 
 	# destroy temporary directory
 	rm -rf "$TMPLOC"
@@ -364,8 +364,8 @@ EOF
     # NOTE: assumes that the primary key is the proper key to use
     (umask 077 && \
 	gpg_host --export-secret-key "$fingerprint" | \
-	openpgp2ssh "$fingerprint" > "${VARLIB}/ssh_host_rsa_key")
-    log info "Private SSH host key output to file: ${VARLIB}/ssh_host_rsa_key"
+	openpgp2ssh "$fingerprint" > "${SYSDATADIR}/ssh_host_rsa_key")
+    log info "Private SSH host key output to file: ${SYSDATADIR}/ssh_host_rsa_key"
 }
 
 # extend the lifetime of a host key:
@@ -575,8 +575,8 @@ diagnostics() {
 	problemsfound=$(($problemsfound+1))
     fi
 
-    if ! [ -d "$VARLIB" ] ; then
-	echo "! no $VARLIB directory found.  Please create it."
+    if ! [ -d "$SYSDATADIR" ] ; then
+	echo "! no $SYSDATADIR directory found.  Please create it."
 	problemsfound=$(($problemsfound+1))
     fi
 
@@ -650,22 +650,22 @@ diagnostics() {
 	# Ensure that the ssh_host_rsa_key file is present and non-empty:
 	echo
 	echo "Checking host SSH key..."
-	if [ ! -s "${VARLIB}/ssh_host_rsa_key" ] ; then
-	    echo "! The host key as prepared for SSH (${VARLIB}/ssh_host_rsa_key) is missing or empty."
+	if [ ! -s "${SYSDATADIR}/ssh_host_rsa_key" ] ; then
+	    echo "! The host key as prepared for SSH (${SYSDATADIR}/ssh_host_rsa_key) is missing or empty."
 	    problemsfound=$(($problemsfound+1))
 	else
-	    if [ $(ls -l "${VARLIB}/ssh_host_rsa_key" | cut -f1 -d\ ) != '-rw-------' ] ; then
-		echo "! Permissions seem wrong for ${VARLIB}/ssh_host_rsa_key -- should be 0600."
+	    if [ $(ls -l "${SYSDATADIR}/ssh_host_rsa_key" | cut -f1 -d\ ) != '-rw-------' ] ; then
+		echo "! Permissions seem wrong for ${SYSDATADIR}/ssh_host_rsa_key -- should be 0600."
 		problemsfound=$(($problemsfound+1))
 	    fi
 
 	    # propose changes needed for sshd_config (if any)
-	    if ! grep -q "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$" "$sshd_config"; then
-		echo "! $sshd_config does not point to the monkeysphere host key (${VARLIB}/ssh_host_rsa_key)."
-		echo " - Recommendation: add a line to $sshd_config: 'HostKey ${VARLIB}/ssh_host_rsa_key'"
+	    if ! grep -q "^HostKey[[:space:]]\+${SYSDATADIR}/ssh_host_rsa_key$" "$sshd_config"; then
+		echo "! $sshd_config does not point to the monkeysphere host key (${SYSDATADIR}/ssh_host_rsa_key)."
+		echo " - Recommendation: add a line to $sshd_config: 'HostKey ${SYSDATADIR}/ssh_host_rsa_key'"
 		problemsfound=$(($problemsfound+1))
 	    fi
-	    if badhostkeys=$(grep -i '^HostKey' "$sshd_config" | grep -v "^HostKey[[:space:]]\+${VARLIB}/ssh_host_rsa_key$") ; then
+	    if badhostkeys=$(grep -i '^HostKey' "$sshd_config" | grep -v "^HostKey[[:space:]]\+${SYSDATADIR}/ssh_host_rsa_key$") ; then
 		echo "! $sshd_config refers to some non-monkeysphere host keys:"
 		echo "$badhostkeys"
 		echo " - Recommendation: remove the above HostKey lines from $sshd_config"
@@ -689,12 +689,12 @@ diagnostics() {
     echo
     echo "Checking for MonkeySphere-enabled public-key authentication for users ..."
     # Ensure that User ID authentication is enabled:
-    if ! grep -q "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$" "$sshd_config"; then
+    if ! grep -q "^AuthorizedKeysFile[[:space:]]\+${SYSDATADIR}/authorized_keys/%u$" "$sshd_config"; then
 	echo "! $sshd_config does not point to monkeysphere authorized keys."
-	echo " - Recommendation: add a line to $sshd_config: 'AuthorizedKeysFile ${VARLIB}/authorized_keys/%u'"
+	echo " - Recommendation: add a line to $sshd_config: 'AuthorizedKeysFile ${SYSDATADIR}/authorized_keys/%u'"
 	problemsfound=$(($problemsfound+1))
     fi
-    if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' "$sshd_config" | grep -v "^AuthorizedKeysFile[[:space:]]\+${VARLIB}/authorized_keys/%u$") ; then
+    if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' "$sshd_config" | grep -v "^AuthorizedKeysFile[[:space:]]\+${SYSDATADIR}/authorized_keys/%u$") ; then
 	echo "! $sshd_config refers to non-monkeysphere authorized_keys files:"
 	echo "$badauthorizedkeys"
 	echo " - Recommendation: remove the above AuthorizedKeysFile lines from $sshd_config"
@@ -927,8 +927,8 @@ MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkey
 # other variables
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
 REQUIRED_USER_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_USER_KEY_CAPABILITY:="a"}
-GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${VARLIB}/gnupg-host"}
-GNUPGHOME_AUTHENTICATION=${MONKEYSPHERE_GNUPGHOME_AUTHENTICATION:="${VARLIB}/gnupg-authentication"}
+GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${SYSDATADIR}/gnupg-host"}
+GNUPGHOME_AUTHENTICATION=${MONKEYSPHERE_GNUPGHOME_AUTHENTICATION:="${SYSDATADIR}/gnupg-authentication"}
 
 # export variables needed in su invocation
 export DATE
