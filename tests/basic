@@ -23,7 +23,9 @@ gpgadmin() {
 # cleanup:
 
 cleanup() {
-    rm -f ./ssh-socket
+    # FIXME: stop the sshd process
+
+    rm -f "$SOCKET"
 
     # FIXME: how should we clear out the temporary $VARLIB?
 
@@ -33,20 +35,26 @@ cleanup() {
 ## set up some variables to ensure that we're operating strictly in
 ## the tests, not system-wide:
 
-# FIXME: can we override $VARLIB ?
-# FIXME: can we override $ETC ?
+TESTDIR=$(pwd)
+export MONKEYSPHERE_SYSDATADIR="$TESTDIR"/var
+export MONKEYSPHERE_SYSCONFIGDIR="$TESTDIR"/etc
+export SOCKET="$TESTDIR"/ssh-socket
+
+### SERVER TESTS
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
-export PATH=$(pwd)/../src:$(pwd)/../src/keytrans:$PATH
-export MONKEYSPHERE_SHARE=$(pwd)/../src
+export PATH="$TESTDIR"/../src:"$TESTDIR"/../src/keytrans:"$PATH"
+export MONKEYSPHERE_SHARE="$TESTDIR"/../src
 
-# create a new host key, certify it with the "Admin's Key".
+# create a new host key
 
 echo | monkeysphere-server gen-key --expire 2d
 
 HOSTKEYID=$( monkeysphere-server show-key | tail -n1 | cut -f3 -d\  )
 
+# certify it with the "Admin's Key".
+# (this would normally be done via keyservers)
 monkeysphere-server gpg-authentication-cmd "--armor --export $HOSTKEYID" | gpgadmin --import
 
 gpgadmin --sign-key "$HOSTKEYID"
@@ -57,13 +65,22 @@ gpgadmin --sign-key "$HOSTKEYID"
 # indicate that the "Admin's" key is an identity certifier for the
 # host
 
-monkeysphere-server add-identity-certifier ./admin/pubkey.gpg
+monkeysphere-server add-identity-certifier ./home/admin/.gnupg/pubkey.gpg
+
+# write the sshd_config
+cat <<EOF > "$TESTDIR"/etc/ssh/sshd_config
+HostKey ${TESTDIR}/etc/ssh/ssh_host_rsa_key
+EOF
 
 # launch sshd with the new host key.
 
-mkfifo ./ssh-socket
+mkfifo "$SOCKET"
 
-sshd -f ./sshd_config -i <>./ssh-socket
+/usr/sbin/sshd -f "$TESTDIR"/etc/ssh/sshd_config -i <>"$SOCKET"
+
+
+
+### TESTUSER TESTS
 
 # connect to sample sshd host key, using monkeysphere to verify the
 # identity before connection.
@@ -74,5 +91,4 @@ sshd -f ./sshd_config -i <>./ssh-socket
 # log in.
 
 ## FIXME: implement!
-
 
