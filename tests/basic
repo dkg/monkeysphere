@@ -15,26 +15,22 @@
 # fail on fail
 set -e
 
-# these tests assume a commonly-trusted "Admin's key", a fake key
-# permanently stored in ./home/admin/.gnupg:
+# gpg command for test admin user
 gpgadmin() {
-    GNUPGHOME="$TESTDIR"/home/admin/.gnupg gpg "$@"
+    GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg "$@"
 }
 
 # cleanup:
 cleanup() {
 
+    echo
     read -p "press enter to cleanup and remove tmp:"
 
-    # FIXME: stop the sshd process
+    echo "### stop sshd..."
+    kill "$SSHD_PID"
 
-    echo
     echo "### removing temp dir..."
     rm -rf "$TEMPDIR"
-
-    # FIXME: how should we clear out the temporary $VARLIB?
-
-    # FIXME: clear out ssh client config file and known hosts.
 }
 
 ## setup trap
@@ -66,6 +62,12 @@ export MONKEYSPHERE_CHECK_KEYSERVER=false
 SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
 
+# copy in admin and testuser home to tmp
+echo "### copying admin and testuser homes..."
+cp -r "$TESTDIR"/home/admin "$TEMPDIR"/
+cp -r "$TESTDIR"/home/testuser "$TEMPDIR"/
+
+
 
 ### SERVER TESTS
 
@@ -96,11 +98,9 @@ echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 # FIXME: how can we test publish-key without flooding junk into the
 # keyservers?
 
-# indicate that the "Admin's" key is an identity certifier for the
-# host
-
+# add admin as identity certifier for testhost
 echo "### adding admin as certifier..."
-echo y | monkeysphere-server add-identity-certifier "$TESTDIR"/home/admin/.gnupg/pubkey.gpg
+echo y | monkeysphere-server add-identity-certifier "$TEMPDIR"/admin/.gnupg/pubkey.gpg
 
 # initialize base sshd_config
 cp etc/ssh/sshd_config "$SSHD_CONFIG"
@@ -113,13 +113,10 @@ EOF
 # launch test sshd with the new host key.
 echo "### starting sshd..."
 socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -d -d -d -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
+export SSHD_PID=$!
 
 
 ### TESTUSER TESTS
-
-# copy testuser home directory into temp dir
-echo "### seting up testuser home..."
-cp -r "$TESTDIR"/home/testuser "$TEMPDIR"/
 
 # generate an auth subkey for the test user
 echo "### generating key for testuser..."
@@ -130,9 +127,6 @@ MONKEYSPHERE_GNUPGHOME="$TEMPDIR"/testuser/.gnupg \
 echo "### export server key to testuser..."
 gpgadmin --armor --export "$HOSTKEYID" | \
     GNUPGHOME="$TEMPDIR"/testuser/.gnupg gpg --import
-
-#GNUPGHOME="$TEMPDIR"/testuser/.gnupg gpg --list-keys
-#read -p "?"
 
 # connect to test sshd, using monkeysphere to verify the identity
 # before connection.
