@@ -42,19 +42,6 @@ index f207e2c..29c7b6a 100644
  Monkeysphere authentication GNUPG home directory.
  
  .SH AUTHOR
-diff --git src/monkeysphere-server src/monkeysphere-server
-index e590f3c..f46e8bb 100755
---- src/monkeysphere-server
-+++ src/monkeysphere-server
-@@ -17,7 +17,7 @@ SHARE=${MONKEYSPHERE_SHARE:="/usr/share/monkeysphere"}
- export SHARE
- . "${SHARE}/common" || exit 1
- 
--VARLIB="/var/lib/monkeysphere"
-+VARLIB="/var/monkeysphere"
- export VARLIB
- 
- # UTC date in ISO 8601 format if needed
 diff --git doc/getting-started-admin.mdwn doc/getting-started-admin.mdwn
 index 6c8ad53..67fdda1 100644
 --- doc/getting-started-admin.mdwn
@@ -77,3 +64,27 @@ index 6c8ad53..67fdda1 100644
  
  And then read the section below about how to ensure these files are
  maintained.  You'll need to restart `sshd` to have your changes take
+--- src/monkeysphere-server.orig	2008-10-25 18:01:19.000000000 -0400
++++ src/monkeysphere-server	2008-10-25 18:01:24.000000000 -0400
+@@ -17,7 +17,7 @@
+ export SYSSHAREDIR
+ . "${SYSSHAREDIR}/common" || exit 1
+ 
+-SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
++SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/monkeysphere"}
+ export SYSDATADIR
+ 
+ # UTC date in ISO 8601 format if needed
+--- etc/gnupg-authentication.conf.orig	2008-10-25 18:02:58.000000000 -0400
++++ etc/gnupg-authentication.conf	2008-10-25 18:03:04.000000000 -0400
+@@ -4,8 +4,8 @@
+ # It is highly recommended that you
+ #    DO NOT MODIFY
+ # these variables.
+-primary-keyring /var/lib/monkeysphere/gnupg-authentication/pubring.gpg
+-keyring /var/lib/monkeysphere/gnupg-host/pubring.gpg
++primary-keyring /var/monkeysphere/gnupg-authentication/pubring.gpg
++keyring /var/monkeysphere/gnupg-host/pubring.gpg
+ 
+ # PGP keyserver to use for PGP queries.
+ keyserver hkp://pgp.mit.edu
