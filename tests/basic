@@ -88,8 +88,7 @@ EOF
 
 # launch sshd with the new host key.
 echo "-- starting sshd..."
-mkfifo "$SOCKET"
-/usr/sbin/sshd -f "$TEMPDIR"/sshd_config -i <>"$SOCKET"
+socat EXEC:'/usr/sbin/sshd -f '"$TEMPDIR"/sshd_config' -i -d -d -d -D -e' "UNIX-LISTEN:${TEMPDIR/socket}" &
 
 
 ### TESTUSER TESTS
