@@ -91,9 +91,12 @@ gpgadmin --sign-key "$HOSTKEYID"
 echo "### adding admin as certifier..."
 monkeysphere-server add-identity-certifier "$TESTDIR"/home/admin/.gnupg/pubkey.gpg
 
+# initialize base sshd_config
+cp etc/ssh/sshd_config "$TEMPDIR"/sshd_config
 # write the sshd_config
-cat <<EOF > "$SSHD_CONFIG"
+cat <<EOF >> "$SSHD_CONFIG"
 HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
+AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authorized_keys/%u
 EOF
 
 # launch test sshd with the new host key.
