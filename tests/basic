@@ -15,10 +15,9 @@
 # fail on fail
 set -e
 
-# these tests assume a commonly-trusted "Admin's key", a fake key
-# permanently stored in ./home/admin/.gnupg:
+# gpg command for test admin user
 gpgadmin() {
-    GNUPGHOME="$TESTDIR"/home/admin/.gnupg gpg "$@"
+    GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg "$@"
 }
 
 # cleanup:
@@ -63,6 +62,12 @@ export MONKEYSPHERE_CHECK_KEYSERVER=false
 SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
 
+# copy in admin and testuser home to tmp
+echo "### copying admin and testuser homes..."
+cp -r "$TESTDIR"/home/admin "$TEMPDIR"/
+cp -r "$TESTDIR"/home/testuser "$TEMPDIR"/
+
+
 
 ### SERVER TESTS
 
@@ -95,7 +100,7 @@ echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 
 # add admin as identity certifier for testhost
 echo "### adding admin as certifier..."
-echo y | monkeysphere-server add-identity-certifier "$TESTDIR"/home/admin/.gnupg/pubkey.gpg
+echo y | monkeysphere-server add-identity-certifier "$TEMPDIR"/admin/.gnupg/pubkey.gpg
 
 # initialize base sshd_config
 cp etc/ssh/sshd_config "$SSHD_CONFIG"
@@ -108,14 +113,10 @@ EOF
 # launch test sshd with the new host key.
 echo "### starting sshd..."
 socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -d -d -d -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
-
 export SSHD_PID=$!
 
-### TESTUSER TESTS
 
-# copy testuser home directory into temp dir
-echo "### seting up testuser home..."
-cp -r "$TESTDIR"/home/testuser "$TEMPDIR"/
+### TESTUSER TESTS
 
 # generate an auth subkey for the test user
 echo "### generating key for testuser..."
