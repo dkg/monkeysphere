@@ -18,7 +18,6 @@ gpgadmin() {
     GNUPGHOME="$TESTDIR"/home/admin/.gnupg gpg "$@"
 }
 
-
 # cleanup:
 cleanup() {
     # FIXME: stop the sshd process
@@ -33,7 +32,7 @@ cleanup() {
 }
 
 ## setup trap
-#trap cleanup EXIT
+trap cleanup EXIT
 
 ## set up some variables to ensure that we're operating strictly in
 ## the tests, not system-wide:
@@ -61,6 +60,7 @@ export MONKEYSPHERE_CHECK_KEYSERVER=false
 SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
 
+
 ### SERVER TESTS
 
 # create the temp gnupghome directories
@@ -68,7 +68,7 @@ mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/gnupg-host
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication
 
 # add the quick-random option to the gpg host config
-echo "quick-random" >> "$MONKEYSPHERE_SYSCONFIGDIR"/gnupg-host.conf
+echo "quick-random" >> "$MONKEYSPHERE_SYSCONFIGDIR"/gnupg-host/gpg.conf
 
 # create a new host key
 echo "### generating server key..."
@@ -114,6 +114,10 @@ echo "### generating key for testuser..."
 MONKEYSPHERE_GNUPGHOME="$TEMPDIR"/testuser/.gnupg \
     monkeysphere gen-subkey --expire 0
 
+# add server key to testuser keychain
+monkeysphere-server gpg-authentication-cmd "--armor --export $HOSTKEYID" | \
+    GNUPGHOME="$TEMPDIR"/testuser/.gnupg gpg --import
+
 # connect to test sshd, using monkeysphere to verify the identity
 # before connection.
 echo "### connecting to sshd socket..."
@@ -122,5 +126,8 @@ ssh -oProxyCommand="$PROXY_COMMAND" testhost
 
 # create a new client side key, certify it with the "CA", use it to
 # log in.
-
 ## FIXME: implement!
+
+
+### FINISH
+read -p "press enter to cleanup tmp:"
