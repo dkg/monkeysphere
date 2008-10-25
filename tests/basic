@@ -92,7 +92,7 @@ echo "### adding admin as certifier..."
 monkeysphere-server add-identity-certifier "$TESTDIR"/home/admin/.gnupg/pubkey.gpg
 
 # initialize base sshd_config
-cp etc/ssh/sshd_config "$TEMPDIR"/sshd_config
+cp etc/ssh/sshd_config "$SSHD_CONFIG"
 # write the sshd_config
 cat <<EOF >> "$SSHD_CONFIG"
 HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
