@@ -681,10 +681,13 @@ diagnostics() {
 # FIXME: look to see that the ownertrust rules are set properly on the
 #    authentication keyring
 
-# FIXME:  make sure that at least one identity certifier exists
+# FIXME: make sure that at least one identity certifier exists
 
 # FIXME: look at the timestamps on the monkeysphere-generated
 # authorized_keys files -- warn if they seem out-of-date.
+
+# FIXME: check for a cronjob that updates monkeysphere-generated
+# authorized_keys?
 
     echo
     echo "Checking for MonkeySphere-enabled public-key authentication for users ..."
