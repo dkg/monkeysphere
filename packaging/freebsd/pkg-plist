@@ -16,4 +16,3 @@ etc/monkeysphere/monkeysphere-server.conf.sample
 @dirrm share/doc/monkeysphere
 @dirrm share/monkeysphere
 @dirrm etc/monkeysphere
-

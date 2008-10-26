@@ -41,16 +41,14 @@ index f207e2c..360408e 100644
  System-wide monkeysphere config file.
  .TP
  /var/lib/monkeysphere/authorized_keys/USER
-diff --git src/common src/common
-index c8a7db6..cb4f8e1 100644
---- src/common
-+++ src/common
+--- src/common.orig	2008-10-12 14:58:00.000000000 -0400
++++ src/common	2008-10-25 17:40:34.000000000 -0400
 @@ -16,7 +16,7 @@
  ### COMMON VARIABLES
  
  # managed directories
--ETC="/etc/monkeysphere"
-+ETC="/usr/local/etc/monkeysphere"
- export ETC
+-SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"/etc/monkeysphere"}
++SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"/usr/local/etc/monkeysphere"}
+ export SYSCONFIGDIR
  
  ########################################################################

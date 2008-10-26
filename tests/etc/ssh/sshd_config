@@ -1,0 +1,23 @@
+# Base sshd_config for monkeysphere test
+
+# HostKey and AuthorizedKeysFile lines will be added dynamically
+# during test.
+
+# goal: minimal ssh configuration to do public key authentication.
+
+Protocol 2
+PubkeyAuthentication yes
+HostbasedAuthentication no
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+PasswordAuthentication no
+KerberosAuthentication no
+GSSAPIAuthentication no
+X11Forwarding no
+PrintMotd no
+PrintLastLog no
+TCPKeepAlive no
+AcceptEnv LANG LC_*
+UsePAM no
+UsePrivilegeSeparation no
+LogLevel DEBUG

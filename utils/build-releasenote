@@ -28,7 +28,8 @@ checksums
 temprelease=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
 trap "rm -f $temprelease" EXIT
 set -e
-head -n$(( $(grep -n '^-----BEGIN PGP SIGNED MESSAGE-----$' website/download.mdwn | head -n1 | cut -f1 -d:) - 1 )) website/download.mdwn >$temprelease
+head -n$(( $(grep -n '^-----BEGIN PGP SIGNED MESSAGE-----$' website/download.mdwn | head -n1 | cut -f1 -d:) - 1 )) website/download.mdwn | \
+ sed -e 's|http://archive\.monkeysphere\.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_[[:digit:].]\+\.orig\.tar\.gz|http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_'"${VERSION%%-*}"'.orig.tar.gz|g' >$temprelease
 checksums | gpg --no-tty --clearsign --default-key EB8AF314 >>$temprelease
 cat utils/download.mdwn.footer >>$temprelease
 mv "$temprelease" website/download.mdwn

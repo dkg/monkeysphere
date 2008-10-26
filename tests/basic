@@ -2,38 +2,46 @@
 
 # Tests to ensure that the monkeysphere is working
 
-# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-# Date: 2008-09-13 13:40:15-0400
+# Authors: 
+#   Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#   Jameson Rollins <jrollins@fifthhorseman.net>
+# Copyright: 2008
+# License: GPL v3 or later
 
-# these tests might be best run under fakeroot, particularly the
-# "server-side" tests.  Using fakeroot, they should be able to be run
+# these tests should all be able to
 # as a non-privileged user.
 
-# NOTE: these tests have *not* themselves been tested yet
-# (2008-09-13).  Please exercise with caution!
+# all subcommands in this script should complete without failure:
+set -e
 
-# these tests assume a commonly-trusted "Admin's key", a fake key
-# permanently stored in ./home/admin/.gnupg:
+# gpg command for test admin user
 gpgadmin() {
-    GNUPGHOME="$TESTDIR"/home/admin/.gnupg gpg "$@"
+    GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg "$@"
 }
 
+failed_cleanup() {
+# FIXME: can we be more verbose here?
+  echo 'FAILED!'
+  read -p "press enter to cleanup and remove tmp:"
+
+  cleanup
+}
 
 # cleanup:
 cleanup() {
-    # FIXME: stop the sshd process
+    if ( ps "$SSHD_PID" >/dev/null ) ; then 
+	echo "### stopping still-running sshd..."
+	kill "$SSHD_PID"
+    fi
 
-    echo
-    echo "-- removing temp dir..."
+    echo "### removing temp dir..."
     rm -rf "$TEMPDIR"
 
-    # FIXME: how should we clear out the temporary $VARLIB?
-
-    # FIXME: clear out ssh client config file and known hosts.
+    wait
 }
 
 ## setup trap
-#trap cleanup EXIT
+trap failed_cleanup EXIT
 
 ## set up some variables to ensure that we're operating strictly in
 ## the tests, not system-wide:
@@ -42,6 +50,10 @@ export TESTDIR=$(pwd)
 
 # make temp dir
 TEMPDIR="$TESTDIR"/tmp
+if [ -e "$TEMPDIR" ] ; then
+    echo "tempdir '$TEMPDIR' already exists."
+    exit 1
+fi
 mkdir "$TEMPDIR"
 
 # Use the local copy of executables first, instead of system ones.
@@ -52,62 +64,108 @@ export MONKEYSPHERE_SYSDATADIR="$TEMPDIR"
 export MONKEYSPHERE_SYSCONFIGDIR="$TEMPDIR"
 export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src
 export MONKEYSPHERE_MONKEYSPHERE_USER="$USER"
+export MONKEYSPHERE_CHECK_KEYSERVER=false
+
+SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
+
+# copy in admin and testuser home to tmp
+echo "### copying admin and testuser homes..."
+cp -a "$TESTDIR"/home/admin "$TEMPDIR"/
+cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
+
+cat <<EOF >> "$TEMPDIR"/testuser/.ssh/config
+UserKnownHostsFile $TEMPDIR/testuser/.ssh/known_hosts
+ProxyCommand $TEMPDIR/testuser/.ssh/proxy-command %h %p $SOCKET
+EOF
+
+cat <<EOF >> "$TEMPDIR"/testuser/.monkeysphere/monkeysphere.conf
+KNOWN_HOSTS=$TEMPDIR/testuser/.ssh/known_hosts
+EOF
+
+# set up a simple default monkeysphere-server.conf
+cat <<EOF >> "$TEMPDIR"/monkeysphere-server.conf
+AUTHORIZED_USER_IDS="$TEMPDIR/testuser/.monkeysphere/authorized_user_ids"
+EOF
 
 ### SERVER TESTS
 
-# create the temp gnupghome directories
+# setup monkeysphere temp gnupghome directories
 mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/gnupg-host
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication
+mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authorized_keys
+cat <<EOF > "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication/gpg.conf
+primary-keyring ${MONKEYSPHERE_SYSDATADIR}/gnupg-authentication/pubring.gpg
+keyring ${MONKEYSPHERE_SYSDATADIR}/gnupg-host/pubring.gpg
+EOF
 
 # create a new host key
-echo "-- generating server key..."
-echo | monkeysphere-server gen-key --length 1024 --expire 0
+echo "### generating server key..."
+# add gpg.conf with quick-random
+echo "quick-random" >> "$MONKEYSPHERE_SYSCONFIGDIR"/gnupg-host/gpg.conf
+echo | monkeysphere-server gen-key --length 1024 --expire 0 testhost
+# remove the gpg.conf
+rm "$MONKEYSPHERE_SYSCONFIGDIR"/gnupg-host/gpg.conf
 
 HOSTKEYID=$( monkeysphere-server show-key | tail -n1 | cut -f3 -d\  )
 
 # certify it with the "Admin's Key".
 # (this would normally be done via keyservers)
-echo "-- certifying server key..."
+echo "### certifying server key..."
 monkeysphere-server gpg-authentication-cmd "--armor --export $HOSTKEYID" | gpgadmin --import
-gpgadmin --sign-key "$HOSTKEYID"
+echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 
 # FIXME: how can we test publish-key without flooding junk into the
 # keyservers?
 
-# indicate that the "Admin's" key is an identity certifier for the
-# host
+# add admin as identity certifier for testhost
+echo "### adding admin as certifier..."
+echo y | monkeysphere-server add-identity-certifier "$TEMPDIR"/admin/.gnupg/pubkey.gpg
 
-echo "-- adding admin as certifier..."
-monkeysphere-server add-identity-certifier "$TESTDIR"/home/admin/.gnupg/pubkey.gpg
-
+# initialize base sshd_config
+cp etc/ssh/sshd_config "$SSHD_CONFIG"
 # write the sshd_config
-cat <<EOF > "$TEMPDIR"/sshd_config
+cat <<EOF >> "$SSHD_CONFIG"
 HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
+AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authorized_keys/%u
 EOF
 
-# launch sshd with the new host key.
-echo "-- starting sshd..."
-socat EXEC:'/usr/sbin/sshd -f '"$TEMPDIR"/sshd_config' -i -d -d -d -D -e' "UNIX-LISTEN:${TEMPDIR/socket}" &
-
+# launch test sshd with the new host key.
+echo "### starting sshd..."
+socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
+export SSHD_PID=$!
 
 ### TESTUSER TESTS
 
-# copy testuser home directory into temp dir
-cp -r "$TESTDIR"/home/testuser "$TEMPDIR"/
-
 # generate an auth subkey for the test user
-echo "-- generating key for testuser..."
-MONKEYSPHERE_GNUPGHOME="$TEMPDIR"/testuser/.gnupg \
-    monkeysphere gen-subkey --expire 0
+echo "### generating key for testuser..."
+export GNUPGHOME="$TEMPDIR"/testuser/.gnupg
+export SSH_ASKPASS="$TEMPDIR"/testuser/.ssh/askpass
+export MONKEYSPHERE_HOME="$TEMPDIR"/testuser/.monkeysphere
 
-# connect to sample sshd host key, using monkeysphere to verify the
-# identity before connection.
+monkeysphere gen-subkey --expire 0
 
-## FIXME: implement!
+# add server key to testuser keychain
+echo "### export server key to testuser..."
+gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 
-# create a new client side key, certify it with the "CA", use it to
-# log in.
+# teach the "server" about the testuser's key
+echo "### export testuser key to server..."
+gpg --export testuser | monkeysphere-server gpg-authentication-cmd --import
+echo "### update server authorized_keys file for this testuser..."
+monkeysphere-server update-users "$USER"
 
-## FIXME: implement!
+# connect to test sshd, using monkeysphere-ssh-proxycommand to verify
+# the identity before connection.  This should work in both directions!
+echo "### testuser connecting to sshd socket..."
 
+ssh-agent bash -c \
+   "monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config testhost true"
+
+trap - EXIT
+
+echo
+echo "Monkeysphere basic tests completed successfully!"
+echo
+
+cleanup

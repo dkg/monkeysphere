@@ -22,7 +22,7 @@ LIB_DEPENDS=	gnutls.26:${PORTSDIR}/security/gnutls
 RUN_DEPENDS=    base64:${PORTSDIR}/converters/base64 \
 		gpg:${PORTSDIR}/security/gnupg \
 		lockfile:${PORTSDIR}/mail/procmail \
-		getopt:${PORTSDIR}/misc/getopt \
+		/usr/local/bin/getopt:${PORTSDIR}/misc/getopt \
 		bash:${PORTSDIR}/shells/bash
 
 MAN1=		monkeysphere.1 openpgp2ssh.1 monkeysphere-ssh-proxycommand.1
@@ -30,7 +30,7 @@ MAN7=		monkeysphere.7
 MAN8=		monkeysphere-server.8
 MANCOMPRESSED= yes
 
-MAKE_ARGS= ETCPREFIX=/usr/local MANPREFIX=/usr/local/man ETCSUFFIX=.sample
+MAKE_ARGS= ETCPREFIX=${PREFIX} MANPREFIX=${PREFIX}/man ETCSUFFIX=.sample
 
 # get rid of cruft after the patching:
 post-patch:
