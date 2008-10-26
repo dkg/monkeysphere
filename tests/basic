@@ -126,6 +126,9 @@ HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
 AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authorized_keys/%u
 EOF
 
+# FIXME: teach the "server" about the testuser's key, and update the
+# fake authorized_keys file for testuser!
+
 # launch test sshd with the new host key.
 echo "### starting sshd..."
 socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
@@ -150,7 +153,7 @@ gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 echo "### testuser connecting to sshd socket..."
 
 ssh-agent bash -c \
-   'monkeysphere subkey-to-ssh-agent && ssh -F "$TEMPDIR"/testuser/.ssh/config testhost'
+   "monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config testhost"
 
 trap - EXIT
 cleanup
