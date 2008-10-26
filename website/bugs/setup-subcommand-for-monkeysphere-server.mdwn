@@ -27,3 +27,30 @@ Would either of these be useful?  Are they confusing?  Could they be
 clarified?
 
 --dkg
+
+---
+
+I'm not sure how I feel about this idea.  I feel like it should just
+be the job of the package to setup the initial server environment.  I
+don't really feel like the admin should have to worry about it.  But
+then again, I can sort of see it from the point of view of someone
+just installing from source (but who the hell really does that
+anymore anyway?).
+
+I'm also sort of mixed about the setup --full idea as well.  At first
+I thought that it wasn't a good idea, and that I didn't like the idea
+of monkeysphere monkeying around with the config files of other
+packages (ie. ssh).  However, once I started to think about setting up
+monkeysphere on lots of servers, I started to think that it's maybe a
+good idea.  It might be good to have a single command that would just
+end with the server being on the monkeysphere:
+
+  * generate the server key
+  * modify sshd to point to it
+  * restart ssh
+  * publish the key to the keyserver
+
+So I'm starting to think that this might be a good idea.  Also curious
+what other think.
+
+-- jrollins
