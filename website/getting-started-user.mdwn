@@ -104,6 +104,60 @@ subkey to your ssh agent by running:
 
 FIXME: using the key with a single ssh connection?
 
+Establish trust
+---------------
+
+Now that you have the above setup, you will need to establish an
+acceptable trust path to the admin(s) of a monkeysphere-enabled server
+that you will be connecting to. You need to do this because the admin
+is certifying the host, and you need a mechanism to validate that
+certification. The only way to do that is by indicating who you trust
+to certify hosts. This is a two step process: first you must sign the
+key, and then you have to indicate a trust level.
+
+The process of signing another key is outside the scope of this
+document, however the gnupg README details the signing process and you
+can find good [documentation
+](http://www.debian.org/events/keysigning) online detailing this
+process.
+
+If you have signed your admins' key, you need to denote some kind of
+trust to that key. To do this you should edit the key and use the
+'trust' command. For the Monkeysphere to trust the assertions that are
+made about a host, you need full calculated validity to the host
+certifiers. This can be done either by giving full trust to one
+host-certifying key, or by giving marginal trust to three different
+host-certifiers. In the following we demonstrate how to add full trust
+validity to a host-certifying key:
+
+     $ gpg --edit-key <admin_keyid>
+     Command> trust
+     pub  2048R/3B757F8C  created: 2008-06-19  expires: 2008-11-16  usage: CA  
+                     trust: unknown       validity: full
+     [  unknown  ] (1). ssh://monkeysphere.info
+     [  unknown  ] (2)  ssh://george.riseup.net
+
+     Please decide how far you trust this user to correctly verify other users' keys
+     (by looking at passports, checking fingerprints from different sources, etc.)
+
+       1 = I don't know or won't say
+       2 = I do NOT trust
+       3 = I trust marginally
+       4 = I trust fully
+       5 = I trust ultimately
+       m = back to the main menu
+
+       Your decision? 4 
+
+Note: Due to a limitation with gnupg, it is not currently possible to
+limit the domain scope properly, which means that if you fully trust
+an admin, this admin can currently assert host verification for any
+hosts.
+
+Because the Monkeysphre relies on GPG's definition of the OpenPGP web
+of trust, it is important to understand [how GPG calculates User ID
+validity for a key](/trust-models).
+
 
 Miscellaneous
 -------------
