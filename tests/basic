@@ -71,14 +71,14 @@ echo "### copying admin and testuser homes..."
 cp -a "$TESTDIR"/home/admin "$TEMPDIR"/
 cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
 
-cat <<EOF > "$TEMPDIR"/testuser/.ssh/config
+cat <<EOF >> "$TEMPDIR"/testuser/.ssh/config
 UserKnownHostsFile $TEMPDIR/testuser/.ssh/known_hosts
+ProxyCommand $TEMPDIR/testuser/.ssh/proxy-command %h %p $SOCKET
 EOF
 
-cat <<EOF > "$TEMPDIR"/testuser/.monkeysphere/monkeysphere.conf
+cat <<EOF >> "$TEMPDIR"/testuser/.monkeysphere/monkeysphere.conf
 KNOWN_HOSTS=$TEMPDIR/testuser/.ssh/known_hosts
 EOF
-
 
 ### SERVER TESTS
 
@@ -142,7 +142,6 @@ gpgadmin --armor --export "$HOSTKEYID" | \
 # connect to test sshd, using monkeysphere-ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
 echo "### testuser connecting to sshd socket..."
-PROXY_COMMAND="monkeysphere-ssh-proxycommand --no-connect %h && socat STDIO UNIX:${SOCKET}"
 GNUPGHOME="$TEMPDIR"/testuser/.gnupg \
 MONKEYSPHERE_HOME="$TEMPDIR"/testuser/.monkeysphere \
- ssh -F "$TEMPDIR"/testuser/.ssh/config -v -v -v -oProxyCommand="$PROXY_COMMAND" testhost
+ ssh -F "$TEMPDIR"/testuser/.ssh/config -v -v -v testhost
