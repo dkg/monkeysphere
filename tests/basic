@@ -121,6 +121,7 @@ export SSHD_PID=$!
 # generate an auth subkey for the test user
 echo "### generating key for testuser..."
 MONKEYSPHERE_GNUPGHOME="$TEMPDIR"/testuser/.gnupg \
+SSH_ASKPASS=echo \
     monkeysphere gen-subkey --expire 0
 
 # add server key to testuser keychain
@@ -128,12 +129,10 @@ echo "### export server key to testuser..."
 gpgadmin --armor --export "$HOSTKEYID" | \
     GNUPGHOME="$TEMPDIR"/testuser/.gnupg gpg --import
 
-# connect to test sshd, using monkeysphere to verify the identity
-# before connection.
+# connect to test sshd, using monkeysphere-ssh-proxycommand to verify
+# the identity before connection.  This should work in both directions!
 echo "### testuser connecting to sshd socket..."
 PROXY_COMMAND="monkeysphere-ssh-proxycommand --no-connect %h && socat STDIO UNIX:${SOCKET}"
-GNUPGHOME="$TEMPDIR"/testuser/.gnupg ssh -oProxyCommand="$PROXY_COMMAND" testhost
+GNUPGHOME="$TEMPDIR"/testuser/.gnupg ssh -v -v -v -oProxyCommand="$PROXY_COMMAND" testhost
 
-# create a new client side key, certify it with the "CA", use it to
-# log in.
-## FIXME: implement!
+
