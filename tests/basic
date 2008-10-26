@@ -22,18 +22,16 @@ gpgadmin() {
 failed_cleanup() {
 # FIXME: can we be more verbose here?
   echo 'FAILED!'
+  read -p "press enter to cleanup and remove tmp:"
+
   cleanup
 }
 
 # cleanup:
 cleanup() {
-
-    echo
-    read -p "press enter to cleanup and remove tmp:"
-
-    if ( ps $SSHD_PID >/dev/null ) ; then 
+    if ( ps "$SSHD_PID" >/dev/null ) ; then 
 	echo "### stopping still-running sshd..."
-	kill $SSHD_PID
+	kill "$SSHD_PID"
     fi
 
     echo "### removing temp dir..."
@@ -162,7 +160,12 @@ monkeysphere-server update-users "$USER"
 echo "### testuser connecting to sshd socket..."
 
 ssh-agent bash -c \
-   "monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config testhost"
+   "monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config testhost true"
 
 trap - EXIT
+
+echo
+echo "Monkeysphere basic tests completed successfully!"
+echo
+
 cleanup
