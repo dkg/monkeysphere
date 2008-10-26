@@ -2,22 +2,27 @@
 
 # Tests to ensure that the monkeysphere is working
 
-# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-# Date: 2008-09-13 13:40:15-0400
+# Authors: 
+#   Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#   Jameson Rollins <jrollins@fifthhorseman.net>
+# Copyright: 2008
+# License: GPL v3 or later
 
-# these tests might be best run under fakeroot, particularly the
-# "server-side" tests.  Using fakeroot, they should be able to be run
+# these tests should all be able to
 # as a non-privileged user.
 
-# NOTE: these tests have *not* themselves been tested yet
-# (2008-09-13).  Please exercise with caution!
-
-# fail on fail
+# all subcommands in this script should complete without failure:
 set -e
 
 # gpg command for test admin user
 gpgadmin() {
     GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg "$@"
+}
+
+failed_cleanup() {
+# FIXME: can we be more verbose here?
+  echo 'FAILED!'
+  cleanup
 }
 
 # cleanup:
@@ -38,7 +43,7 @@ cleanup() {
 }
 
 ## setup trap
-trap cleanup EXIT
+trap failed_cleanup EXIT
 
 ## set up some variables to ensure that we're operating strictly in
 ## the tests, not system-wide:
@@ -123,7 +128,7 @@ EOF
 
 # launch test sshd with the new host key.
 echo "### starting sshd..."
-socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -d -d -d -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
+socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
 export SSHD_PID=$!
 
 ### TESTUSER TESTS
@@ -144,4 +149,8 @@ gpgadmin --armor --export "$HOSTKEYID" | \
 echo "### testuser connecting to sshd socket..."
 GNUPGHOME="$TEMPDIR"/testuser/.gnupg \
 MONKEYSPHERE_HOME="$TEMPDIR"/testuser/.monkeysphere \
- ssh -F "$TEMPDIR"/testuser/.ssh/config -v -v -v testhost
+ ssh-agent bash -c \
+   'monkeysphere subkey-to-ssh-agent && ssh -F "$TEMPDIR"/testuser/.ssh/config testhost'
+
+trap - EXIT
+cleanup
