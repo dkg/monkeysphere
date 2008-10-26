@@ -26,9 +26,9 @@ cleanup() {
     echo
     read -p "press enter to cleanup and remove tmp:"
 
-    if ( jobs %1 >/dev/null 2>/dev/null ) ; then 
+    if ( ps $SSHD_PID >/dev/null ) ; then 
 	echo "### stopping still-running sshd..."
-	kill %1
+	kill $SSHD_PID
     fi
 
     echo "### removing temp dir..."
@@ -124,6 +124,7 @@ EOF
 # launch test sshd with the new host key.
 echo "### starting sshd..."
 socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -d -d -d -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
+export SSHD_PID=$!
 
 ### TESTUSER TESTS
 
