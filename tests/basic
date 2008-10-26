@@ -64,8 +64,8 @@ export SOCKET="$TEMPDIR"/ssh-socket
 
 # copy in admin and testuser home to tmp
 echo "### copying admin and testuser homes..."
-cp -r "$TESTDIR"/home/admin "$TEMPDIR"/
-cp -r "$TESTDIR"/home/testuser "$TEMPDIR"/
+cp -a "$TESTDIR"/home/admin "$TEMPDIR"/
+cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
 
 
 
