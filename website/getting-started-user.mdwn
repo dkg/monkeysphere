@@ -116,8 +116,9 @@ to certify hosts. This is a two step process: first you must sign the
 key, and then you have to indicate a trust level.
 
 The process of signing another key is outside the scope of this
-document, however the gnupg README details the signing process and you
-can find good [documentation
+document, however the [gnupg
+README](http://cvs.gnupg.org/cgi-bin/viewcvs.cgi/branches/STABLE-BRANCH-1-4/README?root=GnuPG&view=markup)
+details the signing process and you can find good [documentation
 ](http://www.debian.org/events/keysigning) online detailing this
 process.
 
@@ -129,30 +130,51 @@ certifiers. This can be done either by giving full trust to one
 host-certifying key, or by giving marginal trust to three different
 host-certifiers. In the following we demonstrate how to add full trust
 validity to a host-certifying key:
-
-     $ gpg --edit-key <admin_keyid>
-     Command> trust
-     pub  2048R/3B757F8C  created: 2008-06-19  expires: 2008-11-16  usage: CA  
-                     trust: unknown       validity: full
-     [  unknown  ] (1). ssh://monkeysphere.info
-     [  unknown  ] (2)  ssh://george.riseup.net
-
-     Please decide how far you trust this user to correctly verify other users' keys
-     (by looking at passports, checking fingerprints from different sources, etc.)
-
-       1 = I don't know or won't say
-       2 = I do NOT trust
-       3 = I trust marginally
-       4 = I trust fully
-       5 = I trust ultimately
-       m = back to the main menu
-
-       Your decision? 4 
+        
+	
+	$ gpg --edit-key 'Jane Admin'
+	gpg (GnuPG) 1.4.9; Copyright (C) 2008 Free Software Foundation, Inc.
+	This is free software: you are free to change and redistribute it.
+	There is NO WARRANTY, to the extent permitted by law.
+	
+	
+	pub  4096R/ABCD123A  created: 2007-06-02  expires: 2012-05-31  usage: SC  
+	                     trust: unknown       validity: full
+	sub  2048R/01DECAF7  created: 2007-06-02  expires: 2012-05-31  usage: E   
+	[  full  ] (1). Jane Admin <jane_admin@example.net>
+	
+	Command> trust
+	pub  4096R/ABCD123A  created: 2007-06-02  expires: 2012-05-31  usage: SC  
+	                     trust: unknown       validity: full
+	sub  2048R/01DECAF7  created: 2007-06-02  expires: 2012-05-31  usage: E   
+	[  full  ] (1). Jane Admin <jane_admin@example.net>
+	
+	Please decide how far you trust this user to correctly verify other users' keys
+	(by looking at passports, checking fingerprints from different sources, etc.)
+	
+	  1 = I don't know or won't say
+	  2 = I do NOT trust
+	  3 = I trust marginally
+	  4 = I trust fully
+	  5 = I trust ultimately
+	  m = back to the main menu
+	
+	Your decision? 4
+	
+	pub  4096R/ABCD123A  created: 2007-06-02  expires: 2012-05-31  usage: SC  
+	                     trust: full          validity: full
+	sub  2048R/01DECAF7  created: 2007-06-02  expires: 2012-05-31  usage: E   
+	[  full  ] (1). Jane Admin <jane_admin@example.net>
+	Please note that the shown key validity is not necessarily correct
+	unless you restart the program.
+	
+	Command> save
+	Key not changed so no update needed.
+	$ 
 
 Note: Due to a limitation with gnupg, it is not currently possible to
 limit the domain scope properly, which means that if you fully trust
-an admin, this admin can currently assert host verification for any
-hosts.
+an admin, you'll trust all their certifications.
 
 Because the Monkeysphre relies on GPG's definition of the OpenPGP web
 of trust, it is important to understand [how GPG calculates User ID
