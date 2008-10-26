@@ -85,6 +85,11 @@ cat <<EOF >> "$TEMPDIR"/testuser/.monkeysphere/monkeysphere.conf
 KNOWN_HOSTS=$TEMPDIR/testuser/.ssh/known_hosts
 EOF
 
+# set up a simple default monkeysphere-server.conf
+cat <<EOF >> "$TEMPDIR"/monkeysphere-server.conf
+AUTHORIZED_USER_IDS="$TEMPDIR/testuser/.monkeysphere/authorized_user_ids"
+EOF
+
 ### SERVER TESTS
 
 # setup monkeysphere temp gnupghome directories
@@ -149,8 +154,8 @@ gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 # teach the "server" about the testuser's key
 echo "### export testuser key to server..."
 gpg --export testuser | monkeysphere-server gpg-authentication-cmd --import
-echo "### update server authorized_keys file for testuser..."
-monkeysphere-server update-users testuser
+echo "### update server authorized_keys file for this testuser..."
+monkeysphere-server update-users "$USER"
 
 # connect to test sshd, using monkeysphere-ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
