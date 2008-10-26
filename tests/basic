@@ -68,7 +68,7 @@ cp -a "$TESTDIR"/home/admin "$TEMPDIR"/
 cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
 
 cat <<EOF > "$TEMPDIR"/testuser/.ssh/config
-UserKnownHosts $TEMPDIR/testuser/.ssh/known_hosts
+UserKnownHostsFile $TEMPDIR/testuser/.ssh/known_hosts
 EOF
 
 cat <<EOF > "$TEMPDIR"/testuser/.monkeysphere/monkeysphere.conf
