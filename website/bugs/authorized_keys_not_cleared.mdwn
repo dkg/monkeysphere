@@ -1,0 +1,20 @@
+[[meta title="users with missing or empty authorized keys and User IDs should have MS-generated keys cleared" ]]
+
+I had a user who had a bunch of entries in
+`~/.monkeysphere/authorized_user_ids`, and a bunch of raw keys in
+`~/.ssh/authorized_keys`.  My system's `monkeysphere-server` handled
+this situation appropriately, and populated
+`/var/lib/monkeysphere/authorized_keys/user` with the full set.
+
+Then i wanted to wipe out all key entries for that user.  So i did:
+
+	mkdir ~user/backup
+	mv ~user/.ssh ~user/.monkeysphere ~user/backup
+	monkeysphere-server update-users user
+
+I expected this to either remove
+`/var/lib/monkeysphere/authorized_keys/user`, or truncate it to 0
+bytes.  However, it just remained untouched, and the old keys
+persisted.
+
+This seems like a potential security problem.
