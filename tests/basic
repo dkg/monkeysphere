@@ -27,10 +27,12 @@ cleanup() {
     read -p "press enter to cleanup and remove tmp:"
 
     echo "### stop sshd..."
-    kill "$SSHD_PID"
+    kill %1
 
     echo "### removing temp dir..."
     rm -rf "$TEMPDIR"
+
+    wait
 }
 
 ## setup trap
@@ -120,8 +122,6 @@ EOF
 # launch test sshd with the new host key.
 echo "### starting sshd..."
 socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -d -d -d -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
-export SSHD_PID=$!
-
 
 ### TESTUSER TESTS
 
