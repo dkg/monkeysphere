@@ -135,21 +135,21 @@ export SSHD_PID=$!
 
 # generate an auth subkey for the test user
 echo "### generating key for testuser..."
-MONKEYSPHERE_GNUPGHOME="$TEMPDIR"/testuser/.gnupg \
-SSH_ASKPASS=echo \
-    monkeysphere gen-subkey --expire 0
+export GNUPGHOME="$TEMPDIR"/testuser/.gnupg
+export SSH_ASKPASS="$TEMPDIR"/testuser/.ssh/askpass
+export MONKEYSPHERE_HOME="$TEMPDIR"/testuser/.monkeysphere
+
+monkeysphere gen-subkey --expire 0
 
 # add server key to testuser keychain
 echo "### export server key to testuser..."
-gpgadmin --armor --export "$HOSTKEYID" | \
-    GNUPGHOME="$TEMPDIR"/testuser/.gnupg gpg --import
+gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 
 # connect to test sshd, using monkeysphere-ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
 echo "### testuser connecting to sshd socket..."
-GNUPGHOME="$TEMPDIR"/testuser/.gnupg \
-MONKEYSPHERE_HOME="$TEMPDIR"/testuser/.monkeysphere \
- ssh-agent bash -c \
+
+ssh-agent bash -c \
    'monkeysphere subkey-to-ssh-agent && ssh -F "$TEMPDIR"/testuser/.ssh/config testhost'
 
 trap - EXIT
