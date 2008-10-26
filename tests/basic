@@ -26,8 +26,10 @@ cleanup() {
     echo
     read -p "press enter to cleanup and remove tmp:"
 
-    echo "### stop sshd..."
-    kill %1
+    if ( jobs %1 >/dev/null 2>/dev/null ) ; then 
+	echo "### stopping still-running sshd..."
+	kill %1
+    fi
 
     echo "### removing temp dir..."
     rm -rf "$TEMPDIR"
