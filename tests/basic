@@ -127,12 +127,6 @@ HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
 AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authorized_keys/%u
 EOF
 
-# teach the "server" about the testuser's key
-GNUPGHOME="$TEMPDIR"/testuser/.gnupg gpg --export testuser | \
-  monkeysphere-server gpg-authentication-cmd --import
-
-monkeysphere-server update-users testuser
-
 # launch test sshd with the new host key.
 echo "### starting sshd..."
 socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
@@ -151,6 +145,12 @@ monkeysphere gen-subkey --expire 0
 # add server key to testuser keychain
 echo "### export server key to testuser..."
 gpgadmin --armor --export "$HOSTKEYID" | gpg --import
+
+# teach the "server" about the testuser's key
+echo "### export testuser key to server..."
+gpg --export testuser | monkeysphere-server gpg-authentication-cmd --import
+echo "### update server authorized_keys file for testuser..."
+monkeysphere-server update-users testuser
 
 # connect to test sshd, using monkeysphere-ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
