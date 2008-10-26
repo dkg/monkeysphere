@@ -1,4 +1,4 @@
-monkeysphere (0.16~pre-1) UNRELEASED; urgency=low
+monkeysphere (0.16-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
   * replaced "#!/bin/bash" with "#!/usr/bin/env bash" for better
@@ -12,13 +12,15 @@ monkeysphere (0.16~pre-1) UNRELEASED; urgency=low
     getopt lives.
   * monkeysphere-server diagnostics now counts problems and suggests a
     re-run after they have been resolved.
+  * completed basic test suite: this can be run from the git sources or
+    the tarball with: cd tests && ./basic
 
   [ Jameson Graef Rollins ]
   * Genericize fs location variables.
   * break out gpg.conf files into SYSCONFIGDIR, and not auto-generated at
     install.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sat, 11 Oct 2008 14:27:17 -0400
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sun, 26 Oct 2008 03:06:18 -0400
 
 monkeysphere (0.15-1) experimental; urgency=low
 
