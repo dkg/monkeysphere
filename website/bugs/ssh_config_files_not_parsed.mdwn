@@ -31,3 +31,17 @@ here](http://marc.info/?l=openssh-unix-dev&m=121804767122918&w=2), but
 i haven't had much of a response yet.
 
 --dkg
+
+---
+
+For some reason this didn't get mentioned in this bug earlier, but
+there is a monkeysphere config variable about hashing known_hosts
+lines, which is set to true by default (to be in sync with the Debian
+openssh-client package).
+
+I think this bug is really more about the fact that monkeysphere does
+not parse the ssh config files for any directives relavent to what the
+monkeysphere is doing.  I'm changing the name of this bug to reflect
+what the real issue is.
+
+-- Big Jimmy.
