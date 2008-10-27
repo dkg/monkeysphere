@@ -24,7 +24,7 @@ POST-INSTALL)
         GID=${UID}
         SHELL=/usr/local/bin/bash
 
-        if pw group show "${GROUP}" 2>/dev/null; then
+        if pw group show "${GROUP}" >/dev/null 2>&1; then
                 echo "You already have a group \"${GROUP}\", so I will use it."
         else
                 if pw groupadd ${GROUP} -g ${GID}; then
@@ -35,7 +35,8 @@ POST-INSTALL)
                 fi
         fi
 
-        if oldshell=`pw user show "${USER}" 2>/dev/null`; then
+	if pw user show "${USER}" >/dev/null 2>&1; then
+            oldshell=`pw user show "${USER}" 2>/dev/null | cut -f10 -d:`
 	    if [ x"$oldshell" != x"$SHELL" ]; then
 		echo "You already have a \"${USER}\" user, but its shell is '$oldshell'."
 		echo "This package requires that \"${USER}\"'s shell be '$SHELL'."

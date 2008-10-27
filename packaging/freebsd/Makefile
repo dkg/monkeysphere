@@ -12,9 +12,6 @@ MASTER_SITES=  http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monke
 # hack for debian orig tarballs
 DISTFILES=      ${PORTNAME}_${DISTVERSION}.orig.tar.gz
 
-# comment this out to test the port
-IGNORE=			this port is not finished yet
-
 MAINTAINER=    dkg@fifthhorseman.net
 COMMENT=       use the OpenPGP web of trust to verify ssh connections
 
@@ -43,5 +40,11 @@ post-install:
 	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere-server.conf ]; then \
 		${CP} -p ${PREFIX}/etc/monkeysphere/monkeysphere-server.conf.sample ${PREFIX}/etc/monkeysphere/monkeysphere-server.conf ; \
 	fi
+.if !defined(PACKAGE_BUILDING)
+	@${SETENV} ${SH} ${PKGINSTALL} ${PKGNAME} POST-INSTALL
+.endif
+
+post-deinstall:
+	@${SETENV} ${SH} ${PKGDEINSTALL} ${PKGNAME} POST-DEINSTALL
 
 .include <bsd.port.mk>
