@@ -87,20 +87,15 @@ Using your OpenPGP authentication key for SSH
 Once you have created an OpenPGP authentication subkey, you will need
 to feed it to your ssh agent.
 
-Currently (2008-08-23), gnutls does not support this operation. In order
-to take this step, you will need to upgrade to a patched version of
-gnutls. You can easily upgrade a Debian system by adding the following
-to `/etc/apt/sources.list.d/monkeysphere.list`:
-
-	deb http://archive.monkeysphere.info/debian experimental gnutls
-	deb-src http://archive.monkeysphere.info/debian experimental gnutls
-
-Next, run `aptitude update; aptitude install libgnutls26`.
-
-With the patched gnutls installed, you can feed your authentication
-subkey to your ssh agent by running:
+The GnuTLS library supports this operation as of version 2.6, but
+earlier versions do not.  With a recent version of GnuTLS installed,
+you can feed your authentication subkey to your ssh agent by running:
 
 	$ monkeysphere subkey-to-ssh-agent
+
+If you can't (or don't want to) upgrade to GnuTLS 2.6 or later, there
+are patches for GnuTLS 2.4 available in [the Monkeysphere git
+repo](/community).
 
 FIXME: using the key with a single ssh connection?
 

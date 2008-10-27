@@ -1,5 +1,15 @@
 [[meta title="Modified GnuTLS 2.4.x available"]]
 
+-----
+
+**2008-10-25 UPDATE:** [GnuTLS 2.6 has been released, and it contains the
+functionality we needed](/news/gnutls-2.6-enables-monkeysphere).
+Please upgrade to GnuTLS 2.6 if you need Monkeysphere to deal with
+passphrase-protected authentication subkeys.  The information on this
+page is now of historical interest only.
+
+-----
+
 The MonkeySphere project is now making available a patched version of
 [GnuTLS](http://gnutls.org/) version 2.4.x, which enhances the utility
 of the `monkeysphere` package by enabling it to read authentication
