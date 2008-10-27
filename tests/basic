@@ -19,15 +19,28 @@ gpgadmin() {
     GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg "$@"
 }
 
-failed_cleanup() {
-# FIXME: can we be more verbose here?
-  echo 'FAILED!'
-  read -p "press enter to cleanup and remove tmp:"
+launch_sshd() {
+    socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
+    export SSHD_PID=$!
 
-  cleanup
+    while [ ! -S "$SOCKET" ] ; do
+	sleep 1
+    done
 }
 
-# cleanup:
+ssh_test() {
+    ssh-agent bash -c \
+	"monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config testhost true"
+}
+
+failed_cleanup() {
+    # FIXME: can we be more verbose here?
+    echo 'FAILED!'
+    read -p "press enter to cleanup and remove tmp:"
+
+    cleanup
+}
+
 cleanup() {
     if ( ps "$SSHD_PID" >/dev/null ) ; then 
 	echo "### stopping still-running sshd..."
@@ -66,7 +79,7 @@ export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src
 export MONKEYSPHERE_MONKEYSPHERE_USER="$USER"
 export MONKEYSPHERE_CHECK_KEYSERVER=false
 
-SSHD_CONFIG="$TEMPDIR"/sshd_config
+export SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
 
 # copy in admin and testuser home to tmp
@@ -132,8 +145,7 @@ EOF
 
 # launch test sshd with the new host key.
 echo "### starting sshd..."
-socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
-export SSHD_PID=$!
+launch_sshd
 
 ### TESTUSER TESTS
 
@@ -158,9 +170,29 @@ monkeysphere-server update-users "$USER"
 # connect to test sshd, using monkeysphere-ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
 echo "### testuser connecting to sshd socket..."
+ssh_test
 
-ssh-agent bash -c \
-   "monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config testhost true"
+# kill the previous sshd process if it's still running
+kill "$SSHD_PID"
+
+# now remove the testuser's authorized_user_ids file and reupdate
+# authorized_keys file...
+echo "### removing testuser authorized_user_ids and reupdating authorized_keys..."
+rm -f "$TEMPDIR"/testuser/.monkeysphere/authorized_user_ids
+monkeysphere-server update-users "$USER"
+
+# restart the sshd
+echo "### restarting sshd..."
+launch_sshd
+
+# and make sure the user can no longer connect
+echo "### testuser attempting to connect to sshd socket..."
+# FIXME: this prompts for the passphrase for the default identity
+# file.  how can this be avoided?
+ssh_test || SSH_RETURN="$?"
+if [ "$SSH_RETURN" != '255' ] ; then
+    exit
+fi
 
 trap - EXIT
 
