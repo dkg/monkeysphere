@@ -170,31 +170,7 @@ update_users() {
 	    continue
 	fi
 
-	# set authorized_user_ids and raw authorized_keys variables,
-	# translating ssh-style path variables
-	authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
-	rawAuthorizedKeys=$(translate_ssh_variables "$uname" "$RAW_AUTHORIZED_KEYS")
-
-	# if neither is found, skip user
-	if [ ! -s "$authorizedUserIDs" ] ; then
-	    if [ "$rawAuthorizedKeys" = '-' -o ! -s "$rawAuthorizedKeys" ] ; then
-		continue
-	    fi
-	fi
-
 	log verbose "----- user: $uname -----"
-
-        # exit if the authorized_user_ids file is empty
-	if ! check_key_file_permissions "$uname" "$AUTHORIZED_USER_IDS" ; then
-	    log error "Improper permissions on path '$AUTHORIZED_USER_IDS'."
-	    continue
-	fi
-
-	# check permissions on the authorized_keys file path
-	if ! check_key_file_permissions "$uname" "$RAW_AUTHORIZED_KEYS" ; then
-	    log error "Improper permissions on path '$RAW_AUTHORIZED_KEYS'."
-	    continue
-	fi
 
         # make temporary directory
         TMPLOC=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
@@ -217,39 +193,60 @@ update_users() {
         chmod 0600 "$TMP_AUTHORIZED_USER_IDS"
         chown -R "$MONKEYSPHERE_USER" "$TMPLOC"
 
-	# if the authorized_user_ids file exists...
+	# process authorized_user_ids file
+	# translating ssh-style path variables
+	authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
 	if [ -s "$authorizedUserIDs" ] ; then
-            # copy user authorized_user_ids file to temporary
-            # location
-	    cat "$authorizedUserIDs" > "$TMP_AUTHORIZED_USER_IDS"
+	    # check permissions on the authorized_user_ids file path
+	    if check_key_file_permissions "$uname" "$authorizedUserIDs" ; then
+                # copy user authorized_user_ids file to temporary
+                # location
+		cat "$authorizedUserIDs" > "$TMP_AUTHORIZED_USER_IDS"
 
-	    # export needed variables
-	    export AUTHORIZED_KEYS
-	    export TMP_AUTHORIZED_USER_IDS
+		# export needed variables
+		export AUTHORIZED_KEYS
+		export TMP_AUTHORIZED_USER_IDS
 
-	    # process authorized_user_ids file, as monkeysphere
-	    # user
-	    su_monkeysphere_user \
-		". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
-	    RETURN="$?"
+		# process authorized_user_ids file, as monkeysphere
+		# user
+		su_monkeysphere_user \
+		    ". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
+		RETURN="$?"
+	    else
+		log error "Improper permissions on path '$AUTHORIZED_USER_IDS'."
+	    fi
 	fi
 
-	# add user-controlled authorized_keys file path if specified
+	# add user-controlled authorized_keys file if specified
+	# translate ssh-style path variables
+	rawAuthorizedKeys=$(translate_ssh_variables "$uname" "$RAW_AUTHORIZED_KEYS")
 	if [ "$rawAuthorizedKeys" != '-' -a -s "$rawAuthorizedKeys" ] ; then
-	    log verbose "adding raw authorized_keys file... "
-	    cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
+	    # check permissions on the authorized_keys file path
+	    if check_key_file_permissions "$uname" "$rawAuthorizedKeys" ; then
+		log verbose "adding raw authorized_keys file... "
+		cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
+	    else
+		log error "Improper permissions on path '$RAW_AUTHORIZED_KEYS'.  Not added to authorized_keys file."
+	    fi
 	fi
 
-	# openssh appears to check the contents of the
-        # authorized_keys file as the user in question, so the
-        # file must be readable by that user at least.
-	# FIXME: is there a better way to do this?
-	chown root "$AUTHORIZED_KEYS"
-	chgrp $(getent passwd "$uname" | cut -f4 -d:) "$AUTHORIZED_KEYS"
-	chmod g+r "$AUTHORIZED_KEYS"
+	# move the new authorized_keys file into place
+	if [ -s "$AUTHORIZED_KEYS" ] ; then
+	    # openssh appears to check the contents of the
+	    # authorized_keys file as the user in question, so the
+	    # file must be readable by that user at least.
+	    # FIXME: is there a better way to do this?
+	    chown root "$AUTHORIZED_KEYS"
+	    chgrp $(getent passwd "$uname" | cut -f4 -d:) "$AUTHORIZED_KEYS"
+	    chmod g+r "$AUTHORIZED_KEYS"
 
-	# move the resulting authorized_keys file into place
-	mv -f "$AUTHORIZED_KEYS" "${SYSDATADIR}/authorized_keys/${uname}"
+	    mv -f "$AUTHORIZED_KEYS" "${SYSDATADIR}/authorized_keys/${uname}"
+	else
+	    rm -f "${SYSDATADIR}/authorized_keys/${uname}"
+	fi
+
+	# unset the trap
+	trap - EXIT
 
 	# destroy temporary directory
 	rm -rf "$TMPLOC"
