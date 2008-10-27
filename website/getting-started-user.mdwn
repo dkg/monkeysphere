@@ -87,22 +87,93 @@ Using your OpenPGP authentication key for SSH
 Once you have created an OpenPGP authentication subkey, you will need
 to feed it to your ssh agent.
 
-Currently (2008-08-23), gnutls does not support this operation. In order
-to take this step, you will need to upgrade to a patched version of
-gnutls. You can easily upgrade a Debian system by adding the following
-to `/etc/apt/sources.list.d/monkeysphere.list`:
-
-	deb http://archive.monkeysphere.info/debian experimental gnutls
-	deb-src http://archive.monkeysphere.info/debian experimental gnutls
-
-Next, run `aptitude update; aptitude install libgnutls26`.
-
-With the patched gnutls installed, you can feed your authentication
-subkey to your ssh agent by running:
+The GnuTLS library supports this operation as of version 2.6, but
+earlier versions do not.  With a recent version of GnuTLS installed,
+you can feed your authentication subkey to your ssh agent by running:
 
 	$ monkeysphere subkey-to-ssh-agent
 
+If you can't (or don't want to) upgrade to GnuTLS 2.6 or later, there
+are patches for GnuTLS 2.4 available in [the Monkeysphere git
+repo](/community).
+
 FIXME: using the key with a single ssh connection?
+
+Establish trust
+---------------
+
+Now that you have the above setup, you will need to establish an
+acceptable trust path to the admin(s) of a monkeysphere-enabled server
+that you will be connecting to. You need to do this because the admin
+is certifying the host, and you need a mechanism to validate that
+certification. The only way to do that is by indicating who you trust
+to certify hosts. This is a two step process: first you must sign the
+key, and then you have to indicate a trust level.
+
+The process of signing another key is outside the scope of this
+document, however the [gnupg
+README](http://cvs.gnupg.org/cgi-bin/viewcvs.cgi/branches/STABLE-BRANCH-1-4/README?root=GnuPG&view=markup)
+details the signing process and you can find good [documentation
+](http://www.debian.org/events/keysigning) online detailing this
+process.
+
+If you have signed your admins' key, you need to denote some kind of
+trust to that key. To do this you should edit the key and use the
+'trust' command. For the Monkeysphere to trust the assertions that are
+made about a host, you need full calculated validity to the host
+certifiers. This can be done either by giving full trust to one
+host-certifying key, or by giving marginal trust to three different
+host-certifiers. In the following we demonstrate how to add full trust
+validity to a host-certifying key:
+        
+	
+	$ gpg --edit-key 'Jane Admin'
+	gpg (GnuPG) 1.4.9; Copyright (C) 2008 Free Software Foundation, Inc.
+	This is free software: you are free to change and redistribute it.
+	There is NO WARRANTY, to the extent permitted by law.
+	
+	
+	pub  4096R/ABCD123A  created: 2007-06-02  expires: 2012-05-31  usage: SC  
+	                     trust: unknown       validity: full
+	sub  2048R/01DECAF7  created: 2007-06-02  expires: 2012-05-31  usage: E   
+	[  full  ] (1). Jane Admin <jane_admin@example.net>
+	
+	Command> trust
+	pub  4096R/ABCD123A  created: 2007-06-02  expires: 2012-05-31  usage: SC  
+	                     trust: unknown       validity: full
+	sub  2048R/01DECAF7  created: 2007-06-02  expires: 2012-05-31  usage: E   
+	[  full  ] (1). Jane Admin <jane_admin@example.net>
+	
+	Please decide how far you trust this user to correctly verify other users' keys
+	(by looking at passports, checking fingerprints from different sources, etc.)
+	
+	  1 = I don't know or won't say
+	  2 = I do NOT trust
+	  3 = I trust marginally
+	  4 = I trust fully
+	  5 = I trust ultimately
+	  m = back to the main menu
+	
+	Your decision? 4
+	
+	pub  4096R/ABCD123A  created: 2007-06-02  expires: 2012-05-31  usage: SC  
+	                     trust: full          validity: full
+	sub  2048R/01DECAF7  created: 2007-06-02  expires: 2012-05-31  usage: E   
+	[  full  ] (1). Jane Admin <jane_admin@example.net>
+	Please note that the shown key validity is not necessarily correct
+	unless you restart the program.
+	
+	Command> save
+	Key not changed so no update needed.
+	$ 
+
+Note: Due to a limitation with gnupg, it is not currently possible to
+limit the domain scope properly, which means that if you fully trust
+an admin, you'll trust all their certifications.
+
+Because the Monkeysphre relies on GPG's definition of the OpenPGP web
+of trust, it is important to understand [how GPG calculates User ID
+validity for a key](/trust-models).
 
 
 Miscellaneous
