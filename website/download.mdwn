@@ -18,25 +18,13 @@ verify the packages, you'll want to [add this key to your apt
 configuration after verifying its
 integrity](http://wiki.debian.org/SecureApt).
 
+To use the `monkeysphere subkey-to-ssh-agent` subcommand, you will
+also need [version 2.6 of GnuTLS](/news/gnutls-2.6-enables-monkeysphere),
+which is available in Debian experimental.
+
 Once you've installed the packages, you might want to read up on how
 to get started [as a regular user](/getting-started-user) or [as a
 systems administrator](/getting-started-admin).
-
-## Enhancements ##
-
-As of 2008-08-22, If you run debian lenny you're very close to being
-able to run a fully monkeysphere-enabled system.  One gap in the
-system is that lenny's GnuTLS can't support the `monkeysphere
-subkey-to-ssh-agent` subcommand.
-
-You can install a patched version of GnuTLS to enable this feature of
-the Monkeysphere by adjusting the monkeysphere `sources.list` lines to
-include the `gnutls` component.  So they'd look like this instead:
-
-	deb http://archive.monkeysphere.info/debian experimental monkeysphere gnutls
-	deb-src http://archive.monkeysphere.info/debian experimental monkeysphere gnutls
-
-You can [read more about this offering](/news/modified-gnutls-2.4.x-available).
 
 ## Source ##
 
