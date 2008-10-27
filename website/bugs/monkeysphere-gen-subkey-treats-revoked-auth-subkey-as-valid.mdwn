@@ -19,3 +19,19 @@ revoked, so probably monkeysphere needs to be looking at gpg's
 computed validity from the public keyring instead of the secret
 keyring to be able to get the "r" flag from field 2, in addition to
 the "e" flag from field 12.
+
+---
+
+So the problem is that there is no field 2 for secret keys.  From
+/usr/share/doc/gnupg/DETAILS.gz:
+
+      2. Field:  A letter describing the calculated trust. This is a single
+      	 	 letter, but be prepared that additional information may follow
+		 in some future versions. (not used for secret keys)
+
+Why would secret keys not have this field?  They have validity too,
+right?  This doesn't make any sense.  I verify that indeed there is no
+output in field 2 for secret keys.  I would say this is a bug in gpg,
+but it's clearly done on purpose.  Any ideas?
+
+-- jrollins

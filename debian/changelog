@@ -1,3 +1,10 @@
+monkeysphere (0.17-1) experimental; urgency=low
+
+  * Fix some bugs in, and cleanup, authorized_keys file creation in
+    monkeysphere-server update-users.
+
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Sun, 26 Oct 2008 21:49:17 -0400
+
 monkeysphere (0.16-1) experimental; urgency=low
 
   [ Daniel Kahn Gillmor ]
