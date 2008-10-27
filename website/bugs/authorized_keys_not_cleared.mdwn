@@ -18,3 +18,7 @@ bytes.  However, it just remained untouched, and the old keys
 persisted.
 
 This seems like a potential security problem.
+
+---
+
+[[bugs/done]] on 2008-10-26 in c8ab71b24b566967fdb39818d071f6548dc056c8
