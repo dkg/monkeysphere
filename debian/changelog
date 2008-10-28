@@ -1,3 +1,9 @@
+monkeysphere (0.18-1) UNRELEASED; urgency=low
+
+  * Fix bugs in authorized_{user_ids,keys} file permission checking.
+
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Tue, 28 Oct 2008 14:36:16 -0400
+
 monkeysphere (0.17-1) experimental; urgency=low
 
   [ Jameson Graef Rollins ]  

@@ -213,7 +213,7 @@ update_users() {
 		    ". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
 		RETURN="$?"
 	    else
-		log error "Improper permissions on path '$AUTHORIZED_USER_IDS'."
+		log verbose "not processing authorized_user_ids."
 	    fi
 	fi
 
@@ -226,7 +226,7 @@ update_users() {
 		log verbose "adding raw authorized_keys file... "
 		cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
 	    else
-		log error "Improper permissions on path '$RAW_AUTHORIZED_KEYS'.  Not added to authorized_keys file."
+		log verbose "not adding raw authorized_keys file."		
 	    fi
 	fi
 
@@ -371,7 +371,7 @@ EOF
     (umask 077 && \
 	gpg_host --export-secret-key "$fingerprint" | \
 	openpgp2ssh "$fingerprint" > "${SYSDATADIR}/ssh_host_rsa_key")
-    log info "Private SSH host key output to file: ${SYSDATADIR}/ssh_host_rsa_key"
+    log info "private SSH host key output to file: ${SYSDATADIR}/ssh_host_rsa_key"
 }
 
 # extend the lifetime of a host key:

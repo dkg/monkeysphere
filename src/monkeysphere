@@ -347,14 +347,10 @@ case $COMMAND in
 	MODE='authorized_keys'
 
 	# check permissions on the authorized_user_ids file path
-	if ! check_key_file_permissions "$USER" "$AUTHORIZED_USER_IDS" ; then
-	    failure "Improper permissions on authorized_user_ids file path."
-	fi
+	check_key_file_permissions "$USER" "$AUTHORIZED_USER_IDS" || failure
 
 	# check permissions on the authorized_keys file path
-	if ! check_key_file_permissions "$USER" "$AUTHORIZED_KEYS" ; then
-	    failure "Improper permissions on authorized_keys file path."
-	fi
+	check_key_file_permissions "$USER" "$AUTHORIZED_KEYS" || failure
 
         # exit if the authorized_user_ids file is empty
 	if [ ! -e "$AUTHORIZED_USER_IDS" ] ; then
