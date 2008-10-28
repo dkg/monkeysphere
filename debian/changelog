@@ -2,6 +2,10 @@ monkeysphere (0.18-1) UNRELEASED; urgency=low
 
   [ Jameson Graef Rollins ]
   * Fix bugs in authorized_{user_ids,keys} file permission checking.
+  * Add new monkeysphere tmpdir to enable atomic moves of authorized_keys
+    files.
+  * chown authorized_keys files to `whoami`, for compatibility with test
+    suite.
   
   [ Daniel Kahn Gillmor ]
   * update install to ensure placement of
@@ -9,7 +13,7 @@ monkeysphere (0.18-1) UNRELEASED; urgency=low
   * choose either --quick-random or --debug-quick-random depending on
     which gpg supports for the test suite.
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 28 Oct 2008 17:58:25 -0400
+ -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Tue, 28 Oct 2008 19:19:20 -0400
 
 monkeysphere (0.17-1) experimental; urgency=low
 

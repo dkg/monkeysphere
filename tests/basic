@@ -19,20 +19,27 @@ gpgadmin() {
     GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg "$@"
 }
 
-launch_sshd() {
+ssh_test() {
     umask 0077
+
+    # start the ssh daemon on the socket
     socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
-    export SSHD_PID=$!
+    SSHD_PID="$!"
 
     # wait until the socket is created before continuing
     while [ ! -S "$SOCKET" ] ; do
 	sleep 1
     done
-}
 
-ssh_test() {
+    # make a client connection to the socket
     ssh-agent bash -c \
 	"monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config testhost true"
+    RETURN="$?"
+
+    # kill the previous sshd process if it's still running
+    kill "$SSHD_PID"
+
+    return "$RETURN"
 }
 
 failed_cleanup() {
@@ -52,11 +59,6 @@ get_gpg_prng_arg() {
 }
 
 cleanup() {
-    if [ "$SSHD_PID" ] && ( ps "$SSHD_PID" >/dev/null ) ; then 
-	echo "### stopping still-running sshd..."
-	kill "$SSHD_PID"
-    fi
-
     echo "### removing temp dir..."
     rm -rf "$TEMPDIR"
 
@@ -88,6 +90,7 @@ export MONKEYSPHERE_SYSCONFIGDIR="$TEMPDIR"
 export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src
 export MONKEYSPHERE_MONKEYSPHERE_USER="$USER"
 export MONKEYSPHERE_CHECK_KEYSERVER=false
+export MONKEYSPHERE_LOG_LEVEL=DEBUG
 
 export SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
@@ -150,16 +153,13 @@ echo "### adding admin as certifier..."
 echo y | monkeysphere-server add-identity-certifier "$TEMPDIR"/admin/.gnupg/pubkey.gpg
 
 # initialize base sshd_config
+echo "### configuring sshd..."
 cp etc/ssh/sshd_config "$SSHD_CONFIG"
 # write the sshd_config
 cat <<EOF >> "$SSHD_CONFIG"
 HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
 AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authorized_keys/%u
 EOF
-
-# launch test sshd with the new host key.
-echo "### starting sshd..."
-launch_sshd
 
 ### TESTUSER TESTS
 
@@ -168,7 +168,6 @@ echo "### generating key for testuser..."
 export GNUPGHOME="$TEMPDIR"/testuser/.gnupg
 export SSH_ASKPASS="$TEMPDIR"/testuser/.ssh/askpass
 export MONKEYSPHERE_HOME="$TEMPDIR"/testuser/.monkeysphere
-
 monkeysphere gen-subkey --expire 0
 
 # add server key to testuser keychain
@@ -183,26 +182,20 @@ monkeysphere-server update-users "$USER"
 
 # connect to test sshd, using monkeysphere-ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
-echo "### testuser connecting to sshd socket..."
+echo "### ssh connection test for success..."
 ssh_test
 
-# kill the previous sshd process if it's still running
-kill "$SSHD_PID"
-
-# now remove the testuser's authorized_user_ids file and reupdate
-# authorized_keys file...
+# remove the testuser's authorized_user_ids file and update
+# authorized_keys file, this is to make sure that the ssh
+# authentication FAILS...
 echo "### removing testuser authorized_user_ids and reupdating authorized_keys..."
 rm -f "$TEMPDIR"/testuser/.monkeysphere/authorized_user_ids
 monkeysphere-server update-users "$USER"
 
-# restart the sshd
-echo "### restarting sshd..."
-launch_sshd
-
-# and make sure the user can no longer connect
-echo "### testuser attempting to connect to sshd socket..."
-ssh_test || SSH_RETURN="$?"
-if [ "$SSH_RETURN" != '255' ] ; then
+# make sure the user can NOT connect
+echo "### ssh connection test for server authentication denial..."
+ssh_test
+if [ "$?" != '255' ] ; then
     exit
 fi
 
