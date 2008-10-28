@@ -43,7 +43,7 @@ failed_cleanup() {
 }
 
 cleanup() {
-    if ( ps "$SSHD_PID" >/dev/null ) ; then 
+    if [ "$SSHD_PID" ] && ( ps "$SSHD_PID" >/dev/null ) ; then 
 	echo "### stopping still-running sshd..."
 	kill "$SSHD_PID"
     fi
@@ -82,6 +82,7 @@ export MONKEYSPHERE_CHECK_KEYSERVER=false
 
 export SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
+export SSHD_PID=
 
 # copy in admin and testuser home to tmp
 echo "### copying admin and testuser homes..."
