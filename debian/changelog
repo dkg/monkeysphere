@@ -6,6 +6,8 @@ monkeysphere (0.18-1) UNRELEASED; urgency=low
   [ Daniel Kahn Gillmor ]
   * update install to ensure placement of
     /etc/monkeysphere/gnupg-{host,authentication}.conf 
+  * choose either --quick-random or --debug-quick-random depending on
+    which gpg supports for the test suite.
 
  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 28 Oct 2008 17:58:25 -0400
 

@@ -42,6 +42,14 @@ failed_cleanup() {
     cleanup
 }
 
+get_gpg_prng_arg() {
+    if (gpg --quick-random --version >/dev/null 2>&1) ; then
+	echo quick-random
+    elif (gpg --debug-quick-random --version >/dev/null 2>&1) ; then
+	echo debug-quick-random
+    fi
+}
+
 cleanup() {
     if [ "$SSHD_PID" ] && ( ps "$SSHD_PID" >/dev/null ) ; then 
 	echo "### stopping still-running sshd..."
@@ -99,6 +107,8 @@ cat <<EOF >> "$TEMPDIR"/testuser/.monkeysphere/monkeysphere.conf
 KNOWN_HOSTS=$TEMPDIR/testuser/.ssh/known_hosts
 EOF
 
+get_gpg_prng_arg >> "$TEMPDIR"/testuser/.gnupg/gpg.conf
+
 # set up a simple default monkeysphere-server.conf
 cat <<EOF >> "$TEMPDIR"/monkeysphere-server.conf
 AUTHORIZED_USER_IDS="$TEMPDIR/testuser/.monkeysphere/authorized_user_ids"
@@ -118,7 +128,7 @@ EOF
 # create a new host key
 echo "### generating server key..."
 # add gpg.conf with quick-random
-echo "quick-random" >> "$MONKEYSPHERE_SYSCONFIGDIR"/gnupg-host/gpg.conf
+get_gpg_prng_arg >> "$MONKEYSPHERE_SYSCONFIGDIR"/gnupg-host/gpg.conf
 echo | monkeysphere-server gen-key --length 1024 --expire 0 testhost
 # remove the gpg.conf
 rm "$MONKEYSPHERE_SYSCONFIGDIR"/gnupg-host/gpg.conf
