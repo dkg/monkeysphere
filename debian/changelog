@@ -1,11 +1,12 @@
 monkeysphere (0.17-1) experimental; urgency=low
 
+  [ Jameson Graef Rollins ]  
   * Fix some bugs in, and cleanup, authorized_keys file creation in
     monkeysphere-server update-users.
   * Move to using the empty string for not adding a user-controlled
     authorized_keys file in the RAW_AUTHORIZED_KEYS variable.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Mon, 27 Oct 2008 07:39:10 -0400
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 28 Oct 2008 02:04:22 -0400
 
 monkeysphere (0.16-1) experimental; urgency=low
 
