@@ -20,6 +20,7 @@ gpgadmin() {
 }
 
 launch_sshd() {
+    umask 0077
     socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
     export SSHD_PID=$!
 
