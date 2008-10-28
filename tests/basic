@@ -23,6 +23,7 @@ ssh_test() {
     umask 0077
 
     # start the ssh daemon on the socket
+    echo "##### starting ssh server..."
     socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
     SSHD_PID="$!"
 
@@ -32,6 +33,7 @@ ssh_test() {
     done
 
     # make a client connection to the socket
+    echo "##### starting ssh client..."
     ssh-agent bash -c \
 	"monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config testhost true"
     RETURN="$?"
@@ -101,21 +103,27 @@ echo "### copying admin and testuser homes..."
 cp -a "$TESTDIR"/home/admin "$TEMPDIR"/
 cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
 
-cat <<EOF >> "$TEMPDIR"/testuser/.ssh/config
-UserKnownHostsFile $TEMPDIR/testuser/.ssh/known_hosts
-IdentityFile $TEMPDIR/testuser/.ssh/no-such-identity
-ProxyCommand $TEMPDIR/testuser/.ssh/proxy-command %h %p $SOCKET
+# set up environment for testuser
+export HOME="$TEMPDIR"/testuser
+export GNUPGHOME="$HOME"/.gnupg
+export SSH_ASKPASS="$HOME"/.ssh/askpass
+export MONKEYSPHERE_HOME="$HOME"/.monkeysphere
+
+cat <<EOF >> "$HOME"/.ssh/config
+UserKnownHostsFile $HOME/.ssh/known_hosts
+IdentityFile $HOME/.ssh/no-such-identity
+ProxyCommand $HOME/.ssh/proxy-command %h %p $SOCKET
 EOF
 
-cat <<EOF >> "$TEMPDIR"/testuser/.monkeysphere/monkeysphere.conf
-KNOWN_HOSTS=$TEMPDIR/testuser/.ssh/known_hosts
+cat <<EOF >> "$MONKEYSPHERE_HOME"/monkeysphere.conf
+KNOWN_HOSTS=$HOME/.ssh/known_hosts
 EOF
 
-get_gpg_prng_arg >> "$TEMPDIR"/testuser/.gnupg/gpg.conf
+get_gpg_prng_arg >> "$GNUPGHOME"/gpg.conf
 
 # set up a simple default monkeysphere-server.conf
 cat <<EOF >> "$TEMPDIR"/monkeysphere-server.conf
-AUTHORIZED_USER_IDS="$TEMPDIR/testuser/.monkeysphere/authorized_user_ids"
+AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authorized_user_ids"
 EOF
 
 ### SERVER TESTS
@@ -124,6 +132,7 @@ EOF
 mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/gnupg-host
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authorized_keys
+mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/tmp
 cat <<EOF > "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication/gpg.conf
 primary-keyring ${MONKEYSPHERE_SYSDATADIR}/gnupg-authentication/pubring.gpg
 keyring ${MONKEYSPHERE_SYSDATADIR}/gnupg-host/pubring.gpg
@@ -165,9 +174,6 @@ EOF
 
 # generate an auth subkey for the test user
 echo "### generating key for testuser..."
-export GNUPGHOME="$TEMPDIR"/testuser/.gnupg
-export SSH_ASKPASS="$TEMPDIR"/testuser/.ssh/askpass
-export MONKEYSPHERE_HOME="$TEMPDIR"/testuser/.monkeysphere
 monkeysphere gen-subkey --expire 0
 
 # add server key to testuser keychain
@@ -178,7 +184,7 @@ gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 echo "### export testuser key to server..."
 gpg --export testuser | monkeysphere-server gpg-authentication-cmd --import
 echo "### update server authorized_keys file for this testuser..."
-monkeysphere-server update-users "$USER"
+monkeysphere-server update-users testuser
 
 # connect to test sshd, using monkeysphere-ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
@@ -190,7 +196,7 @@ ssh_test
 # authentication FAILS...
 echo "### removing testuser authorized_user_ids and reupdating authorized_keys..."
 rm -f "$TEMPDIR"/testuser/.monkeysphere/authorized_user_ids
-monkeysphere-server update-users "$USER"
+monkeysphere-server update-users testuser
 
 # make sure the user can NOT connect
 echo "### ssh connection test for server authentication denial..."

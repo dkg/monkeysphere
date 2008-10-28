@@ -1,4 +1,5 @@
 usr/share/monkeysphere
 var/lib/monkeysphere
 var/lib/monkeysphere/authorized_keys
+var/lib/monkeysphere/tmp
 etc/monkeysphere
