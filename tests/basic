@@ -23,6 +23,7 @@ launch_sshd() {
     socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
     export SSHD_PID=$!
 
+    # wait until the socket is created before continuing
     while [ ! -S "$SOCKET" ] ; do
 	sleep 1
     done
@@ -89,6 +90,7 @@ cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
 
 cat <<EOF >> "$TEMPDIR"/testuser/.ssh/config
 UserKnownHostsFile $TEMPDIR/testuser/.ssh/known_hosts
+IdentityFile $TEMPDIR/testuser/.ssh/no-such-identity
 ProxyCommand $TEMPDIR/testuser/.ssh/proxy-command %h %p $SOCKET
 EOF
 
@@ -187,8 +189,6 @@ launch_sshd
 
 # and make sure the user can no longer connect
 echo "### testuser attempting to connect to sshd socket..."
-# FIXME: this prompts for the passphrase for the default identity
-# file.  how can this be avoided?
 ssh_test || SSH_RETURN="$?"
 if [ "$SSH_RETURN" != '255' ] ; then
     exit
