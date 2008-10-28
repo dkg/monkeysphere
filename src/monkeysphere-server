@@ -194,6 +194,7 @@ update_users() {
         chown -R "$MONKEYSPHERE_USER" "$TMPLOC"
 
 	# process authorized_user_ids file
+	log debug "checking for authorized_user_ids..."
 	# translating ssh-style path variables
 	authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
 	if [ -s "$authorizedUserIDs" ] ; then
@@ -213,20 +214,27 @@ update_users() {
 		    ". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
 		RETURN="$?"
 	    else
-		log verbose "not processing authorized_user_ids."
+		log debug "not processing authorized_user_ids."
 	    fi
+	else
+	    log debug "empty or absent authorized_user_ids file."
 	fi
 
 	# add user-controlled authorized_keys file if specified
 	# translate ssh-style path variables
 	rawAuthorizedKeys=$(translate_ssh_variables "$uname" "$RAW_AUTHORIZED_KEYS")
-	if [ "$rawAuthorizedKeys" -a -s "$rawAuthorizedKeys" ] ; then
-	    # check permissions on the authorized_keys file path
-	    if check_key_file_permissions "$uname" "$rawAuthorizedKeys" ; then
-		log verbose "adding raw authorized_keys file... "
-		cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
+	if [ "$rawAuthorizedKeys" ] ; then
+	    log debug "checking for raw authorized_keys..."
+	    if [ -s "$rawAuthorizedKeys" ] ; then
+		# check permissions on the authorized_keys file path
+		if check_key_file_permissions "$uname" "$rawAuthorizedKeys" ; then
+		    log verbose "adding raw authorized_keys file... "
+		    cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
+		else
+		    log debug "not adding raw authorized_keys file."		
+		fi
 	    else
-		log verbose "not adding raw authorized_keys file."		
+		log debug "empty or absent authorized_keys file."
 	    fi
 	fi
 
