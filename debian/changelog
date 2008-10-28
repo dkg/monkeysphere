@@ -1,8 +1,13 @@
 monkeysphere (0.18-1) UNRELEASED; urgency=low
 
+  [ Jameson Graef Rollins ]
   * Fix bugs in authorized_{user_ids,keys} file permission checking.
+  
+  [ Daniel Kahn Gillmor ]
+  * update install to ensure placement of
+    /etc/monkeysphere/gnupg-{host,authentication}.conf 
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Tue, 28 Oct 2008 14:36:16 -0400
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 28 Oct 2008 17:58:25 -0400
 
 monkeysphere (0.17-1) experimental; urgency=low
 

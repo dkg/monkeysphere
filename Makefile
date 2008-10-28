@@ -46,6 +46,8 @@ install: all installman
 	install src/monkeysphere-server $(DESTDIR)$(PREFIX)/sbin
 	install -m 0644 src/common $(DESTDIR)$(PREFIX)/share/monkeysphere
 	install doc/* $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
+	install -m 0644 etc/gnupg-host.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/gnupg-host.conf$(ETCSUFFIX)
+	install -m 0644 etc/gnupg-authentication.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/gnupg-authentication.conf$(ETCSUFFIX)
 	install -m 0644 etc/monkeysphere.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/monkeysphere.conf$(ETCSUFFIX)
 	install -m 0644 etc/monkeysphere-server.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/monkeysphere-server.conf$(ETCSUFFIX)
 

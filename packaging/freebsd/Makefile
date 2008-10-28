@@ -34,6 +34,12 @@ post-patch:
 	find . -iname '*.orig' -delete
 
 post-install:
+	@if [ ! -f ${PREFIX}/etc/monkeysphere/gnupg-host.conf ]; then \
+		${CP} -p ${PREFIX}/etc/monkeysphere/gnupg-host.conf.sample ${PREFIX}/etc/monkeysphere/gnupg-host.conf ; \
+	fi
+	@if [ ! -f ${PREFIX}/etc/monkeysphere/gnupg-authentication.conf ]; then \
+		${CP} -p ${PREFIX}/etc/monkeysphere/gnupg-authentication.conf.sample ${PREFIX}/etc/monkeysphere/gnupg-authentication.conf ; \
+	fi
 	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere.conf ]; then \
 		${CP} -p ${PREFIX}/etc/monkeysphere/monkeysphere.conf.sample ${PREFIX}/etc/monkeysphere/monkeysphere.conf ; \
 	fi
