@@ -1,8 +1,10 @@
-monkeysphere (0.19-1) UNRELEASED; urgency=low
+monkeysphere (0.19-1) experimental; urgency=low
 
+  [ Daniel Kahn Gillmor ]
   * simulating an X11 session in the test script.
+  * updated packaging so that symlinks to config files are correct.
 
- --
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 29 Oct 2008 02:47:49 -0400
 
 monkeysphere (0.18-1) experimental; urgency=low
 
