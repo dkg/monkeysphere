@@ -7,6 +7,11 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-10-29 - dkg
+	* aptitude update && aptitude full-upgrade
+	* brought monkeysphere up to 0.19-1
+	* removed tasksel
+	
 2008-10-25 - dkg
 	* aptitude update && aptitude full-upgrade
 	* brought monkeysphere up to 0.16-1
