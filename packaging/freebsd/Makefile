@@ -6,7 +6,7 @@
 #
 
 PORTNAME=      monkeysphere
-PORTVERSION=   0.16
+PORTVERSION=   0.19
 CATEGORIES=    security
 MASTER_SITES=  http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
 # hack for debian orig tarballs
@@ -17,7 +17,7 @@ COMMENT=       use the OpenPGP web of trust to verify ssh connections
 
 LIB_DEPENDS=	gnutls.26:${PORTSDIR}/security/gnutls
 RUN_DEPENDS=    base64:${PORTSDIR}/converters/base64 \
-		gpg:${PORTSDIR}/security/gnupg \
+		gpg:${PORTSDIR}/security/gnupg1 \
 		lockfile:${PORTSDIR}/mail/procmail \
 		/usr/local/bin/getopt:${PORTSDIR}/misc/getopt \
 		bash:${PORTSDIR}/shells/bash
@@ -34,6 +34,12 @@ post-patch:
 	find . -iname '*.orig' -delete
 
 post-install:
+	@if [ ! -f ${PREFIX}/etc/monkeysphere/gnupg-host.conf ]; then \
+		${CP} -p ${PREFIX}/etc/monkeysphere/gnupg-host.conf.sample ${PREFIX}/etc/monkeysphere/gnupg-host.conf ; \
+	fi
+	@if [ ! -f ${PREFIX}/etc/monkeysphere/gnupg-authentication.conf ]; then \
+		${CP} -p ${PREFIX}/etc/monkeysphere/gnupg-authentication.conf.sample ${PREFIX}/etc/monkeysphere/gnupg-authentication.conf ; \
+	fi
 	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere.conf ]; then \
 		${CP} -p ${PREFIX}/etc/monkeysphere/monkeysphere.conf.sample ${PREFIX}/etc/monkeysphere/monkeysphere.conf ; \
 	fi

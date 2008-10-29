@@ -20,6 +20,11 @@ export SYSSHAREDIR
 SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
 export SYSDATADIR
 
+# monkeysphere temp directory, in sysdatadir to enable atomic moves of
+# authorized_keys files
+MSTMPDIR="${SYSDATADIR}/tmp"
+export MSTMPDIR
+
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
 
@@ -148,6 +153,8 @@ update_users() {
 	unames=$(getent passwd | cut -d: -f1)
     fi
 
+    RETCODE=0
+
     # set mode
     MODE="authorized_keys"
 
@@ -165,7 +172,7 @@ update_users() {
     # loop over users
     for uname in $unames ; do
 	# check all specified users exist
-	if ! getent passwd "$uname" >/dev/null ; then
+	if ! id "$uname" >/dev/null ; then
 	    log error "----- unknown user '$uname' -----"
 	    continue
 	fi
@@ -173,7 +180,7 @@ update_users() {
 	log verbose "----- user: $uname -----"
 
         # make temporary directory
-        TMPLOC=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+        TMPLOC=$(mktemp -d ${MSTMPDIR}/tmp.XXXXXXXXXX)
 
 	# trap to delete temporary directory on exit
 	trap "rm -rf $TMPLOC" EXIT
@@ -194,6 +201,7 @@ update_users() {
         chown -R "$MONKEYSPHERE_USER" "$TMPLOC"
 
 	# process authorized_user_ids file
+	log debug "checking for authorized_user_ids..."
 	# translating ssh-style path variables
 	authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
 	if [ -s "$authorizedUserIDs" ] ; then
@@ -213,20 +221,27 @@ update_users() {
 		    ". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
 		RETURN="$?"
 	    else
-		log error "Improper permissions on path '$AUTHORIZED_USER_IDS'."
+		log debug "not processing authorized_user_ids."
 	    fi
+	else
+	    log debug "empty or absent authorized_user_ids file."
 	fi
 
 	# add user-controlled authorized_keys file if specified
 	# translate ssh-style path variables
 	rawAuthorizedKeys=$(translate_ssh_variables "$uname" "$RAW_AUTHORIZED_KEYS")
-	if [ "$rawAuthorizedKeys" -a -s "$rawAuthorizedKeys" ] ; then
-	    # check permissions on the authorized_keys file path
-	    if check_key_file_permissions "$uname" "$rawAuthorizedKeys" ; then
-		log verbose "adding raw authorized_keys file... "
-		cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
+	if [ "$rawAuthorizedKeys" != 'none' ] ; then
+	    log debug "checking for raw authorized_keys..."
+	    if [ -s "$rawAuthorizedKeys" ] ; then
+		# check permissions on the authorized_keys file path
+		if check_key_file_permissions "$uname" "$rawAuthorizedKeys" ; then
+		    log verbose "adding raw authorized_keys file... "
+		    cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
+		else
+		    log debug "not adding raw authorized_keys file."		
+		fi
 	    else
-		log error "Improper permissions on path '$RAW_AUTHORIZED_KEYS'.  Not added to authorized_keys file."
+		log debug "empty or absent authorized_keys file."
 	    fi
 	fi
 
@@ -235,12 +250,25 @@ update_users() {
 	    # openssh appears to check the contents of the
 	    # authorized_keys file as the user in question, so the
 	    # file must be readable by that user at least.
-	    # FIXME: is there a better way to do this?
-	    chown root "$AUTHORIZED_KEYS"
-	    chgrp $(getent passwd "$uname" | cut -f4 -d:) "$AUTHORIZED_KEYS"
-	    chmod g+r "$AUTHORIZED_KEYS"
 
-	    mv -f "$AUTHORIZED_KEYS" "${SYSDATADIR}/authorized_keys/${uname}"
+	    # but in general, we don't want the user tampering with
+	    # this file directly, so we'll adopt this approach: Own
+	    # the file by the monkeysphere-server invoker (usually
+	    # root, but should be the same uid that sshd is launched
+	    # as); change the group of the file so that members of the
+	    # user's group can read it.
+
+	    # FIXME: is there a better way to do this?
+	    chown $(whoami) "$AUTHORIZED_KEYS" && \
+		chgrp $(id -g "$uname") "$AUTHORIZED_KEYS" && \
+		chmod g+r "$AUTHORIZED_KEYS" && \
+		mv -f "$AUTHORIZED_KEYS" "${SYSDATADIR}/authorized_keys/${uname}" || \
+		{ 
+		log error "Failed to install authorized_keys for '$uname'!"
+		rm -f "${SYSDATADIR}/authorized_keys/${uname}"
+		# indicate that there has been a failure:
+		RETURN=1
+		}
 	else
 	    rm -f "${SYSDATADIR}/authorized_keys/${uname}"
 	fi
@@ -371,7 +399,7 @@ EOF
     (umask 077 && \
 	gpg_host --export-secret-key "$fingerprint" | \
 	openpgp2ssh "$fingerprint" > "${SYSDATADIR}/ssh_host_rsa_key")
-    log info "Private SSH host key output to file: ${SYSDATADIR}/ssh_host_rsa_key"
+    log info "private SSH host key output to file: ${SYSDATADIR}/ssh_host_rsa_key"
 }
 
 # extend the lifetime of a host key:

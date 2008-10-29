@@ -24,7 +24,7 @@ export SYSCONFIGDIR
 
 # failure function.  exits with code 255, unless specified otherwise.
 failure() {
-    echo "$1" >&2
+    [ "$1" ] && echo "$1" >&2
     exit ${2:-'255'}
 }
 
@@ -393,8 +393,9 @@ test_gpg_expire() {
 # check that a file is properly owned, and that all it's parent
 # directories are not group/other writable
 check_key_file_permissions() {
-    local user
+    local uname
     local path
+    local stat
     local access
     local gAccess
     local oAccess
@@ -404,30 +405,36 @@ check_key_file_permissions() {
 	[ "$1" = "w" ]
     }
 
-    user="$1"
+    uname="$1"
     path="$2"
 
-    # return 0 is path does not exist
-    [ -e "$path" ] || return 0
+    # return 255 if cannot stat file
+    if ! stat=$(ls -ld "$path" 2>/dev/null) ; then
+        log error "could not stat path '$path'."
+	return 255
+    fi
 
-    owner=$(ls -l "$path" | awk '{ print $3 }')
-    gAccess=$(ls -l "$path" | cut -c6)
-    oAccess=$(ls -l "$path" | cut -c9)
+    owner=$(echo "$stat" | awk '{ print $3 }')
+    gAccess=$(echo "$stat" | cut -c6)
+    oAccess=$(echo "$stat" | cut -c9)
 
-    # check owner
-    if [ "$owner" != "$user" -a "$owner" != 'root' ] ; then
+    # return 1 if path has invalid owner
+    if [ "$owner" != "$uname" -a "$owner" != 'root' ] ; then
+	log error "improper ownership on path '$path'."
 	return 1
     fi
 
-    # check group/other writability
+    # return 2 if path has group or other writability
     if is_write "$gAccess" || is_write "$oAccess" ; then
+	log error "improper group or other writability on path '$path'."
 	return 2
     fi
 
+    # return zero if all clear, or go to next path
     if [ "$path" = '/' ] ; then
 	return 0
     else
-	check_key_file_permissions $(dirname "$path")
+	check_key_file_permissions "$uname" $(dirname "$path")
     fi
 }
 
@@ -662,7 +669,7 @@ process_user_id() {
 		else
 		    log debug "  - unacceptable primary key."
 		    if [ -z "$sshKey" ] ; then
-			log error "   ! primary key could not be translated (not RSA or DSA?)."
+			log error "    ! primary key could not be translated (not RSA or DSA?)."
 		    else
 			echo "1:${sshKey}"
 		    fi
@@ -1018,7 +1025,7 @@ process_authorized_user_ids() {
     log debug "processing authorized_user_ids file..."
 
     if ! meat "$authorizedUserIDs" > /dev/null ; then
-	log debug "no user IDs to process."
+	log debug " no user IDs to process."
 	return
     fi
 

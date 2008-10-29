@@ -1,11 +1,38 @@
+monkeysphere (0.19-1) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * simulating an X11 session in the test script.
+  * updated packaging so that symlinks to config files are correct.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 29 Oct 2008 02:47:49 -0400
+
+monkeysphere (0.18-1) experimental; urgency=low
+
+  [ Jameson Graef Rollins ]
+  * Fix bugs in authorized_{user_ids,keys} file permission checking.
+  * Add new monkeysphere tmpdir to enable atomic moves of authorized_keys
+    files.
+  * chown authorized_keys files to `whoami`, for compatibility with test
+    suite.
+  * major improvements to test suite, added more tests.
+  
+  [ Daniel Kahn Gillmor ]
+  * update make install to ensure placement of
+    /etc/monkeysphere/gnupg-{host,authentication}.conf 
+  * choose either --quick-random or --debug-quick-random depending on
+    which gpg supports for the test suite.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 29 Oct 2008 00:41:38 -0400
+
 monkeysphere (0.17-1) experimental; urgency=low
 
+  [ Jameson Graef Rollins ]  
   * Fix some bugs in, and cleanup, authorized_keys file creation in
     monkeysphere-server update-users.
   * Move to using the empty string for not adding a user-controlled
     authorized_keys file in the RAW_AUTHORIZED_KEYS variable.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Mon, 27 Oct 2008 07:39:10 -0400
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 28 Oct 2008 02:04:22 -0400
 
 monkeysphere (0.16-1) experimental; urgency=low
 
