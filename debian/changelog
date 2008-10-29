@@ -1,4 +1,4 @@
-monkeysphere (0.18-1) UNRELEASED; urgency=low
+monkeysphere (0.18-1) experimental; urgency=low
 
   [ Jameson Graef Rollins ]
   * Fix bugs in authorized_{user_ids,keys} file permission checking.
@@ -6,14 +6,15 @@ monkeysphere (0.18-1) UNRELEASED; urgency=low
     files.
   * chown authorized_keys files to `whoami`, for compatibility with test
     suite.
+  * major improvements to test suite, added more tests.
   
   [ Daniel Kahn Gillmor ]
-  * update install to ensure placement of
+  * update make install to ensure placement of
     /etc/monkeysphere/gnupg-{host,authentication}.conf 
   * choose either --quick-random or --debug-quick-random depending on
     which gpg supports for the test suite.
 
- -- Jameson Graef Rollins <jrollins@phys.columbia.edu>  Tue, 28 Oct 2008 19:19:20 -0400
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 29 Oct 2008 00:41:38 -0400
 
 monkeysphere (0.17-1) experimental; urgency=low
 
