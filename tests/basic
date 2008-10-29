@@ -115,6 +115,7 @@ export SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
 export SSHD_PID=
 
+export DISPLAY=monkeys
 
 ### CONFIGURE ENVIRONMENTS
 
