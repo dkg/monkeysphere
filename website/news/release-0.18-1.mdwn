@@ -1,0 +1,25 @@
+[[meta title="Monkeysphere 0.18-1 released!"]]
+
+# Monkeysphere 0.18-1 released! #
+
+Monkeysphere 0.18-1 has been released.  
+
+Notes from the changelog:
+
+<pre>
+  [ Jameson Graef Rollins ]
+  * Fix bugs in authorized_{user_ids,keys} file permission checking.
+  * Add new monkeysphere tmpdir to enable atomic moves of authorized_keys
+    files.
+  * chown authorized_keys files to `whoami`, for compatibility with test
+    suite.
+  * major improvements to test suite, added more tests.
+  
+  [ Daniel Kahn Gillmor ]
+  * update make install to ensure placement of
+    /etc/monkeysphere/gnupg-{host,authentication}.conf 
+  * choose either --quick-random or --debug-quick-random depending on
+    which gpg supports for the test suite.
+</pre>
+
+[[Download]] it now!
