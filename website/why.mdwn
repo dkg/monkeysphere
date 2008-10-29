@@ -137,6 +137,9 @@ than the current infrastructure allows, and is more meaningful to
 actual humans using these tools than some message like "Certified by
 GloboTrust".
 
+You may also be interested in [some thoughts about alternate PKIs for
+SSH](/similar).
+
 ## Philosophy ##
 
 Humans (and
