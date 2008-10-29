@@ -15,6 +15,7 @@
 # MySQL puts its data in /var/db/mysql
 
 VARLIB="/var/monkeysphere"
+ETCDIR="/usr/local/etc/monkeysphere"
 
 case $2 in
 POST-INSTALL)
@@ -56,20 +57,14 @@ POST-INSTALL)
                 fi
         fi
 
-	## set up the cache directories:
+	## set up the cache directories, and link them to the config files:
 
 	install -d -o root -g monkeysphere -m 750 "$VARLIB"/gnupg-host
-	cat <<EOF > "$VARLIB"/gnupg-host/gpg.conf
-list-options show-uid-validity
-EOF
+	ln -sf "$ETCDIR"/gnupg-host.conf  "$VARLIB"/gnupg-host/gpg.conf
 
 	install -d -o monkeysphere -g monkeysphere -m 700 "$VARLIB"/gnupg-authentication
-# install authentication gpg.conf
-	cat <<EOF > "$VARLIB"/gnupg-authentication/gpg.conf
-list-options show-uid-validity
-primary-keyring $VARLIB/gnupg-authentication/pubring.gpg
-keyring $VARLIB/gnupg-host/pubring.gpg
-EOF
+	ln -sf "$ETCDIR"/gnupg-authentication.conf  "$VARLIB"/gnupg-authentication/gpg.conf
+
 	chown monkeysphere:monkeysphere "$VARLIB"/gnupg-authentication/gpg.conf
 
 	monkeysphere-server diagnostics
