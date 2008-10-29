@@ -91,7 +91,6 @@ export PATH="$TESTDIR"/../src:"$TESTDIR"/../src/keytrans:"$PATH"
 
 export MONKEYSPHERE_SYSDATADIR="$TEMPDIR"
 export MONKEYSPHERE_SYSCONFIGDIR="$TEMPDIR"
-export MONKEYSPHERE_SERVER_CONFIG="$TEMPDIR"/monkeysphere-server.conf
 export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src
 export MONKEYSPHERE_MONKEYSPHERE_USER=$(whoami)
 export MONKEYSPHERE_CHECK_KEYSERVER=false
@@ -139,8 +138,8 @@ mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/gnupg-host
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authorized_keys
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/tmp
-cp etc/monkeysphere/monkeysphere-server.conf "$MONKEYSPHERE_SERVER_CONFIG"
-cat <<EOF >> "$MONKEYSPHERE_SERVER_CONFIG"
+cp etc/monkeysphere/monkeysphere-server.conf "$TEMPDIR"/monkeysphere-server.conf
+cat <<EOF >> "$TEMPDIR"/monkeysphere-server.conf
 AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authorized_user_ids"
 EOF
 cat <<EOF > "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication/gpg.conf
