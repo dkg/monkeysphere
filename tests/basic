@@ -90,7 +90,7 @@ export PATH="$TESTDIR"/../src:"$TESTDIR"/../src/keytrans:"$PATH"
 export MONKEYSPHERE_SYSDATADIR="$TEMPDIR"
 export MONKEYSPHERE_SYSCONFIGDIR="$TEMPDIR"
 export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src
-export MONKEYSPHERE_MONKEYSPHERE_USER="$USER"
+export MONKEYSPHERE_MONKEYSPHERE_USER=$(whoami)
 export MONKEYSPHERE_CHECK_KEYSERVER=false
 export MONKEYSPHERE_LOG_LEVEL=DEBUG
 
@@ -172,9 +172,9 @@ EOF
 
 ### TESTUSER TESTS
 
-# generate an auth subkey for the test user
+# generate an auth subkey for the test user that expires in 2 days
 echo "### generating key for testuser..."
-monkeysphere gen-subkey --expire 0
+monkeysphere gen-subkey --expire 2
 
 # add server key to testuser keychain
 echo "### export server key to testuser..."
@@ -184,7 +184,7 @@ gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 echo "### export testuser key to server..."
 gpg --export testuser | monkeysphere-server gpg-authentication-cmd --import
 echo "### update server authorized_keys file for this testuser..."
-monkeysphere-server update-users testuser
+monkeysphere-server update-users $(whoami)
 
 # connect to test sshd, using monkeysphere-ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
@@ -196,13 +196,15 @@ ssh_test
 # authentication FAILS...
 echo "### removing testuser authorized_user_ids and reupdating authorized_keys..."
 rm -f "$TEMPDIR"/testuser/.monkeysphere/authorized_user_ids
-monkeysphere-server update-users testuser
+monkeysphere-server update-users $(whoami)
 
 # make sure the user can NOT connect
 echo "### ssh connection test for server authentication denial..."
 ssh_test
-if [ "$?" != '255' ] ; then
-    exit
+ret="$?"
+if [ "$ret" != '255' ] ; then
+    echo "### connection should have failed!"
+    exit "$ret"
 fi
 
 trap - EXIT
