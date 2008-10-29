@@ -318,10 +318,12 @@ case $COMMAND in
     'update-known_hosts'|'update-known-hosts'|'k')
 	MODE='known_hosts'
 
+	# touch the known_hosts file so that the file permission check
+	# below won't fail upon not finding the file
+	(umask 0022 && touch "$KNOWN_HOSTS")
+
 	# check permissions on the known_hosts file path
-	if ! check_key_file_permissions "$USER" "$KNOWN_HOSTS" ; then
-	    failure "Improper permissions on known_hosts file path."
-	fi
+	check_key_file_permissions "$USER" "$KNOWN_HOSTS" || failure
 
         # if hosts are specified on the command line, process just
         # those hosts

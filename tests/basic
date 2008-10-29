@@ -104,19 +104,19 @@ cp -a "$TESTDIR"/home/admin "$TEMPDIR"/
 cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
 
 # set up environment for testuser
-export HOME="$TEMPDIR"/testuser
-export GNUPGHOME="$HOME"/.gnupg
-export SSH_ASKPASS="$HOME"/.ssh/askpass
-export MONKEYSPHERE_HOME="$HOME"/.monkeysphere
+TESTHOME="$TEMPDIR"/testuser
+export GNUPGHOME="$TESTHOME"/.gnupg
+export SSH_ASKPASS="$TESTHOME"/.ssh/askpass
+export MONKEYSPHERE_HOME="$TESTHOME"/.monkeysphere
 
-cat <<EOF >> "$HOME"/.ssh/config
-UserKnownHostsFile $HOME/.ssh/known_hosts
-IdentityFile $HOME/.ssh/no-such-identity
-ProxyCommand $HOME/.ssh/proxy-command %h %p $SOCKET
+cat <<EOF >> "$TESTHOME"/.ssh/config
+UserKnownHostsFile $TESTHOME/.ssh/known_hosts
+IdentityFile $TESTHOME/.ssh/no-such-identity
+ProxyCommand $TESTHOME/.ssh/proxy-command %h %p $SOCKET
 EOF
 
 cat <<EOF >> "$MONKEYSPHERE_HOME"/monkeysphere.conf
-KNOWN_HOSTS=$HOME/.ssh/known_hosts
+KNOWN_HOSTS=$TESTHOME/.ssh/known_hosts
 EOF
 
 get_gpg_prng_arg >> "$GNUPGHOME"/gpg.conf
@@ -128,7 +128,7 @@ EOF
 
 ### SERVER TESTS
 
-# setup monkeysphere temp gnupghome directories
+# setup monkeysphere directories
 mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/gnupg-host
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authorized_keys
@@ -195,7 +195,7 @@ ssh_test
 # authorized_keys file, this is to make sure that the ssh
 # authentication FAILS...
 echo "### removing testuser authorized_user_ids and reupdating authorized_keys..."
-rm -f "$TEMPDIR"/testuser/.monkeysphere/authorized_user_ids
+rm -f "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-server update-users $(whoami)
 
 # make sure the user can NOT connect
