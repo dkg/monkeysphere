@@ -19,8 +19,12 @@ gpgadmin() {
     GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg "$@"
 }
 
+# test ssh connection
+# first argument is expected return code from ssh connection
 ssh_test() {
     umask 0077
+
+    CODE=${1:-0}
 
     # start the ssh daemon on the socket
     echo "##### starting ssh server..."
@@ -32,16 +36,27 @@ ssh_test() {
 	sleep 1
     done
 
+    set +e
+
     # make a client connection to the socket
     echo "##### starting ssh client..."
     ssh-agent bash -c \
 	"monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config testhost true"
     RETURN="$?"
 
-    # kill the previous sshd process if it's still running
+    # kill the sshd process if it's still running
     kill "$SSHD_PID"
 
-    return "$RETURN"
+    set -e
+
+    echo "##### return $RETURN"
+    if [ "$RETURN" = "$CODE" ] ; then
+	echo "##### ssh connection test returned as desired"
+	return 0
+    else
+	echo "##### ssh connection test failed.  expected return code $CODE"
+	return 1
+    fi
 }
 
 failed_cleanup() {
@@ -195,20 +210,30 @@ monkeysphere-server update-users $(whoami)
 echo "### ssh connection test for success..."
 ssh_test
 
-# remove the testuser's authorized_user_ids file and update
-# authorized_keys file, this is to make sure that the ssh
-# authentication FAILS...
-echo "### removing testuser authorized_user_ids and reupdating authorized_keys..."
-rm -f "$TESTHOME"/.monkeysphere/authorized_user_ids
+# remove the testuser's authorized_user_ids file, update, and make
+# sure that the ssh authentication FAILS
+echo "### removing testuser authorized_user_ids and updating..."
+mv "$TESTHOME"/.monkeysphere/authorized_user_ids{,.bak}
 monkeysphere-server update-users $(whoami)
-
-# make sure the user can NOT connect
 echo "### ssh connection test for server authentication denial..."
-ssh_test || ret="$?"
-if [ "$ret" != '255' ] ; then
-    echo "### connection should have failed!"
-    exit "$ret"
-fi
+ssh_test 255
+mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
+
+# put improper permissions on authorized_user_ids file, update, and
+# make sure ssh authentication FAILS
+echo "### setting group writability on authorized_user_ids and updating..."
+chmod g+w "$TESTHOME"/.monkeysphere/authorized_user_ids
+monkeysphere-server update-users $(whoami)
+echo "### ssh connection test for server authentication denial..."
+ssh_test 255
+chmod g-w "$TESTHOME"/.monkeysphere/authorized_user_ids
+echo "### setting other writability on authorized_user_ids and updating..."
+chmod o+w "$TESTHOME"/.monkeysphere/authorized_user_ids
+monkeysphere-server update-users $(whoami)
+echo "### ssh connection test for server authentication denial..."
+ssh_test 255
+chmod o-w "$TESTHOME"/.monkeysphere/authorized_user_ids
+
 
 trap - EXIT
 
