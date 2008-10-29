@@ -115,6 +115,10 @@ export SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
 export SSHD_PID=
 
+# Make sure $DISPLAY is set to convince ssh and monkeysphere to fall
+# back on $SSH_ASKPASS.  Make sure it's not set to the current actual
+# $DISPLAY (if one exists) because this test suite should not be doing
+# *anything* with any running X11 session.
 export DISPLAY=monkeys
 
 ### CONFIGURE ENVIRONMENTS

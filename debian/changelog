@@ -1,3 +1,9 @@
+monkeysphere (0.19-1) UNRELEASED; urgency=low
+
+  * simulating an X11 session in the test script.
+
+ --
+
 monkeysphere (0.18-1) experimental; urgency=low
 
   [ Jameson Graef Rollins ]
