@@ -70,6 +70,8 @@ cleanup() {
 ## setup trap
 trap failed_cleanup EXIT
 
+
+### SETUP VARIABLES
 ## set up some variables to ensure that we're operating strictly in
 ## the tests, not system-wide:
 
@@ -89,6 +91,7 @@ export PATH="$TESTDIR"/../src:"$TESTDIR"/../src/keytrans:"$PATH"
 
 export MONKEYSPHERE_SYSDATADIR="$TEMPDIR"
 export MONKEYSPHERE_SYSCONFIGDIR="$TEMPDIR"
+export MONKEYSPHERE_SERVER_CONFIG="$TEMPDIR"/monkeysphere-server.conf
 export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src
 export MONKEYSPHERE_MONKEYSPHERE_USER=$(whoami)
 export MONKEYSPHERE_CHECK_KEYSERVER=false
@@ -97,6 +100,9 @@ export MONKEYSPHERE_LOG_LEVEL=DEBUG
 export SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
 export SSHD_PID=
+
+
+### CONFIGURE ENVIRONMENTS
 
 # copy in admin and testuser home to tmp
 echo "### copying admin and testuser homes..."
@@ -108,35 +114,42 @@ TESTHOME="$TEMPDIR"/testuser
 export GNUPGHOME="$TESTHOME"/.gnupg
 export SSH_ASKPASS="$TESTHOME"/.ssh/askpass
 export MONKEYSPHERE_HOME="$TESTHOME"/.monkeysphere
-
 cat <<EOF >> "$TESTHOME"/.ssh/config
 UserKnownHostsFile $TESTHOME/.ssh/known_hosts
 IdentityFile $TESTHOME/.ssh/no-such-identity
 ProxyCommand $TESTHOME/.ssh/proxy-command %h %p $SOCKET
 EOF
-
 cat <<EOF >> "$MONKEYSPHERE_HOME"/monkeysphere.conf
 KNOWN_HOSTS=$TESTHOME/.ssh/known_hosts
 EOF
-
 get_gpg_prng_arg >> "$GNUPGHOME"/gpg.conf
 
-# set up a simple default monkeysphere-server.conf
-cat <<EOF >> "$TEMPDIR"/monkeysphere-server.conf
-AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authorized_user_ids"
+# set up sshd
+echo "### configuring sshd..."
+cp etc/ssh/sshd_config "$SSHD_CONFIG"
+# write the sshd_config
+cat <<EOF >> "$SSHD_CONFIG"
+HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
+AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authorized_keys/%u
 EOF
 
-### SERVER TESTS
-
-# setup monkeysphere directories
+# set up monkeysphere-server
+echo "### configuring monkeysphere..."
 mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/gnupg-host
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authorized_keys
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/tmp
+cp etc/monkeysphere/monkeysphere-server.conf "$MONKEYSPHERE_SERVER_CONFIG"
+cat <<EOF >> "$MONKEYSPHERE_SERVER_CONFIG"
+AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authorized_user_ids"
+EOF
 cat <<EOF > "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication/gpg.conf
 primary-keyring ${MONKEYSPHERE_SYSDATADIR}/gnupg-authentication/pubring.gpg
 keyring ${MONKEYSPHERE_SYSDATADIR}/gnupg-host/pubring.gpg
 EOF
+
+
+### SERVER TESTS
 
 # create a new host key
 echo "### generating server key..."
@@ -161,14 +174,6 @@ echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 echo "### adding admin as certifier..."
 echo y | monkeysphere-server add-identity-certifier "$TEMPDIR"/admin/.gnupg/pubkey.gpg
 
-# initialize base sshd_config
-echo "### configuring sshd..."
-cp etc/ssh/sshd_config "$SSHD_CONFIG"
-# write the sshd_config
-cat <<EOF >> "$SSHD_CONFIG"
-HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
-AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authorized_keys/%u
-EOF
 
 ### TESTUSER TESTS
 
@@ -200,8 +205,7 @@ monkeysphere-server update-users $(whoami)
 
 # make sure the user can NOT connect
 echo "### ssh connection test for server authentication denial..."
-ssh_test
-ret="$?"
+ssh_test || ret="$?"
 if [ "$ret" != '255' ] ; then
     echo "### connection should have failed!"
     exit "$ret"

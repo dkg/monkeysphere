@@ -230,7 +230,7 @@ update_users() {
 	# add user-controlled authorized_keys file if specified
 	# translate ssh-style path variables
 	rawAuthorizedKeys=$(translate_ssh_variables "$uname" "$RAW_AUTHORIZED_KEYS")
-	if [ "$rawAuthorizedKeys" ] ; then
+	if [ "$rawAuthorizedKeys" != 'none' ] ; then
 	    log debug "checking for raw authorized_keys..."
 	    if [ -s "$rawAuthorizedKeys" ] ; then
 		# check permissions on the authorized_keys file path
