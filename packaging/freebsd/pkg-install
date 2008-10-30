@@ -67,8 +67,6 @@ POST-INSTALL)
 
 	install -d "$VARLIB"/tmp "$VARLIB"/authorized_keys
 
-	chown monkeysphere:monkeysphere "$VARLIB"/gnupg-authentication/gpg.conf
-
 	monkeysphere-server diagnostics
         ;;
 esac
