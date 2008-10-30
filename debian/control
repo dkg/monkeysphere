@@ -2,7 +2,7 @@ Source: monkeysphere
 Section: net
 Priority: extra
 Maintainer: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-Uploaders: Jameson Graef Rollins <jrollins@phys.columbia.edu>
+Uploaders: Jameson Graef Rollins <jrollins@finestructure.net>
 Build-Depends: debhelper (>= 7.0), libgnutls-dev (>= 2.4.0)
 Standards-Version: 3.8.0.1
 Homepage: http://web.monkeysphere.info/
