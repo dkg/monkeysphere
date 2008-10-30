@@ -65,6 +65,8 @@ POST-INSTALL)
 	install -d -o monkeysphere -g monkeysphere -m 700 "$VARLIB"/gnupg-authentication
 	ln -sf "$ETCDIR"/gnupg-authentication.conf  "$VARLIB"/gnupg-authentication/gpg.conf
 
+	install -d "$VARLIB"/tmp "$VARLIB"/authorized_keys
+
 	chown monkeysphere:monkeysphere "$VARLIB"/gnupg-authentication/gpg.conf
 
 	monkeysphere-server diagnostics
