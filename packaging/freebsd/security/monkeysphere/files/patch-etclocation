@@ -6,8 +6,8 @@ index c001f2d..d33fd36 100644
  # authorized_keys file.  '%h' will be replaced by the home directory
  # of the user, and %u will be replaced by the username of the user.
  # For purely admin-controlled authorized_user_ids, you might put them
--# in /etc/monkeysphere/authorized_user_ids/%u
-+# in /usr/local/etc/monkeysphere/authorized_user_ids/%u
+-# in /etc/monkeysphere/authorized_user_ids/%u, for instance.
++# in /usr/local/etc/monkeysphere/authorized_user_ids/%u, for instance.
  #AUTHORIZED_USER_IDS="%h/.monkeysphere/authorized_user_ids"
  
  # Whether to add user controlled authorized_keys file to

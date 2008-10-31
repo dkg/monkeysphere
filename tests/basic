@@ -14,6 +14,13 @@
 # all subcommands in this script should complete without failure:
 set -e
 
+## make sure that the right tools are installed to run the test.  the
+## test has *more* requirements than plain ol' monkeysphere:
+
+which socat || { echo "You must have socat installed to run this test." ; exit 1; }
+
+## FIXME: other checks?
+
 # gpg command for test admin user
 gpgadmin() {
     GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg "$@"

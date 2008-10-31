@@ -1,0 +1,31 @@
+[[meta title="FreeBSD port available"]]
+
+There is now a FreeBSD port available for the Monkeysphere.
+
+It has been built and tested (so far) on a FreeBSD 7.1 AMD64 system,
+installed from the [BETA2
+ISOs](ftp://ftp.freebsd.org/pub/FreeBSD/ISO-IMAGES-amd64/7.1/).  Many
+thanks to [Anarcat](http://anarcat.ath.cx/pgp) for his work in pulling
+this port together!
+
+While the monkeysphere is not officially included in the ports tree
+yet, [a problem
+report](http://www.freebsd.org/cgi/query-pr.cgi?pr=ports/128406) has
+been submitted, and the package itself is functional.
+
+The latest version of the ports directory can be found in [the git
+repository](/community) under
+`packaging/freebsd/security/monkeysphere`.  Please [let us
+know](/community) if you encounter any problems with it on a FreeBSD
+system.
+
+If you have git installed on your FreeBSD system, you should be able
+to build the latest port with:
+
+    git clone git://git.monkeysphere.info/monkeysphere
+    cp -a monkeysphere/packaging/freebsd/security/monkeysphere /usr/ports/security
+    cd /usr/ports/security/monkeysphere
+    make && make install
+
+Happy Hacking!
+
