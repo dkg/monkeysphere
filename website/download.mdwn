@@ -2,10 +2,25 @@
 
 # Downloading and Installing #
 
+Once you've installed the packages, please see the [documentation
+page](/doc) to read up on how to get started [as a regular
+user](/getting-started-user) or [as a systems
+administrator](/getting-started-admin).
+
+## Dependencies ##
+
+Monkeysphere relies on:
+
+ * [GnuTLS](http://gnutls.org/)
+  * version 2.4 or later for general use
+  * [version 2.6 or later](/news/gnutls-2.6-enables-monkeysphere) to use the `monkeysphere subkey-to-ssh-agent` subcommand.
+ * [OpenSSH](http://openssh.com/)
+ * [GnuPG](http://gnupg.org/)
+
 ## Debian ##
 
-If you are running a Debian system, you can install Monkeysphere
-by following these directions:
+If you are running a [Debian](http://www.debian.org/) system, you can
+install Monkeysphere by following these directions:
 
 You can add this repo to your system by putting the following lines in
 `/etc/apt/sources.list.d/monkeysphere.list`:
@@ -14,23 +29,20 @@ You can add this repo to your system by putting the following lines in
 	deb-src http://archive.monkeysphere.info/debian experimental monkeysphere
 
 The repository is currently signed by [The Monkeysphere archive
-signing key](/archive-key), key id EB8AF314 (fingerprint: `2E8D
-D26C 53F1 197D DF40 3E61 18E6 67F1 EB8A F314`).  To cryptographically
+signing key](/archive-key), key id EB8AF314 (fingerprint: `2E8D D26C
+53F1 197D DF40 3E61 18E6 67F1 EB8A F314`).  To cryptographically
 verify the packages, you'll want to [add this key to your apt
 configuration after verifying its
 integrity](http://wiki.debian.org/SecureApt).
 
 To use the `monkeysphere subkey-to-ssh-agent` subcommand, you will
-also need [version 2.6 of GnuTLS](/news/gnutls-2.6-enables-monkeysphere),
-which is available in Debian experimental.
-
-Once you've installed the packages, you might want to read up on how
-to get started [as a regular user](/getting-started-user) or [as a
-systems administrator](/getting-started-admin).
+also need [version 2.6 of
+GnuTLS](/news/gnutls-2.6-enables-monkeysphere), which is available in
+Debian experimental.
 
 ## FreeBSD ##
 
-There is [now a FreeBSD port available](/news/FreeBSD-port-available/)
+There is [now a FreeBSD port available](/news/FreeBSD-port-available)
 for the Monkeysphere.
 
 While the monkeysphere is not officially included in the ports tree
@@ -51,6 +63,12 @@ port with:
     cp -a monkeysphere/packaging/freebsd/security/monkeysphere /usr/ports/security
     cd /usr/ports/security/monkeysphere
     make && make install
+
+To use the `monkeysphere subkey-to-ssh-agent` subcommand, you will
+also need [version 2.6 of
+GnuTLS](/news/gnutls-2.6-enables-monkeysphere), which is [slated to be
+available after the 7.1 ports slush is
+over](http://www.freebsd.org/cgi/query-pr.cgi?pr=ports/127330).
 
 ## Source ##
 
