@@ -3,3 +3,26 @@
 # Technical Details #
 
 Under construction.
+
+## Host key verification ##
+
+When an ssh connection is initiated, the ssh client checks that the
+host key presented by the server matches one found in the connecting
+user's `known_hosts` file.  If so, the ssh client allows the
+connection to continue.  If not, the client asks the user if they
+would like to accept the host key for future session by asking the
+user to verify the host key's fingerprint.
+
+### Adding a server to the monkeysphere ###
+
+Servers are "monkeysphere enabled" by generating an OpenPGP
+authentication key for the server, translating the key into on ssh
+key, and publishing the host key to the Web of Trust.
+
+### Verifying a host key ###
+
+## User authentication ##
+
+### Adding an individual to the monkeysphere ###
+
+### Verifying a user key ###

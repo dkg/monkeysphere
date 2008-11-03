@@ -13,6 +13,7 @@
 
 # all subcommands in this script should complete without failure:
 set -e
+set -o pipefail
 
 ## make sure that the right tools are installed to run the test.  the
 ## test has *more* requirements than plain ol' monkeysphere:
