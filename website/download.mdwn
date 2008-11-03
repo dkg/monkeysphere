@@ -2,6 +2,8 @@
 
 # Downloading and Installing #
 
+## Debian ##
+
 If you are running a Debian system, you can install Monkeysphere
 by following these directions:
 
@@ -26,15 +28,38 @@ Once you've installed the packages, you might want to read up on how
 to get started [as a regular user](/getting-started-user) or [as a
 systems administrator](/getting-started-admin).
 
+## FreeBSD ##
+
+There is [now a FreeBSD port available](/news/FreeBSD-port-available/)
+for the Monkeysphere.
+
+While the monkeysphere is not officially included in the ports tree
+yet, [a problem
+report](http://www.freebsd.org/cgi/query-pr.cgi?pr=ports/128406) has
+been submitted, and the package itself is functional.
+
+The latest version of the ports directory can be found in [the git
+repository](/community) under
+`packaging/freebsd/security/monkeysphere`.  Please [let us
+know](/community) if you encounter any problems with it on a FreeBSD
+system.
+
+Until the port is accepted, you should be able to build the latest
+port with:
+
+    git clone git://git.monkeysphere.info/monkeysphere
+    cp -a monkeysphere/packaging/freebsd/security/monkeysphere /usr/ports/security
+    cd /usr/ports/security/monkeysphere
+    make && make install
+
 ## Source ##
 
-For people who can't use the debian package, or folks who just want to
-look at the source, we recommend [using git](/community).
+For those that would like to download the source directly, [the source
+is available](/community) via [git](http://git.or.cz/).
 
-But if you want a tarball of the most recent release, we publish those
-too.  The [latest
+The [latest
 tarball](http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_0.19.orig.tar.gz)
-has these checksums:
+is also available, and has these checksums:
 
 <pre>
 -----BEGIN PGP SIGNED MESSAGE-----
