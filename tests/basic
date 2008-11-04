@@ -13,11 +13,11 @@
 
 # all subcommands in this script should complete without failure:
 set -e
+# piped commands should return the code of the first non-zero return
 set -o pipefail
 
 ## make sure that the right tools are installed to run the test.  the
 ## test has *more* requirements than plain ol' monkeysphere:
-
 which socat || { echo "You must have socat installed to run this test." ; exit 1; }
 
 ## FIXME: other checks?
@@ -121,7 +121,6 @@ export MONKEYSPHERE_LOG_LEVEL=DEBUG
 
 export SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
-export SSHD_PID=
 
 # Make sure $DISPLAY is set to convince ssh and monkeysphere to fall
 # back on $SSH_ASKPASS.  Make sure it's not set to the current actual
