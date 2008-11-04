@@ -4,29 +4,43 @@
 ## Verifying the key ##
 
 The [Monkeysphere apt repository](/download) is signed by this key, so
-you can verify that the packages come from the right place and have
-not been tampered with.
+you [can verify](http://wiki.debian.org/SecureApt) that the packages
+come from the right place and have not been tampered with.
 
 This key is certified by several of the Monkeysphere developers, and
 should be able to be found from the public keyservers with:
 
-	gpg --keyserver $KEYSERVER --recv EB8AF314
+	$ gpg --recv-key EB8AF314
+	gpg: requesting key EB8AF314 from hkp server pool.sks-keyservers.net
+	gpg: key EB8AF314: public key "Monkeysphere Archive Signing Key (http://archive.monkeysphere.info/debian)" imported
+	gpg: no ultimately trusted keys found
+	gpg: Total number processed: 1
+	gpg:               imported: 1  (RSA: 1)
+	$
 
 You should be able to verify the fingerprint like this:
 
-	[0 dkg@squeak ~]$ gpg --list-key --fingerprint http://archive.monkeysphere.info/debian
+	$ gpg --list-key --fingerprint http://archive.monkeysphere.info/debian
 	pub   4096R/EB8AF314 2008-09-02 [expires: 2009-09-02]
 	      Key fingerprint = 2E8D D26C 53F1 197D DF40  3E61 18E6 67F1 EB8A F314
 	uid       [  full  ] Monkeysphere Archive Signing Key (http://archive.monkeysphere.info/debian)
-	
-	[0 dkg@squeak ~]$ 
+	$ 
 
-And you can verify the fingerprints with:
+And you can also verify the fingerprints with:
  
-	gpg --list-sigs http://archive.monkeysphere.info/debian
+	$ gpg --list-sigs http://archive.monkeysphere.info/debian
 
 If you believe that the repository has been tampered with, please [let
 us know](/community)!
+
+If you have properly verified this key, you can add it to your apt
+keyring for proper cryptographic verification of the archive and its
+packages by doing the following:
+
+	 $ sudo gpg -a --export EB8AF314 | apt-key add -
+	 OK
+	 $ aptitude update
+	 ...
 
 ## The key itself ##
 
