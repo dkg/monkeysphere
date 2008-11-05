@@ -32,8 +32,7 @@ The repository is currently signed by [The Monkeysphere archive
 signing key](/archive-key), key id EB8AF314 (fingerprint: `2E8D D26C
 53F1 197D DF40 3E61 18E6 67F1 EB8A F314`).  To cryptographically
 verify the packages, you'll want to [add this key to your apt
-configuration after verifying its
-integrity](http://wiki.debian.org/SecureApt).
+configuration after verifying its integrity](/archive-key).
 
 To use the `monkeysphere subkey-to-ssh-agent` subcommand, you will
 also need [version 2.6 of
