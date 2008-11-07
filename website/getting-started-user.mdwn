@@ -20,6 +20,16 @@ done with a simple cronjob.  An example of crontab line to do this is:
 
 This would refresh your keychain every day at noon.
 
+Install the monkeysphere software on your system
+------------------------------------------------
+
+If you haven't installed monkeysphere yet, you will need to [download
+and install] (/download) before continuing.
+
+Make sure that you have the GnuTLS library version 2.6 or later
+installed on your system. If you can't (or don't want to) upgrade to
+GnuTLS 2.6 or later, there are patches for GnuTLS 2.4 available in
+[the Monkeysphere git repo](/community).
 
 Keeping your `known_hosts` file in sync with your keyring
 -----------------------------------------------------------
@@ -92,10 +102,6 @@ earlier versions do not.  With a recent version of GnuTLS installed,
 you can feed your authentication subkey to your ssh agent by running:
 
 	$ monkeysphere subkey-to-ssh-agent
-
-If you can't (or don't want to) upgrade to GnuTLS 2.6 or later, there
-are patches for GnuTLS 2.4 available in [the Monkeysphere git
-repo](/community).
 
 FIXME: using the key with a single ssh connection?
 
