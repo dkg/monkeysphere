@@ -54,6 +54,7 @@ ssh_test() {
 
     # kill the sshd process if it's still running
     kill "$SSHD_PID"
+    SSHD_PID=
 
     set -e
 
@@ -87,8 +88,15 @@ cleanup() {
     echo "### removing temp dir..."
     rm -rf "$TEMPDIR"
 
+    if [ "$SSHD_PID" ] ; then
+	echo "### killing off lingering sshd..."
+	kill "$SSHD_PID"
+    fi
+
     wait
 }
+
+SSHD_PID=
 
 ## setup trap
 trap failed_cleanup EXIT
