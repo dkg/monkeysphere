@@ -1,3 +1,10 @@
+#!/usr/bin/make -f
+
+# Makefile for monkeysphere
+
+# (c) 2008 Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Licensed under GPL v3 or later
+
 MONKEYSPHERE_VERSION = `head -n1 debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/'`
 
 # these defaults are for debian.  porters should probably adjust them
