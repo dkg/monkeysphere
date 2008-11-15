@@ -1,14 +1,15 @@
 monkeysphere (0.20-1) UNRELEASED; urgency=low
 
-  [ Jameson Graef Rollins ]
-  * clean up Makefile to generate more elegant source tarballs.
-  
   [ Daniel Kahn Gillmor ]
   * ensure that tempdirs are properly created, bail out otherwise instead
     of stumbling ahead.
   * minor fussing with the test script to make it cleaner.
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sun, 09 Nov 2008 18:09:40 -0500
+  [ Jameson Graef Rollins ]
+  * clean up Makefile to generate more elegant source tarballs.
+  * make myself the maintainer.
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 15 Nov 2008 13:12:57 -0500
 
 monkeysphere (0.19-1) experimental; urgency=low
 
