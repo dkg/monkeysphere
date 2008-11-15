@@ -1,4 +1,4 @@
-monkeysphere (0.20-1) UNRELEASED; urgency=low
+monkeysphere (0.20-1) unstable; urgency=low
 
   [ Daniel Kahn Gillmor ]
   * ensure that tempdirs are properly created, bail out otherwise instead
