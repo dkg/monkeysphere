@@ -3,8 +3,9 @@ monkeysphere (0.21-1) unstable; urgency=low
   * move debian packaging to packaging subdirectory.
   * add debian prerm script, and add debhelper lines to other install
     scripts.
+  * upload to Debian (Closes: #505806)
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 15 Nov 2008 15:48:54 -0500
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 15 Nov 2008 16:14:27 -0500
 
 monkeysphere (0.20-1) unstable; urgency=low
 
