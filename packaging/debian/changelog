@@ -1,3 +1,9 @@
+monkeysphere (0.21-2) unstable; urgency=low
+
+  * actually rmdir /var/lib/monkeysphere-* during prerm if possible.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sat, 15 Nov 2008 16:36:57 -0500
+
 monkeysphere (0.21-1) unstable; urgency=low
 
   * New upstream release:

@@ -1,0 +1,10 @@
+I would like to know, at INFO (default) log level, when the 
+monkeyspehere makes a "real" modification to my known_hosts file; that 
+is, when it adds or deletes a key.
+
+Apparently this is hard because monkeysphere is currently configured to 
+delete all keys and then add good keys, so a key added for the first 
+time seems to the monkeysphere very similar to a key re-added ten 
+seconds after last login.
+
+Still, from a UI perspective, I want to know what monkeysphere is doing.
