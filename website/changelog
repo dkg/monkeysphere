@@ -1,3 +1,9 @@
+monkeysphere (0.21-1) unstable; urgency=low
+
+  * move debian packaging to packaging subdirectory.
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 15 Nov 2008 14:26:48 -0500
+
 monkeysphere (0.20-1) unstable; urgency=low
 
   [ Daniel Kahn Gillmor ]
