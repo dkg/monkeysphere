@@ -1,4 +1,11 @@
-MONKEYSPHERE_VERSION = `head -n1 debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/'`
+#!/usr/bin/make -f
+
+# Makefile for monkeysphere
+
+# (c) 2008 Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Licensed under GPL v3 or later
+
+MONKEYSPHERE_VERSION = `head -n1 packaging/debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/'`
 
 # these defaults are for debian.  porters should probably adjust them
 # before calling make install
@@ -22,7 +29,7 @@ tarball: clean
 
 debian-package: tarball
 	tar xzf monkeysphere_$(MONKEYSPHERE_VERSION).orig.tar.gz
-	cp -a debian monkeysphere-$(MONKEYSPHERE_VERSION)
+	cp -a packaging/debian monkeysphere-$(MONKEYSPHERE_VERSION)
 	(cd monkeysphere-$(MONKEYSPHERE_VERSION) && debuild -uc -us)
 	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
 

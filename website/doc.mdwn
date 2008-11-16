@@ -2,20 +2,16 @@
 
 # Documentation #
 
-## Dependencies ##
-
-Monkeysphere relies on:
-
- * [GnuTLS](http://gnutls.org/) version 2.4.0 or later
- * [OpenSSH](http://openssh.com/)
- * [GnuPG](http://gnupg.org/)
-
 ## Getting started ##
 
  * [Downloading and installing](/download)
  * Getting started as a [user](/getting-started-user)
  * Getting started as a [server admin](/getting-started-admin)
+
+## Under the hood ##
+
  * [Developing the monkeysphere](/community)
+ * [Technical details](/technical-details)
 
 ## References ##
 

@@ -1,4 +1,4 @@
-MonkeySphere is a system to use the OpenPGP web-of-trust to
+Monkeysphere is a system to use the OpenPGP web-of-trust to
 authenticate and encrypt ssh connections.
 
 It is free software, developed by:
@@ -7,17 +7,17 @@ It is free software, developed by:
   Jamie McClelland <jamie@mayfirst.org>
   Micah Anderson <micah@riseup.net>
   Matthew Goins <mjgoins@openflows.com>
-  Mike Castleman <mlcastle@mlcastle.net>
+  Mike Castleman <m@mlcastle.net>
   Elliot Winard <enw@caveteen.com>
   Ross Glover <ross@ross.mayfirst.org>
   Greg Lyle <greg@stealthisemail.com>
 
-MonkeySphere is distributed in the hope that it will be useful, but
+Monkeysphere is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 General Public License for more details.
 
-MonkeySphere Copyright 2007, and are all released under the GPL,
+Monkeysphere Copyright 2007, and are all released under the GPL,
 version 3 or later.
 
 

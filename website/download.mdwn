@@ -2,10 +2,25 @@
 
 # Downloading and Installing #
 
+Once you've installed the packages, please see the [documentation
+page](/doc) to read up on how to get started [as a regular
+user](/getting-started-user) or [as a systems
+administrator](/getting-started-admin).
+
+## Dependencies ##
+
+Monkeysphere relies on:
+
+ * [GnuTLS](http://gnutls.org/)
+  * version 2.4 or later for general use
+  * [version 2.6 or later](/news/gnutls-2.6-enables-monkeysphere) to use the `monkeysphere subkey-to-ssh-agent` subcommand.
+ * [OpenSSH](http://openssh.com/)
+ * [GnuPG](http://gnupg.org/)
+
 ## Debian ##
 
-If you are running a Debian system, you can install Monkeysphere
-by following these directions:
+If you are running a [Debian](http://www.debian.org/) system, you can
+install Monkeysphere by following these directions:
 
 You can add this repo to your system by putting the following lines in
 `/etc/apt/sources.list.d/monkeysphere.list`:
@@ -13,23 +28,20 @@ You can add this repo to your system by putting the following lines in
 	deb http://archive.monkeysphere.info/debian experimental monkeysphere
 	deb-src http://archive.monkeysphere.info/debian experimental monkeysphere
 
-The repository is currently signed by the Monkeysphere archive
-signing key, key id EB8AF314 (fingerprint: `2E8D
-D26C 53F1 197D DF40 3E61 18E6 67F1 EB8A F314`).  To cryptographically
+The repository is currently signed by [The Monkeysphere archive
+signing key](/archive-key), key id EB8AF314 (fingerprint: `2E8D D26C
+53F1 197D DF40 3E61 18E6 67F1 EB8A F314`).  To cryptographically
 verify the packages, you'll want to [add this key to your apt
 configuration after verifying its integrity](/archive-key).
 
 To use the `monkeysphere subkey-to-ssh-agent` subcommand, you will
-also need [version 2.6 of GnuTLS](/news/gnutls-2.6-enables-monkeysphere),
-which is available in Debian experimental.
-
-Once you've installed the packages, you might want to read up on how
-to get started [as a regular user](/getting-started-user) or [as a
-systems administrator](/getting-started-admin).
+also need [version 2.6 of
+GnuTLS](/news/gnutls-2.6-enables-monkeysphere), which is available in
+Debian experimental.
 
 ## FreeBSD ##
 
-There is [now a FreeBSD port available](/news/FreeBSD-port-available/)
+There is [now a FreeBSD port available](/news/FreeBSD-port-available)
 for the Monkeysphere.
 
 While the monkeysphere is not officially included in the ports tree
@@ -51,44 +63,50 @@ port with:
     cd /usr/ports/security/monkeysphere
     make && make install
 
+To use the `monkeysphere subkey-to-ssh-agent` subcommand, you will
+also need [version 2.6 of
+GnuTLS](/news/gnutls-2.6-enables-monkeysphere), which is [slated to be
+available after the 7.1 ports slush is
+over](http://www.freebsd.org/cgi/query-pr.cgi?pr=ports/127330).
+
 ## Source ##
 
 For those that would like to download the source directly, [the source
 is available](/community) via [git](http://git.or.cz/).
 
 The [latest
-tarball](http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_0.19.orig.tar.gz)
+tarball](http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_0.21.orig.tar.gz)
 is also available, and has these checksums:
 
 <pre>
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-checksums for the monkeysphere 0.19 release:
+checksums for the monkeysphere 0.21 release:
 
 MD5:
-64c643dd0ab642bbc8814aec1718000e  monkeysphere_0.19.orig.tar.gz
+15fe181983565aca0fbe4c41f9f6752e  monkeysphere_0.21.orig.tar.gz
 
 SHA1:
-ea3c263b084d2c0b7922cd96677be192201700e4  monkeysphere_0.19.orig.tar.gz
+27e915a45cdbe50a139ed4f4b13746b17c165b0f  monkeysphere_0.21.orig.tar.gz
 
 SHA256:
-321b77c1e10fe48ffbef8491893f5dd22842c35c11464efa7893150ce756a522  monkeysphere_0.19.orig.tar.gz
+1535c3f722f5f5c1646a4981efef4a262ac7b23bf4b980c9aee11af2600eedc2  monkeysphere_0.21.orig.tar.gz
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (GNU/Linux)
 
-iQIVAwUBSQgMCRjmZ/HrivMUAQI2Jg//bZoSxx0Nor6uBikRGHQny8LzgUT/0kpv
-xg0eRmL9kQwhGis/sdOiJ9cHykJ1ukhRiIZGfxPBdxiQbWGs9nM6147TGIDgqx6D
-yYIW41dvzTRB0TwjNd7g1q6MaSiDNuU/6dD+ooM3/IiR8PDR7X8we0WhSM63KD+v
-HeMsN51UMhBfeaZ06fxrjYoJCvnp0YNYJpLuvtd5tzxqJCJA2Vh5VqJMbMP/MtbY
-zM/zuNXRI1mJnQZeU++IaAnimX7c7SsGjLaloZG8mapYqqY0tKJ5Yod6aeloq+i5
-wI4gZuuPcgAntD6cnPaqB1ni/d71yywme5F75zpezXGzKzDSh1J5oE6akjMi2lJE
-DSOKp7zb7TvDwXxCl+vOVod81F260gPhonlTsD/LpBfPGPBdWlWP+fFchb9N/a2u
-weCMhUYX1u8Jg/bHIycjoQjPEgZwCkJT9RKF1NTLyWvb4P4a3sPe+fauCMZFbTQ/
-3EYPRBY+PfIDO09XswdB5O3gq6B33ChyWJpdwlXEEHMcFt1FuezuP0avVM9/3ZNp
-MkqalDrUEd65X8o+CE3KjFxjMceVdda9mz2netnoHrFMW6X3mFqE2fTldgHi1mCT
-hMCqpPzY04+HOHYZ0GapR3pvedd4dwhkNYrdpckp+nJMTRfexEPH/NXDVNH/mxKg
-jLoIos0SaiY=
-=VUsz
+iQIVAwUBSR8+7BjmZ/HrivMUAQLeKg/+JT4LCXBR/06p/w2KBd1MKqch5Qf2ryIo
+mxCTWtZRgVQSeOFUJ5SXX+Tfs7VZfkV5HuahUH3NmGC6EMhYyB2olwBOOoIAqEKw
+1zVyn49bowCee+gTc3QHyT0Eqgt2ARtzl3/VrHkiw2MaJN3IZXseovyL8ksnEu+u
+s8fq26imtBrrucIxp4ZtHUw/h/YrJohHcJ8QQN5/UWFLug4C4aRFmnzL+oCySxAa
+0au/zFxxRZE5pMhLUvRwwCwPFx2CGBz6y9lAOiDPhhUqh+Bf7JKWJzk35Dj5Tm+2
+lCIzYtfpBkuF9ehCrm8WYF5aFg+gto8Bc6IJci9J6h2npBYIG0IbWOknMZz3+Ti2
+c3EltlJjK0LKEHujDYjf9tkNAxbBdtlYuw8x925ILeK7n8xX0Jr1TDzPyAIYaogv
+IVqsgnvQ489K8k06173kyrPaetyvOlU3bN1zcPdqTyCD6+eBbeCeKXO4324C8iMF
+rQPW4HScOdIidqFuzHyIT7PoY4DwWMgeAVymRSEufifvRcdCvQdlC4MaxxVf5I8A
+ATkD3CrY+5NZeERAGbmlu7Uz+sUk5tLUH0Q2qvjZUIQRctfr4BMheuBubsLR9yP3
+FZ4Q4kl34eU/WU7NtTmIFy7gDhLSIoeQINfYZlNEXQ7Y/RZUOEwoPI/spAXgw6De
+Xpsw0wPZtcM=
+=JDaA
 -----END PGP SIGNATURE-----
 </pre>

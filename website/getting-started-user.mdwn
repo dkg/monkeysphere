@@ -24,7 +24,7 @@ Install the monkeysphere software on your system
 ------------------------------------------------
 
 If you haven't installed monkeysphere yet, you will need to [download
-and install] (/download) before continuing.
+and install](/download) before continuing.
 
 Make sure that you have the GnuTLS library version 2.6 or later
 installed on your system. If you can't (or don't want to) upgrade to

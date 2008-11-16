@@ -13,10 +13,11 @@
 
 # all subcommands in this script should complete without failure:
 set -e
+# piped commands should return the code of the first non-zero return
+set -o pipefail
 
 ## make sure that the right tools are installed to run the test.  the
 ## test has *more* requirements than plain ol' monkeysphere:
-
 which socat || { echo "You must have socat installed to run this test." ; exit 1; }
 
 ## FIXME: other checks?
@@ -53,6 +54,7 @@ ssh_test() {
 
     # kill the sshd process if it's still running
     kill "$SSHD_PID"
+    SSHD_PID=
 
     set -e
 
@@ -86,8 +88,15 @@ cleanup() {
     echo "### removing temp dir..."
     rm -rf "$TEMPDIR"
 
+    if [ "$SSHD_PID" ] ; then
+	echo "### killing off lingering sshd..."
+	kill "$SSHD_PID"
+    fi
+
     wait
 }
+
+SSHD_PID=
 
 ## setup trap
 trap failed_cleanup EXIT
@@ -120,7 +129,6 @@ export MONKEYSPHERE_LOG_LEVEL=DEBUG
 
 export SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
-export SSHD_PID=
 
 # Make sure $DISPLAY is set to convince ssh and monkeysphere to fall
 # back on $SSH_ASKPASS.  Make sure it's not set to the current actual

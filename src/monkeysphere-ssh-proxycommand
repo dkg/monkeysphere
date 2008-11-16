@@ -14,11 +14,81 @@
 #  ProxyCommand monkeysphere-ssh-proxycommand %h %p
 
 ########################################################################
+PGRM=$(basename $0)
+
+SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
+export SYSSHAREDIR
+. "${SYSSHAREDIR}/common" || exit 1
+
+########################################################################
+# FUNCTIONS
+########################################################################
 
 usage() {
-cat <<EOF >&2
+    cat <<EOF >&2
 usage: ssh -o ProxyCommand="$(basename $0) %h %p" ...
 EOF
+}
+
+log() {
+    echo "$@" >&2
+}
+
+output_no_valid_key() {
+    local sshKeyOffered
+    local userID
+    local type
+    local validity
+    local keyid
+    local uidfpr
+    local usage
+    local sshKeyGPG
+    local sshFingerprint
+
+    log "OpenPGP keys with*out* full validity found for this host:"
+    log
+
+    # retrieve the actual ssh key
+    sshKeyOffered=$(ssh-keyscan -t rsa -p "$PORT" "$HOST" 2>/dev/null | awk '{ print $2, $3 }')
+
+    userID="ssh://${HOSTP}"
+
+    # output gpg info for (exact) userid and store
+    gpgOut=$(gpg --list-key --fixed-list-mode --with-colon \
+	--with-fingerprint --with-fingerprint \
+	="$userID" 2>/dev/null)
+
+    # loop over all lines in the gpg output and process.
+    echo "$gpgOut" | cut -d: -f1,2,5,10,12 | \
+    while IFS=: read -r type validity keyid uidfpr usage ; do
+	case $type in
+	    'pub'|'sub')
+		# get the ssh key of the gpg key
+		sshKeyGPG=$(gpg2ssh "$keyid")
+
+		# if one of keys found matches the one offered by the
+		# host, then output info
+		if [ "$sshKeyGPG" = "$sshKeyOffered" ] ; then
+
+		    # get the fingerprint of the ssh key
+		    tmpkey=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+		    echo "$sshKeyGPG" > "$tmpkey"
+		    sshFingerprint=$(ssh-keygen -l -f "$tmpkey" | awk '{ print $2 }')
+		    rm -rf "$tmpkey"
+
+		    # output gpg info
+		    gpg --check-sigs \
+			--list-options show-uid-validity \
+			"$keyid" >&2
+
+		    # output ssh fingerprint
+		    log "RSA key fingerprint is ${sshFingerprint}."
+		    log "Falling through to standard ssh host checking."
+		    log
+		fi
+		;;
+	esac
+    done
 }
 
 ########################################################################
@@ -35,7 +105,7 @@ HOST="$1"
 PORT="$2"
 
 if [ -z "$HOST" ] ; then
-    echo "Host not specified." >&2
+    log "Host not specified."
     usage
     exit 255
 fi
@@ -87,6 +157,30 @@ export MONKEYSPHERE_CHECK_KEYSERVER
 
 # update the known_hosts file for the host
 monkeysphere update-known_hosts "$HOSTP"
+
+# output on depending on the return of the update-known_hosts
+# subcommand, which is (ultimately) the return code of the
+# update_known_hosts function in common
+case $? in
+    0)
+	# acceptable host key found so continue to ssh
+	true
+	;;
+    1)
+	# no hosts at all found so also continue (drop through to
+	# regular ssh host verification)
+	true
+	;;
+    2)
+	# at least one *bad* host key (and no good host keys) was
+	# found, so output some usefull information
+	output_no_valid_key
+	;;
+    *)
+	# anything else drop through
+	true
+	;;
+esac
 
 # exec a netcat passthrough to host for the ssh connection
 if [ -z "$NO_CONNECT" ] ; then

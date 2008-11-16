@@ -13,6 +13,12 @@ etc/monkeysphere/monkeysphere.conf.sample
 @unexec if cmp -s %D/etc/monkeysphere/monkeysphere-server.conf.sample %D/etc/monkeysphere/monkeysphere-server.conf; then rm -f %D/etc/monkeysphere/monkeysphere-server.conf; fi
 etc/monkeysphere/monkeysphere-server.conf.sample
 @exec if [ ! -f %D/etc/monkeysphere/monkeysphere-server.conf ] ; then cp -p %D/%F %B/monkeysphere-server.conf; fi
+@unexec if cmp -s %D/etc/monkeysphere/gnupg-host.conf.sample %D/etc/monkeysphere/gnupg-host.conf; then rm -f %D/etc/monkeysphere/gnupg-host.conf; fi
+etc/monkeysphere/gnupg-host.conf.sample
+@exec if [ ! -f %D/etc/monkeysphere/gnupg-host.conf ] ; then cp -p %D/%F %B/gnupg-host.conf; fi
+@unexec if cmp -s %D/etc/monkeysphere/gnupg-authentication.conf.sample %D/etc/monkeysphere/gnupg-authentication.conf; then rm -f %D/etc/monkeysphere/gnupg-authentication.conf; fi
+etc/monkeysphere/gnupg-authentication.conf.sample
+@exec if [ ! -f %D/etc/monkeysphere/gnupg-authentication.conf ] ; then cp -p %D/%F %B/gnupg-authentication.conf; fi
 @dirrm share/doc/monkeysphere
 @dirrm share/monkeysphere
 @dirrm etc/monkeysphere
