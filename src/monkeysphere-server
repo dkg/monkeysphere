@@ -399,7 +399,11 @@ EOF
     (umask 077 && \
 	gpg_host --export-secret-key "$fingerprint" | \
 	openpgp2ssh "$fingerprint" > "${SYSDATADIR}/ssh_host_rsa_key")
-    log info "private SSH host key output to file: ${SYSDATADIR}/ssh_host_rsa_key"
+    log info "SSH host private key output to file: ${SYSDATADIR}/ssh_host_rsa_key"
+    ssh-keygen -y -f "${SYSDATADIR}/ssh_host_rsa_key" > "${SYSDATADIR}/ssh_host_rsa_key.pub"
+    log info "SSH host public key output to file: ${SYSDATADIR}/ssh_host_rsa_key.pub"
+    gpg_authentication --export-options export-minimal --export "0x${fingerprint}!" > "${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
+    log info "SSH host public key in OpenPGP form: ${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
 }
 
 # extend the lifetime of a host key:
