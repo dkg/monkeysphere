@@ -137,7 +137,7 @@ show_server_key() {
     tmpkey=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
     gpg_authentication "--export $fingerprint" | openpgp2ssh "$fingerprint" 2>/dev/null > "$tmpkey"
     echo -n "ssh fingerprint: "
-    ssh-keygen -l -f $tmpkey | awk '{ print $1, $2, $4 }'
+    ssh-keygen -l -f "$tmpkey" | awk '{ print $1, $2, $4 }'
     rm -rf "$tmpkey"
     echo -n "OpenPGP fingerprint: "
     echo "$fingerprint"

@@ -1,9 +1,11 @@
 monkeysphere (0.22-1) UNRELEASED; urgency=low
 
   * New upstream release:
-    - Added info log output when a new key is added to known_hosts file.
+    - added info log output when a new key is added to known_hosts file.
+    - added some useful output to the ssh-proxycommand for "marginal"
+      cases where keys are found for host but do not have full validity.
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 15 Nov 2008 20:49:13 -0500
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Sun, 16 Nov 2008 03:17:16 -0500
 
 monkeysphere (0.21-2) unstable; urgency=low
 
