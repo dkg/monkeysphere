@@ -1,3 +1,10 @@
+monkeysphere (0.22-1) UNRELEASED; urgency=low
+
+  * New upstream release:
+    - Added info log output when a new key is added to known_hosts file.
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 15 Nov 2008 20:49:13 -0500
+
 monkeysphere (0.21-2) unstable; urgency=low
 
   * actually rmdir /var/lib/monkeysphere-* during prerm if possible.

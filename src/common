@@ -742,6 +742,7 @@ process_user_id() {
 process_host_known_hosts() {
     local host
     local userID
+    local noKey=
     local nKeys
     local nKeysOK
     local ok
@@ -768,8 +769,9 @@ process_host_known_hosts() {
             continue
         fi
 
-	# remove the old host key line, and note if removed
-	remove_line "$KNOWN_HOSTS" "$sshKey"
+	# remove any old host key line, and note if removed nothing is
+	# removed
+	remove_line "$KNOWN_HOSTS" "$sshKey" || noKey=true
 
 	# if key OK, add new host line
 	if [ "$ok" -eq '0' ] ; then
@@ -787,6 +789,11 @@ process_host_known_hosts() {
 		rm -f "$tmpfile" "${tmpfile}.old"
 	    else
 		ssh2known_hosts "$host" "$sshKey" >> "$KNOWN_HOSTS"
+	    fi
+
+	    # log if this is a new key to the known_hosts file
+	    if [ "$noKey" ] ; then
+		log info "* new key for $host added to known_hosts file."
 	    fi
 	fi
     done
