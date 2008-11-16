@@ -45,20 +45,24 @@ output_no_valid_key() {
     local sshKeyGPG
     local sshFingerprint
 
-    log "OpenPGP keys with*out* full validity found for this host:"
+    userID="ssh://${HOSTP}"
+
+    log "Monkeysphere found only OpenPGP keys for this host with*out* full validity."
+    log "host:                $userID"
     log
 
     # retrieve the actual ssh key
     sshKeyOffered=$(ssh-keyscan -t rsa -p "$PORT" "$HOST" 2>/dev/null | awk '{ print $2, $3 }')
+    # FIXME: should we do any checks for failed keyscans, eg host not
+    # found?
 
-    userID="ssh://${HOSTP}"
-
-    # output gpg info for (exact) userid and store
+    # output gpg info for userid and store
     gpgOut=$(gpg --list-key --fixed-list-mode --with-colon \
 	--with-fingerprint --with-fingerprint \
 	="$userID" 2>/dev/null)
 
-    # loop over all lines in the gpg output and process.
+    # find all 'pub' and 'sub' lines in the gpg output, which each
+    # represent a retrieved key for the user ID
     echo "$gpgOut" | cut -d: -f1,2,5,10,12 | \
     while IFS=: read -r type validity keyid uidfpr usage ; do
 	case $type in
