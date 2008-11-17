@@ -77,12 +77,11 @@ output_no_valid_key() {
 		    log "An OpenPGP key matching the ssh key offered by the host was found:"
 		    log
 
-		    # get the fingerprint of the ssh key
-		    tmpkey=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
-		    echo "$sshKeyGPG" > "$tmpkey"
-		    sshFingerprint=$(ssh-keygen -l -f "$tmpkey" | \
+		    # do some crazy "Here Strings" redirection to get the key to
+		    # ssh-keygen, since it doesn't read from stdin cleanly
+		    sshFingerprint=$(ssh-keygen -l -f /dev/stdin \
+			<<<$(echo "$sshKeyGPG") | \
 			awk '{ print $2 }')
-		    rm -rf "$tmpkey"
 
 		    # get the sigs for the matching key
 		    gpgSigOut=$(gpg --check-sigs \

@@ -132,13 +132,13 @@ show_server_key() {
     fingerprint=$(fingerprint_server_key)
     gpg_authentication "--fingerprint --list-key --list-options show-unusable-uids $fingerprint"
 
-    # dumping to a file named ' ' so that the ssh-keygen output
-    # doesn't claim any potentially bogus hostname(s):
-    tmpkey=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
-    gpg_authentication "--export $fingerprint" | openpgp2ssh "$fingerprint" 2>/dev/null > "$tmpkey"
+    # do some crazy "Here Strings" redirection to get the key to
+    # ssh-keygen, since it doesn't read from stdin cleanly
     echo -n "ssh fingerprint: "
-    ssh-keygen -l -f "$tmpkey" | awk '{ print $1, $2, $4 }'
-    rm -rf "$tmpkey"
+    ssh-keygen -l -f /dev/stdin \
+	<<<$(gpg_authentication "--export $fingerprint" | \
+	openpgp2ssh "$fingerprint" 2>/dev/null) | \
+	awk '{ print $1, $2, $4 }'
     echo -n "OpenPGP fingerprint: "
     echo "$fingerprint"
 }
