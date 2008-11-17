@@ -6,6 +6,7 @@ monkeysphere (0.22~pre-1) UNRELEASED; urgency=low
     - added info log output when a new key is added to known_hosts file.
     - added some useful output to the ssh-proxycommand for "marginal"
       cases where keys are found for host but do not have full validity.
+    - force ssh-keygen to read from stdin to get ssh key fingerprint.
 
   [ Daniel Kahn Gillmor ]
 
@@ -13,7 +14,7 @@ monkeysphere (0.22~pre-1) UNRELEASED; urgency=low
     standard ssh public key file, and the other a minimal OpenPGP key with
     just the latest valid self-sig.
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Sun, 16 Nov 2008 03:22:08 -0500
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Mon, 17 Nov 2008 18:15:43 -0500
 
 monkeysphere (0.21-2) unstable; urgency=low
 
