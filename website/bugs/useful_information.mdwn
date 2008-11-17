@@ -8,3 +8,17 @@ time seems to the monkeysphere very similar to a key re-added ten
 seconds after last login.
 
 Still, from a UI perspective, I want to know what monkeysphere is doing.
+
+------
+
+It looks like jrollins committed a change for reporting at INFO level
+when a host key gets added by the monkeysphere:
+2459fa3ea277d7b9289945748619eab1e3441e5c
+
+When i connect to a host whose key is not already present in my
+known_hosts file, i get the following to stderr:
+
+    ms: * new key for squeak.fifthhorseman.net added to known_hosts file.
+
+This doesn't fully close this bug, because we aren't notifying on key
+deletion, afaict.

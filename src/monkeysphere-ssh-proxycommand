@@ -14,11 +14,128 @@
 #  ProxyCommand monkeysphere-ssh-proxycommand %h %p
 
 ########################################################################
+PGRM=$(basename $0)
+
+SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
+export SYSSHAREDIR
+. "${SYSSHAREDIR}/common" || exit 1
+
+########################################################################
+# FUNCTIONS
+########################################################################
 
 usage() {
-cat <<EOF >&2
+    cat <<EOF >&2
 usage: ssh -o ProxyCommand="$(basename $0) %h %p" ...
 EOF
+}
+
+log() {
+    echo "$@" >&2
+}
+
+output_no_valid_key() {
+    local sshKeyOffered
+    local userID
+    local type
+    local validity
+    local keyid
+    local uidfpr
+    local usage
+    local sshKeyGPG
+    local tmpkey
+    local sshFingerprint
+    local gpgSigOut
+
+    userID="ssh://${HOSTP}"
+
+    log "-------------------- Monkeysphere warning -------------------"
+    log "Monkeysphere found OpenPGP keys for this hostname, but none had full validity."
+
+    # retrieve the actual ssh key
+    sshKeyOffered=$(ssh-keyscan -t rsa -p "$PORT" "$HOST" 2>/dev/null | awk '{ print $2, $3 }')
+    # FIXME: should we do any checks for failed keyscans, eg. host not
+    # found?
+
+    # get the gpg info for userid
+    gpgOut=$(gpg --list-key --fixed-list-mode --with-colon \
+	--with-fingerprint --with-fingerprint \
+	="$userID" 2>/dev/null)
+
+    # find all 'pub' and 'sub' lines in the gpg output, which each
+    # represent a retrieved key for the user ID
+    echo "$gpgOut" | cut -d: -f1,2,5,10,12 | \
+    while IFS=: read -r type validity keyid uidfpr usage ; do
+	case $type in
+	    'pub'|'sub')
+		# get the ssh key of the gpg key
+		sshKeyGPG=$(gpg2ssh "$keyid")
+
+		# if one of keys found matches the one offered by the
+		# host, then output info
+		if [ "$sshKeyGPG" = "$sshKeyOffered" ] ; then
+		    log "An OpenPGP key matching the ssh key offered by the host was found:"
+		    log
+
+		    # get the fingerprint of the ssh key
+		    tmpkey=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+		    echo "$sshKeyGPG" > "$tmpkey"
+		    sshFingerprint=$(ssh-keygen -l -f "$tmpkey" | \
+			awk '{ print $2 }')
+		    rm -rf "$tmpkey"
+
+		    # get the sigs for the matching key
+		    gpgSigOut=$(gpg --check-sigs \
+			--list-options show-uid-validity \
+			"$keyid")
+
+		    # output the sigs, but only those on the user ID
+		    # we are looking for
+		    echo "$gpgSigOut" | awk '
+{
+if (match($0,"^pub")) {	print; }
+if (match($0,"^uid")) { ok=0; }
+if (match($0,"^uid.*'$userID'$")) { ok=1; print; }
+if (ok) { if (match($0,"^sig")) { print; } }
+}
+' >&2
+		    log
+
+		    # output the other user IDs for reference
+		    if (echo "$gpgSigOut" | grep "^uid" | grep -v -q "$userID") ; then
+			log "Other user IDs on this key:"
+			echo "$gpgSigOut" | grep "^uid" | grep -v "$userID" >&2
+			log
+		    fi
+
+		    # output ssh fingerprint
+		    log "RSA key fingerprint is ${sshFingerprint}."
+
+		    # this whole process is in a "while read"
+		    # subshell.  the only way to get information out
+		    # of the subshell is to change the return code.
+		    # therefore we return 1 here to indicate that a
+		    # matching gpg key was found for the ssh key
+		    # offered by the host
+		    return 1
+		fi
+		;;
+	esac
+    done
+
+    # if no key match was made (and the "while read" subshell returned
+    # 1) output how many keys were found
+    if (($? != 1)) ; then
+	log "None of the found keys matched the key offered by the host."
+	log "Run the following command for more info about the found keys:"
+	log "gpg --check-sigs --list-options show-uid-validity =${userID}"
+	# FIXME: should we do anything extra here if the retrieved
+	# host key is actually in the known_hosts file and the ssh
+	# connection will succeed?  Should the user be warned?
+	# prompted?
+    fi
+
+    log "-------------------- ssh continues below --------------------"
 }
 
 ########################################################################
@@ -35,7 +152,7 @@ HOST="$1"
 PORT="$2"
 
 if [ -z "$HOST" ] ; then
-    echo "Host not specified." >&2
+    log "Host not specified."
     usage
     exit 255
 fi
@@ -87,6 +204,39 @@ export MONKEYSPHERE_CHECK_KEYSERVER
 
 # update the known_hosts file for the host
 monkeysphere update-known_hosts "$HOSTP"
+
+# output on depending on the return of the update-known_hosts
+# subcommand, which is (ultimately) the return code of the
+# update_known_hosts function in common
+case $? in
+    0)
+	# acceptable host key found so continue to ssh
+	true
+	;;
+    1)
+	# no hosts at all found so also continue (drop through to
+	# regular ssh host verification)
+	true
+	;;
+    2)
+	# at least one *bad* host key (and no good host keys) was
+	# found, so output some usefull information
+	output_no_valid_key
+	;;
+    *)
+	# anything else drop through
+	true
+	;;
+esac
+
+# FIXME: what about the case where monkeysphere successfully finds a
+# valid key for the host and adds it to the known_hosts file, but a
+# different non-monkeysphere key for the host already exists in the
+# known_hosts, and it is this non-ms key that is offered by the host?
+# monkeysphere will succeed, and the ssh connection will succeed, and
+# the user will be left with the impression that they are dealing with
+# a OpenPGP/PKI host key when in fact they are not.  should we use
+# ssh-keyscan to compare the keys first?
 
 # exec a netcat passthrough to host for the ssh connection
 if [ -z "$NO_CONNECT" ] ; then
