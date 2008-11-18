@@ -7,12 +7,21 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-11-17 - micah
+	* verified the SHA256 values for the key material
+	* /usr/lib/sks/sks_build.sh (chose option #2: normalbuild)
+	* chown -R debian-sks:debian-sks /var/lib/sks
+	* edit /etc/default/sks to enable the initscript
+	* /etc/init.d/sks start
+	* rm -rf /var/lib/sks/dump
+	
 2008-11-15 - micah
 	* aptitude update && aptitude full-upgrade
 	* aptitude install sks
 	* cd /var/lib/sks/dump ; wget -q -r -np -nd -A bz2,SHA256,asc \
 	  http://nynex.net/keydump/ -e robots=off
 	* install monkeysphere 0.21-2 package
+	* apt-get install bzip2 ; bunzip2 /var/lib/sks/dump/*.bz2
 
 2008-11-15 - jamie
   * aptitude install esmtp-run mailx
