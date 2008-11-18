@@ -1,19 +1,17 @@
 # Signing a server OpenPGP key #
 
 This page is meant to address the issue of signing server OpenPGP
-keys.  Server's are not people (or monkeys), obviously, so the
-circumstances under which one should sign a server key is a big
-different than those under which a person should sign another person's
-key.
-
+keys.  Servers are not people, so the circumstances under which one
+should sign a server key are different from those under which one
+should sign another person's key.
 
 # Why are signatures on the server key important? #
 
 In order for users to connect to a server in a monkeysphere-enabled
-network, the server key must have *full* validity for the connecting
-user.  If the user has not themselves signed the server's key, then
-the server's key can only be valid if other people that the user
-trusts have signed the key.
+network, the server key must have *full* calculated validity from the
+perspective of the connecting user.  If the user has not themselves
+signed the server's key, then the server's key can only be valid if
+other people that the user trusts have signed the key.
 
 If only one person has signed the server's key, then the user must
 fully trust the single person who has signed the server key.  Full
@@ -26,13 +24,12 @@ server key has been signed by three or more people that the user has
  *marginal* trust of.  In other words, three or more *marginally*
 trusted signatures equals one *fully* trusted signature.  It is much
 more common for users to have marginal trust of other users in the Web
-of Trust.  For this reason, it is important to have as many people
+of Trust.  For this reason, it is advisable to have as many people
 sign the server key as possible.
-
 
 ## What information should you have before signing a server key? ##
 
-When signing the key of a person, you want to do two things:
+Before signing the key of a person, you want to do two things:
 
 1. verify the identity of the person.
 2. verify that the person is actually in control of the key that you
@@ -51,10 +48,10 @@ straightforward.  If you are logged on to the machine in question,
 then you can check directly that the key exists on the system.
 
 What is not so straightforward is what exactly it means to "verify the
-identity" of a remote server on the web?  The identity in this case is
-the fully qualified domain name (FQDN) of the host.  Verifying this
-identity amounts to being sure that the host in question really is
-located at that FQDN.
+identity" of a remote server on the internet?  The identity in this
+case is the fully qualified domain name (FQDN) of the host.  Verifying
+this identity amounts to being sure that the host in question really
+is located at that FQDN.
 
 
 ## Signing the server key ##
