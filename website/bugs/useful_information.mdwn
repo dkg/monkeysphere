@@ -38,3 +38,13 @@ In general, more verbose log levels *do* tell the user what the
 monkeysphere is doing.  Moving to DEBUG log level will tell you pretty
 much everything that happens.  I do *not* think that this should be
 the default log level, though.
+
+------
+
+I wouldn't want to see an extremely verbose default log level.  But i
+do think that saying something like "key blah blah blah was stripped
+from your known\_hosts file because it was expired" (for example)
+would be useful.  I think this case would occur infrequently enough
+that it is worth reporting in the UI at the regular log level.
+
+  --dkg
