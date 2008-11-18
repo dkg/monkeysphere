@@ -7,6 +7,7 @@ so that your users can have it automatically verified, and you can set
 up your machine to automatically identify connecting users by their
 presence in the OpenPGP web of trust.
 
+
 Server host key publication
 ---------------------------
 To generate and publish a server host key:
@@ -47,6 +48,7 @@ maintained.  You'll need to restart `sshd` to have your changes take
 effect.  As with any change to `sshd_config`, be sure to retain an
 existing session to the machine while you test your changes so you
 don't get locked out.
+
 
 Monkeysphere authorized_keys maintenance
 ----------------------------------------

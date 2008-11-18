@@ -639,7 +639,7 @@ process_user_id() {
 		;;
 	    'uid') # user ids
 		if [ "$lastKey" != pub ] ; then
-		    log verbose " - got a user ID after a sub key?!  user IDs should only follow primary keys!"
+		    log verbose " ! got a user ID after a sub key?!  user IDs should only follow primary keys!"
 		    continue
 		fi
 		# if an acceptable user ID was already found, skip
@@ -652,6 +652,8 @@ process_user_id() {
 		    if [ "$validity" = 'u' -o "$validity" = 'f' ] ; then
 			# mark user ID acceptable
 			uidOK=true
+		    else
+			log debug "  - unacceptable user ID validity ($validity)."
 		    fi
 		else
 		    continue
@@ -693,10 +695,12 @@ process_user_id() {
 		
 		# if sub key validity is not ok, skip
 		if [ "$validity" != 'u' -a "$validity" != 'f' ] ; then
+		    log debug "  - unacceptable sub key validity ($validity)."
 		    continue
 		fi
 		# if sub key capability is not ok, skip
 		if ! check_capability "$usage" $requiredCapability ; then
+		    log debug "  - unacceptable sub key capability ($usage)."
 		    continue
 		fi
 
@@ -742,6 +746,7 @@ process_user_id() {
 process_host_known_hosts() {
     local host
     local userID
+    local noKey=
     local nKeys
     local nKeysOK
     local ok
@@ -768,8 +773,9 @@ process_host_known_hosts() {
             continue
         fi
 
-	# remove the old host key line, and note if removed
-	remove_line "$KNOWN_HOSTS" "$sshKey"
+	# remove any old host key line, and note if removed nothing is
+	# removed
+	remove_line "$KNOWN_HOSTS" "$sshKey" || noKey=true
 
 	# if key OK, add new host line
 	if [ "$ok" -eq '0' ] ; then
@@ -787,6 +793,11 @@ process_host_known_hosts() {
 		rm -f "$tmpfile" "${tmpfile}.old"
 	    else
 		ssh2known_hosts "$host" "$sshKey" >> "$KNOWN_HOSTS"
+	    fi
+
+	    # log if this is a new key to the known_hosts file
+	    if [ "$noKey" ] ; then
+		log info "* new key for $host added to known_hosts file."
 	    fi
 	fi
     done

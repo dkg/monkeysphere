@@ -4,7 +4,7 @@ VERSION=`head -n1 packaging/debian/changelog | sed 's/.*(\([^)]*\)).*/\1/'`
 
 { 
     sed "s/__VERSION__/$VERSION/g" < utils/releasenote.header
-    head -n$(( $(grep -n '^ --' debian/changelog  | head -n1 | cut -f1 -d:) - 2 )) debian/changelog | tail -n+3
+    head -n$(( $(grep -n '^ --' packaging/debian/changelog  | head -n1 | cut -f1 -d:) - 2 )) packaging/debian/changelog | tail -n+3
     sed "s/__VERSION__/$VERSION/g" < utils/releasenote.footer
 } > "website/news/release-$VERSION.mdwn"
 
