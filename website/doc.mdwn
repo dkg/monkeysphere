@@ -10,7 +10,7 @@
 
 ## Going further ##
 
- * [Signing server keys](/signing-server-keys)
+ * [Signing host keys](/signing-host-keys)
 
 ## Under the hood ##
 
