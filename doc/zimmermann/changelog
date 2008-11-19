@@ -15,6 +15,7 @@
 	doc/zimmermann/index.html from this repo.
 	* made nginx proxy plain ol' HTTP on port 80 also so that SKS does
 	not need to try to listen on a privileged port.
+	* turned on initial_stat and stat_hour: 3 in /etc/sks/sksconf
 	
 2008-11-19 - mlc
 	* aptitude install nginx
