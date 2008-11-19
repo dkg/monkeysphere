@@ -7,6 +7,9 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-11-19 - dkg
+	* added 9 SKS peers as a result of feedback from sks-devel.
+	
 2008-11-19 - mlc
 	* aptitude install nginx
 	* get rid of /etc/nginx/sites-enabled/default
