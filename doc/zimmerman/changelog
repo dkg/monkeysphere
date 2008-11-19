@@ -7,6 +7,13 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-11-19 - mlc
+	* aptitude install nginx
+	* get rid of /etc/nginx/sites-enabled/default
+	* create /etc/nginx/sites-available/https-proxy and make a symlink
+	  to it in the sites-enabled directory
+	* invoke-rc.d nginx start
+
 2008-11-17 - micah
 	* verified the SHA256 values for the key material
 	* /usr/lib/sks/sks_build.sh (chose option #2: normalbuild)

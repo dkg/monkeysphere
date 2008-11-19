@@ -1,0 +1,14 @@
+server {
+	listen  443;
+	server_name zimmermann.mayfirst.org;
+	ssl on;
+	ssl_certificate /etc/ssl/certs/ssl-cert-snakeoil.pem;
+	ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
+	ssl_ciphers HIGH:MEDIUM:!ADH;
+
+	access_log  off;
+
+	location / {
+		proxy_pass http://localhost:11371/;
+	}
+}
