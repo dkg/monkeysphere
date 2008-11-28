@@ -1,7 +1,7 @@
-monkeysphere (0.22~pre-1) UNRELEASED; urgency=low
+monkeysphere (0.22-1) unstable; urgency=low
 
   * New upstream release:
-  [ Jameson Rollins ]
+  [ Jameson Graef Rollins ]
 
     - added info log output when a new key is added to known_hosts file.
     - added some useful output to the ssh-proxycommand for "marginal"
@@ -16,7 +16,7 @@ monkeysphere (0.22~pre-1) UNRELEASED; urgency=low
     - debian/control: corrected alternate dependency from procfile to
     procmail (which provides /usr/bin/lockfile)
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 25 Nov 2008 12:13:58 -0500
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Fri, 28 Nov 2008 14:23:31 -0500
 
 monkeysphere (0.21-2) unstable; urgency=low
 

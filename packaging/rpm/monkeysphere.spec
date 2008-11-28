@@ -7,9 +7,6 @@ Group: net
 URL: http://web.monkeysphere.info/
 
 Source: http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_%{version}.orig.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-
-BuildRequires: libgnutls-dev
 
 %description
 SSH key-based authentication is tried-and-true, but it lacks a true
@@ -25,22 +22,18 @@ License (GPL).
 %setup -q
 
 %build
-%configure --disable-debug
 %{__make}
 
 %install
 %{__rm} -rf %{buildroot}
+Prefix=%{buildroot}/usr
 %makeinstall
-%find_lang %{name}
 
 %clean
 %{__rm} -rf %{buildroot}
 
-%files -f %{name}.lang
+%files
 %defattr(-, root, root, 0755)
-%doc AUTHORS ChangeLog INSTALL NEWS TODO README COPYING
-%{_bindir}/monkeysphere
-%{_datadir}/monkeysphere/
 
 %changelog
 * Sat Nov 22 2008 - 
