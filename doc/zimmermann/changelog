@@ -1,12 +1,16 @@
 ******************************************************************************
 *                                                                            *
-*                       zimmerman system log                                 *
+*                       zimmermann system log                                *
 *                                                                            *
 ******************************************************************************
 *  Please add new entries in reverse chronological order whenever you make   *
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2008-11-29 - dkg
+	* zimmermann now uses an X.509 certificate signed by the MF/PL CA
+	for its HTTPS connection.
+	
 2008-11-19 - dkg
 	* added 10 SKS peers as a result of feedback from sks-devel.
 	* set localtime to America/New_York via dpkg-reconfigure tzdata
