@@ -1,0 +1,25 @@
+[[meta title="Monkeysphere 0.22-1 released!"]]
+
+Monkeysphere 0.22-1 has been released.  
+
+Notes from the changelog:
+
+<pre>
+  * New upstream release:
+  [ Jameson Graef Rollins ]
+
+    - added info log output when a new key is added to known_hosts file.
+    - added some useful output to the ssh-proxycommand for "marginal"
+      cases where keys are found for host but do not have full validity.
+    - force ssh-keygen to read from stdin to get ssh key fingerprint.
+
+  [ Daniel Kahn Gillmor ]
+
+    - automatically output two copies of the host's public key: one
+    standard ssh public key file, and the other a minimal OpenPGP key with
+    just the latest valid self-sig.
+    - debian/control: corrected alternate dependency from procfile to
+    procmail (which provides /usr/bin/lockfile)
+</pre>
+
+[[Download]] it now!
