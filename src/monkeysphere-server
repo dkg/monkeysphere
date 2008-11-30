@@ -117,6 +117,16 @@ gpg_authentication() {
     su_monkeysphere_user "gpg $@"
 }
 
+# function to check for host secret keys
+# fails if host sec key exists, exits true otherwise
+check_host_keyring() {
+    if ! gpg_host --list-secret-keys --fingerprint \
+	--with-colons --fixed-list-mode 2>/dev/null | grep -q '^sec:' ; then
+
+	failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-server gen-key' first."
+    fi
+}
+
 # output just key fingerprint
 fingerprint_server_key() {
     gpg_host --list-secret-keys --fingerprint \
@@ -337,6 +347,7 @@ gen_key() {
     userID="ssh://${hostName}"
 
     # check for presense of key with user ID
+    # FIXME: is this the proper test to be doing here?
     if gpg_host --list-key ="$userID" > /dev/null 2>&1 ; then
 	failure "Key for '$userID' already exists"
     fi
@@ -410,10 +421,6 @@ EOF
 extend_key() {
     local fpr=$(fingerprint_server_key)
     local extendTo="$1"
-
-    if [ -z "$fpr" ] ; then
-	failure "You don't appear to have a MonkeySphere host key on this server.  Try 'monkeysphere-server gen-key' first."
-    fi
 
     # get the new expiration date
     extendTo=$(get_gpg_expiration "$extendTo")
@@ -990,6 +997,7 @@ shift
 
 case $COMMAND in
     'update-users'|'update-user'|'u')
+	check_host_keyring
 	update_users "$@"
 	;;
 
@@ -998,22 +1006,27 @@ case $COMMAND in
 	;;
 
     'extend-key'|'e')
+	check_host_keyring
 	extend_key "$@"
 	;;
 
     'add-hostname'|'add-name'|'n+')
+	check_host_keyring
 	add_hostname "$@"
 	;;
 
     'revoke-hostname'|'revoke-name'|'n-')
+	check_host_keyring
 	revoke_hostname "$@"
 	;;
 
     'show-key'|'show'|'s')
+	check_host_keyring
 	show_server_key
 	;;
 
     'publish-key'|'publish'|'p')
+	check_host_keyring
 	publish_server_key
 	;;
 
@@ -1022,14 +1035,17 @@ case $COMMAND in
 	;;
 
     'add-identity-certifier'|'add-id-certifier'|'add-certifier'|'c+')
+	check_host_keyring
 	add_certifier "$@"
 	;;
 
     'remove-identity-certifier'|'remove-id-certifier'|'remove-certifier'|'c-')
+	check_host_keyring
 	remove_certifier "$@"
 	;;
 
     'list-identity-certifiers'|'list-id-certifiers'|'list-certifiers'|'list-certifier'|'c')
+	check_host_keyring
 	list_certifiers "$@"
 	;;
 
