@@ -716,6 +716,10 @@ diagnostics() {
 		echo " - Recommendation: remove the above HostKey lines from $sshd_config"
 		problemsfound=$(($problemsfound+1))
 	    fi
+
+        # FIXME: test (with ssh-keyscan?) that the running ssh
+        # daemon is actually offering the monkeysphere host key.
+
 	fi
     fi
 
