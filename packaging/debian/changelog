@@ -1,3 +1,11 @@
+monkeysphere (0.23~pre-1) UNRELEASED; urgency=low
+
+  * New upstream release:
+    - added better checks for the existence of a host private key for
+      functions that require it to be there.
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Sun, 30 Nov 2008 17:14:50 -0500
+
 monkeysphere (0.22-1) unstable; urgency=low
 
   * New upstream release:
