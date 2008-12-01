@@ -147,7 +147,7 @@ advance_date() {
     local shortunits
 
     # try things the GNU way first 
-    if date -d "$number $longunits" "$format" >&/dev/null ; then
+    if date -d "$number $longunits" "$format" >/dev/null 2>&1; then
 	date -d "$number $longunits" "$format"
     else
 	# otherwise, convert to (a limited version of) BSD date syntax:

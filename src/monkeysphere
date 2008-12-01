@@ -158,7 +158,7 @@ EOF
     log verbose "done."
 }
 
-function subkey_to_ssh_agent() {
+subkey_to_ssh_agent() {
     # try to add all authentication subkeys to the agent:
 
     local sshaddresponse

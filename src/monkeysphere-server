@@ -866,9 +866,9 @@ add_certifier() {
     # export the key to the host keyring
     gpg_authentication "--export 0x${fingerprint}!" | gpg_host --import
 
-    if [ "$trust" == marginal ]; then
+    if [ "$trust" = marginal ]; then
 	trustval=1
-    elif [ "$trust" == full ]; then
+    elif [ "$trust" = full ]; then
 	trustval=2
     else
 	failure "Trust value requested ('$trust') was unclear (only 'marginal' or 'full' are supported)."
