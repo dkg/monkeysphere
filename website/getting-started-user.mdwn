@@ -20,6 +20,7 @@ done with a simple cronjob.  An example of crontab line to do this is:
 
 This would refresh your keychain every day at noon.
 
+
 Install the monkeysphere software on your system
 ------------------------------------------------
 
@@ -31,8 +32,9 @@ installed on your system. If you can't (or don't want to) upgrade to
 GnuTLS 2.6 or later, there are patches for GnuTLS 2.4 available in
 [the Monkeysphere git repo](/community).
 
+
 Keeping your `known_hosts` file in sync with your keyring
------------------------------------------------------------
+---------------------------------------------------------
 
 With your keyring updated, you want to make sure that OpenSSH can
 still see the most recent trusted information about who the various
@@ -45,6 +47,7 @@ This command will check to see if there is an OpenPGP key for each
 (non-hashed) host listed in the `known_hosts` file, and then add the
 key for that host to the `known_hosts` file if one is found.  This
 command could be added to a crontab as well, if desired.
+
 
 
 Using `monkeysphere-ssh-proxycommand`(1)
@@ -91,6 +94,7 @@ If you have more than one secret key, you'll need to specify the key
 you want to add the subkey to on the command line.
 
 
+
 Using your OpenPGP authentication key for SSH
 ---------------------------------------------
 
@@ -104,6 +108,7 @@ you can feed your authentication subkey to your ssh agent by running:
 	$ monkeysphere subkey-to-ssh-agent
 
 FIXME: using the key with a single ssh connection?
+
 
 Establish trust
 ---------------

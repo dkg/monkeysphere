@@ -1,0 +1,4 @@
+Since Monkeysphere is using bash, it would be nice to use the shell
+build in getopts function, instead of the external getopt program.
+This would reduce an external dependency, which would definitely be
+better for portability.

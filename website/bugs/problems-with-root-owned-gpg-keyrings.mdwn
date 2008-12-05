@@ -22,3 +22,100 @@ be hiding a bug, rather than getting it fixed correctly.
 Are there other ways we can deal with this problem?
 
 --dkg
+
+Here is an example when using monkeysphere-server
+add-identity-certifier on a host with a newly-installed monkeysphere
+installaton.  Note that running the same command a second time works
+as expected:
+
+     0 pip:~# monkeysphere-server c+ 0EE5BE979282D80B9F7540F1CCD2ED94D21739E9
+     gpg: requesting key D21739E9 from hkp server pool.sks-keyservers.net
+     gpg: key D21739E9: public key "Daniel Kahn Gillmor <dkg@fifthhorseman.net>" imported
+     gpg: can't create `/var/lib/monkeysphere/gnupg-host/pubring.gpg.tmp': Permission denied
+     gpg: failed to rebuild keyring cache: file open error
+     gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+     gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+     gpg: next trustdb check due at 2009-03-30
+     gpg: Total number processed: 1
+     gpg:               imported: 1  (RSA: 1)
+     Could not receive a key with this ID from the 'pool.sks-keyservers.net' keyserver.
+     255 pip:~# monkeysphere-server c+ 0EE5BE979282D80B9F7540F1CCD2ED94D21739E9
+     gpg: requesting key D21739E9 from hkp server pool.sks-keyservers.net
+     gpg: key D21739E9: "Daniel Kahn Gillmor <dkg@fifthhorseman.net>" not changed
+     gpg: Total number processed: 1
+     gpg:              unchanged: 1
+
+     key found:
+     pub   4096R/D21739E9 2007-06-02 [expires: 2012-05-31]
+           Key fingerprint = 0EE5 BE97 9282 D80B 9F75  40F1 CCD2 ED94 D217 39E9
+     uid       [ unknown] Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+     uid       [ unknown] Daniel Kahn Gillmor <dkg@openflows.com>
+     uid       [ unknown] Daniel Kahn Gillmor <dkg@astro.columbia.edu>
+     uid       [ unknown] Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>
+     uid       [ unknown] [jpeg image of size 3515]
+     sub   2048R/4BFA08E4 2008-06-19 [expires: 2009-06-19]
+     sub   4096R/21484CFF 2007-06-02 [expires: 2012-05-31]
+
+     Are you sure you want to add the above key as a
+     certifier of users on this system? (y/N) y
+     gpg: key D21739E9: public key "Daniel Kahn Gillmor <dkg@fifthhorseman.net>" imported
+     gpg: Total number processed: 1
+     gpg:               imported: 1  (RSA: 1)
+     gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+     gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+     gpg: next trustdb check due at 2009-03-30
+     gpg (GnuPG) 1.4.9; Copyright (C) 2008 Free Software Foundation, Inc.
+     This is free software: you are free to change and redistribute it.
+     There is NO WARRANTY, to the extent permitted by law.
+
+
+     pub  4096R/D21739E9  created: 2007-06-02  expires: 2012-05-31  usage: SC  
+                          trust: unknown       validity: unknown
+     [ unknown] (1). Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+     [ unknown] (2)  Daniel Kahn Gillmor <dkg@openflows.com>
+     [ unknown] (3)  Daniel Kahn Gillmor <dkg@astro.columbia.edu>
+     [ unknown] (4)  Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>
+     [ unknown] (5)  [jpeg image of size 3515]
+
+
+     pub  4096R/D21739E9  created: 2007-06-02  expires: 2012-05-31  usage: SC  
+                          trust: unknown       validity: unknown
+      Primary key fingerprint: 0EE5 BE97 9282 D80B 9F75  40F1 CCD2 ED94 D217 39E9
+
+          Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+          Daniel Kahn Gillmor <dkg@openflows.com>
+          Daniel Kahn Gillmor <dkg@astro.columbia.edu>
+          Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>
+          [jpeg image of size 3515]
+
+     This key is due to expire on 2012-05-31.
+     Please decide how far you trust this user to correctly verify other users' keys
+     (by looking at passports, checking fingerprints from different sources, etc.)
+
+       1 = I trust marginally
+       2 = I trust fully
+
+
+     Please enter the depth of this trust signature.
+     A depth greater than 1 allows the key you are signing to make
+     trust signatures on your behalf.
+
+
+     Please enter a domain to restrict this signature, or enter for none.
+
+
+     Are you sure that you want to sign this key with your
+     key "ssh://pip.fifthhorseman.net" (9B83C17D)
+
+     The signature will be marked as non-exportable.
+
+
+     gpg: can't create `/var/lib/monkeysphere/gnupg-host/pubring.gpg.tmp': Permission denied
+     gpg: failed to rebuild keyring cache: file open error
+     gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+     gpg: depth: 0  valid:   1  signed:   1  trust: 0-, 0q, 0n, 0m, 0f, 1u
+     gpg: depth: 1  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 1f, 0u
+     gpg: next trustdb check due at 2009-03-30
+
+     Identity certifier added.
+     0 pip:~# 

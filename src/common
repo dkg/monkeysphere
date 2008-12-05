@@ -147,7 +147,7 @@ advance_date() {
     local shortunits
 
     # try things the GNU way first 
-    if date -d "$number $longunits" "$format" >&/dev/null ; then
+    if date -d "$number $longunits" "$format" >/dev/null 2>&1; then
 	date -d "$number $longunits" "$format"
     else
 	# otherwise, convert to (a limited version of) BSD date syntax:
@@ -639,7 +639,7 @@ process_user_id() {
 		;;
 	    'uid') # user ids
 		if [ "$lastKey" != pub ] ; then
-		    log verbose " - got a user ID after a sub key?!  user IDs should only follow primary keys!"
+		    log verbose " ! got a user ID after a sub key?!  user IDs should only follow primary keys!"
 		    continue
 		fi
 		# if an acceptable user ID was already found, skip
@@ -652,6 +652,8 @@ process_user_id() {
 		    if [ "$validity" = 'u' -o "$validity" = 'f' ] ; then
 			# mark user ID acceptable
 			uidOK=true
+		    else
+			log debug "  - unacceptable user ID validity ($validity)."
 		    fi
 		else
 		    continue
@@ -693,10 +695,12 @@ process_user_id() {
 		
 		# if sub key validity is not ok, skip
 		if [ "$validity" != 'u' -a "$validity" != 'f' ] ; then
+		    log debug "  - unacceptable sub key validity ($validity)."
 		    continue
 		fi
 		# if sub key capability is not ok, skip
 		if ! check_capability "$usage" $requiredCapability ; then
+		    log debug "  - unacceptable sub key capability ($usage)."
 		    continue
 		fi
 
