@@ -2,7 +2,7 @@ Monkeysphere is a system to use the OpenPGP web-of-trust to
 authenticate and encrypt ssh connections.
 
 It is free software, developed by:
-  Jameson Rollins <jrollins@fifthhorseman.net>
+  Jameson Graef Rollins <jrollins@finestructure.net>
   Daniel Kahn Gillmor <dkg@fifthhorseman.net>
   Jamie McClelland <jamie@mayfirst.org>
   Micah Anderson <micah@riseup.net>

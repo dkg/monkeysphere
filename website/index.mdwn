@@ -69,12 +69,11 @@ To emphasize: ***no modifications to SSH are required to use the
 Monkeysphere***.  OpenSSH can be used as is; completely unpatched and
 "out of the box".
 
-## Links ##
+## License ##
 
-* [OpenSSH](http://openssh.com/)
-* [GnuPG](http://www.gnupg.org/)
-* [Secure Shell Authentication Protocol RFC 4252](http://tools.ietf.org/html/rfc4252)
-* [OpenPGP RFC 4880](http://tools.ietf.org/html/rfc4880)
+All Monkeysphere software is copyright, 2007, by [the
+authors](community), and released under [GPL, version 3 or
+later](http://www.gnu.org/licenses/gpl-3.0.html).
 
 ----
 
