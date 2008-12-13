@@ -8,6 +8,7 @@
 [[DOCUMENTATION|doc]] 
 [[NEWS|news]]
 [[COMMUNITY|community]]
-[[BUGS|bugs]]
+<a href="https://labs.riseup.net/code/wiki/monkeysphere">WIKI</a>
+<a href="https://labs.riseup.net/code/projects/monkeysphere/issues">BUGS</a>
 
 </td></tr></tbody></table>
