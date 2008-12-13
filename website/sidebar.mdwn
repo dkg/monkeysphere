@@ -9,5 +9,4 @@
 [[NEWS|news]]
 [[COMMUNITY|community]]
 [[BUGS|bugs]]
-<a href="https://labs.riseup.net/code/wiki/monkeysphere" WIKI</a>
 </td></tr></tbody></table>
