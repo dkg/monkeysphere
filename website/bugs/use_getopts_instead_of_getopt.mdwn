@@ -8,3 +8,12 @@ better for portability.
 So it looks like the sh built-in getopts does not include long options
 (eg. "--expire").  Is it worth getting rid of the long options for
 this?
+
+---
+
+Why not just get rid of getopts altogether and perform a simple
+argument-processing loop with bash string tests?  We're only invoking
+getopt in three places, and each invocation is no more complex than
+three arguments -- and most arguments take a separate parameter, which
+means that handling tricky arg blobs like -aCxr are not gonna be
+supported anyway.
