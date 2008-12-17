@@ -63,15 +63,6 @@ gen_subkey(){
     keyExpire=
 
     # get options
-    TEMP=$(PATH="/usr/local/bin:$PATH" getopt -o l:e: -l length:,expire: -n "$PGRM" -- "$@") || failure "getopt failed!  Does your getopt support GNU-style long options?"
-
-    if [ $? != 0 ] ; then
-	exit 1
-    fi
-
-    # Note the quotes around `$TEMP': they are essential!
-    eval set -- "$TEMP"
-
     while true ; do
 	case "$1" in
 	    -l|--length)
@@ -82,10 +73,11 @@ gen_subkey(){
 		keyExpire="$2"
 		shift 2
 		;;
-	    --)
-		shift
-		;;
-            *)
+	    *)
+		if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
+		    failure "Unknown option '$1'.
+Type '$PGRM help' for usage."
+		fi
 		break
 		;;
 	esac
