@@ -45,6 +45,7 @@ subcommands:
    --length (-l) BITS                  key length in bits (2048)
    --expire (-e) EXPIRE                date to expire
  subkey-to-ssh-agent (s)             store authentication subkey in ssh-agent
+ version (v)                         show version number
  help (h,?)                          this help
 
 EOF
@@ -363,6 +364,10 @@ case $COMMAND in
 
     'subkey-to-ssh-agent'|'s')
 	subkey_to_ssh_agent "$@"
+	;;
+
+    'version'|'v')
+	echo "$VERSION"
 	;;
 
     '--help'|'help'|'-h'|'h'|'?')

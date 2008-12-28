@@ -19,6 +19,9 @@
 SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"/etc/monkeysphere"}
 export SYSCONFIGDIR
 
+# monkeysphere version
+VERSION=__VERSION__
+
 ########################################################################
 ### UTILITY FUNCTIONS
 

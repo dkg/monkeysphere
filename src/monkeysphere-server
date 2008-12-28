@@ -66,6 +66,7 @@ subcommands:
 
  gpg-authentication-cmd CMD          gnupg-authentication command
 
+ version (v)                         show version number
  help (h,?)                          this help
 
 EOF
@@ -1064,6 +1065,10 @@ case $COMMAND in
     'gpg-authentication-cmd')
 	check_user
 	gpg_authentication_cmd "$@"
+	;;
+
+    'version'|'v')
+	echo "$VERSION"
 	;;
 
     '--help'|'help'|'-h'|'h'|'?')
