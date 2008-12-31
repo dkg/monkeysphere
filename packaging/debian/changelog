@@ -6,8 +6,10 @@ monkeysphere (0.23~pre-1) UNRELEASED; urgency=low
     - add checks for root users, for functions where it is required.
     - get rid of getopts.
     - added version output option
+    - check that existing authentication keys are valid in gen_key
+      function.
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Sun, 28 Dec 2008 15:54:21 -0500
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Tue, 30 Dec 2008 20:21:16 -0500
 
 monkeysphere (0.22-1) unstable; urgency=low
 
