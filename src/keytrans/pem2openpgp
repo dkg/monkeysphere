@@ -20,6 +20,58 @@ use Crypt::OpenSSL::Bignum;
 use Digest::SHA1;
 use MIME::Base64;
 
+
+# make an old-style packet out of the given packet type and body.
+# old-style  (see RFC 4880 section 4.2)
+sub make_packet {
+  my $type = shift;
+  my $body = shift;
+
+# FIXME: yet another length():
+  my $len = length($body);
+
+  my $lenbytes;
+  my $lencode;
+
+  if ($len < 2**8) {
+    $lenbytes = 0;
+    $lencode = 'C';
+  } elsif ($len < 2**16) {
+    $lenbytes = 1;
+    $lencode = 'n';
+  } elsif ($len < 2**31) {
+    ## not testing against full 32 bits because i don't want to deal
+    ## with potential overflow.
+    $lenbytes = 2;
+    $lencode = 'N';
+  } else {
+    ## what the hell do we do here?
+    $lenbytes = 3;
+    $lencode = '';
+  }
+
+  return pack('C'.$lencode, 0x80 + ($type * 4) + $lenbytes, $len).
+    $body;
+}
+
+
+# takes a Crypt::OpenSSL::Bignum
+sub mpi_pack {
+  my $num = shift;
+
+  my $hex = $num->to_hex();
+
+  my $mpilen = length($hex)*4;
+
+# this is a kludgy way to get the number of bits in the first byte:
+  my $bitsinfirstbyte = length(sprintf("%b", hex(substr $hex, 0, 2)));
+
+  $mpilen -= (8 - $bitsinfirstbyte);
+
+  return pack('n', $mpilen).$num->to_bin();
+}
+
+
 my $holdTerminator = $/;
 undef $/;
 my $buf = <STDIN>;
@@ -103,8 +155,14 @@ my $sig_data_to_be_hashed =
 my ($n, $e, $d, $p, $q) = $rsa->get_key_parameters();
 
 
-open(KEYFILE, "</home/wt215/gpg-test/key-data");
-my $key_data = <KEYFILE>;
+my $pubkey =
+  pack('CN', 4, $timestamp).
+  $pubkey_algo.
+  mpi_pack($n).
+  mpi_pack($e);
+
+#open(KEYFILE, "</home/wt215/gpg-test/key-data");
+my $key_data = make_packet(6, $pubkey);
 
 # FIXME: $keyid should be generated from the public key instead of
 # hardcoded:
@@ -133,22 +191,7 @@ my $data_hash = Digest::SHA1::sha1_hex($datatosign);
 
 my $issuer_packet = pack('CCH16', 9, 16, $keyid);
 
-my $sig = $rsa->sign($datatosign);
-
-my $bigsig = Crypt::OpenSSL::Bignum->new_from_bin($sig);
-
-
-my $hex = $bigsig->to_hex();
-
-my $mpilen = length($hex)*4;
-
-# this is a kludgy way to get the number of bits in the first byte:
-my $bitsinfirstbyte = length(sprintf("%b", hex(substr $hex, 0, 2)));
-
-$mpilen -= (8 - $bitsinfirstbyte);
-
-# emit two octets representing $mpilen, followed by the signature itself:
-
+my $sig = Crypt::OpenSSL::Bignum->new_from_bin($rsa->sign($datatosign));
 
 my $sig_body =
   $sig_data_to_be_hashed.
@@ -156,25 +199,10 @@ my $sig_body =
   pack('n', length($issuer_packet)).
   $issuer_packet.
   pack('n', hex(substr($data_hash, 0, 4))).
-  pack("n" , $mpilen).
-  $sig;
+  mpi_pack($sig);
 
-# FIXME: yet another length():
-my $len = length($sig_body);
-
-my $header;
-
-if ($len < 2**8) {
-  $header = pack('CC', 0x88, $len);
-} elsif ($len < 2**16) {
-  $header = pack('Cn', 0x89, $len);
-} elsif ($len < 2**31) {
-  $header = pack('CN', 0x8a, $len);
-} else {
-  # what the hell do we do here?
-  $header = pack('C', 0x8b);
-}
-
-print $header.$sig_body;
+print make_packet(6, $pubkey);
+print make_packet(13, $uid);
+print make_packet(2, $sig_body);
 
 $/ = $holdTerminator;
