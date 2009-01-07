@@ -29,7 +29,6 @@ sub make_packet {
   my $type = shift;
   my $body = shift;
 
-# FIXME: yet another length():
   my $len = length($body);
 
   my $lenbytes;
@@ -62,17 +61,18 @@ sub make_packet {
 sub mpi_pack {
   my $num = shift;
 
-  my $hex = $num->to_hex();
+  my $val = $num->to_bin();
+  my $mpilen = length($val)*8;
 
-  my $mpilen = length($hex)*4;
-
-# this is a kludgy way to get the number of bits in the first byte:
-  my $bitsinfirstbyte = length(sprintf("%b", hex(substr $hex, 0, 2)));
+# this is a kludgy way to get the number of significant bits in the
+# first byte:
+  my $bitsinfirstbyte = length(sprintf("%b", ord($val)));
 
   $mpilen -= (8 - $bitsinfirstbyte);
 
-  return pack('n', $mpilen).$num->to_bin();
+  return pack('n', $mpilen).$val;
 }
+
 # FIXME: genericize this to accept either RSA or DSA keys:
 sub make_rsa_key_body {
   my $key = shift;
@@ -166,7 +166,6 @@ my $subpackets_to_be_hashed =
   $features.
   $keyserver_pref;
 
-#FIXME: what's the right way to get length()?
 my $subpacket_octets = pack('n', length($subpackets_to_be_hashed));
 
 my $sig_data_to_be_hashed =
@@ -191,8 +190,6 @@ my $keyid = substr(fingerprint($rsa, $timestamp), 40 - 16, 16);
 # signature data itself.
 my $trailer = pack('CCN', 4, 0xff, length($sig_data_to_be_hashed));
 
-# FIXME: length() is probably not right here either in the event that
-# the uid uses unicode.
 my $uid_data =
   pack('CN', 0xb4, length($uid)).
   $uid;
@@ -212,7 +209,6 @@ my $sig = Crypt::OpenSSL::Bignum->new_from_bin($rsa->sign($datatosign));
 
 my $sig_body =
   $sig_data_to_be_hashed.
-# FIXME: another dubious length() call.
   pack('n', length($issuer_packet)).
   $issuer_packet.
   pack('n', hex(substr($data_hash, 0, 4))).
