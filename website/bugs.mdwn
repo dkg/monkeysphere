@@ -2,10 +2,18 @@
 
 # Bugs #
 
-This is Monkeysphere's bug list.  You can also browse our [completed bugs](done).
+The Monkeysphere is moving to a [new issue tracking
+system](https://labs.riseup.net/code/projects/show/monkeysphere),
+hosted at [Riseup Labs](https://labs.riseup.net/code).  We're leaving
+this old bug list up during the transition.
 
-If you don't have commit access to the public repo, we'd appreciate
-you reporting bugs on [the monkeysphere mailing list](/community).
+If you use [Debian](htt[://debian.org), please consider submitting
+your bug to the [Debian BTS](http://bugs.debian.org/monkeysphere).
+
+You can also browse our [completed bugs](done).
+
+Please feel free to also ask any questions on the [the monkeysphere
+mailing list](/community).
 
 [[inline pages="./bugs/* and !./bugs/done and !link(done) 
 and !*/Discussion" actions=yes postform=yes show=0]]

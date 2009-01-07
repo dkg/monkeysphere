@@ -29,6 +29,7 @@ tarball: clean
 
 debian-package: tarball
 	tar xzf monkeysphere_$(MONKEYSPHERE_VERSION).orig.tar.gz
+	sed -i "s|__VERSION__|$(MONKEYSPHERE_VERSION)|g" monkeysphere-$(MONKEYSPHERE_VERSION)/src/common
 	cp -a packaging/debian monkeysphere-$(MONKEYSPHERE_VERSION)
 	(cd monkeysphere-$(MONKEYSPHERE_VERSION) && debuild -uc -us)
 	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
