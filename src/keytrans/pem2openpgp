@@ -107,6 +107,23 @@ sub fingerprint {
   return Digest::SHA1::sha1(pack('Cn', 0x99, length($rsabody)).$rsabody);
 }
 
+# FIXME: make tables of relevant identifiers: digest algorithms,
+# ciphers, asymmetric crypto, packet types, subpacket types, signature
+# types.  As these are created, replace the opaque numbers below with
+# semantically-meaningful code.
+
+# see RFC 4880 section 5.2.3.21
+my $usage_flags = { certify => 0x01,
+		    sign => 0x02,
+		    encrypt_comms => 0x04,
+		    encrypt_storage => 0x08,
+		    encrypt => 0x0c, ## both comms and storage
+		    split => 0x10, # the private key is split via secret sharing
+		    authenticate => 0x20,
+		    shared => 0x80, # more than one person holds the entire private key
+		  };
+
+
 # we're just not dealing with newline business right now.  slurp in
 # the whole file.
 undef $/;
@@ -141,8 +158,9 @@ my $timestamp = time();
 my $creation_time_packet = pack('CCN', 5, 2, $timestamp);
 
 
-# usage: signing and certification:
-my $flags = 0x03;
+# FIXME: HARDCODED: what if someone wants to select a different set of
+# usage flags?  For now, we do only authentication.
+my $flags = $usage_flags->{authenticate};
 my $usage_packet = pack('CCC', 2, 27, $flags);
 
 
