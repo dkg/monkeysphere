@@ -20,6 +20,8 @@ use Crypt::OpenSSL::Bignum;
 use Digest::SHA1;
 use MIME::Base64;
 
+## make sure all length() and substr() calls use bytes only:
+use bytes;
 
 # make an old-style packet out of the given packet type and body.
 # old-style  (see RFC 4880 section 4.2)
@@ -55,7 +57,8 @@ sub make_packet {
 }
 
 
-# takes a Crypt::OpenSSL::Bignum
+# takes a Crypt::OpenSSL::Bignum, returns it formatted as OpenPGP MPI
+# (RFC 4880 section 3.2)
 sub mpi_pack {
   my $num = shift;
 
@@ -70,7 +73,30 @@ sub mpi_pack {
 
   return pack('n', $mpilen).$num->to_bin();
 }
+# FIXME: genericize this to accept either RSA or DSA keys:
+sub make_rsa_key_body {
+  my $key = shift;
+  my $timestamp = shift;
 
+  my ($n, $e) = $key->get_key_parameters();
+
+  return
+    pack('CN', 4, $timestamp).
+      pack('C', 1). # RSA
+	mpi_pack($n).
+	  mpi_pack($e);
+
+}
+
+# expects an RSA key (public or private) and a timestamp
+sub fingerprint {
+  my $key = shift;
+  my $timestamp = shift;
+
+  my $rsabody = make_rsa_key_body($key, $timestamp);
+
+  return Digest::SHA1::sha1_hex(pack('Cn', 0x99, length($rsabody)).$rsabody);
+}
 
 my $holdTerminator = $/;
 undef $/;
@@ -130,7 +156,7 @@ my $features = pack('CCC', 2, 30, 1);
 # keyserver preference: only owner modify (???):
 my $keyserver_pref = pack('CCC', 2, 23, 0x80);
 
-my $subpackets_to_be_hashed = 
+my $subpackets_to_be_hashed =
   $creation_time_packet.
   $usage_packet.
   $expiration_packet.
@@ -151,22 +177,13 @@ my $sig_data_to_be_hashed =
   $subpacket_octets.
   $subpackets_to_be_hashed;
 
-
-my ($n, $e, $d, $p, $q) = $rsa->get_key_parameters();
-
-
-my $pubkey =
-  pack('CN', 4, $timestamp).
-  $pubkey_algo.
-  mpi_pack($n).
-  mpi_pack($e);
+my $pubkey = make_rsa_key_body($rsa, $timestamp);
 
 #open(KEYFILE, "</home/wt215/gpg-test/key-data");
 my $key_data = make_packet(6, $pubkey);
 
-# FIXME: $keyid should be generated from the public key instead of
-# hardcoded:
-my $keyid = '5616d7cb02e69446';
+# take the last 16 characters of the fingerprint as the keyid:
+my $keyid = substr(fingerprint($rsa, $timestamp), 40 - 16, 16);
 
 # the v4 signature trailer is:
 
