@@ -1,0 +1,180 @@
+#!/usr/bin/perl -w -T
+
+# pem2openpgp: take a PEM-encoded RSA private-key on standard input, a
+# User ID as the first argument, and generate an OpenPGP certificate
+# from it.
+
+# Authors:
+#  Jameson Rollins <jrollins@finestructure.net>
+#  Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+
+# Started on: 2009-01-07 02:01:19-0500
+
+# License: GPL v3 or later (we may need to adjust this given that this
+# connects to OpenSSL via perl)
+
+use strict;
+use warnings;
+use Crypt::OpenSSL::RSA;
+use Crypt::OpenSSL::Bignum;
+use Digest::SHA1;
+use MIME::Base64;
+
+my $holdTerminator = $/;
+undef $/;
+my $buf = <STDIN>;
+
+
+my $rsa = Crypt::OpenSSL::RSA->new_private_key($buf);
+
+$rsa->use_sha1_hash();
+$rsa->use_no_padding();
+
+if (! $rsa->check_key()) {
+  die "key does not check";
+}
+
+my $uid = 'fake key (do not use) <test@example.org>';
+
+
+
+my $version = pack('C', 4);
+# strong assertion of identity:
+my $sigtype = pack('C', 0x13);
+# RSA
+my $pubkey_algo = pack('C', 1);
+# SHA1
+my $hash_algo = pack('C', 2);
+
+
+
+my $timestamp = 1231003584;
+
+my $creation_time_packet = pack('CCN', 5, 2, $timestamp);
+
+
+# usage: signing and certification:
+my $flags = 0x03;
+my $usage_packet = pack('CCC', 2, 27, $flags);
+
+
+# expire in 2 days:
+my $expires_in = 86400*2;
+my $expiration_packet = pack('CCN', 5, 9, $expires_in);
+
+
+# prefer AES-256, AES-192, AES-128, CAST5, 3DES:
+my $pref_sym_algos = pack('CCCCCCC', 6, 11, 9, 8, 7, 3, 2);
+
+# prefer SHA-1, SHA-256, RIPE-MD/160
+my $pref_hash_algos = pack('CCCCC', 4, 21, 2, 8, 3);
+
+# prefer ZLIB, BZip2, ZIP
+my $pref_zip_algos = pack('CCCCC', 4, 22, 2, 3, 1);
+
+# we support the MDC feature:
+my $features = pack('CCC', 2, 30, 1);
+
+# keyserver preference: only owner modify (???):
+my $keyserver_pref = pack('CCC', 2, 23, 0x80);
+
+my $subpackets_to_be_hashed = 
+  $creation_time_packet.
+  $usage_packet.
+  $expiration_packet.
+  $pref_sym_algos.
+  $pref_hash_algos.
+  $pref_zip_algos.
+  $features.
+  $keyserver_pref;
+
+#FIXME: what's the right way to get length()?
+my $subpacket_octets = pack('n', length($subpackets_to_be_hashed));
+
+my $sig_data_to_be_hashed =
+  $version.
+  $sigtype.
+  $pubkey_algo.
+  $hash_algo.
+  $subpacket_octets.
+  $subpackets_to_be_hashed;
+
+
+my ($n, $e, $d, $p, $q) = $rsa->get_key_parameters();
+
+
+open(KEYFILE, "</home/wt215/gpg-test/key-data");
+my $key_data = <KEYFILE>;
+
+# FIXME: $keyid should be generated from the public key instead of
+# hardcoded:
+my $keyid = '5616d7cb02e69446';
+
+# the v4 signature trailer is:
+
+# version number, literal 0xff, and then a 4-byte count of the
+# signature data itself.
+my $trailer = pack('CCN', 4, 0xff, length($sig_data_to_be_hashed));
+
+# FIXME: length() is probably not right here either in the event that
+# the uid uses unicode.
+my $uid_data =
+  pack('CN', 0xb4, length($uid)).
+  $uid;
+
+my $datatosign =
+  $key_data.
+  $uid_data.
+  $sig_data_to_be_hashed.
+  $trailer;
+
+my $data_hash = Digest::SHA1::sha1_hex($datatosign);
+
+
+my $issuer_packet = pack('CCH16', 9, 16, $keyid);
+
+my $sig = $rsa->sign($datatosign);
+
+my $bigsig = Crypt::OpenSSL::Bignum->new_from_bin($sig);
+
+
+my $hex = $bigsig->to_hex();
+
+my $mpilen = length($hex)*4;
+
+# this is a kludgy way to get the number of bits in the first byte:
+my $bitsinfirstbyte = length(sprintf("%b", hex(substr $hex, 0, 2)));
+
+$mpilen -= (8 - $bitsinfirstbyte);
+
+# emit two octets representing $mpilen, followed by the signature itself:
+
+
+my $sig_body =
+  $sig_data_to_be_hashed.
+# FIXME: another dubious length() call.
+  pack('n', length($issuer_packet)).
+  $issuer_packet.
+  pack('n', hex(substr($data_hash, 0, 4))).
+  pack("n" , $mpilen).
+  $sig;
+
+# FIXME: yet another length():
+my $len = length($sig_body);
+
+my $header;
+
+if ($len < 2**8) {
+  $header = pack('CC', 0x88, $len);
+} elsif ($len < 2**16) {
+  $header = pack('Cn', 0x89, $len);
+} elsif ($len < 2**31) {
+  $header = pack('CN', 0x8a, $len);
+} else {
+  # what the hell do we do here?
+  $header = pack('C', 0x8b);
+}
+
+print $header.$sig_body;
+
+$/ = $holdTerminator;
