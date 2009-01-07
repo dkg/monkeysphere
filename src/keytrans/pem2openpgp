@@ -23,6 +23,10 @@ use MIME::Base64;
 ## make sure all length() and substr() calls use bytes only:
 use bytes;
 
+my $uid = shift;
+
+# FIXME: fail if there is no given user ID.
+
 # make an old-style packet out of the given packet type and body.
 # old-style  (see RFC 4880 section 4.2)
 sub make_packet {
@@ -111,10 +115,6 @@ $rsa->use_no_padding();
 if (! $rsa->check_key()) {
   die "key does not check";
 }
-
-my $uid = 'fake key (do not use) <test@example.org>';
-
-
 
 my $version = pack('C', 4);
 # strong assertion of identity:
