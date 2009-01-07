@@ -4,6 +4,10 @@
 # User ID as the first argument, and generate an OpenPGP certificate
 # from it.
 
+# Usage:
+
+# pem2openpgp 'ssh://'$(hostname -f) < /etc/ssh/ssh_host_rsa_key | gpg --import
+
 # Authors:
 #  Jameson Rollins <jrollins@finestructure.net>
 #  Daniel Kahn Gillmor <dkg@fifthhorseman.net>
@@ -25,7 +29,8 @@ use bytes;
 
 my $uid = shift;
 
-# FIXME: fail if there is no given user ID.
+# FIXME: fail if there is no given user ID; or should we default to
+# hostname_long() from Sys::Hostname::Long ?
 
 # make an old-style packet out of the given packet type and body.
 # old-style  (see RFC 4880 section 4.2)
@@ -99,10 +104,11 @@ sub fingerprint {
 
   my $rsabody = make_rsa_pub_key_body($key, $timestamp);
 
-  return Digest::SHA1::sha1_hex(pack('Cn', 0x99, length($rsabody)).$rsabody);
+  return Digest::SHA1::sha1(pack('Cn', 0x99, length($rsabody)).$rsabody);
 }
 
-my $holdTerminator = $/;
+# we're just not dealing with newline business right now.  slurp in
+# the whole file.
 undef $/;
 my $buf = <STDIN>;
 
@@ -124,9 +130,13 @@ my $pubkey_algo = pack('C', 1);
 # SHA1
 my $hash_algo = pack('C', 2);
 
+# FIXME: i'm worried about generating a bazillion new OpenPGP
+# certificates from the same key, which could easily happen if you run
+# this script more than once against the same key.  How can we prevent
+# this?
 
-
-my $timestamp = 1231003584;
+# could an environment variable (if set) override the current time?
+my $timestamp = time();
 
 my $creation_time_packet = pack('CCN', 5, 2, $timestamp);
 
@@ -136,7 +146,9 @@ my $flags = 0x03;
 my $usage_packet = pack('CCC', 2, 27, $flags);
 
 
-# expire in 2 days:
+# FIXME: HARDCODED: how should we determine how far off to set the
+# expiration date?  default is to expire in 2 days, which is insanely
+# short (but good for testing).
 my $expires_in = 86400*2;
 my $expiration_packet = pack('CCN', 5, 9, $expires_in);
 
@@ -181,8 +193,8 @@ my $pubkey = make_rsa_pub_key_body($rsa, $timestamp);
 #open(KEYFILE, "</home/wt215/gpg-test/key-data");
 my $key_data = make_packet(6, $pubkey);
 
-# take the last 16 characters of the fingerprint as the keyid:
-my $keyid = substr(fingerprint($rsa, $timestamp), 40 - 16, 16);
+# take the last 8 bytes of the fingerprint as the keyid:
+my $keyid = substr(fingerprint($rsa, $timestamp), 20 - 8, 8);
 
 # the v4 signature trailer is:
 
@@ -203,7 +215,7 @@ my $datatosign =
 my $data_hash = Digest::SHA1::sha1_hex($datatosign);
 
 
-my $issuer_packet = pack('CCH16', 9, 16, $keyid);
+my $issuer_packet = pack('CCa8', 9, 16, $keyid);
 
 my $sig = Crypt::OpenSSL::Bignum->new_from_bin($rsa->sign($datatosign));
 
@@ -214,8 +226,9 @@ my $sig_body =
   pack('n', hex(substr($data_hash, 0, 4))).
   mpi_pack($sig);
 
-print make_packet(6, $pubkey);
-print make_packet(13, $uid);
-print make_packet(2, $sig_body);
+print
+  make_packet(6, $pubkey).
+  make_packet(13, $uid).
+  make_packet(2, $sig_body);
 
-$/ = $holdTerminator;
+
