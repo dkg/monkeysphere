@@ -78,7 +78,7 @@ sub mpi_pack {
 }
 
 # FIXME: genericize this to accept either RSA or DSA keys:
-sub make_rsa_key_body {
+sub make_rsa_pub_key_body {
   my $key = shift;
   my $timestamp = shift;
 
@@ -97,7 +97,7 @@ sub fingerprint {
   my $key = shift;
   my $timestamp = shift;
 
-  my $rsabody = make_rsa_key_body($key, $timestamp);
+  my $rsabody = make_rsa_pub_key_body($key, $timestamp);
 
   return Digest::SHA1::sha1_hex(pack('Cn', 0x99, length($rsabody)).$rsabody);
 }
@@ -176,7 +176,7 @@ my $sig_data_to_be_hashed =
   $subpacket_octets.
   $subpackets_to_be_hashed;
 
-my $pubkey = make_rsa_key_body($rsa, $timestamp);
+my $pubkey = make_rsa_pub_key_body($rsa, $timestamp);
 
 #open(KEYFILE, "</home/wt215/gpg-test/key-data");
 my $key_data = make_packet(6, $pubkey);
