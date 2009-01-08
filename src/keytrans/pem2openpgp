@@ -114,17 +114,17 @@ sub fingerprint {
 my $asym_algos = { rsa => 1,
 		   elgamal => 16,
 		   dsa => 17,
-		   }
+		   };
 
 # see RFC 4880 section 9.2
 my $ciphers = { plaintext => 0,
 		idea => 1,
-		3des => 2,
+		tripledes => 2,
 		cast5 => 3,
 		blowfish => 4,
 		aes128 => 7,
 		aes192 => 8,
-		aes256 => 9
+		aes256 => 9,
 		twofish => 10,
 	      };
 
@@ -155,7 +155,6 @@ my $usage_flags = { certify => 0x01,
 		    authenticate => 0x20,
 		    shared => 0x80, # more than one person holds the entire private key
 		  };
-
 
 # see RFC 4880 section 4.3
 my $packet_types = { pubkey_enc_session => 1,
@@ -197,28 +196,28 @@ my $sig_types = { binary_doc => 0x00,
 
 
 # see RFC 4880 section 5.2.3.1
-my $subpacket_types => { sig_creation_time => 2,
-			 sig_expiration_time => 3,
-			 exportable => 4,
-			 trust_sig => 5,
-			 regex => 6,
-			 revocable => 7,
-			 key_expiration_time => 9,
-			 preferred_cipher => 11,
-			 revocation_key => 12,
-			 issuer => 16,
-			 notation => 20,
-			 preferred_digest => 21,
-			 keyserver_prefs => 23,
-			 preferred_keyserver => 24,
-			 primary_uid => 25,
-			 policy_uri => 26,
-			 usage_flags => 27,
-			 signers_uid => 28,
-			 revocation_reason => 29,
-			 features => 30,
-			 signature_target => 31,
-			 embedded_signature = 32,
+my $subpacket_types = { sig_creation_time => 2,
+			sig_expiration_time => 3,
+			exportable => 4,
+			trust_sig => 5,
+			regex => 6,
+			revocable => 7,
+			key_expiration_time => 9,
+			preferred_cipher => 11,
+			revocation_key => 12,
+			issuer => 16,
+			notation => 20,
+			preferred_digest => 21,
+			keyserver_prefs => 23,
+			preferred_keyserver => 24,
+			primary_uid => 25,
+			policy_uri => 26,
+			usage_flags => 27,
+			signers_uid => 28,
+			revocation_reason => 29,
+			features => 30,
+			signature_target => 31,
+			embedded_signature => 32,
 		       };
 
 # we're just not dealing with newline business right now.  slurp in
@@ -230,7 +229,10 @@ my $buf = <STDIN>;
 my $rsa = Crypt::OpenSSL::RSA->new_private_key($buf);
 
 $rsa->use_sha1_hash();
-$rsa->use_no_padding();
+
+# see page 22 of RFC 4880 for why i think this is the right padding
+# choice to use:
+$rsa->use_pkcs1_padding();
 
 if (! $rsa->check_key()) {
   die "key does not check";
