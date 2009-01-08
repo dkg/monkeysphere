@@ -107,10 +107,43 @@ sub fingerprint {
   return Digest::SHA1::sha1(pack('Cn', 0x99, length($rsabody)).$rsabody);
 }
 
-# FIXME: make tables of relevant identifiers: digest algorithms,
-# ciphers, asymmetric crypto, packet types, subpacket types, signature
-# types.  As these are created, replace the opaque numbers below with
-# semantically-meaningful code.
+# FIXME: replace the opaque numbers below with
+# semantically-meaningful references based on these tables.
+
+# see RFC 4880 section 9.1 (ignoring deprecated algorithms for now)
+my $asym_algos = { rsa => 1,
+		   elgamal => 16,
+		   dsa => 17,
+		   }
+
+# see RFC 4880 section 9.2
+my $ciphers = { plaintext => 0,
+		idea => 1,
+		3des => 2,
+		cast5 => 3,
+		blowfish => 4,
+		aes128 => 7,
+		aes192 => 8,
+		aes256 => 9
+		twofish => 10,
+	      };
+
+# see RFC 4880 section 9.3
+my $zips = { uncompressed => 0,
+	     zip => 1,
+	     zlib => 2,
+	     bzip2 => 3,
+	   };
+
+# see RFC 4880 section 9.4
+my $digests = { md5 => 1,
+		sha1 => 2,
+		ripemd160 => 3,
+		sha256 => 8,
+		sha384 => 9,
+		sha512 => 10,
+		sha224 => 11,
+	      };
 
 # see RFC 4880 section 5.2.3.21
 my $usage_flags = { certify => 0x01,
@@ -123,6 +156,70 @@ my $usage_flags = { certify => 0x01,
 		    shared => 0x80, # more than one person holds the entire private key
 		  };
 
+
+# see RFC 4880 section 4.3
+my $packet_types = { pubkey_enc_session => 1,
+		     sig => 2,
+		     symkey_enc_session => 3,
+		     onepass_sig => 4,
+		     seckey => 5,
+		     pubkey => 6,
+		     sec_subkey => 7,
+		     compressed_data => 8,
+		     symenc_data => 9,
+		     marker => 10,
+		     literal => 11,
+		     trust => 12,
+		     uid => 13,
+		     pub_subkey => 14,
+		     uat => 17,
+		     symenc_w_integrity => 18,
+		     mdc => 19,
+		   };
+
+# see RFC 4880 section 5.2.1
+my $sig_types = { binary_doc => 0x00,
+		  text_doc => 0x01,
+		  standalone => 0x02,
+		  generic_certification => 0x10,
+		  persona_certification => 0x11,
+		  casual_certification => 0x12,
+		  positive_certification => 0x13,
+		  subkey_binding => 0x18,
+		  primary_key_binding => 0x19,
+		  key_signature => 0x1f,
+		  key_revocation => 0x20,
+		  subkey_revocation => 0x28,
+		  certification_revocation => 0x30,
+		  timestamp => 0x40,
+		  thirdparty => 0x50,
+		};
+
+
+# see RFC 4880 section 5.2.3.1
+my $subpacket_types => { sig_creation_time => 2,
+			 sig_expiration_time => 3,
+			 exportable => 4,
+			 trust_sig => 5,
+			 regex => 6,
+			 revocable => 7,
+			 key_expiration_time => 9,
+			 preferred_cipher => 11,
+			 revocation_key => 12,
+			 issuer => 16,
+			 notation => 20,
+			 preferred_digest => 21,
+			 keyserver_prefs => 23,
+			 preferred_keyserver => 24,
+			 primary_uid => 25,
+			 policy_uri => 26,
+			 usage_flags => 27,
+			 signers_uid => 28,
+			 revocation_reason => 29,
+			 features => 30,
+			 signature_target => 31,
+			 embedded_signature = 32,
+		       };
 
 # we're just not dealing with newline business right now.  slurp in
 # the whole file.
