@@ -32,83 +32,7 @@ my $uid = shift;
 # FIXME: fail if there is no given user ID; or should we default to
 # hostname_long() from Sys::Hostname::Long ?
 
-# make an old-style packet out of the given packet type and body.
-# old-style  (see RFC 4880 section 4.2)
-sub make_packet {
-  my $type = shift;
-  my $body = shift;
 
-  my $len = length($body);
-
-  my $lenbytes;
-  my $lencode;
-
-  if ($len < 2**8) {
-    $lenbytes = 0;
-    $lencode = 'C';
-  } elsif ($len < 2**16) {
-    $lenbytes = 1;
-    $lencode = 'n';
-  } elsif ($len < 2**31) {
-    ## not testing against full 32 bits because i don't want to deal
-    ## with potential overflow.
-    $lenbytes = 2;
-    $lencode = 'N';
-  } else {
-    ## what the hell do we do here?
-    $lenbytes = 3;
-    $lencode = '';
-  }
-
-  return pack('C'.$lencode, 0x80 + ($type * 4) + $lenbytes, $len).
-    $body;
-}
-
-
-# takes a Crypt::OpenSSL::Bignum, returns it formatted as OpenPGP MPI
-# (RFC 4880 section 3.2)
-sub mpi_pack {
-  my $num = shift;
-
-  my $val = $num->to_bin();
-  my $mpilen = length($val)*8;
-
-# this is a kludgy way to get the number of significant bits in the
-# first byte:
-  my $bitsinfirstbyte = length(sprintf("%b", ord($val)));
-
-  $mpilen -= (8 - $bitsinfirstbyte);
-
-  return pack('n', $mpilen).$val;
-}
-
-# FIXME: genericize this to accept either RSA or DSA keys:
-sub make_rsa_pub_key_body {
-  my $key = shift;
-  my $timestamp = shift;
-
-  my ($n, $e) = $key->get_key_parameters();
-
-  return
-    pack('CN', 4, $timestamp).
-      pack('C', 1). # RSA
-	mpi_pack($n).
-	  mpi_pack($e);
-
-}
-
-# expects an RSA key (public or private) and a timestamp
-sub fingerprint {
-  my $key = shift;
-  my $timestamp = shift;
-
-  my $rsabody = make_rsa_pub_key_body($key, $timestamp);
-
-  return Digest::SHA1::sha1(pack('Cn', 0x99, length($rsabody)).$rsabody);
-}
-
-# FIXME: replace the opaque numbers below with
-# semantically-meaningful references based on these tables.
 
 # see RFC 4880 section 9.1 (ignoring deprecated algorithms for now)
 my $asym_algos = { rsa => 1,
@@ -229,6 +153,120 @@ my $features = { mdc => 0x01
 my $keyserver_prefs = { nomodify => 0x80
 		      };
 
+###### end lookup tables ######
+
+# FIXME: if we want to be able to interpret openpgp data as well as
+# produce it, we need to produce key/value-swapped lookup tables as well.
+
+
+# make an old-style packet out of the given packet type and body.
+# old-style  (see RFC 4880 section 4.2)
+sub make_packet {
+  my $type = shift;
+  my $body = shift;
+
+  my $len = length($body);
+
+  my $lenbytes;
+  my $lencode;
+
+  if ($len < 2**8) {
+    $lenbytes = 0;
+    $lencode = 'C';
+  } elsif ($len < 2**16) {
+    $lenbytes = 1;
+    $lencode = 'n';
+  } elsif ($len < 2**31) {
+    ## not testing against full 32 bits because i don't want to deal
+    ## with potential overflow.
+    $lenbytes = 2;
+    $lencode = 'N';
+  } else {
+    ## what the hell do we do here?
+    $lenbytes = 3;
+    $lencode = '';
+  }
+
+  return pack('C'.$lencode, 0x80 + ($type * 4) + $lenbytes, $len).
+    $body;
+}
+
+
+# takes a Crypt::OpenSSL::Bignum, returns it formatted as OpenPGP MPI
+# (RFC 4880 section 3.2)
+sub mpi_pack {
+  my $num = shift;
+
+  my $val = $num->to_bin();
+  my $mpilen = length($val)*8;
+
+# this is a kludgy way to get the number of significant bits in the
+# first byte:
+  my $bitsinfirstbyte = length(sprintf("%b", ord($val)));
+
+  $mpilen -= (8 - $bitsinfirstbyte);
+
+  return pack('n', $mpilen).$val;
+}
+
+# see the bottom of page 43 of RFC 4880
+sub simple_checksum {
+  my $bytes = shift;
+
+  return unpack("%C*",$bytes) % 65536;
+}
+
+# FIXME: genericize these to accept either RSA or DSA keys:
+sub make_rsa_pub_key_body {
+  my $key = shift;
+  my $timestamp = shift;
+
+  my ($n, $e) = $key->get_key_parameters();
+
+  return
+    pack('CN', 4, $timestamp).
+      pack('C', $asym_algos->{rsa}).
+	mpi_pack($n).
+	  mpi_pack($e);
+}
+sub make_rsa_sec_key_body {
+  my $key = shift;
+  my $timestamp = shift;
+
+  # we're not using $a and $b, but we need them to get to $c.
+  my ($n, $e, $d, $p, $q, $a, $b, $c) = $key->get_key_parameters();
+
+  my $secret_material = mpi_pack($d).
+    mpi_pack($p).
+      mpi_pack($q).
+	mpi_pack($c);
+
+  # FIXME: according to Crypt::OpenSSL::RSA, $c is 1/q mod p; but
+  # according to sec 5.5.3 of RFC 4880, this last argument should
+  # instead be: u, the multiplicative inverse of p, mod q.  i don't
+  # see a simple way to generate this number from the perl module
+  # directly yet.
+
+  return
+    pack('CN', 4, $timestamp).
+      pack('C', $asym_algos->{rsa}).
+	mpi_pack($n).
+	  mpi_pack($e).
+	    pack('C', 0). # seckey material is not encrypted -- see RFC 4880 sec 5.5.3
+	      $secret_material.
+		simple_checksum($secret_material);
+}
+
+# expects an RSA key (public or private) and a timestamp
+sub fingerprint {
+  my $key = shift;
+  my $timestamp = shift;
+
+  my $rsabody = make_rsa_pub_key_body($key, $timestamp);
+
+  return Digest::SHA1::sha1(pack('Cn', 0x99, length($rsabody)).$rsabody);
+}
+
 # we're just not dealing with newline business right now.  slurp in
 # the whole file.
 undef $/;
@@ -330,6 +368,7 @@ my $sig_data_to_be_hashed =
   $subpackets_to_be_hashed;
 
 my $pubkey = make_rsa_pub_key_body($rsa, $timestamp);
+my $seckey = make_rsa_sec_key_body($rsa, $timestamp);
 
 my $key_data = make_packet($packet_types->{pubkey}, $pubkey);
 
