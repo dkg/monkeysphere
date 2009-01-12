@@ -1,8 +1,12 @@
 #!/usr/bin/perl -w -T
 
 # pem2openpgp: take a PEM-encoded RSA private-key on standard input, a
-# User ID as the first argument, and generate an OpenPGP certificate
-# from it.
+# User ID as the first argument, and generate an OpenPGP secret key
+# and certificate from it.
+
+# WARNING: the secret key material *will* appear on stdout (albeit in
+# OpenPGP form) -- if you redirect stdout to a file, make sure the
+# permissions on that file are appropriately locked down!
 
 # Usage:
 
@@ -160,6 +164,58 @@ my $keyserver_prefs = { nomodify => 0x80
 # produce it, we need to produce key/value-swapped lookup tables as well.
 
 
+########### Math/Utility Functions ##############
+
+
+# see the bottom of page 43 of RFC 4880
+sub simple_checksum {
+  my $bytes = shift;
+
+  return unpack("%32W*",$bytes) % 65536;
+}
+
+# calculate the multiplicative inverse of a mod b this is euclid's
+# extended algorithm.  For more information see:
+# http://en.wikipedia.org/wiki/Extended_Euclidean_algorithm the
+# arguments here should be Crypt::OpenSSL::Bignum objects.  $a should
+# be the larger of the two values, and the two values should be
+# coprime.
+
+sub modular_multi_inverse {
+  my $a = shift;
+  my $b = shift;
+
+  my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
+  my $x = Crypt::OpenSSL::Bignum->zero();
+  my $y = Crypt::OpenSSL::Bignum->one();
+  my $lastx = Crypt::OpenSSL::Bignum->one();
+  my $lasty = Crypt::OpenSSL::Bignum->zero();
+
+  while (! $b->is_zero()) {
+    my ($quotient, $remainder) = $a->div($b, $ctx);
+
+    $a = $b;
+    $b = $remainder;
+
+    my $temp = $x;
+    $x = $lastx->sub($quotient->mul($x, $ctx));
+    $lastx = $temp;
+
+    $temp = $y;
+    $y = $lasty->sub($quotient->mul($y, $ctx));
+    $lasty = $temp;
+  }
+
+  if (!$a->is_one()) {
+    die "did this math wrong.\n";
+  }
+
+  return $lastx;
+}
+
+
+############ OpenPGP formatting functions ############
+
 # make an old-style packet out of the given packet type and body.
 # old-style  (see RFC 4880 section 4.2)
 sub make_packet {
@@ -210,13 +266,6 @@ sub mpi_pack {
   return pack('n', $mpilen).$val;
 }
 
-# see the bottom of page 43 of RFC 4880
-sub simple_checksum {
-  my $bytes = shift;
-
-  return unpack("%32W*",$bytes) % 65536;
-}
-
 # FIXME: genericize these to accept either RSA or DSA keys:
 sub make_rsa_pub_key_body {
   my $key = shift;
@@ -229,45 +278,6 @@ sub make_rsa_pub_key_body {
       pack('C', $asym_algos->{rsa}).
 	mpi_pack($n).
 	  mpi_pack($e);
-}
-
-# calculate the multiplicative inverse of a mod b this is euclid's
-# extended algorithm.  For more information see:
-# http://en.wikipedia.org/wiki/Extended_Euclidean_algorithm the
-# arguments here should be Crypt::OpenSSL::Bignum objects.  $a should
-# be the larger of the two values, and the two values should be
-# coprime.
-
-sub modular_multi_inverse {
-  my $a = shift;
-  my $b = shift;
-
-  my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
-  my $x = Crypt::OpenSSL::Bignum->zero();
-  my $y = Crypt::OpenSSL::Bignum->one();
-  my $lastx = Crypt::OpenSSL::Bignum->one();
-  my $lasty = Crypt::OpenSSL::Bignum->zero();
-
-  while (! $b->is_zero()) {
-    my ($quotient, $remainder) = $a->div($b, $ctx);
-
-    $a = $b;
-    $b = $remainder;
-
-    my $temp = $x;
-    $x = $lastx->sub($quotient->mul($x, $ctx));
-    $lastx = $temp;
-
-    $temp = $y;
-    $y = $lasty->sub($quotient->mul($y, $ctx));
-    $lasty = $temp;
-  }
-
-  if (!$a->is_one()) {
-    die "did this math wrong.\n";
-  }
-
-  return $lastx;
 }
 
 sub make_rsa_sec_key_body {
@@ -336,23 +346,28 @@ my $hash_algo = pack('C', $digests->{sha1});
 
 # FIXME: i'm worried about generating a bazillion new OpenPGP
 # certificates from the same key, which could easily happen if you run
-# this script more than once against the same key.  How can we prevent
-# this?
+# this script more than once against the same key (because the
+# timestamps will differ).  How can we prevent this?
 
-# could an environment variable (if set) override the current time?
+# could an environment variable (if set) override the current time, to
+# be able to create a standard key?  If we read the key from a file
+# instead of stdin, should we use the creation time on the file?
 my $timestamp = time();
 
 my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $timestamp);
 
 
 # FIXME: HARDCODED: what if someone wants to select a different set of
-# usage flags?  For now, we do only authentication.
+# usage flags?  For now, we do only authentication because that's what
+# monkeysphere needs.
 my $usage_packet = pack('CCC', 2, $subpacket_types->{usage_flags}, $usage_flags->{authenticate});
 
 
 # FIXME: HARDCODED: how should we determine how far off to set the
 # expiration date?  default is to expire in 2 days, which is insanely
-# short (but good for testing).
+# short (but good for testing).  The user ought to be able to decide
+# this directly, rather than having to do "monkeysphere-server
+# extend-key".
 my $expires_in = 86400*2;
 my $expiration_packet = pack('CCN', 5, $subpacket_types->{key_expiration_time}, $expires_in);
 
