@@ -275,18 +275,18 @@ sub make_rsa_sec_key_body {
   my $timestamp = shift;
 
   # we're not using $a and $b, but we need them to get to $c.
-  my ($n, $e, $d, $p, $q, $a, $b, $c) = $key->get_key_parameters();
+  my ($n, $e, $d, $p, $q) = $key->get_key_parameters();
 
   my $secret_material = mpi_pack($d).
     mpi_pack($p).
       mpi_pack($q).
 	mpi_pack(modular_multi_inverse($p, $q));
 
-  # FIXME: according to Crypt::OpenSSL::RSA, $c is 1/q mod p; but
-  # according to sec 5.5.3 of RFC 4880, this last argument should
-  # instead be: u, the multiplicative inverse of p, mod q.  i don't
-  # see a simple way to generate this number from the perl module
-  # directly yet.
+  # according to Crypt::OpenSSL::RSA, the closest value we can get out
+  # of get_key_parameters is 1/q mod p; but according to sec 5.5.3 of
+  # RFC 4880, we're actually looking for u, the multiplicative inverse
+  # of p, mod q.  This is why we're calculating the value directly
+  # with modular_multi_inverse.
 
   return
     pack('CN', 4, $timestamp).
