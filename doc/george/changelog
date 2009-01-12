@@ -7,6 +7,12 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2009-01-11 - dkg
+	* extended the expiration date for george's key three months into
+	the future.
+	* aptitude update && aptitude full-upgrade (brings monkeysphere to
+	0.22-1)
+	
 2008-10-29 - dkg
 	* aptitude update && aptitude full-upgrade
 	* brought monkeysphere up to 0.19-1
