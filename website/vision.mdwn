@@ -7,8 +7,25 @@ This is probably at the crux of the Monkeysphere vision for the future:
 * [Simon Josefsson proposed out-of-process certificate verification model in gnutls-devel](http://news.gmane.org/find-root.php?group=gmane.comp.encryption.gpg.gnutls.devel&article=3231)
 * [Werner Koch's dirmngr](http://www.gnupg.org/documentation/manuals/dirmngr/)
 * [GnuTLS wiki external validation](http://redmine.josefsson.org/wiki/gnutls/GnuTLSExternalValidation)
+* [Pathfinder PKI validation](http://code.google.com/p/pathfinder-pki/) (includes validation plugins for OpenSSL and LibNSS).
 
-## Other discussions ##
+## TLS transition strategies ##
+
+While [RFC 5081](http://tools.ietf.org/html/rfc5081) is quite a while
+off from widespread adoption, it would be good to have an interim
+translation step.  This is analogous to the SSH work we've done, where
+the on-the-wire protocol remains the same, but the keys themselves are
+looked up in the OpenPGP WoT.
+
+Firefox extensions that deal with certificate validation seem to be
+the easiest path toward demonstrating this technique.  We should look
+at:
+
+* [SSL Blacklist](http://codefromthe70s.org/sslblacklist.aspx)
+* [Perspectives](http://www.cs.cmu.edu/~perspectives/firefox.html)
+* there is another firefox extension that basically disables all TLS certificate checking.  The download page says things like "this is a bad idea" and "do not install this extension", but i'm unable to find it at the moment.
+
+## Related discussions ##
 
 * [Wandering Thoughts blog discussion about Web of Trust flaws](http://utcc.utoronto.ca/~cks/space/blog/tech/WebOfTrustFlaws?showcomments)
 * [Wandering Thoughts blog discussion about certificate authorities](http://utcc.utoronto.ca/~cks/space/blog/web/SSLCANeed?showcomments)
