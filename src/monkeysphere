@@ -41,6 +41,9 @@ Monkeysphere client tool.
 subcommands:
  update-known_hosts (k) [HOST]...    update known_hosts file
  update-authorized_keys (a)          update authorized_keys file
+ import-subkey (i)                   import existing ssh key as gpg subkey
+   --keyfile (-f) FILE                 key file to import
+   --expire (-e) EXPIRE                date to expire
  gen-subkey (g) [KEYID]              generate an authentication subkey
    --length (-l) BITS                  key length in bits (2048)
    --expire (-e) EXPIRE                date to expire
@@ -51,6 +54,47 @@ subcommands:
 EOF
 }
 
+# import an existing ssh key as a gpg subkey
+import_subkey() {
+    local keyFile="~/.ssh/id_rsa"
+    local keyExpire
+    local keyID
+    local gpgOut
+    local userID
+
+    # get options
+    while true ; do
+	case "$1" in
+	    -f|--keyfile)
+		keyFile="$2"
+		shift 2
+		;;
+	    -e|--expire)
+		keyExpire="$2"
+		shift 2
+		;;
+	    *)
+		if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
+		    failure "Unknown option '$1'.
+Type '$PGRM help' for usage."
+		fi
+		break
+		;;
+	esac
+    done
+
+    log verbose "importing ssh key..."
+    fifoDir=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+    (umask 077 && mkfifo "$fifoDir/pass")
+    ssh2openpgp | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
+
+    passphrase_prompt  "Please enter your passphrase for $keyID: " "$fifoDir/pass"
+
+    rm -rf "$fifoDir"
+    wait
+    log verbose "done."
+}
+
 # generate a subkey with the 'a' usage flags set
 gen_subkey(){
     local keyLength
@@ -58,10 +102,6 @@ gen_subkey(){
     local keyID
     local gpgOut
     local userID
-
-    # set default key parameter values
-    keyLength=
-    keyExpire=
 
     # get options
     while true ; do
@@ -374,6 +414,10 @@ case $COMMAND in
 	# process authorized_user_ids file
 	process_authorized_user_ids "$AUTHORIZED_USER_IDS"
 	RETURN="$?"
+	;;
+
+    'import-subkey'|'i')
+	import_key "$@"
 	;;
 
     'gen-subkey'|'g')
