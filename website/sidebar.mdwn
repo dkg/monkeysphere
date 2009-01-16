@@ -12,6 +12,7 @@
 [[COMMUNITY|community]]
 <a href="https://labs.riseup.net/code/wiki/monkeysphere">WIKI</a>
 <a href="https://labs.riseup.net/code/projects/monkeysphere/issues">BUGS</a>
+[[VISION|vision]]
 </td>
 </tr>
 </table>
