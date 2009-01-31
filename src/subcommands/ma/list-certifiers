@@ -12,6 +12,8 @@
 
 # list the host certifiers
 
+list_certifiers() {
+
 local keys
 local key
 
@@ -23,3 +25,5 @@ keys=$(gpg_authentication "--no-options --list-options show-uid-validity --keyri
 for key in $keys ; do
     gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key --fingerprint $key"
 done
+
+}

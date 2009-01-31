@@ -10,6 +10,8 @@
 # They are Copyright 2008, and are all released under the GPL, version 3
 # or later.
 
+update_users() {
+
 if [ "$1" ] ; then
     # get users from command line
     unames="$@"
@@ -141,4 +143,6 @@ for uname in $unames ; do
 
     # destroy temporary directory
     rm -rf "$TMPLOC"
- done
+done
+
+}
