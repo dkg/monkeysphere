@@ -23,10 +23,6 @@ fingerprint_server_key >/dev/null \
 # get options
 while true ; do
 	case "$1" in
-	    -h|--hostname)
-		hostName="$2"
-		shift 2
-		;;
 	    -f|--keyfile)
 		keyFile="$2"
 		shift 2
@@ -40,6 +36,9 @@ while true ; do
 		    failure "Unknown option '$1'.
 Type '$PGRM help' for usage."
 		fi
+		hostName="$1"
+		shift
+		;;
 		break
 		;;
 	esac

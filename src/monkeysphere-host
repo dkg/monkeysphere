@@ -48,10 +48,10 @@ subcommands:
  publish-key (p)                     publish server host key to keyserver
 
  expert
-  import-key (i) [NAME[:PORT]]       import existing ssh key to gpg
+  import-key (i)  NAME[:PORT]        import existing ssh key to gpg
    --keyfile (-f) FILE                 key file to import
    --expire (-e) EXPIRE                date to expire
-  gen-key (g) [NAME[:PORT]]          generate gpg key for the host
+  gen-key (g) NAME[:PORT]            generate gpg key for the host
    --length (-l) BITS                  key length in bits (2048)
    --expire (-e) EXPIRE                date to expire
   diagnostics (d)                    monkeysphere host status
@@ -95,16 +95,6 @@ gpg_host() {
     chmod g+r "${GNUPGHOME_HOST}/pubring.gpg"
     
     return "$returnCode"
-}
-
-# check if user is root
-is_root() {
-    [ $(id -u 2>/dev/null) = '0' ]
-}
-
-# check that user is root, for functions that require root access
-check_user() {
-    is_root || failure "You must be root to run this command."
 }
 
 # output just key fingerprint
@@ -202,37 +192,31 @@ case $COMMAND in
 	;;
 
     'extend-key'|'e')
-	check_user
 	check_host_keyring
 	extend_key "$@"
 	;;
 
     'add-hostname'|'add-name'|'n+')
-	check_user
 	check_host_keyring
 	add_hostname "$@"
 	;;
 
     'revoke-hostname'|'revoke-name'|'n-')
-	check_user
 	check_host_keyring
 	revoke_hostname "$@"
 	;;
 
     'add-revoker'|'o')
-	check_user
 	check_host_keyring
 	add_revoker "$@"
 	;;
 
     'revoke-key'|'r')
-	check_user
 	check_host_keyring
 	revoke_key "$@"
 	;;
 
     'publish-key'|'publish'|'p')
-	check_user
 	check_host_keyring
 	publish_server_key
 	;;

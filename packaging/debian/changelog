@@ -1,15 +1,24 @@
 monkeysphere (0.23~pre-1) UNRELEASED; urgency=low
+  
+  "The Golden Bezoar Release"
 
-  * New upstream release:
-    - added better checks for the existence of a host private key for
-      functions that require it to be there.
-    - add checks for root users, for functions where it is required.
-    - get rid of getopts.
-    - added version output option
-    - check that existing authentication keys are valid in gen_key
-      function.
+  * New upstream release.
+  * rearchitect UI:
+    - replace monkeysphere-server with monkeysphere-{authentication,host}
+    - fold monkeysphere-ssh-proxycommand into /usr/bin/monkeysphere
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Tue, 30 Dec 2008 20:21:16 -0500
+  * simplify adding a host to the monkeysphere, automate the process
+    during debian installation
+  * provide pem2openpgp for translating unencrypted PEM-encoded raw key
+    material into OpenPGP keys.
+  * added better checks for the existence of a host private key for
+    functions that require it to be there.
+  * get rid of getopts dependency
+  * added version output option
+  * check that existing authentication keys are valid in gen_key
+     function.
+
+ -- Daniel Kahn Gillmor <dkg@pip.fifthhorseman.net>  Sat, 31 Jan 2009 17:32:58 -0500
 
 monkeysphere (0.22-1) unstable; urgency=low
 
