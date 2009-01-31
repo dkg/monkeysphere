@@ -12,6 +12,8 @@
 
 # add hostname user ID to server key
 
+add_hostname() {
+
 local userID
 local fingerprint
 local tmpuidMatch
@@ -61,7 +63,7 @@ if echo "$adduidCommand" | \
     # update the trustdb for the authentication keyring
     gpg_authentication "--check-trustdb"
 
-    show_server_key
+    show_key
 
     echo
     echo "NOTE: User ID added to key, but key not published."
@@ -69,3 +71,5 @@ if echo "$adduidCommand" | \
 else
     failure "Problem adding user ID."
 fi
+
+}

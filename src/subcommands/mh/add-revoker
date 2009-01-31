@@ -12,5 +12,9 @@
 
 # add a revoker to the host key
 
+add_revoker() {
+
 # FIXME: implement!
 failure "not implemented yet!"
+
+}

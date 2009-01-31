@@ -12,6 +12,8 @@
 
 # publish server key to keyserver
 
+publish_key() {
+
 read -p "Really publish host key to $KEYSERVER? (y/N) " OK; OK=${OK:=N}
 if [ ${OK/y/Y} != 'Y' ] ; then
     failure "key not published."
@@ -22,3 +24,5 @@ fingerprint=$(fingerprint_server_key)
 
 # publish host key
 gpg_authentication "--keyserver $KEYSERVER --send-keys '0x${fingerprint}!'"
+
+}

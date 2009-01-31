@@ -12,5 +12,9 @@
 
 # revoke host key
 
+revoke_key() {
+
 # FIXME: implement!
 failure "not implemented yet!"
+
+}

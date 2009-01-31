@@ -20,11 +20,6 @@ export SYSSHAREDIR
 SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere/host"}
 export SYSDATADIR
 
-# monkeysphere temp directory, in sysdatadir to enable atomic moves of
-# authorized_keys files
-MSTMPDIR="${SYSDATADIR}/tmp"
-export MSTMPDIR
-
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
 
@@ -53,13 +48,12 @@ subcommands:
  publish-key (p)                     publish server host key to keyserver
 
  expert
-  import-key (i)  NAME[:PORT]        import existing ssh key to gpg
+  import-key (i) [NAME[:PORT]]       import existing ssh key to gpg
    --keyfile (-f) FILE                 key file to import
    --expire (-e) EXPIRE                date to expire
-  gen-key (g) NAME[:PORT]            generate gpg key for the host
+  gen-key (g) [NAME[:PORT]]          generate gpg key for the host
    --length (-l) BITS                  key length in bits (2048)
    --expire (-e) EXPIRE                date to expire
-   --revoker (-r) FINGERPRINT          add a revoker
   diagnostics (d)                    monkeysphere host status
 
  version (v)                         show version number
@@ -117,6 +111,35 @@ fingerprint_server_key() {
 check_host_keyring() {
     fingerprint_server_key >/dev/null \
 	|| failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-server gen-key' first."
+}
+
+# show info about the host key
+show_key() {
+    local fingerprintPGP
+    local fingerprintSSH
+    local ret=0
+
+    # FIXME: you shouldn't have to be root to see the host key fingerprint
+    if is_root ; then
+	check_host_keyring
+	fingerprintPGP=$(fingerprint_server_key)
+	gpg_authentication "--fingerprint --list-key --list-options show-unusable-uids $fingerprintPGP" 2>/dev/null
+	echo "OpenPGP fingerprint: $fingerprintPGP"
+    else
+	log info "You must be root to see host OpenPGP fingerprint."
+	ret='1'
+    fi
+
+    if [ -f "${SYSDATADIR}/ssh_host_rsa_key.pub" ] ; then
+	fingerprintSSH=$(ssh-keygen -l -f "${SYSDATADIR}/ssh_host_rsa_key.pub" | \
+	    awk '{ print $1, $2, $4 }')
+	echo "ssh fingerprint: $fingerprintSSH"
+    else
+	log info "SSH host key not found."
+	ret='1'
+    fi
+
+return $ret
 }
 
 ########################################################################
