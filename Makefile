@@ -50,8 +50,8 @@ install: all installman
 	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/sbin $(DESTDIR)$(PREFIX)/share/monkeysphere
 	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
 	mkdir -p $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
-	install src/monkeysphere src/monkeysphere-ssh-proxycommand src/keytrans/openpgp2ssh src/keytrans/pem2openpgp $(DESTDIR)$(PREFIX)/bin
-	install src/monkeysphere-server $(DESTDIR)$(PREFIX)/sbin
+	install src/monkeysphere src/keytrans/openpgp2ssh src/keytrans/pem2openpgp $(DESTDIR)$(PREFIX)/bin
+	install src/monkeysphere-authentication src/monkeysphere-host $(DESTDIR)$(PREFIX)/sbin
 	install -m 0644 src/common $(DESTDIR)$(PREFIX)/share/monkeysphere
 	install doc/* $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
 	install -m 0644 etc/gnupg-host.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/gnupg-host.conf$(ETCSUFFIX)
