@@ -1,14 +1,15 @@
-#!/usr/bin/env bash
+# -*-shell-script-*-
+# This should be sourced by bash (though we welcome changes to make it POSIX sh compliant)
 
 # Monkeysphere host revoke-key subcommand
 #
 # The monkeysphere scripts are written by:
-# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jameson Rollins <jrollins@finestructure.net>
 # Jamie McClelland <jm@mayfirst.org>
 # Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #
-# They are Copyright 2008, and are all released under the GPL, version 3
-# or later.
+# They are Copyright 2008-2009, and are all released under the GPL,
+# version 3 or later.
 
 # revoke host key
 
