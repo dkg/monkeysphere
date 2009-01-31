@@ -7,6 +7,11 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2009-01-30 - micah
+	* Replaced nullmailer with postfix, nullmailer doesn't handle aliases
+	  and insisted either on constantly respooling mail when there was no
+	  where to go. 
+
 2009-01-24 - micah
 	* Configured /etc/aliases to have root go to mjgoins, micah, dkg, jrollins
 	* Configured /etc/nullmailer/remotes to have mail.riseup.net so remote delivery will work
