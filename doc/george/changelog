@@ -7,6 +7,11 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2009-01-31 - jrollins
+	* applied diff represented in commit
+	f75a5747a8b99e04c02c475791c476f1fbd2b674 to change log level for
+	unacceptable untranslatable keys.
+
 2009-01-30 - micah
 	* Replaced nullmailer with postfix, nullmailer doesn't handle aliases
 	  and insisted either on constantly respooling mail when there was no
