@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# Monkeysphere host extend-key subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+# extend the lifetime of a host key:
+
+local fpr=$(fingerprint_server_key)
+local extendTo="$1"
+
+# get the new expiration date
+extendTo=$(get_gpg_expiration "$extendTo")
+
+gpg_host --quiet --command-fd 0 --edit-key "$fpr" <<EOF 
+expire
+$extendTo
+save
+EOF
+
+echo
+echo "NOTE: Host key expiration date adjusted, but not yet published."
+echo "Run '$PGRM publish-key' to publish the new expiration date."

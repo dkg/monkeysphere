@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+# Monkeysphere authentication remove-certifier subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+# delete a certifiers key from the host keyring
+
+local keyID
+local fingerprint
+
+keyID="$1"
+if [ -z "$keyID" ] ; then
+    failure "You must specify the key ID of a key to remove."
+fi
+
+if gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key 0x${keyID}!" ; then
+    read -p "Really remove above listed identity certifier? (y/N) " OK; OK=${OK:-N}
+    if [ "${OK/y/Y}" != 'Y' ] ; then
+	failure "Identity certifier not removed."
+    fi
+else
+    failure
+fi
+
+# delete the requested key
+if gpg_authentication "--delete-key --batch --yes 0x${keyID}!" ; then
+    # delete key from host keyring as well
+    gpg_host --delete-key --batch --yes "0x${keyID}!"
+
+    # update the trustdb for the authentication keyring
+    gpg_authentication "--check-trustdb"
+
+    echo
+    echo "Identity certifier removed."
+else
+    failure "Problem removing identity certifier."
+fi
+

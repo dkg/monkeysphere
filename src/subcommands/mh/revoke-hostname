@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+# Monkeysphere host revoke-hostname subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+# revoke hostname user ID from host key
+
+local userID
+local fingerprint
+local tmpuidMatch
+local line
+local uidIndex
+local message
+local revuidCommand
+
+if [ -z "$1" ] ; then
+    failure "You must specify a hostname to revoke."
+fi
+
+echo "WARNING: There is a known bug in this function."
+echo "This function has been known to occasionally revoke the wrong user ID."
+echo "Please see the following bug report for more information:"
+echo "http://web.monkeysphere.info/bugs/revoke-hostname-revoking-wrong-userid/"
+read -p "Are you sure you would like to proceed? (y/N) " OK; OK=${OK:=N}
+if [ ${OK/y/Y} != 'Y' ] ; then
+    failure "aborting."
+fi
+
+userID="ssh://${1}"
+
+fingerprint=$(fingerprint_server_key)
+
+# match to only ultimately trusted user IDs
+tmpuidMatch="u:$(echo $userID | gpg_escape)"
+
+# find the index of the requsted user ID
+# NOTE: this is based on circumstantial evidence that the order of
+# this output is the appropriate index
+if line=$(gpg_host --list-keys --with-colons --fixed-list-mode "0x${fingerprint}!" \
+    | egrep '^(uid|uat):' | cut -f2,10 -d: | grep -n -x -F "$tmpuidMatch") ; then
+    uidIndex=${line%%:*}
+else
+    failure "No non-revoked user ID '$userID' is found."
+fi
+
+echo "The following host key user ID will be revoked:"
+echo "  $userID"
+read -p "Are you sure you would like to revoke this user ID? (y/N) " OK; OK=${OK:=N}
+if [ ${OK/y/Y} != 'Y' ] ; then
+    failure "User ID not revoked."
+fi
+
+message="Hostname removed by monkeysphere-server $DATE"
+
+# edit-key script command to revoke user ID
+revuidCommand=$(cat <<EOF
+$uidIndex
+revuid
+y
+4
+$message
+
+y
+save
+EOF
+    )	
+
+# execute edit-key script
+if echo "$revuidCommand" | \
+    gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
+
+    # update the trustdb for the authentication keyring
+    gpg_authentication "--check-trustdb"
+
+    show_server_key
+
+    echo
+    echo "NOTE: User ID revoked, but revocation not published."
+    echo "Run '$PGRM publish-key' to publish the revocation."
+else
+    failure "Problem revoking user ID."
+fi

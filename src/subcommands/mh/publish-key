@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# Monkeysphere host publish-key subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+# publish server key to keyserver
+
+read -p "Really publish host key to $KEYSERVER? (y/N) " OK; OK=${OK:=N}
+if [ ${OK/y/Y} != 'Y' ] ; then
+    failure "key not published."
+fi
+
+# find the key fingerprint
+fingerprint=$(fingerprint_server_key)
+
+# publish host key
+gpg_authentication "--keyserver $KEYSERVER --send-keys '0x${fingerprint}!'"

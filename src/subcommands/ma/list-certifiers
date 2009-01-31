@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# Monkeysphere authentication list-certifiers subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+# list the host certifiers
+
+local keys
+local key
+
+# find trusted keys in authentication keychain
+keys=$(gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-keys --with-colons --fingerprint" | \
+    grep ^pub: | cut -d: -f2,5 | egrep '^(u|f):' | cut -d: -f2)
+
+# output keys
+for key in $keys ; do
+    gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key --fingerprint $key"
+done

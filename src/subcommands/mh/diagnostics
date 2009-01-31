@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Monkeysphere authentication diagnostics subcommand
+# Monkeysphere host diagnostics subcommand
 #
 # The monkeysphere scripts are written by:
 # Jameson Rollins <jrollins@fifthhorseman.net>

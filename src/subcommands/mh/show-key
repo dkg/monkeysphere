@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# Monkeysphere host show-key subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+local fingerprintPGP
+local fingerprintSSH
+local ret=0
+
+# FIXME: you shouldn't have to be root to see the host key fingerprint
+if is_root ; then
+    check_host_keyring
+    fingerprintPGP=$(fingerprint_server_key)
+    gpg_authentication "--fingerprint --list-key --list-options show-unusable-uids $fingerprintPGP" 2>/dev/null
+    echo "OpenPGP fingerprint: $fingerprintPGP"
+else
+    log info "You must be root to see host OpenPGP fingerprint."
+    ret='1'
+fi
+
+if [ -f "${SYSDATADIR}/ssh_host_rsa_key.pub" ] ; then
+    fingerprintSSH=$(ssh-keygen -l -f "${SYSDATADIR}/ssh_host_rsa_key.pub" | \
+	awk '{ print $1, $2, $4 }')
+    echo "ssh fingerprint: $fingerprintSSH"
+else
+    log info "SSH host key not found."
+    ret='1'
+fi
+
+return $ret
