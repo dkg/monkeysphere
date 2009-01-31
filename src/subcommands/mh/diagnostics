@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+
+# Monkeysphere host diagnostics subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+#  * check on the status and validity of the key and public certificates
+local seckey
+local keysfound
+local curdate
+local warnwindow
+local warndate
+local create
+local expire
+local uid
+local fingerprint
+local badhostkeys
+local sshd_config
+local problemsfound=0
+
+# FIXME: what's the correct, cross-platform answer?
+sshd_config=/etc/ssh/sshd_config
+seckey=$(gpg_host --list-secret-keys --fingerprint --with-colons --fixed-list-mode)
+keysfound=$(echo "$seckey" | grep -c ^sec:)
+curdate=$(date +%s)
+# warn when anything is 2 months away from expiration
+warnwindow='2 months'
+warndate=$(advance_date $warnwindow +%s)
+
+if ! id monkeysphere >/dev/null ; then
+    echo "! No monkeysphere user found!  Please create a monkeysphere system user with bash as its shell."
+    problemsfound=$(($problemsfound+1))
+fi
+
+if ! [ -d "$SYSDATADIR" ] ; then
+    echo "! no $SYSDATADIR directory found.  Please create it."
+    problemsfound=$(($problemsfound+1))
+fi
+
+echo "Checking host GPG key..."
+if (( "$keysfound" < 1 )); then
+    echo "! No host key found."
+    echo " - Recommendation: run 'monkeysphere-server gen-key'"
+    problemsfound=$(($problemsfound+1))
+elif (( "$keysfound" > 1 )); then
+    echo "! More than one host key found?"
+    # FIXME: recommend a way to resolve this
+    problemsfound=$(($problemsfound+1))
+else
+    create=$(echo "$seckey" | grep ^sec: | cut -f6 -d:)
+    expire=$(echo "$seckey" | grep ^sec: | cut -f7 -d:)
+    fingerprint=$(echo "$seckey" | grep ^fpr: | head -n1 | cut -f10 -d:)
+    # check for key expiration:
+    if [ "$expire" ]; then
+	if (( "$expire"  < "$curdate" )); then
+	    echo "! Host key is expired."
+	    echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
+	    problemsfound=$(($problemsfound+1))
+	elif (( "$expire" < "$warndate" )); then
+	    echo "! Host key expires in less than $warnwindow:" $(advance_date $(( $expire - $curdate )) seconds +%F)
+	    echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
+	    problemsfound=$(($problemsfound+1))
+	fi
+    fi
+
+    # and weirdnesses:
+    if [ "$create" ] && (( "$create" > "$curdate" )); then
+	echo "! Host key was created in the future(?!). Is your clock correct?"
+	echo " - Recommendation: Check clock ($(date +%F_%T)); use NTP?"
+	problemsfound=$(($problemsfound+1))
+    fi
+    
+    # check for UserID expiration:
+    echo "$seckey" | grep ^uid: | cut -d: -f6,7,10 | \
+    while IFS=: read create expire uid ; do
+	# FIXME: should we be doing any checking on the form
+	# of the User ID?  Should we be unmangling it somehow?
+
+	if [ "$create" ] && (( "$create" > "$curdate" )); then
+	    echo "! User ID '$uid' was created in the future(?!).  Is your clock correct?"
+	    echo " - Recommendation: Check clock ($(date +%F_%T)); use NTP?"
+	    problemsfound=$(($problemsfound+1))
+	fi
+	if [ "$expire" ] ; then
+	    if (( "$expire" < "$curdate" )); then
+		echo "! User ID '$uid' is expired."
+		# FIXME: recommend a way to resolve this
+		problemsfound=$(($problemsfound+1))
+	    elif (( "$expire" < "$warndate" )); then
+		echo "! User ID '$uid' expires in less than $warnwindow:" $(advance_date $(( $expire - $curdate )) seconds +%F)		
+		# FIXME: recommend a way to resolve this
+		problemsfound=$(($problemsfound+1))
+	    fi
+	fi
+    done
+	    
+# FIXME: verify that the host key is properly published to the
+#   keyservers (do this with the non-privileged user)
+
+# FIXME: check that there are valid, non-expired certifying signatures
+#   attached to the host key after fetching from the public keyserver
+#   (do this with the non-privileged user as well)
+
+# FIXME: propose adding a revoker to the host key if none exist (do we
+#   have a way to do that after key generation?)
+
+    # Ensure that the ssh_host_rsa_key file is present and non-empty:
+    echo
+    echo "Checking host SSH key..."
+    if [ ! -s "${SYSDATADIR}/ssh_host_rsa_key" ] ; then
+	echo "! The host key as prepared for SSH (${SYSDATADIR}/ssh_host_rsa_key) is missing or empty."
+	problemsfound=$(($problemsfound+1))
+    else
+	if [ $(ls -l "${SYSDATADIR}/ssh_host_rsa_key" | cut -f1 -d\ ) != '-rw-------' ] ; then
+	    echo "! Permissions seem wrong for ${SYSDATADIR}/ssh_host_rsa_key -- should be 0600."
+	    problemsfound=$(($problemsfound+1))
+	fi
+
+	# propose changes needed for sshd_config (if any)
+	if ! grep -q "^HostKey[[:space:]]\+${SYSDATADIR}/ssh_host_rsa_key$" "$sshd_config"; then
+	    echo "! $sshd_config does not point to the monkeysphere host key (${SYSDATADIR}/ssh_host_rsa_key)."
+	    echo " - Recommendation: add a line to $sshd_config: 'HostKey ${SYSDATADIR}/ssh_host_rsa_key'"
+	    problemsfound=$(($problemsfound+1))
+	fi
+	if badhostkeys=$(grep -i '^HostKey' "$sshd_config" | grep -v "^HostKey[[:space:]]\+${SYSDATADIR}/ssh_host_rsa_key$") ; then
+	    echo "! $sshd_config refers to some non-monkeysphere host keys:"
+	    echo "$badhostkeys"
+	    echo " - Recommendation: remove the above HostKey lines from $sshd_config"
+	    problemsfound=$(($problemsfound+1))
+	fi
+
+        # FIXME: test (with ssh-keyscan?) that the running ssh
+        # daemon is actually offering the monkeysphere host key.
+
+    fi
+fi
+
+# FIXME: look at the ownership/privileges of the various keyrings,
+#    directories housing them, etc (what should those values be?  can
+#    we make them as minimal as possible?)
+
+# FIXME: look to see that the ownertrust rules are set properly on the
+#    authentication keyring
+
+# FIXME: make sure that at least one identity certifier exists
+
+# FIXME: look at the timestamps on the monkeysphere-generated
+# authorized_keys files -- warn if they seem out-of-date.
+
+# FIXME: check for a cronjob that updates monkeysphere-generated
+# authorized_keys?
+
+echo
+echo "Checking for MonkeySphere-enabled public-key authentication for users ..."
+# Ensure that User ID authentication is enabled:
+if ! grep -q "^AuthorizedKeysFile[[:space:]]\+${SYSDATADIR}/authorized_keys/%u$" "$sshd_config"; then
+    echo "! $sshd_config does not point to monkeysphere authorized keys."
+    echo " - Recommendation: add a line to $sshd_config: 'AuthorizedKeysFile ${SYSDATADIR}/authorized_keys/%u'"
+    problemsfound=$(($problemsfound+1))
+fi
+if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' "$sshd_config" | grep -v "^AuthorizedKeysFile[[:space:]]\+${SYSDATADIR}/authorized_keys/%u$") ; then
+    echo "! $sshd_config refers to non-monkeysphere authorized_keys files:"
+    echo "$badauthorizedkeys"
+    echo " - Recommendation: remove the above AuthorizedKeysFile lines from $sshd_config"
+    problemsfound=$(($problemsfound+1))
+fi
+
+if [ "$problemsfound" -gt 0 ]; then
+    echo "When the above $problemsfound issue"$(if [ "$problemsfound" -eq 1 ] ; then echo " is" ; else echo "s are" ; fi)" resolved, please re-run:"
+    echo "  monkeysphere-server diagnostics"
+else
+    echo "Everything seems to be in order!"
+fi

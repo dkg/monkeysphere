@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+
+# Monkeysphere authentication add-certifier subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+# retrieve key from web of trust, import it into the host keyring, and
+# ltsign the key in the host keyring so that it may certify other keys
+
+local domain
+local trust
+local depth
+local keyID
+local fingerprint
+local ltsignCommand
+local trustval
+
+# set default values for trust depth and domain
+domain=
+trust=full
+depth=1
+
+# get options
+while true ; do
+    case "$1" in
+	-n|--domain)
+	    domain="$2"
+	    shift 2
+	    ;;
+	-t|--trust)
+	    trust="$2"
+	    shift 2
+	    ;;
+	-d|--depth)
+	    depth="$2"
+	    shift 2
+	    ;;
+	*)
+	    if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
+		failure "Unknown option '$1'.
+Type '$PGRM help' for usage."
+	    fi
+	    break
+	    ;;
+    esac
+done
+
+keyID="$1"
+if [ -z "$keyID" ] ; then
+    failure "You must specify the key ID of a key to add, or specify a file to read the key from."
+fi
+if [ -f "$keyID" ] ; then
+    echo "Reading key from file '$keyID':"
+    importinfo=$(gpg_authentication "--import" < "$keyID" 2>&1) || failure "could not read key from '$keyID'"
+    # FIXME: if this is tried when the key database is not
+    # up-to-date, i got these errors (using set -x):
+
+    # ++ su -m monkeysphere -c '\''gpg --import'\''
+    # Warning: using insecure memory!
+    # gpg: key D21739E9: public key "Daniel Kahn Gillmor <dkg@fifthhorseman.net>" imported
+    # gpg: Total number processed: 1
+    # gpg:               imported: 1  (RSA: 1)
+    # gpg: can'\''t create `/var/monkeysphere/gnupg-host/pubring.gpg.tmp'\'': Permission denied
+    # gpg: failed to rebuild keyring cache: Permission denied
+    # gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+    # gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+    # gpg: next trustdb check due at 2009-01-10'
+    # + failure 'could not read key from '\''/root/dkg.gpg'\'''
+    # + echo 'could not read key from '\''/root/dkg.gpg'\'''
+
+    keyID=$(echo "$importinfo" | grep '^gpg: key ' | cut -f2 -d: | cut -f3 -d\ )
+    if [ -z "$keyID" ] || [ $(echo "$keyID" | wc -l) -ne 1 ] ; then
+	failure "Expected there to be a single gpg key in the file."
+    fi
+else
+    # get the key from the key server
+    gpg_authentication "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" || failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
+fi
+
+export keyID
+
+# get the full fingerprint of a key ID
+fingerprint=$(gpg_authentication "--list-key --with-colons --with-fingerprint 0x${keyID}!" | \
+    grep '^fpr:' | grep "$keyID" | cut -d: -f10)
+
+if [ -z "$fingerprint" ] ; then
+    failure "Key '$keyID' not found."
+fi
+
+echo
+echo "key found:"
+gpg_authentication "--fingerprint 0x${fingerprint}!"
+
+echo "Are you sure you want to add the above key as a"
+read -p "certifier of users on this system? (y/N) " OK; OK=${OK:-N}
+if [ "${OK/y/Y}" != 'Y' ] ; then
+    failure "Identity certifier not added."
+fi
+
+# export the key to the host keyring
+gpg_authentication "--export 0x${fingerprint}!" | gpg_host --import
+
+if [ "$trust" = marginal ]; then
+    trustval=1
+elif [ "$trust" = full ]; then
+    trustval=2
+else
+    failure "Trust value requested ('$trust') was unclear (only 'marginal' or 'full' are supported)."
+fi
+
+# ltsign command
+# NOTE: *all* user IDs will be ltsigned
+ltsignCommand=$(cat <<EOF
+ltsign
+y
+$trustval
+$depth
+$domain
+y
+save
+EOF
+    )
+
+# ltsign the key
+if echo "$ltsignCommand" | \
+    gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
+
+    # update the trustdb for the authentication keyring
+    gpg_authentication "--check-trustdb"
+
+    echo
+    echo "Identity certifier added."
+else
+    failure "Problem adding identify certifier."
+fi

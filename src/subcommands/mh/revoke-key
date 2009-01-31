@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# Monkeysphere host revoke-key subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+# revoke host key
+
+# FIXME: implement!
+failure "not implemented yet!"
