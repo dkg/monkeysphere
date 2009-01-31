@@ -10,7 +10,10 @@
 # They are Copyright 2008, and are all released under the GPL, version 3
 # or later.
 
-#  * check on the status and validity of the key and public certificates
+# check on the status and validity of the key and public certificates
+
+diagnostics() {
+
 local seckey
 local keysfound
 local curdate
@@ -177,3 +180,5 @@ if [ "$problemsfound" -gt 0 ]; then
 else
     echo "Everything seems to be in order!"
 fi
+
+}

@@ -13,6 +13,8 @@
 # retrieve key from web of trust, import it into the host keyring, and
 # ltsign the key in the host keyring so that it may certify other keys
 
+add_certifier() {
+
 local domain
 local trust
 local depth
@@ -139,3 +141,5 @@ if echo "$ltsignCommand" | \
 else
     failure "Problem adding identify certifier."
 fi
+
+}

@@ -10,6 +10,8 @@
 # They are Copyright 2008, and are all released under the GPL, version 3
 # or later.
 
+gen_key() {
+
 local keyType="RSA"
 local keyLength="2048"
 local keyUsage="auth"
@@ -100,3 +102,5 @@ log info "SSH host public key in OpenPGP form: ${SYSDATADIR}/ssh_host_rsa_key.pu
 
 # show info about new key
 show_key
+
+}

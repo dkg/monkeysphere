@@ -10,6 +10,8 @@
 # They are Copyright 2008, and are all released under the GPL, version 3
 # or later.
 
+import_key() {
+
 local hostName=$(hostname -f)
 local keyFile="/etc/ssh/ssh_host_rsa_key"
 local keyExpire
@@ -82,3 +84,5 @@ log info "SSH host public key in OpenPGP form: ${SYSDATADIR}/ssh_host_rsa_key.pu
 
 # show info about new key
 show_key
+
+}

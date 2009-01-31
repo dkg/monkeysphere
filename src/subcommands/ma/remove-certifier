@@ -12,6 +12,8 @@
 
 # delete a certifiers key from the host keyring
 
+remove_certifier() {
+
 local keyID
 local fingerprint
 
@@ -43,3 +45,4 @@ else
     failure "Problem removing identity certifier."
 fi
 
+}
