@@ -47,6 +47,7 @@ subcommands:
  gen-subkey (g) [KEYID]              generate an authentication subkey
    --length (-l) BITS                  key length in bits (2048)
    --expire (-e) EXPIRE                date to expire
+ ssh-proxycommand                    ssh proxycommand
  subkey-to-ssh-agent (s)             store authentication subkey in ssh-agent
  version (v)                         show version number
  help (h,?)                          this help
@@ -422,6 +423,10 @@ case $COMMAND in
 
     'gen-subkey'|'g')
 	gen_subkey "$@"
+	;;
+
+    'ssh-proxycommand'|'p')
+	ssh-proxycommand "$@"
 	;;
 
     'subkey-to-ssh-agent'|'s')
