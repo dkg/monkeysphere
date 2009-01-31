@@ -60,9 +60,6 @@ EOF
 if echo "$adduidCommand" | \
     gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
 
-    # update the trustdb for the authentication keyring
-    gpg_authentication "--check-trustdb"
-
     show_key
 
     echo
