@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+
+# Monkeysphere authentication update-users subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+if [ "$1" ] ; then
+    # get users from command line
+    unames="$@"
+else	     
+    # or just look at all users if none specified
+    unames=$(getent passwd | cut -d: -f1)
+fi
+
+RETCODE=0
+
+# set mode
+MODE="authorized_keys"
+
+# set gnupg home
+GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
+
+# check to see if the gpg trust database has been initialized
+if [ ! -s "${GNUPGHOME}/trustdb.gpg" ] ; then
+    failure "GNUPG trust database uninitialized.  Please see MONKEYSPHERE-SERVER(8)."
+fi
+
+# make sure the authorized_keys directory exists
+mkdir -p "${SYSDATADIR}/authorized_keys"
+
+# loop over users
+for uname in $unames ; do
+    # check all specified users exist
+    if ! id "$uname" >/dev/null ; then
+	log error "----- unknown user '$uname' -----"
+	continue
+    fi
+
+    log verbose "----- user: $uname -----"
+
+    # make temporary directory
+    TMPLOC=$(mktemp -d ${MSTMPDIR}/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
+
+    # trap to delete temporary directory on exit
+    trap "rm -rf $TMPLOC" EXIT
+
+    # create temporary authorized_user_ids file
+    TMP_AUTHORIZED_USER_IDS="${TMPLOC}/authorized_user_ids"
+    touch "$TMP_AUTHORIZED_USER_IDS"
+
+     # create temporary authorized_keys file
+    AUTHORIZED_KEYS="${TMPLOC}/authorized_keys"
+    touch "$AUTHORIZED_KEYS"
+
+    # set restrictive permissions on the temporary files
+    # FIXME: is there a better way to do this?
+    chmod 0700 "$TMPLOC"
+    chmod 0600 "$AUTHORIZED_KEYS"
+    chmod 0600 "$TMP_AUTHORIZED_USER_IDS"
+    chown -R "$MONKEYSPHERE_USER" "$TMPLOC"
+
+    # process authorized_user_ids file
+    log debug "checking for authorized_user_ids..."
+    # translating ssh-style path variables
+    authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
+    if [ -s "$authorizedUserIDs" ] ; then
+	# check permissions on the authorized_user_ids file path
+	if check_key_file_permissions "$uname" "$authorizedUserIDs" ; then
+            # copy user authorized_user_ids file to temporary
+            # location
+	    cat "$authorizedUserIDs" > "$TMP_AUTHORIZED_USER_IDS"
+
+	    # export needed variables
+	    export AUTHORIZED_KEYS
+	    export TMP_AUTHORIZED_USER_IDS
+
+	    # process authorized_user_ids file, as monkeysphere user
+	    su_monkeysphere_user \
+		". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
+	    RETURN="$?"
+	else
+	    log debug "not processing authorized_user_ids."
+	fi
+    else
+	log debug "empty or absent authorized_user_ids file."
+    fi
+
+    # add user-controlled authorized_keys file if specified translate
+    # ssh-style path variables
+    rawAuthorizedKeys=$(translate_ssh_variables "$uname" "$RAW_AUTHORIZED_KEYS")
+    if [ "$rawAuthorizedKeys" != 'none' ] ; then
+	log debug "checking for raw authorized_keys..."
+	if [ -s "$rawAuthorizedKeys" ] ; then
+	    # check permissions on the authorized_keys file path
+	    if check_key_file_permissions "$uname" "$rawAuthorizedKeys" ; then
+		log verbose "adding raw authorized_keys file... "
+		cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
+	    else
+		log debug "not adding raw authorized_keys file."		
+	    fi
+	else
+	    log debug "empty or absent authorized_keys file."
+	fi
+    fi
+
+    # move the new authorized_keys file into place
+    if [ -s "$AUTHORIZED_KEYS" ] ; then
+	# openssh appears to check the contents of the authorized_keys
+	# file as the user in question, so the file must be readable
+	# by that user at least.
+
+	# but in general, we don't want the user tampering with this
+	# file directly, so we'll adopt this approach: Own the file by
+	# the monkeysphere-server invoker (usually root, but should be
+	# the same uid that sshd is launched as); change the group of
+	# the file so that members of the user's group can read it.
+
+	# FIXME: is there a better way to do this?
+	chown $(whoami) "$AUTHORIZED_KEYS" && \
+	    chgrp $(id -g "$uname") "$AUTHORIZED_KEYS" && \
+	    chmod g+r "$AUTHORIZED_KEYS" && \
+	    mv -f "$AUTHORIZED_KEYS" "${SYSDATADIR}/authorized_keys/${uname}" || \
+	    { 
+	    log error "Failed to install authorized_keys for '$uname'!"
+	    rm -f "${SYSDATADIR}/authorized_keys/${uname}"
+	    # indicate that there has been a failure:
+	    RETURN=1
+	}
+    else
+	rm -f "${SYSDATADIR}/authorized_keys/${uname}"
+    fi
+
+    # unset the trap
+    trap - EXIT
+
+    # destroy temporary directory
+    rm -rf "$TMPLOC"
+ done
