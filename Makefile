@@ -29,6 +29,7 @@ tarball: clean
 
 debian-package: tarball
 	tar xzf monkeysphere_$(MONKEYSPHERE_VERSION).orig.tar.gz
+	sed -i "s|__VERSION__|$(MONKEYSPHERE_VERSION)|g" monkeysphere-$(MONKEYSPHERE_VERSION)/src/common
 	cp -a packaging/debian monkeysphere-$(MONKEYSPHERE_VERSION)
 	(cd monkeysphere-$(MONKEYSPHERE_VERSION) && debuild -uc -us)
 	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
@@ -49,7 +50,7 @@ install: all installman
 	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/sbin $(DESTDIR)$(PREFIX)/share/monkeysphere
 	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
 	mkdir -p $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
-	install src/monkeysphere src/monkeysphere-ssh-proxycommand src/keytrans/openpgp2ssh $(DESTDIR)$(PREFIX)/bin
+	install src/monkeysphere src/monkeysphere-ssh-proxycommand src/keytrans/openpgp2ssh src/keytrans/pem2openpgp $(DESTDIR)$(PREFIX)/bin
 	install src/monkeysphere-server $(DESTDIR)$(PREFIX)/sbin
 	install -m 0644 src/common $(DESTDIR)$(PREFIX)/share/monkeysphere
 	install doc/* $(DESTDIR)$(PREFIX)/share/doc/monkeysphere

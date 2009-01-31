@@ -58,29 +58,29 @@ pre {
   overflow: auto;
 }
 
-table.sitenav { 
+table.sitenav {
   border-bottom: 2px solid black;
   padding: 0px;
   width: 100%;
   font-size: larger;
 }
 
-table.sitenav img.logo { 
-  margin: 0px; 
-  padding: 0px; 
+table.sitenav img.logo {
+  margin: 0em;
+  padding: 0px;
   vertical-align: bottom;
+}
+
+table.sitenav img.title {
+  margin: 0px;
+  padding: 0px;
+  vertical-align: top;
 }
 
 table.sitenav a { 
   font-weight: bold;
   margin-right: 1em;
   font-size: smaller;
-}
-
-/* trying to align the sitenav links roughly with the text in the monkeysphere logo */
-td#sitenav { 
-  vertical-align: bottom;
-  padding-bottom: 30px;
 }
 
 table.sitenav span.selflink { 

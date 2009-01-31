@@ -19,6 +19,9 @@
 SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"/etc/monkeysphere"}
 export SYSCONFIGDIR
 
+# monkeysphere version
+VERSION=__VERSION__
+
 ########################################################################
 ### UTILITY FUNCTIONS
 
@@ -671,7 +674,7 @@ process_user_id() {
 		else
 		    log debug "  - unacceptable primary key."
 		    if [ -z "$sshKey" ] ; then
-			log error "    ! primary key could not be translated (not RSA or DSA?)."
+			log debug "    ! primary key could not be translated (not RSA or DSA?)."
 		    else
 			echo "1:${sshKey}"
 		    fi
@@ -729,7 +732,7 @@ process_user_id() {
 		else
 		    log debug "  - unacceptable sub key."
 		    if [ -z "$sshKey" ] ; then
-			log error "    ! sub key could not be translated (not RSA or DSA?)."
+			log debug "    ! sub key could not be translated (not RSA or DSA?)."
 		    else
 			echo "1:${sshKey}"
 		    fi

@@ -20,3 +20,14 @@
  export SYSSHAREDIR
  . "${SYSSHAREDIR}/common" || exit 1
  
+--- src/monkeysphere-ssh-proxycommand.orig
++++ src/monkeysphere-ssh-proxycommand
+@@ -16,7 +16,7 @@
+ ########################################################################
+ PGRM=$(basename $0)
+ 
+-SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
++SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/local/share/monkeysphere"}
+ export SYSSHAREDIR
+ . "${SYSSHAREDIR}/common" || exit 1
+ 

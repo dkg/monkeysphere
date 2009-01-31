@@ -3,9 +3,9 @@
 [The Monkeysphere has made it into
 Debian!](http://packages.debian.org/sid/monkeysphere)
 
-It is in Debian unstable (sid) now, which means it won't make it into
-the next unstable release (lenny), but hopefully will be in the stable
-release after that (squeeze).
+It is in Debian unstable ("sid") now, which means it won't make it
+into the next stable release ("lenny"), but hopefully will make it
+into the stable release after that ("squeeze").
 
 Congratulations to all the work by all the [monkeysphere
 developers](/community), and to Micah Anderson for being our Debian
