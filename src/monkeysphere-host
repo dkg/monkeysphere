@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# monkeysphere-server: MonkeySphere server admin tool
+# monkeysphere-host: Monkeysphere host admin tool
 #
 # The monkeysphere scripts are written by:
 # Jameson Rollins <jrollins@fifthhorseman.net>
@@ -17,7 +17,7 @@ SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
 export SYSSHAREDIR
 . "${SYSSHAREDIR}/common" || exit 1
 
-SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
+SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere/host"}
 export SYSDATADIR
 
 # monkeysphere temp directory, in sysdatadir to enable atomic moves of
@@ -41,38 +41,28 @@ RETURN=0
 usage() {
     cat <<EOF >&2
 usage: $PGRM <subcommand> [options] [args]
-Monkeysphere server admin tool.
+Monkeysphere host admin tool.
 
 subcommands:
- update-users (u) [USER]...          update user authorized_keys files
-
- import-key (i)                      import existing ssh key to gpg
-   --hostname (-h) NAME[:PORT]         hostname for key user ID
-   --keyfile (-f) FILE                 key file to import
-   --expire (-e) EXPIRE                date to expire
- gen-key (g)                         generate gpg key for the host
-   --hostname (-h) NAME[:PORT]         hostname for key user ID
-   --length (-l) BITS                  key length in bits (2048)
-   --expire (-e) EXPIRE                date to expire
-   --revoker (-r) FINGERPRINT          add a revoker
+ show-key (s)                        output all host key information
  extend-key (e) EXPIRE               extend host key expiration
  add-hostname (n+) NAME[:PORT]       add hostname user ID to host key
  revoke-hostname (n-) NAME[:PORT]    revoke hostname user ID
  add-revoker (o) FINGERPRINT         add a revoker to the host key
  revoke-key (r)                      revoke host key
- show-key (s)                        output all server host key information
  publish-key (p)                     publish server host key to keyserver
- diagnostics (d)                     report on server monkeysphere status
 
- add-id-certifier (c+) KEYID         import and tsign a certification key
-   --domain (-n) DOMAIN                limit ID certifications to DOMAIN
-   --trust (-t) TRUST                  trust level of certifier (full)
-   --depth (-d) DEPTH                  trust depth for certifier (1)
- remove-id-certifier (c-) KEYID      remove a certification key
- list-id-certifiers (c)              list certification keys
-
- gpg-authentication-cmd CMD          give a gpg command to the
-                                     authentication keyring
+ expert
+  import-key (i)                     import existing ssh key to gpg
+   --hostname (-h) NAME[:PORT]         hostname for key user ID
+   --keyfile (-f) FILE                 key file to import
+   --expire (-e) EXPIRE                date to expire
+  gen-key (g)                        generate gpg key for the host
+   --hostname (-h) NAME[:PORT]         hostname for key user ID
+   --length (-l) BITS                  key length in bits (2048)
+   --expire (-e) EXPIRE                date to expire
+   --revoker (-r) FINGERPRINT          add a revoker
+  diagnostics (d)                    monkeysphere host status
 
  version (v)                         show version number
  help (h,?)                          this help
@@ -113,17 +103,6 @@ gpg_host() {
     chmod g+r "${GNUPGHOME_HOST}/pubring.gpg"
     
     return "$returnCode"
-}
-
-# function to interact with the authentication gnupg keyring
-# FIXME: this function requires basically accepts only a single
-# argument because of problems with quote expansion.  this needs to be
-# fixed/improved.
-gpg_authentication() {
-    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
-    export GNUPGHOME
-
-    su_monkeysphere_user "gpg $@"
 }
 
 # check if user is root
@@ -179,331 +158,6 @@ show_server_key() {
     fi
 
     return $ret
-}
-
-# update authorized_keys for users
-update_users() {
-    if [ "$1" ] ; then
-	# get users from command line
-	unames="$@"
-    else
-	# or just look at all users if none specified
-	unames=$(getent passwd | cut -d: -f1)
-    fi
-
-    RETCODE=0
-
-    # set mode
-    MODE="authorized_keys"
-
-    # set gnupg home
-    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
-
-    # check to see if the gpg trust database has been initialized
-    if [ ! -s "${GNUPGHOME}/trustdb.gpg" ] ; then
-	failure "GNUPG trust database uninitialized.  Please see MONKEYSPHERE-SERVER(8)."
-    fi
-
-    # make sure the authorized_keys directory exists
-    mkdir -p "${SYSDATADIR}/authorized_keys"
-
-    # loop over users
-    for uname in $unames ; do
-	# check all specified users exist
-	if ! id "$uname" >/dev/null ; then
-	    log error "----- unknown user '$uname' -----"
-	    continue
-	fi
-
-	log verbose "----- user: $uname -----"
-
-        # make temporary directory
-        TMPLOC=$(mktemp -d ${MSTMPDIR}/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
-
-	# trap to delete temporary directory on exit
-	trap "rm -rf $TMPLOC" EXIT
-
-        # create temporary authorized_user_ids file
-        TMP_AUTHORIZED_USER_IDS="${TMPLOC}/authorized_user_ids"
-        touch "$TMP_AUTHORIZED_USER_IDS"
-
-        # create temporary authorized_keys file
-        AUTHORIZED_KEYS="${TMPLOC}/authorized_keys"
-        touch "$AUTHORIZED_KEYS"
-
-        # set restrictive permissions on the temporary files
-	# FIXME: is there a better way to do this?
-        chmod 0700 "$TMPLOC"
-        chmod 0600 "$AUTHORIZED_KEYS"
-        chmod 0600 "$TMP_AUTHORIZED_USER_IDS"
-        chown -R "$MONKEYSPHERE_USER" "$TMPLOC"
-
-	# process authorized_user_ids file
-	log debug "checking for authorized_user_ids..."
-	# translating ssh-style path variables
-	authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
-	if [ -s "$authorizedUserIDs" ] ; then
-	    # check permissions on the authorized_user_ids file path
-	    if check_key_file_permissions "$uname" "$authorizedUserIDs" ; then
-                # copy user authorized_user_ids file to temporary
-                # location
-		cat "$authorizedUserIDs" > "$TMP_AUTHORIZED_USER_IDS"
-
-		# export needed variables
-		export AUTHORIZED_KEYS
-		export TMP_AUTHORIZED_USER_IDS
-
-		# process authorized_user_ids file, as monkeysphere
-		# user
-		su_monkeysphere_user \
-		    ". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
-		RETURN="$?"
-	    else
-		log debug "not processing authorized_user_ids."
-	    fi
-	else
-	    log debug "empty or absent authorized_user_ids file."
-	fi
-
-	# add user-controlled authorized_keys file if specified
-	# translate ssh-style path variables
-	rawAuthorizedKeys=$(translate_ssh_variables "$uname" "$RAW_AUTHORIZED_KEYS")
-	if [ "$rawAuthorizedKeys" != 'none' ] ; then
-	    log debug "checking for raw authorized_keys..."
-	    if [ -s "$rawAuthorizedKeys" ] ; then
-		# check permissions on the authorized_keys file path
-		if check_key_file_permissions "$uname" "$rawAuthorizedKeys" ; then
-		    log verbose "adding raw authorized_keys file... "
-		    cat "$rawAuthorizedKeys" >> "$AUTHORIZED_KEYS"
-		else
-		    log debug "not adding raw authorized_keys file."		
-		fi
-	    else
-		log debug "empty or absent authorized_keys file."
-	    fi
-	fi
-
-	# move the new authorized_keys file into place
-	if [ -s "$AUTHORIZED_KEYS" ] ; then
-	    # openssh appears to check the contents of the
-	    # authorized_keys file as the user in question, so the
-	    # file must be readable by that user at least.
-
-	    # but in general, we don't want the user tampering with
-	    # this file directly, so we'll adopt this approach: Own
-	    # the file by the monkeysphere-server invoker (usually
-	    # root, but should be the same uid that sshd is launched
-	    # as); change the group of the file so that members of the
-	    # user's group can read it.
-
-	    # FIXME: is there a better way to do this?
-	    chown $(whoami) "$AUTHORIZED_KEYS" && \
-		chgrp $(id -g "$uname") "$AUTHORIZED_KEYS" && \
-		chmod g+r "$AUTHORIZED_KEYS" && \
-		mv -f "$AUTHORIZED_KEYS" "${SYSDATADIR}/authorized_keys/${uname}" || \
-		{ 
-		log error "Failed to install authorized_keys for '$uname'!"
-		rm -f "${SYSDATADIR}/authorized_keys/${uname}"
-		# indicate that there has been a failure:
-		RETURN=1
-		}
-	else
-	    rm -f "${SYSDATADIR}/authorized_keys/${uname}"
-	fi
-
-	# unset the trap
-	trap - EXIT
-
-	# destroy temporary directory
-	rm -rf "$TMPLOC"
-    done
-}
-
-# import an existing ssh key to a gpg key
-import_key() {
-    local hostName=$(hostname -f)
-    local keyFile="/etc/ssh/ssh_host_rsa_key"
-    local keyExpire
-    local userID
-
-    # check for presense of secret key
-    # FIXME: is this the proper test to be doing here?
-    fingerprint_server_key >/dev/null \
-	&& failure "An OpenPGP host key already exists."
-
-    # get options
-    while true ; do
-	case "$1" in
-	    -h|--hostname)
-		hostName="$2"
-		shift 2
-		;;
-	    -f|--keyfile)
-		keyFile="$2"
-		shift 2
-		;;
-	    -e|--expire)
-		keyExpire="$2"
-		shift 2
-		;;
-	    *)
-		if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
-		    failure "Unknown option '$1'.
-Type '$PGRM help' for usage."
-		fi
-		break
-		;;
-	esac
-    done
-
-    if [ ! -f "$keyFile" ] ; then
-	failure "SSH secret key file '$keyFile' not found."
-    fi
-
-    userID="ssh://${hostName}"
-
-    # prompt about key expiration if not specified
-    keyExpire=$(get_gpg_expiration "$keyExpire")
-
-    echo "The following key parameters will be used for the host private key:"
-    echo "Import: $keyFile"
-    echo "Name-Real: $userID"
-    echo "Expire-Date: $keyExpire"
-
-    read -p "Import key? (Y/n) " OK; OK=${OK:=Y}
-    if [ ${OK/y/Y} != 'Y' ] ; then
-	failure "aborting."
-    fi
-
-    log verbose "importing ssh key..."
-    # translate ssh key to a private key
-    (umask 077 && \
-	pem2openpgp "$userID" "$keyExpire" < "$sshKey" | gpg_host --import)
-
-    # find the key fingerprint of the newly converted key
-    fingerprint=$(fingerprint_server_key)
-
-    # export host ownertrust to authentication keyring
-    log verbose "setting ultimate owner trust for host key..."
-    echo "${fingerprint}:6:" | gpg_host "--import-ownertrust"
-    echo "${fingerprint}:6:" | gpg_authentication "--import-ownertrust"
-
-    # export public key to file
-    gpg_authentication "--export-options export-minimal --armor --export 0x${fingerprint}\!" > "${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
-    log info "SSH host public key in OpenPGP form: ${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
-
-    # show info about new key
-    show_server_key
-}
-
-# generate server gpg key
-gen_key() {
-    local keyType="RSA"
-    local keyLength="2048"
-    local keyUsage="auth"
-    local keyExpire
-    local revoker
-    local hostName=$(hostname -f)
-    local userID
-    local keyParameters
-    local fingerprint
-
-    # check for presense of secret key
-    # FIXME: is this the proper test to be doing here?
-    fingerprint_server_key >/dev/null \
-	&& failure "An OpenPGP host key already exists."
-
-    # get options
-    while true ; do
-	case "$1" in
-	    -h|--hostname)
-		hostName="$2"
-		shift 2
-		;;
-	    -l|--length)
-		keyLength="$2"
-		shift 2
-		;;
-	    -e|--expire)
-		keyExpire="$2"
-		shift 2
-		;;
-	    -r|--revoker)
-		revoker="$2"
-		shift 2
-		;;
-	    *)
-		if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
-		    failure "Unknown option '$1'.
-Type '$PGRM help' for usage."
-		fi
-		break
-		;;
-	esac
-    done
-
-    userID="ssh://${hostName}"
-
-    # prompt about key expiration if not specified
-    keyExpire=$(get_gpg_expiration "$keyExpire")
-
-    # set key parameters
-    keyParameters=\
-"Key-Type: $keyType
-Key-Length: $keyLength
-Key-Usage: $keyUsage
-Name-Real: $userID
-Expire-Date: $keyExpire"
-
-    # add the revoker field if specified
-    # FIXME: the "1:" below assumes that $REVOKER's key is an RSA key.
-    # FIXME: key is marked "sensitive"?  is this appropriate?
-    if [ "$revoker" ] ; then
-	keyParameters=\
-"${keyParameters}
-Revoker: 1:${revoker} sensitive"
-    fi
-
-    echo "The following key parameters will be used for the host private key:"
-    echo "$keyParameters"
-
-    read -p "Generate key? (Y/n) " OK; OK=${OK:=Y}
-    if [ ${OK/y/Y} != 'Y' ] ; then
-	failure "aborting."
-    fi
-
-    # add commit command
-    # must include blank line!
-    keyParameters=\
-"${keyParameters}
-
-%commit
-%echo done"
-
-    log verbose "generating host key..."
-    echo "$keyParameters" | gpg_host --batch --gen-key
-
-    # find the key fingerprint of the newly generated key
-    fingerprint=$(fingerprint_server_key)
-
-    # export host ownertrust to authentication keyring
-    log verbose "setting ultimate owner trust for host key..."
-    echo "${fingerprint}:6:" | gpg_authentication "--import-ownertrust"
-
-    # translate the private key to ssh format, and export to a file
-    # for sshs usage.
-    # NOTE: assumes that the primary key is the proper key to use
-    (umask 077 && \
-	gpg_host --export-secret-key "$fingerprint" | \
-	openpgp2ssh "$fingerprint" > "${SYSDATADIR}/ssh_host_rsa_key")
-    log info "SSH host private key output to file: ${SYSDATADIR}/ssh_host_rsa_key"
-    ssh-keygen -y -f "${SYSDATADIR}/ssh_host_rsa_key" > "${SYSDATADIR}/ssh_host_rsa_key.pub"
-    log info "SSH host public key output to file: ${SYSDATADIR}/ssh_host_rsa_key.pub"
-    gpg_authentication "--export-options export-minimal --armor --export 0x${fingerprint}\!" > "${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
-    log info "SSH host public key in OpenPGP form: ${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
-
-    # show info about new key
-    show_server_key
 }
 
 # extend the lifetime of a host key:
@@ -691,7 +345,6 @@ publish_server_key() {
     gpg_authentication "--keyserver $KEYSERVER --send-keys '0x${fingerprint}!'"
 }
 
-
 diagnostics() {
 #  * check on the status and validity of the key and public certificates
     local seckey
@@ -862,192 +515,6 @@ diagnostics() {
     fi
 }
 
-# retrieve key from web of trust, import it into the host keyring, and
-# ltsign the key in the host keyring so that it may certify other keys
-add_certifier() {
-    local domain
-    local trust
-    local depth
-    local keyID
-    local fingerprint
-    local ltsignCommand
-    local trustval
-
-    # set default values for trust depth and domain
-    domain=
-    trust=full
-    depth=1
-
-    # get options
-    while true ; do
-	case "$1" in
-	    -n|--domain)
-		domain="$2"
-		shift 2
-		;;
-	    -t|--trust)
-		trust="$2"
-		shift 2
-		;;
-	    -d|--depth)
-		depth="$2"
-		shift 2
-		;;
-	    *)
-		if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
-		    failure "Unknown option '$1'.
-Type '$PGRM help' for usage."
-		fi
-		break
-		;;
-	esac
-    done
-
-    keyID="$1"
-    if [ -z "$keyID" ] ; then
-	failure "You must specify the key ID of a key to add, or specify a file to read the key from."
-    fi
-    if [ -f "$keyID" ] ; then
-	echo "Reading key from file '$keyID':"
-	importinfo=$(gpg_authentication "--import" < "$keyID" 2>&1) || failure "could not read key from '$keyID'"
-	# FIXME: if this is tried when the key database is not
-	# up-to-date, i got these errors (using set -x):
-
-# ++ su -m monkeysphere -c '\''gpg --import'\''
-# Warning: using insecure memory!
-# gpg: key D21739E9: public key "Daniel Kahn Gillmor <dkg@fifthhorseman.net>" imported
-# gpg: Total number processed: 1
-# gpg:               imported: 1  (RSA: 1)
-# gpg: can'\''t create `/var/monkeysphere/gnupg-host/pubring.gpg.tmp'\'': Permission denied
-# gpg: failed to rebuild keyring cache: Permission denied
-# gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
-# gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
-# gpg: next trustdb check due at 2009-01-10'
-# + failure 'could not read key from '\''/root/dkg.gpg'\'''
-# + echo 'could not read key from '\''/root/dkg.gpg'\'''
-
-	keyID=$(echo "$importinfo" | grep '^gpg: key ' | cut -f2 -d: | cut -f3 -d\ )
-	if [ -z "$keyID" ] || [ $(echo "$keyID" | wc -l) -ne 1 ] ; then
-	    failure "Expected there to be a single gpg key in the file."
-	fi
-    else
-        # get the key from the key server
-	gpg_authentication "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" || failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
-    fi
-
-    export keyID
-
-
-    # get the full fingerprint of a key ID
-    fingerprint=$(gpg_authentication "--list-key --with-colons --with-fingerprint 0x${keyID}!" | \
-	grep '^fpr:' | grep "$keyID" | cut -d: -f10)
-
-    if [ -z "$fingerprint" ] ; then
-	failure "Key '$keyID' not found."
-    fi
-
-    echo
-    echo "key found:"
-    gpg_authentication "--fingerprint 0x${fingerprint}!"
-
-    echo "Are you sure you want to add the above key as a"
-    read -p "certifier of users on this system? (y/N) " OK; OK=${OK:-N}
-    if [ "${OK/y/Y}" != 'Y' ] ; then
-	failure "Identity certifier not added."
-    fi
-
-    # export the key to the host keyring
-    gpg_authentication "--export 0x${fingerprint}!" | gpg_host --import
-
-    if [ "$trust" = marginal ]; then
-	trustval=1
-    elif [ "$trust" = full ]; then
-	trustval=2
-    else
-	failure "Trust value requested ('$trust') was unclear (only 'marginal' or 'full' are supported)."
-    fi
-
-    # ltsign command
-    # NOTE: *all* user IDs will be ltsigned
-    ltsignCommand=$(cat <<EOF
-ltsign
-y
-$trustval
-$depth
-$domain
-y
-save
-EOF
-	)
-
-    # ltsign the key
-    if echo "$ltsignCommand" | \
-	gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
-
-        # update the trustdb for the authentication keyring
-	gpg_authentication "--check-trustdb"
-
-	echo
-	echo "Identity certifier added."
-    else
-	failure "Problem adding identify certifier."
-    fi
-}
-
-# delete a certifiers key from the host keyring
-remove_certifier() {
-    local keyID
-    local fingerprint
-
-    keyID="$1"
-    if [ -z "$keyID" ] ; then
-	failure "You must specify the key ID of a key to remove."
-    fi
-
-    if gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key 0x${keyID}!" ; then
-	read -p "Really remove above listed identity certifier? (y/N) " OK; OK=${OK:-N}
-	if [ "${OK/y/Y}" != 'Y' ] ; then
-	    failure "Identity certifier not removed."
-	fi
-    else
-	failure
-    fi
-
-    # delete the requested key
-    if gpg_authentication "--delete-key --batch --yes 0x${keyID}!" ; then
-	# delete key from host keyring as well
-	gpg_host --delete-key --batch --yes "0x${keyID}!"
-
-        # update the trustdb for the authentication keyring
-	gpg_authentication "--check-trustdb"
-
-	echo
-	echo "Identity certifier removed."
-    else
-	failure "Problem removing identity certifier."
-    fi
-}
-
-# list the host certifiers
-list_certifiers() {
-    local keys
-    local key
-
-    # find trusted keys in authentication keychain
-    keys=$(gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-keys --with-colons --fingerprint" | \
-        grep ^pub: | cut -d: -f2,5 | egrep '^(u|f):' | cut -d: -f2)
-
-    # output keys
-    for key in $keys ; do
-        gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key --fingerprint $key"
-    done
-}
-
-# issue command to gpg-authentication keyring
-gpg_authentication_cmd() {
-    gpg_authentication "$@"
-}
-
 ########################################################################
 # MAIN
 ########################################################################
@@ -1093,20 +560,8 @@ COMMAND="$1"
 shift
 
 case $COMMAND in
-    'update-users'|'update-user'|'u')
-	check_user
-	check_host_keyring
-	update_users "$@"
-	;;
-
-    'import-key'|'i')
-	check_user
-	import_key "$@"
-	;;
-
-    'gen-key'|'g')
-	check_user
-	gen_key "$@"
+    'show-key'|'show'|'s')
+	show_server_key
 	;;
 
     'extend-key'|'e')
@@ -1139,42 +594,34 @@ case $COMMAND in
 	revoke_key "$@"
 	;;
 
-    'show-key'|'show'|'s')
-	show_server_key
-	;;
-
     'publish-key'|'publish'|'p')
 	check_user
 	check_host_keyring
 	publish_server_key
 	;;
 
-    'diagnostics'|'d')
+    'expert'|'e')
 	check_user
-	diagnostics
-	;;
+	SUBCOMMAND="$1"
+	shift
+	case "$SUBCOMMAND" in
+	    'import-key'|'i')
+		import_key "$@"
+		;;
 
-    'add-identity-certifier'|'add-id-certifier'|'add-certifier'|'c+')
-	check_user
-	check_host_keyring
-	add_certifier "$@"
-	;;
+	    'gen-key'|'g')
+		gen_key "$@"
+		;;
 
-    'remove-identity-certifier'|'remove-id-certifier'|'remove-certifier'|'c-')
-	check_user
-	check_host_keyring
-	remove_certifier "$@"
-	;;
+	    'diagnostics'|'d')
+		diagnostics
+		;;
 
-    'list-identity-certifiers'|'list-id-certifiers'|'list-certifiers'|'list-certifier'|'c')
-	check_user
-	check_host_keyring
-	list_certifiers "$@"
-	;;
-
-    'gpg-authentication-cmd')
-	check_user
-	gpg_authentication_cmd "$@"
+	    *)
+		failure "Unknown expert subcommand: '$COMMAND'
+Type '$PGRM help' for usage."
+		;;
+	esac
 	;;
 
     'version'|'v')

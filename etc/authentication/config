@@ -1,4 +1,4 @@
-# Monkeysphere server configuration file.
+# Monkeysphere authentication configuration file.
 
 # This is an sh-style shell configuration file.  Variable names should
 # be separated from their assignments by a single '=' and no spaces.
@@ -6,12 +6,12 @@
 # prefaced by "MONKEYSPHERE_" will take precedence over the values
 # specified here.
 
-# User who controls the monkeysphere authentication keyring.
-#MONKEYSPHERE_USER=monkeysphere
-
 # Log level.  Can be SILENT, ERROR, INFO, VERBOSE, DEBUG, in
 # increasing order of verbosity.
 #LOG_LEVEL=INFO
+
+# User who controls the monkeysphere 'sphere' keyring.
+#MONKEYSPHERE_USER=monkeysphere
 
 # Path to authorized_user_ids file to process to create
 # authorized_keys file.  '%h' will be replaced by the home directory

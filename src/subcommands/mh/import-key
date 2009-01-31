@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+# Monkeysphere host import-key subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+local hostName=$(hostname -f)
+local keyFile="/etc/ssh/ssh_host_rsa_key"
+local keyExpire
+local userID
+
+# check for presense of secret key
+# FIXME: is this the proper test to be doing here?
+fingerprint_server_key >/dev/null \
+	&& failure "An OpenPGP host key already exists."
+
+# get options
+while true ; do
+	case "$1" in
+	    -h|--hostname)
+		hostName="$2"
+		shift 2
+		;;
+	    -f|--keyfile)
+		keyFile="$2"
+		shift 2
+		;;
+	    -e|--expire)
+		keyExpire="$2"
+		shift 2
+		;;
+	    *)
+		if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
+		    failure "Unknown option '$1'.
+Type '$PGRM help' for usage."
+		fi
+		break
+		;;
+	esac
+done
+
+if [ ! -f "$keyFile" ] ; then
+	failure "SSH secret key file '$keyFile' not found."
+fi
+
+userID="ssh://${hostName}"
+
+# prompt about key expiration if not specified
+keyExpire=$(get_gpg_expiration "$keyExpire")
+
+echo "The following key parameters will be used for the host private key:"
+echo "Import: $keyFile"
+echo "Name-Real: $userID"
+echo "Expire-Date: $keyExpire"
+
+read -p "Import key? (Y/n) " OK; OK=${OK:=Y}
+if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "aborting."
+fi
+
+log verbose "importing ssh key..."
+# translate ssh key to a private key
+(umask 077 && \
+	pem2openpgp "$userID" "$keyExpire" < "$sshKey" | gpg_host --import)
+
+# find the key fingerprint of the newly converted key
+fingerprint=$(fingerprint_server_key)
+
+# export host ownertrust to authentication keyring
+log verbose "setting ultimate owner trust for host key..."
+echo "${fingerprint}:6:" | gpg_host "--import-ownertrust"
+echo "${fingerprint}:6:" | gpg_authentication "--import-ownertrust"
+
+# export public key to file
+gpg_authentication "--export-options export-minimal --armor --export 0x${fingerprint}\!" > "${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
+log info "SSH host public key in OpenPGP form: ${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
+
+# show info about new key
+show_server_key

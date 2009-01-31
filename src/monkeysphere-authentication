@@ -1,0 +1,591 @@
+#!/usr/bin/env bash
+
+# monkeysphere-authentication: Monkeysphere authentication admin tool
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008, and are all released under the GPL, version 3
+# or later.
+
+########################################################################
+PGRM=$(basename $0)
+
+SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
+export SYSSHAREDIR
+. "${SYSSHAREDIR}/common" || exit 1
+
+SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere/authentication"}
+export SYSDATADIR
+
+# monkeysphere temp directory, in sysdatadir to enable atomic moves of
+# authorized_keys files
+MSTMPDIR="${SYSDATADIR}/tmp"
+export MSTMPDIR
+
+# UTC date in ISO 8601 format if needed
+DATE=$(date -u '+%FT%T')
+
+# unset some environment variables that could screw things up
+unset GREP_OPTIONS
+
+# default return code
+RETURN=0
+
+########################################################################
+# FUNCTIONS
+########################################################################
+
+usage() {
+    cat <<EOF >&2
+usage: $PGRM <subcommand> [options] [args]
+Monkeysphere authentication admin tool.
+
+subcommands:
+ update-users (u) [USER]...          update user authorized_keys files
+ add-id-certifier (c+) KEYID         import and tsign a certification key
+   --domain (-n) DOMAIN                limit ID certifications to DOMAIN
+   --trust (-t) TRUST                  trust level of certifier (full)
+   --depth (-d) DEPTH                  trust depth for certifier (1)
+ remove-id-certifier (c-) KEYID      remove a certification key
+ list-id-certifiers (c)              list certification keys
+
+ expert
+  diagnostics (d)                    monkeysphere authentication status
+  gpg-cmd CMD                        execute gpg command
+
+ version (v)                         show version number
+ help (h,?)                          this help
+
+EOF
+}
+
+# function to run command as monkeysphere user
+su_monkeysphere_user() {
+    # if the current user is the monkeysphere user, then just eval
+    # command
+    if [ $(id -un) = "$MONKEYSPHERE_USER" ] ; then
+	eval "$@"
+
+    # otherwise su command as monkeysphere user
+    else
+	su "$MONKEYSPHERE_USER" -c "$@"
+    fi
+}
+
+# function to interact with the host gnupg keyring
+gpg_host() {
+    local returnCode
+
+    GNUPGHOME="$GNUPGHOME_HOST"
+    export GNUPGHOME
+
+    # NOTE: we supress this warning because we need the monkeysphere
+    # user to be able to read the host pubring.  we realize this might
+    # be problematic, but it's the simplest solution, without too much
+    # loss of security.
+    gpg --no-permission-warning "$@"
+    returnCode="$?"
+
+    # always reset the permissions on the host pubring so that the
+    # monkeysphere user can read the trust signatures
+    chgrp "$MONKEYSPHERE_USER" "${GNUPGHOME_HOST}/pubring.gpg"
+    chmod g+r "${GNUPGHOME_HOST}/pubring.gpg"
+    
+    return "$returnCode"
+}
+
+# function to interact with the authentication gnupg keyring
+# FIXME: this function requires basically accepts only a single
+# argument because of problems with quote expansion.  this needs to be
+# fixed/improved.
+gpg_authentication() {
+    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
+    export GNUPGHOME
+
+    su_monkeysphere_user "gpg $@"
+}
+
+# check if user is root
+is_root() {
+    [ $(id -u 2>/dev/null) = '0' ]
+}
+
+# check that user is root, for functions that require root access
+check_user() {
+    is_root || failure "You must be root to run this command."
+}
+
+# output just key fingerprint
+fingerprint_server_key() {
+    # set the pipefail option so functions fails if can't read sec key
+    set -o pipefail
+
+    gpg_host --list-secret-keys --fingerprint \
+	--with-colons --fixed-list-mode 2> /dev/null | \
+	grep '^fpr:' | head -1 | cut -d: -f10 2>/dev/null
+}
+
+# function to check for host secret key
+check_host_keyring() {
+    fingerprint_server_key >/dev/null \
+	|| failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-server gen-key' first."
+}
+
+diagnostics() {
+#  * check on the status and validity of the key and public certificates
+    local seckey
+    local keysfound
+    local curdate
+    local warnwindow
+    local warndate
+    local create
+    local expire
+    local uid
+    local fingerprint
+    local badhostkeys
+    local sshd_config
+    local problemsfound=0
+
+    # FIXME: what's the correct, cross-platform answer?
+    sshd_config=/etc/ssh/sshd_config
+    seckey=$(gpg_host --list-secret-keys --fingerprint --with-colons --fixed-list-mode)
+    keysfound=$(echo "$seckey" | grep -c ^sec:)
+    curdate=$(date +%s)
+    # warn when anything is 2 months away from expiration
+    warnwindow='2 months'
+    warndate=$(advance_date $warnwindow +%s)
+
+    if ! id monkeysphere >/dev/null ; then
+	echo "! No monkeysphere user found!  Please create a monkeysphere system user with bash as its shell."
+	problemsfound=$(($problemsfound+1))
+    fi
+
+    if ! [ -d "$SYSDATADIR" ] ; then
+	echo "! no $SYSDATADIR directory found.  Please create it."
+	problemsfound=$(($problemsfound+1))
+    fi
+
+    echo "Checking host GPG key..."
+    if (( "$keysfound" < 1 )); then
+	echo "! No host key found."
+	echo " - Recommendation: run 'monkeysphere-server gen-key'"
+	problemsfound=$(($problemsfound+1))
+    elif (( "$keysfound" > 1 )); then
+	echo "! More than one host key found?"
+	# FIXME: recommend a way to resolve this
+	problemsfound=$(($problemsfound+1))
+    else
+	create=$(echo "$seckey" | grep ^sec: | cut -f6 -d:)
+	expire=$(echo "$seckey" | grep ^sec: | cut -f7 -d:)
+	fingerprint=$(echo "$seckey" | grep ^fpr: | head -n1 | cut -f10 -d:)
+	# check for key expiration:
+	if [ "$expire" ]; then
+	    if (( "$expire"  < "$curdate" )); then
+		echo "! Host key is expired."
+		echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
+		problemsfound=$(($problemsfound+1))
+	    elif (( "$expire" < "$warndate" )); then
+		echo "! Host key expires in less than $warnwindow:" $(advance_date $(( $expire - $curdate )) seconds +%F)
+		echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
+		problemsfound=$(($problemsfound+1))
+	    fi
+	fi
+
+        # and weirdnesses:
+	if [ "$create" ] && (( "$create" > "$curdate" )); then
+	    echo "! Host key was created in the future(?!). Is your clock correct?"
+	    echo " - Recommendation: Check clock ($(date +%F_%T)); use NTP?"
+	    problemsfound=$(($problemsfound+1))
+	fi
+
+        # check for UserID expiration:
+	echo "$seckey" | grep ^uid: | cut -d: -f6,7,10 | \
+	while IFS=: read create expire uid ; do
+	    # FIXME: should we be doing any checking on the form
+	    # of the User ID?  Should we be unmangling it somehow?
+
+	    if [ "$create" ] && (( "$create" > "$curdate" )); then
+		echo "! User ID '$uid' was created in the future(?!).  Is your clock correct?"
+		echo " - Recommendation: Check clock ($(date +%F_%T)); use NTP?"
+		problemsfound=$(($problemsfound+1))
+	    fi
+	    if [ "$expire" ] ; then
+		if (( "$expire" < "$curdate" )); then
+		    echo "! User ID '$uid' is expired."
+		    # FIXME: recommend a way to resolve this
+		    problemsfound=$(($problemsfound+1))
+		elif (( "$expire" < "$warndate" )); then
+		    echo "! User ID '$uid' expires in less than $warnwindow:" $(advance_date $(( $expire - $curdate )) seconds +%F)		
+		    # FIXME: recommend a way to resolve this
+		    problemsfound=$(($problemsfound+1))
+		fi
+	    fi
+	done
+	    
+# FIXME: verify that the host key is properly published to the
+#   keyservers (do this with the non-privileged user)
+
+# FIXME: check that there are valid, non-expired certifying signatures
+#   attached to the host key after fetching from the public keyserver
+#   (do this with the non-privileged user as well)
+
+# FIXME: propose adding a revoker to the host key if none exist (do we
+#   have a way to do that after key generation?)
+
+	# Ensure that the ssh_host_rsa_key file is present and non-empty:
+	echo
+	echo "Checking host SSH key..."
+	if [ ! -s "${SYSDATADIR}/ssh_host_rsa_key" ] ; then
+	    echo "! The host key as prepared for SSH (${SYSDATADIR}/ssh_host_rsa_key) is missing or empty."
+	    problemsfound=$(($problemsfound+1))
+	else
+	    if [ $(ls -l "${SYSDATADIR}/ssh_host_rsa_key" | cut -f1 -d\ ) != '-rw-------' ] ; then
+		echo "! Permissions seem wrong for ${SYSDATADIR}/ssh_host_rsa_key -- should be 0600."
+		problemsfound=$(($problemsfound+1))
+	    fi
+
+	    # propose changes needed for sshd_config (if any)
+	    if ! grep -q "^HostKey[[:space:]]\+${SYSDATADIR}/ssh_host_rsa_key$" "$sshd_config"; then
+		echo "! $sshd_config does not point to the monkeysphere host key (${SYSDATADIR}/ssh_host_rsa_key)."
+		echo " - Recommendation: add a line to $sshd_config: 'HostKey ${SYSDATADIR}/ssh_host_rsa_key'"
+		problemsfound=$(($problemsfound+1))
+	    fi
+	    if badhostkeys=$(grep -i '^HostKey' "$sshd_config" | grep -v "^HostKey[[:space:]]\+${SYSDATADIR}/ssh_host_rsa_key$") ; then
+		echo "! $sshd_config refers to some non-monkeysphere host keys:"
+		echo "$badhostkeys"
+		echo " - Recommendation: remove the above HostKey lines from $sshd_config"
+		problemsfound=$(($problemsfound+1))
+	    fi
+
+        # FIXME: test (with ssh-keyscan?) that the running ssh
+        # daemon is actually offering the monkeysphere host key.
+
+	fi
+    fi
+
+# FIXME: look at the ownership/privileges of the various keyrings,
+#    directories housing them, etc (what should those values be?  can
+#    we make them as minimal as possible?)
+
+# FIXME: look to see that the ownertrust rules are set properly on the
+#    authentication keyring
+
+# FIXME: make sure that at least one identity certifier exists
+
+# FIXME: look at the timestamps on the monkeysphere-generated
+# authorized_keys files -- warn if they seem out-of-date.
+
+# FIXME: check for a cronjob that updates monkeysphere-generated
+# authorized_keys?
+
+    echo
+    echo "Checking for MonkeySphere-enabled public-key authentication for users ..."
+    # Ensure that User ID authentication is enabled:
+    if ! grep -q "^AuthorizedKeysFile[[:space:]]\+${SYSDATADIR}/authorized_keys/%u$" "$sshd_config"; then
+	echo "! $sshd_config does not point to monkeysphere authorized keys."
+	echo " - Recommendation: add a line to $sshd_config: 'AuthorizedKeysFile ${SYSDATADIR}/authorized_keys/%u'"
+	problemsfound=$(($problemsfound+1))
+    fi
+    if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' "$sshd_config" | grep -v "^AuthorizedKeysFile[[:space:]]\+${SYSDATADIR}/authorized_keys/%u$") ; then
+	echo "! $sshd_config refers to non-monkeysphere authorized_keys files:"
+	echo "$badauthorizedkeys"
+	echo " - Recommendation: remove the above AuthorizedKeysFile lines from $sshd_config"
+	problemsfound=$(($problemsfound+1))
+    fi
+
+    if [ "$problemsfound" -gt 0 ]; then
+	echo "When the above $problemsfound issue"$(if [ "$problemsfound" -eq 1 ] ; then echo " is" ; else echo "s are" ; fi)" resolved, please re-run:"
+	echo "  monkeysphere-server diagnostics"
+    else
+	echo "Everything seems to be in order!"
+    fi
+}
+
+# retrieve key from web of trust, import it into the host keyring, and
+# ltsign the key in the host keyring so that it may certify other keys
+add_certifier() {
+    local domain
+    local trust
+    local depth
+    local keyID
+    local fingerprint
+    local ltsignCommand
+    local trustval
+
+    # set default values for trust depth and domain
+    domain=
+    trust=full
+    depth=1
+
+    # get options
+    while true ; do
+	case "$1" in
+	    -n|--domain)
+		domain="$2"
+		shift 2
+		;;
+	    -t|--trust)
+		trust="$2"
+		shift 2
+		;;
+	    -d|--depth)
+		depth="$2"
+		shift 2
+		;;
+	    *)
+		if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
+		    failure "Unknown option '$1'.
+Type '$PGRM help' for usage."
+		fi
+		break
+		;;
+	esac
+    done
+
+    keyID="$1"
+    if [ -z "$keyID" ] ; then
+	failure "You must specify the key ID of a key to add, or specify a file to read the key from."
+    fi
+    if [ -f "$keyID" ] ; then
+	echo "Reading key from file '$keyID':"
+	importinfo=$(gpg_authentication "--import" < "$keyID" 2>&1) || failure "could not read key from '$keyID'"
+	# FIXME: if this is tried when the key database is not
+	# up-to-date, i got these errors (using set -x):
+
+# ++ su -m monkeysphere -c '\''gpg --import'\''
+# Warning: using insecure memory!
+# gpg: key D21739E9: public key "Daniel Kahn Gillmor <dkg@fifthhorseman.net>" imported
+# gpg: Total number processed: 1
+# gpg:               imported: 1  (RSA: 1)
+# gpg: can'\''t create `/var/monkeysphere/gnupg-host/pubring.gpg.tmp'\'': Permission denied
+# gpg: failed to rebuild keyring cache: Permission denied
+# gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+# gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+# gpg: next trustdb check due at 2009-01-10'
+# + failure 'could not read key from '\''/root/dkg.gpg'\'''
+# + echo 'could not read key from '\''/root/dkg.gpg'\'''
+
+	keyID=$(echo "$importinfo" | grep '^gpg: key ' | cut -f2 -d: | cut -f3 -d\ )
+	if [ -z "$keyID" ] || [ $(echo "$keyID" | wc -l) -ne 1 ] ; then
+	    failure "Expected there to be a single gpg key in the file."
+	fi
+    else
+        # get the key from the key server
+	gpg_authentication "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" || failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
+    fi
+
+    export keyID
+
+
+    # get the full fingerprint of a key ID
+    fingerprint=$(gpg_authentication "--list-key --with-colons --with-fingerprint 0x${keyID}!" | \
+	grep '^fpr:' | grep "$keyID" | cut -d: -f10)
+
+    if [ -z "$fingerprint" ] ; then
+	failure "Key '$keyID' not found."
+    fi
+
+    echo
+    echo "key found:"
+    gpg_authentication "--fingerprint 0x${fingerprint}!"
+
+    echo "Are you sure you want to add the above key as a"
+    read -p "certifier of users on this system? (y/N) " OK; OK=${OK:-N}
+    if [ "${OK/y/Y}" != 'Y' ] ; then
+	failure "Identity certifier not added."
+    fi
+
+    # export the key to the host keyring
+    gpg_authentication "--export 0x${fingerprint}!" | gpg_host --import
+
+    if [ "$trust" = marginal ]; then
+	trustval=1
+    elif [ "$trust" = full ]; then
+	trustval=2
+    else
+	failure "Trust value requested ('$trust') was unclear (only 'marginal' or 'full' are supported)."
+    fi
+
+    # ltsign command
+    # NOTE: *all* user IDs will be ltsigned
+    ltsignCommand=$(cat <<EOF
+ltsign
+y
+$trustval
+$depth
+$domain
+y
+save
+EOF
+	)
+
+    # ltsign the key
+    if echo "$ltsignCommand" | \
+	gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
+
+        # update the trustdb for the authentication keyring
+	gpg_authentication "--check-trustdb"
+
+	echo
+	echo "Identity certifier added."
+    else
+	failure "Problem adding identify certifier."
+    fi
+}
+
+# delete a certifiers key from the host keyring
+remove_certifier() {
+    local keyID
+    local fingerprint
+
+    keyID="$1"
+    if [ -z "$keyID" ] ; then
+	failure "You must specify the key ID of a key to remove."
+    fi
+
+    if gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key 0x${keyID}!" ; then
+	read -p "Really remove above listed identity certifier? (y/N) " OK; OK=${OK:-N}
+	if [ "${OK/y/Y}" != 'Y' ] ; then
+	    failure "Identity certifier not removed."
+	fi
+    else
+	failure
+    fi
+
+    # delete the requested key
+    if gpg_authentication "--delete-key --batch --yes 0x${keyID}!" ; then
+	# delete key from host keyring as well
+	gpg_host --delete-key --batch --yes "0x${keyID}!"
+
+        # update the trustdb for the authentication keyring
+	gpg_authentication "--check-trustdb"
+
+	echo
+	echo "Identity certifier removed."
+    else
+	failure "Problem removing identity certifier."
+    fi
+}
+
+# list the host certifiers
+list_certifiers() {
+    local keys
+    local key
+
+    # find trusted keys in authentication keychain
+    keys=$(gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-keys --with-colons --fingerprint" | \
+        grep ^pub: | cut -d: -f2,5 | egrep '^(u|f):' | cut -d: -f2)
+
+    # output keys
+    for key in $keys ; do
+        gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key --fingerprint $key"
+    done
+}
+
+########################################################################
+# MAIN
+########################################################################
+
+# unset variables that should be defined only in config file
+unset KEYSERVER
+unset AUTHORIZED_USER_IDS
+unset RAW_AUTHORIZED_KEYS
+unset MONKEYSPHERE_USER
+
+# load configuration file
+[ -e ${MONKEYSPHERE_SERVER_CONFIG:="${SYSCONFIGDIR}/monkeysphere-server.conf"} ] && . "$MONKEYSPHERE_SERVER_CONFIG"
+
+# set empty config variable with ones from the environment, or with
+# defaults
+LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=${LOG_LEVEL:="INFO"}}
+KEYSERVER=${MONKEYSPHERE_KEYSERVER:=${KEYSERVER:="pool.sks-keyservers.net"}}
+AUTHORIZED_USER_IDS=${MONKEYSPHERE_AUTHORIZED_USER_IDS:=${AUTHORIZED_USER_IDS:="%h/.monkeysphere/authorized_user_ids"}}
+RAW_AUTHORIZED_KEYS=${MONKEYSPHERE_RAW_AUTHORIZED_KEYS:=${RAW_AUTHORIZED_KEYS:="%h/.ssh/authorized_keys"}}
+MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkeysphere"}}
+
+# other variables
+CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
+REQUIRED_USER_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_USER_KEY_CAPABILITY:="a"}
+GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${SYSDATADIR}/gnupg-host"}
+GNUPGHOME_AUTHENTICATION=${MONKEYSPHERE_GNUPGHOME_AUTHENTICATION:="${SYSDATADIR}/gnupg-authentication"}
+
+# export variables needed in su invocation
+export DATE
+export MODE
+export MONKEYSPHERE_USER
+export LOG_LEVEL
+export KEYSERVER
+export CHECK_KEYSERVER
+export REQUIRED_USER_KEY_CAPABILITY
+export GNUPGHOME_HOST
+export GNUPGHOME_AUTHENTICATION
+export GNUPGHOME
+
+# get subcommand
+COMMAND="$1"
+[ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
+shift
+
+case $COMMAND in
+    'update-users'|'update-user'|'u')
+	check_user
+	check_host_keyring
+	update_users "$@"
+	;;
+
+    'add-identity-certifier'|'add-id-certifier'|'add-certifier'|'c+')
+	check_user
+	check_host_keyring
+	add_certifier "$@"
+	;;
+
+    'remove-identity-certifier'|'remove-id-certifier'|'remove-certifier'|'c-')
+	check_user
+	check_host_keyring
+	remove_certifier "$@"
+	;;
+
+    'list-identity-certifiers'|'list-id-certifiers'|'list-certifiers'|'list-certifier'|'c')
+	check_user
+	check_host_keyring
+	list_certifiers "$@"
+	;;
+
+    'expert'|'e')
+	check_user
+	SUBCOMMAND="$1"
+	shift
+	case "$SUBCOMMAND" in
+	    'diagnostics'|'d')
+		diagnostics
+		;;
+
+	    'gpg-cmd')
+		gpg_authentication "$@"
+		;;
+
+	    *)
+		failure "Unknown expert subcommand: '$COMMAND'
+Type '$PGRM help' for usage."
+		;;
+	esac
+	;;
+
+    'version'|'v')
+	echo "$VERSION"
+	;;
+
+    '--help'|'help'|'-h'|'h'|'?')
+        usage
+        ;;
+
+    *)
+        failure "Unknown command: '$COMMAND'
+Type '$PGRM help' for usage."
+        ;;
+esac
+
+exit "$RETURN"
