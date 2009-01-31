@@ -8,8 +8,7 @@
 # Copyright: 2008
 # License: GPL v3 or later
 
-# these tests should all be able to
-# as a non-privileged user.
+# these tests should all be able to run as a non-privileged user.
 
 # all subcommands in this script should complete without failure:
 set -e
@@ -193,7 +192,7 @@ echo | monkeysphere-server gen-key --length 1024 --expire 0 testhost
 # remove the gpg.conf
 rm "$MONKEYSPHERE_SYSCONFIGDIR"/gnupg-host/gpg.conf
 
-HOSTKEYID=$( monkeysphere-server show-key | tail -n1 | cut -f3 -d\  )
+HOSTKEYID=$( monkeysphere-server show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
 
 # certify it with the "Admin's Key".
 # (this would normally be done via keyservers)

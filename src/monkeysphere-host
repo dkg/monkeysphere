@@ -105,16 +105,6 @@ gpg_host() {
     return "$returnCode"
 }
 
-# check if user is root
-is_root() {
-    [ $(id -u 2>/dev/null) = '0' ]
-}
-
-# check that user is root, for functions that require root access
-check_user() {
-    is_root || failure "You must be root to run this command."
-}
-
 # output just key fingerprint
 fingerprint_server_key() {
     # set the pipefail option so functions fails if can't read sec key
@@ -138,14 +128,14 @@ show_server_key() {
     local ret=0
 
     # FIXME: you shouldn't have to be root to see the host key fingerprint
-    if is_root ; then
-	check_host_keyring
-	fingerprintPGP=$(fingerprint_server_key)
-	gpg_authentication "--fingerprint --list-key --list-options show-unusable-uids $fingerprintPGP" 2>/dev/null
-	echo "OpenPGP fingerprint: $fingerprintPGP"
-    else
+    check_host_keyring
+    fingerprintPGP=$(fingerprint_server_key)
+    gpg_authentication "--fingerprint --list-key --list-options show-unusable-uids $fingerprintPGP" 2>/dev/null
+    if [ $? -ne 0 ] ; then
 	log info "You must be root to see host OpenPGP fingerprint."
 	ret='1'
+    else
+	echo "OpenPGP fingerprint: $fingerprintPGP"
     fi
 
     if [ -f "${SYSDATADIR}/ssh_host_rsa_key.pub" ] ; then
@@ -257,10 +247,6 @@ gen_key() {
     # get options
     while true ; do
 	case "$1" in
-	    -h|--hostname)
-		hostName="$2"
-		shift 2
-		;;
 	    -l|--length)
 		keyLength="$2"
 		shift 2
@@ -278,6 +264,7 @@ gen_key() {
 		    failure "Unknown option '$1'.
 Type '$PGRM help' for usage."
 		fi
+		hostName="$1"
 		break
 		;;
 	esac
@@ -752,37 +739,31 @@ case $COMMAND in
 	;;
 
     'extend-key'|'e')
-	check_user
 	check_host_keyring
 	extend_key "$@"
 	;;
 
     'add-hostname'|'add-name'|'n+')
-	check_user
 	check_host_keyring
 	add_hostname "$@"
 	;;
 
     'revoke-hostname'|'revoke-name'|'n-')
-	check_user
 	check_host_keyring
 	revoke_hostname "$@"
 	;;
 
     'add-revoker'|'o')
-	check_user
 	check_host_keyring
 	add_revoker "$@"
 	;;
 
     'revoke-key'|'r')
-	check_user
 	check_host_keyring
 	revoke_key "$@"
 	;;
 
     'publish-key'|'publish'|'p')
-	check_user
 	check_host_keyring
 	publish_server_key
 	;;
