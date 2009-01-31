@@ -20,11 +20,6 @@ export SYSSHAREDIR
 SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere/host"}
 export SYSDATADIR
 
-# monkeysphere temp directory, in sysdatadir to enable atomic moves of
-# authorized_keys files
-MSTMPDIR="${SYSDATADIR}/tmp"
-export MSTMPDIR
-
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
 
@@ -53,15 +48,12 @@ subcommands:
  publish-key (p)                     publish server host key to keyserver
 
  expert
-  import-key (i)                     import existing ssh key to gpg
-   --hostname (-h) NAME[:PORT]         hostname for key user ID
+  import-key (i) [NAME[:PORT]]       import existing ssh key to gpg
    --keyfile (-f) FILE                 key file to import
    --expire (-e) EXPIRE                date to expire
-  gen-key (g)                        generate gpg key for the host
-   --hostname (-h) NAME[:PORT]         hostname for key user ID
+  gen-key (g) [NAME[:PORT]]          generate gpg key for the host
    --length (-l) BITS                  key length in bits (2048)
    --expire (-e) EXPIRE                date to expire
-   --revoker (-r) FINGERPRINT          add a revoker
   diagnostics (d)                    monkeysphere host status
 
  version (v)                         show version number
