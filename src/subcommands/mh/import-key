@@ -82,4 +82,4 @@ gpg_authentication "--export-options export-minimal --armor --export 0x${fingerp
 log info "SSH host public key in OpenPGP form: ${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
 
 # show info about new key
-show_server_key
+show_key

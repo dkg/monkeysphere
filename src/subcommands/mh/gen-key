@@ -14,7 +14,6 @@ local keyType="RSA"
 local keyLength="2048"
 local keyUsage="auth"
 local keyExpire
-local revoker
 local hostName=$(hostname -f)
 local userID
 local keyParameters
@@ -40,10 +39,6 @@ while true ; do
 		keyExpire="$2"
 		shift 2
 		;;
-	    -r|--revoker)
-		revoker="$2"
-		shift 2
-		;;
 	    *)
 		if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
 		    failure "Unknown option '$1'.
@@ -66,15 +61,6 @@ Key-Length: $keyLength
 Key-Usage: $keyUsage
 Name-Real: $userID
 Expire-Date: $keyExpire"
-
-# add the revoker field if specified
-# FIXME: the "1:" below assumes that $REVOKER's key is an RSA key.
-# FIXME: key is marked "sensitive"?  is this appropriate?
-if [ "$revoker" ] ; then
-	keyParameters=\
-"${keyParameters}
-Revoker: 1:${revoker} sensitive"
-fi
 
 echo "The following key parameters will be used for the host private key:"
 echo "$keyParameters"
@@ -115,4 +101,4 @@ gpg_authentication "--export-options export-minimal --armor --export 0x${fingerp
 log info "SSH host public key in OpenPGP form: ${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
 
 # show info about new key
-show_server_key
+show_key
