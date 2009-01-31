@@ -126,16 +126,6 @@ gpg_authentication() {
     su_monkeysphere_user "gpg $@"
 }
 
-# check if user is root
-is_root() {
-    [ $(id -u 2>/dev/null) = '0' ]
-}
-
-# check that user is root, for functions that require root access
-check_user() {
-    is_root || failure "You must be root to run this command."
-}
-
 # output just key fingerprint
 fingerprint_server_key() {
     # set the pipefail option so functions fails if can't read sec key
@@ -159,14 +149,14 @@ show_server_key() {
     local ret=0
 
     # FIXME: you shouldn't have to be root to see the host key fingerprint
-    if is_root ; then
-	check_host_keyring
-	fingerprintPGP=$(fingerprint_server_key)
-	gpg_authentication "--fingerprint --list-key --list-options show-unusable-uids $fingerprintPGP" 2>/dev/null
-	echo "OpenPGP fingerprint: $fingerprintPGP"
-    else
+    check_host_keyring
+    fingerprintPGP=$(fingerprint_server_key)
+    gpg_authentication "--fingerprint --list-key --list-options show-unusable-uids $fingerprintPGP" 2>/dev/null
+    if [ $? -ne 0 ] ; then
 	log info "You must be root to see host OpenPGP fingerprint."
 	ret='1'
+    else
+	echo "OpenPGP fingerprint: $fingerprintPGP"
     fi
 
     if [ -f "${SYSDATADIR}/ssh_host_rsa_key.pub" ] ; then
@@ -1094,47 +1084,39 @@ shift
 
 case $COMMAND in
     'update-users'|'update-user'|'u')
-	check_user
 	check_host_keyring
 	update_users "$@"
 	;;
 
     'import-key'|'i')
-	check_user
 	import_key "$@"
 	;;
 
     'gen-key'|'g')
-	check_user
 	gen_key "$@"
 	;;
 
     'extend-key'|'e')
-	check_user
 	check_host_keyring
 	extend_key "$@"
 	;;
 
     'add-hostname'|'add-name'|'n+')
-	check_user
 	check_host_keyring
 	add_hostname "$@"
 	;;
 
     'revoke-hostname'|'revoke-name'|'n-')
-	check_user
 	check_host_keyring
 	revoke_hostname "$@"
 	;;
 
     'add-revoker'|'o')
-	check_user
 	check_host_keyring
 	add_revoker "$@"
 	;;
 
     'revoke-key'|'r')
-	check_user
 	check_host_keyring
 	revoke_key "$@"
 	;;
@@ -1144,36 +1126,30 @@ case $COMMAND in
 	;;
 
     'publish-key'|'publish'|'p')
-	check_user
 	check_host_keyring
 	publish_server_key
 	;;
 
     'diagnostics'|'d')
-	check_user
 	diagnostics
 	;;
 
     'add-identity-certifier'|'add-id-certifier'|'add-certifier'|'c+')
-	check_user
 	check_host_keyring
 	add_certifier "$@"
 	;;
 
     'remove-identity-certifier'|'remove-id-certifier'|'remove-certifier'|'c-')
-	check_user
 	check_host_keyring
 	remove_certifier "$@"
 	;;
 
     'list-identity-certifiers'|'list-id-certifiers'|'list-certifiers'|'list-certifier'|'c')
-	check_user
 	check_host_keyring
 	list_certifiers "$@"
 	;;
 
     'gpg-authentication-cmd')
-	check_user
 	gpg_authentication_cmd "$@"
 	;;
 
