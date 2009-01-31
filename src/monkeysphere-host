@@ -131,6 +131,35 @@ check_host_keyring() {
 	|| failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-server gen-key' first."
 }
 
+# show info about the host key
+show_key() {
+    local fingerprintPGP
+    local fingerprintSSH
+    local ret=0
+
+    # FIXME: you shouldn't have to be root to see the host key fingerprint
+    if is_root ; then
+	check_host_keyring
+	fingerprintPGP=$(fingerprint_server_key)
+	gpg_authentication "--fingerprint --list-key --list-options show-unusable-uids $fingerprintPGP" 2>/dev/null
+	echo "OpenPGP fingerprint: $fingerprintPGP"
+    else
+	log info "You must be root to see host OpenPGP fingerprint."
+	ret='1'
+    fi
+
+    if [ -f "${SYSDATADIR}/ssh_host_rsa_key.pub" ] ; then
+	fingerprintSSH=$(ssh-keygen -l -f "${SYSDATADIR}/ssh_host_rsa_key.pub" | \
+	    awk '{ print $1, $2, $4 }')
+	echo "ssh fingerprint: $fingerprintSSH"
+    else
+	log info "SSH host key not found."
+	ret='1'
+    fi
+
+return $ret
+}
+
 ########################################################################
 # MAIN
 ########################################################################

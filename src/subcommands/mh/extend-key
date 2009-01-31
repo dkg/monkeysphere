@@ -12,6 +12,8 @@
 
 # extend the lifetime of a host key:
 
+extend_key() {
+
 local fpr=$(fingerprint_server_key)
 local extendTo="$1"
 
@@ -27,3 +29,5 @@ EOF
 echo
 echo "NOTE: Host key expiration date adjusted, but not yet published."
 echo "Run '$PGRM publish-key' to publish the new expiration date."
+
+}

@@ -12,6 +12,8 @@
 
 # revoke hostname user ID from host key
 
+revoke_hostname() {
+
 local userID
 local fingerprint
 local tmpuidMatch
@@ -79,7 +81,7 @@ if echo "$revuidCommand" | \
     # update the trustdb for the authentication keyring
     gpg_authentication "--check-trustdb"
 
-    show_server_key
+    show_key
 
     echo
     echo "NOTE: User ID revoked, but revocation not published."
@@ -87,3 +89,5 @@ if echo "$revuidCommand" | \
 else
     failure "Problem revoking user ID."
 fi
+
+}
