@@ -1,0 +1,54 @@
+# -*-shell-script-*-
+# This should be sourced by bash (though we welcome changes to make it POSIX sh compliant)
+
+# Monkeysphere import-subkey subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@finestructure.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008-2009, and are all released under the GPL,
+# version 3 or later.
+
+# import an existing ssh key as a gpg subkey
+
+import_subkey() {
+    local keyFile="~/.ssh/id_rsa"
+    local keyExpire
+    local keyID
+    local gpgOut
+    local userID
+
+    # get options
+    while true ; do
+	case "$1" in
+	    -f|--keyfile)
+		keyFile="$2"
+		shift 2
+		;;
+	    -e|--expire)
+		keyExpire="$2"
+		shift 2
+		;;
+	    *)
+		if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
+		    failure "Unknown option '$1'.
+Type '$PGRM help' for usage."
+		fi
+		break
+		;;
+	esac
+    done
+
+    log verbose "importing ssh key..."
+    fifoDir=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+    (umask 077 && mkfifo "$fifoDir/pass")
+    ssh2openpgp | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
+
+    passphrase_prompt  "Please enter your passphrase for $keyID: " "$fifoDir/pass"
+
+    rm -rf "$fifoDir"
+    wait
+    log verbose "done."
+}
