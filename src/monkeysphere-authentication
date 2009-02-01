@@ -3,7 +3,7 @@
 # monkeysphere-authentication: Monkeysphere authentication admin tool
 #
 # The monkeysphere scripts are written by:
-# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jameson Rollins <jrollins@finestructure.net>
 # Jamie McClelland <jm@mayfirst.org>
 # Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #
@@ -11,18 +11,22 @@
 # or later.
 
 ########################################################################
+set -e
+
 PGRM=$(basename $0)
 
 SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
 export SYSSHAREDIR
 . "${SYSSHAREDIR}/common" || exit 1
 
-SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere/authentication"}
+# sharedir for authentication functions
+MASHAREDIR="${SYSSHAREDIR}/ma"
+
+SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
 export SYSDATADIR
 
-# monkeysphere temp directory, in sysdatadir to enable atomic moves of
-# authorized_keys files
-MSTMPDIR="${SYSDATADIR}/tmp"
+# temp directory to enable atomic moves of authorized_keys files
+MATMPDIR="${SYSDATADIR}/tmp"
 export MSTMPDIR
 
 # UTC date in ISO 8601 format if needed
@@ -75,11 +79,11 @@ su_monkeysphere_user() {
     fi
 }
 
-# function to interact with the host gnupg keyring
-gpg_host() {
+# function to interact with the gpg core keyring
+gpg_core() {
     local returnCode
 
-    GNUPGHOME="$GNUPGHOME_HOST"
+    GNUPGHOME="$GNUPGHOME_CORE"
     export GNUPGHOME
 
     # NOTE: we supress this warning because we need the monkeysphere
@@ -91,47 +95,21 @@ gpg_host() {
 
     # always reset the permissions on the host pubring so that the
     # monkeysphere user can read the trust signatures
-    chgrp "$MONKEYSPHERE_USER" "${GNUPGHOME_HOST}/pubring.gpg"
-    chmod g+r "${GNUPGHOME_HOST}/pubring.gpg"
+    chgrp "$MONKEYSPHERE_USER" "${GNUPGHOME_CORE}/pubring.gpg"
+    chmod g+r "${GNUPGHOME_CORE}/pubring.gpg"
     
     return "$returnCode"
 }
 
-# function to interact with the authentication gnupg keyring
+# function to interact with the gpg sphere keyring
 # FIXME: this function requires basically accepts only a single
 # argument because of problems with quote expansion.  this needs to be
 # fixed/improved.
-gpg_authentication() {
-    GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
+gpg_sphere() {
+    GNUPGHOME="$GNUPGHOME_SPHERE"
     export GNUPGHOME
 
     su_monkeysphere_user "gpg $@"
-}
-
-# check if user is root
-is_root() {
-    [ $(id -u 2>/dev/null) = '0' ]
-}
-
-# check that user is root, for functions that require root access
-check_user() {
-    is_root || failure "You must be root to run this command."
-}
-
-# output just key fingerprint
-fingerprint_server_key() {
-    # set the pipefail option so functions fails if can't read sec key
-    set -o pipefail
-
-    gpg_host --list-secret-keys --fingerprint \
-	--with-colons --fixed-list-mode 2> /dev/null | \
-	grep '^fpr:' | head -1 | cut -d: -f10 2>/dev/null
-}
-
-# function to check for host secret key
-check_host_keyring() {
-    fingerprint_server_key >/dev/null \
-	|| failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-server gen-key' first."
 }
 
 ########################################################################
@@ -145,7 +123,7 @@ unset RAW_AUTHORIZED_KEYS
 unset MONKEYSPHERE_USER
 
 # load configuration file
-[ -e ${MONKEYSPHERE_SERVER_CONFIG:="${SYSCONFIGDIR}/monkeysphere-server.conf"} ] && . "$MONKEYSPHERE_SERVER_CONFIG"
+[ -e ${MONKEYSPHERE_AUTHENTICATION_CONFIG:="${SYSCONFIGDIR}/monkeysphere-authentication.conf"} ] && . "$MONKEYSPHERE_AUTHENTICATION_CONFIG"
 
 # set empty config variable with ones from the environment, or with
 # defaults
@@ -158,19 +136,19 @@ MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkey
 # other variables
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
 REQUIRED_USER_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_USER_KEY_CAPABILITY:="a"}
-GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${SYSDATADIR}/gnupg-host"}
-GNUPGHOME_AUTHENTICATION=${MONKEYSPHERE_GNUPGHOME_AUTHENTICATION:="${SYSDATADIR}/gnupg-authentication"}
+GNUPGHOME_CORE=${MONKEYSPHERE_GNUPGHOME_CORE:="${SYSDATADIR}/authentication/core"}
+GNUPGHOME_SPHERE=${MONKEYSPHERE_GNUPGHOME_SPHERE:="${SYSDATADIR}/authentication/sphere"}
 
 # export variables needed in su invocation
 export DATE
 export MODE
-export MONKEYSPHERE_USER
 export LOG_LEVEL
+export MONKEYSPHERE_USER
 export KEYSERVER
 export CHECK_KEYSERVER
 export REQUIRED_USER_KEY_CAPABILITY
-export GNUPGHOME_HOST
-export GNUPGHOME_AUTHENTICATION
+export GNUPGHOME_CORE
+export GNUPGHOME_SPHERE
 export GNUPGHOME
 
 # get subcommand
@@ -180,40 +158,36 @@ shift
 
 case $COMMAND in
     'update-users'|'update-user'|'u')
-	check_user
-	check_host_keyring
+	source "${MASHAREDIR}/update_users"
 	update_users "$@"
 	;;
 
     'add-identity-certifier'|'add-id-certifier'|'add-certifier'|'c+')
-	check_user
-	check_host_keyring
+	source "${MASHAREDIR}/add_certifier"
 	add_certifier "$@"
 	;;
 
     'remove-identity-certifier'|'remove-id-certifier'|'remove-certifier'|'c-')
-	check_user
-	check_host_keyring
+	source "${MASHAREDIR}/remove_certifier"
 	remove_certifier "$@"
 	;;
 
     'list-identity-certifiers'|'list-id-certifiers'|'list-certifiers'|'list-certifier'|'c')
-	check_user
-	check_host_keyring
+	source "${MASHAREDIR}/list_certifiers"
 	list_certifiers "$@"
 	;;
 
     'expert'|'e')
-	check_user
 	SUBCOMMAND="$1"
 	shift
 	case "$SUBCOMMAND" in
 	    'diagnostics'|'d')
+		source "${MASHAREDIR}/diagnostics"
 		diagnostics
 		;;
 
 	    'gpg-cmd')
-		gpg_authentication "$@"
+		gpg_sphere "$@"
 		;;
 
 	    *)

@@ -12,6 +12,11 @@
 
 update_users() {
 
+local unames
+local uname
+local authorizedKeysDir
+local authorizedUserIDs
+
 if [ "$1" ] ; then
     # get users from command line
     unames="$@"
@@ -20,13 +25,16 @@ else
     unames=$(getent passwd | cut -d: -f1)
 fi
 
-RETCODE=0
+RETURN=0
 
 # set mode
 MODE="authorized_keys"
 
 # set gnupg home
-GNUPGHOME="$GNUPGHOME_AUTHENTICATION"
+GNUPGHOME="$GNUPGHOME_SPHERE"
+
+# the authorized_keys directory
+authorizedKeysDir="${SYSDATADIR}/authentication/authorized_keys"
 
 # check to see if the gpg trust database has been initialized
 if [ ! -s "${GNUPGHOME}/trustdb.gpg" ] ; then
@@ -34,7 +42,7 @@ if [ ! -s "${GNUPGHOME}/trustdb.gpg" ] ; then
 fi
 
 # make sure the authorized_keys directory exists
-mkdir -p "${SYSDATADIR}/authorized_keys"
+mkdir -p "${authorizedKeysDir}"
 
 # loop over users
 for uname in $unames ; do
@@ -47,7 +55,7 @@ for uname in $unames ; do
     log verbose "----- user: $uname -----"
 
     # make temporary directory
-    TMPLOC=$(mktemp -d ${MSTMPDIR}/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
+    TMPLOC=$(mktemp -d ${MATMPDIR}/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
 
     # trap to delete temporary directory on exit
     trap "rm -rf $TMPLOC" EXIT
@@ -127,15 +135,15 @@ for uname in $unames ; do
 	chown $(whoami) "$AUTHORIZED_KEYS" && \
 	    chgrp $(id -g "$uname") "$AUTHORIZED_KEYS" && \
 	    chmod g+r "$AUTHORIZED_KEYS" && \
-	    mv -f "$AUTHORIZED_KEYS" "${SYSDATADIR}/authorized_keys/${uname}" || \
+	    mv -f "$AUTHORIZED_KEYS" "${authorizedKeysDir}/${uname}" || \
 	    { 
 	    log error "Failed to install authorized_keys for '$uname'!"
-	    rm -f "${SYSDATADIR}/authorized_keys/${uname}"
+	    rm -f "${authorizedKeysDir}/${uname}"
 	    # indicate that there has been a failure:
 	    RETURN=1
 	}
     else
-	rm -f "${SYSDATADIR}/authorized_keys/${uname}"
+	rm -f "${authorizedKeysDir}/${uname}"
     fi
 
     # unset the trap
