@@ -178,9 +178,9 @@ cp etc/monkeysphere/monkeysphere-server.conf "$TEMPDIR"/monkeysphere-server.conf
 cat <<EOF >> "$TEMPDIR"/monkeysphere-server.conf
 AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authentication/authorized_user_ids"
 EOF
-cat <<EOF > "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication/gpg.conf
+cat <<EOF > "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
 primary-keyring ${MONKEYSPHERE_SYSDATADIR}/authentication/sphere/pubring.gpg
-keyring ${MONKEYSPHERE_SYSDATADIR}/host/pubring.gpg
+keyring ${MONKEYSPHERE_SYSDATADIR}/authentication/core/pubring.gpg
 EOF
 
 
