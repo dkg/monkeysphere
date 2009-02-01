@@ -47,9 +47,10 @@ clean:
 # this target is to be called from the tarball, not from the git
 # working dir!
 install: all installman
-	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/sbin $(DESTDIR)$(PREFIX)/share/monkeysphere/
-	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere/m $(DESTDIR)$(PREFIX)/share/doc/monkeysphere/mh $(DESTDIR)$(PREFIX)/share/doc/monkeysphere/ma
+	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/sbin
+	mkdir -p $(DESTDIR)$(PREFIX)/share/monkeysphere/m $(DESTDIR)$(PREFIX)/share/monkeysphere/mh $(DESTDIR)$(PREFIX)/share/monkeysphere/ma
 	mkdir -p $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
+	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
 	install src/monkeysphere src/keytrans/openpgp2ssh src/keytrans/pem2openpgp $(DESTDIR)$(PREFIX)/bin
 	install src/monkeysphere-host src/monkeysphere-authentication $(DESTDIR)$(PREFIX)/sbin
 	install -m 0644 src/common $(DESTDIR)$(PREFIX)/share/monkeysphere
