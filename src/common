@@ -1,4 +1,5 @@
 # -*-shell-script-*-
+# This should be sourced by bash (though we welcome changes to make it POSIX sh compliant)
 
 # Shared sh functions for the monkeysphere
 #
