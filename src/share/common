@@ -533,12 +533,6 @@ gpg_fetch_userid() {
 	--search ="$userID" > /dev/null 2>&1
     returnCode="$?"
 
-    # if the user is the monkeysphere user, then update the
-    # monkeysphere user's trustdb
-    if [ $(id -un) = "$MONKEYSPHERE_USER" ] ; then
-	gpg_authentication "--check-trustdb" > /dev/null 2>&1
-    fi
-
     return "$returnCode"
 }
 
