@@ -13,13 +13,13 @@
 
 setup() {
     # make the core and the sphere:
-    mkdir -p ${SYSDATADIR}/authentication
-    mkdir -p ${GNUPGHOME_SPHERE}
-    mkdir -p ${GNUPGHOME_CORE}
+    mkdir -p "${SYSDATADIR}"/authentication
+    mkdir -p "${GNUPGHOME_SPHERE}"
+    mkdir -p "${GNUPGHOME_CORE}"
 
     # deliberately replace the config files via truncation
     # FIXME: should we be dumping to tmp files and then moving atomically?
-    cat >${GNUPGHOME_CORE}/gpg.conf <<EOF
+    cat >"${GNUPGHOME_CORE}"/gpg.conf <<EOF
 # Monkeysphere trust core GnuPG configuration
 # This file is maintained by the Monkeysphere software.
 # Edits will be overwritten.
@@ -27,7 +27,7 @@ no-greeting
 list-options show-uid-validity
 EOF
     
-    cat >${GNUPGHOME_SPHERE}/gpg.conf <<EOF
+    cat >"${GNUPGHOME_SPHERE}"/gpg.conf <<EOF
 # Monkeysphere trust sphere GnuPG configuration
 # This file is maintained by the Monkeysphere software.
 # Edits will be overwritten.
@@ -38,6 +38,7 @@ keyring ${GNUPGHOME_CORE}/pubring.gpg
 list-options show-uid-validity
 EOF
 
+    # fingerprint of core key.  this should be empty on unconfigured systems.
     local CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
 
     if [ -z "$CORE_FPR" ] ; then
@@ -53,12 +54,8 @@ EOF
 	# date.
 	< "${TMPLOC}/authkey" pem2openpgp "$CORE_UID" | gpg --import || failure "Could not import new key for Monkeysphere authentication trust core"
 
-	then
-	    CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
-	    if [ -z "$CORE_FPR" ] ; then
-		failure "Failed to find fingerprint of Monkeysphere authentication trust core!"
-	    fi
-	else
+	CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
+	if [ -z "$CORE_FPR" ] ; then
 	    failure "Failed to create Monkeysphere authentication trust core!"
 	fi
 	
@@ -71,11 +68,11 @@ EOF
     printf "%s:6:\n" "$CORE_FPR" | gpg_sphere --import-ownertrust
     local ORIG_TRUST
     if ORIG_TRUST=$(gpg_sphere --export-ownertrust | grep '^[^#]') ; then
-	if [ "$CORE_FPR:6:" != "$ORIG_TRUST" ] ; then
+	if [ "${CORE_FPR}:6:" != "$ORIG_TRUST" ] ; then
 	    failure "Monkeysphere authentication trust sphere should explicitly trust the core.  It does not have proper ownertrust settings."
 	fi
     else
-	failure "Could not get monkeysphere-authentication trust guidleines."
+	failure "Could not get monkeysphere-authentication trust guidelines."
     fi
 
     # ensure that we're using the extended trust model (1), and that

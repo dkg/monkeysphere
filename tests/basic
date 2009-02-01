@@ -137,9 +137,11 @@ export SOCKET="$TEMPDIR"/ssh-socket
 # *anything* with any running X11 session.
 export DISPLAY=monkeys
 
+
 ### CONFIGURE ENVIRONMENTS
 
 # copy in admin and testuser home to tmp
+echo "##################################################"
 echo "### copying admin and testuser homes..."
 cp -a "$TESTDIR"/home/admin "$TEMPDIR"/
 cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
@@ -160,6 +162,7 @@ EOF
 get_gpg_prng_arg >> "$GNUPGHOME"/gpg.conf
 
 # set up sshd
+echo "##################################################"
 echo "### configuring sshd..."
 cp "$TESTDIR"/etc/ssh/sshd_config "$SSHD_CONFIG"
 # write the sshd_config
@@ -172,10 +175,12 @@ EOF
 ### SERVER HOST SETUP
 
 # set up monkeysphere host
+echo "##################################################"
 echo "### configuring monkeysphere host..."
 mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/host
 
 # create a new host key
+echo "##################################################"
 echo "### generating server host key..."
 # add gpg.conf with quick-random
 get_gpg_prng_arg >> "$MONKEYSPHERE_SYSCONFIGDIR"/host/gpg.conf
@@ -183,10 +188,13 @@ echo | monkeysphere-host expert gen-key --length 1024 --expire 0 testhost
 # remove the gpg.conf
 rm "$MONKEYSPHERE_SYSCONFIGDIR"/host/gpg.conf
 
+# FIXME: need to test import-key as well
+
 HOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
 
 # certify it with the "Admin's Key".
 # (this would normally be done via keyservers)
+echo "##################################################"
 echo "### certifying server host key..."
 GNUPGHOME="$MONKEYSPHERE_SYSCONFIGDIR"/host gpg --armor --export "$HOSTKEYID" | gpgadmin --import
 echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
@@ -194,10 +202,13 @@ echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 # FIXME: how can we test publish-key without flooding junk into the
 # keyservers?
 
+# FIXME: should we run "diagnostics" here to test setup?
 
-### SERVER AUTHENTICATION TESTS
+
+### SERVER AUTHENTICATION SETUP
 
 # set up monkeysphere authentication
+echo "##################################################"
 echo "### configuring monkeysphere authentication..."
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication/{authorized_keys,core,sphere,tmp}
 cp "$TESTDIR"/etc/monkeysphere/monkeysphere-authentication.conf "$TEMPDIR"/
@@ -206,65 +217,90 @@ AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authentication/authorized_user_ids"
 EOF
 
 # setup server authentication
+echo "##################################################"
 echo "### setting up server authentication..."
 monkeysphere-authentication setup
 get_gpg_prng_arg >> "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
 
 # add admin as identity certifier for testhost
+echo "##################################################"
 echo "### adding admin as certifier..."
 echo y | monkeysphere-authentication add-id-certifier "$TEMPDIR"/admin/.gnupg/pubkey.gpg
 
+# FIXME: should we run "diagnostics" here to test setup?
 
-### TESTUSER TESTS
+
+### TESTUSER SETUP
 
 # generate an auth subkey for the test user that expires in 2 days
+echo "##################################################"
 echo "### generating key for testuser..."
 monkeysphere gen-subkey --expire 2
 
 # add server key to testuser keychain
+echo "##################################################"
 echo "### export server key to testuser..."
 gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 
 # teach the "server" about the testuser's key
+echo "##################################################"
 echo "### export testuser key to server..."
 gpg --export testuser | monkeysphere-authentication gpg-cmd --import
+
+# update authorized_keys for user
+echo "##################################################"
 echo "### update server authorized_keys file for this testuser..."
 monkeysphere-authentication update-users $(whoami)
 
+
+### TESTS
+
 # connect to test sshd, using monkeysphere-ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
+echo "##################################################"
 echo "### ssh connection test for success..."
 ssh_test
 
 # remove the testuser's authorized_user_ids file, update, and make
 # sure that the ssh authentication FAILS
+echo "##################################################"
 echo "### removing testuser authorized_user_ids and updating..."
 mv "$TESTHOME"/.monkeysphere/authorized_user_ids{,.bak}
 monkeysphere-authentication update-users $(whoami)
+echo "##################################################"
 echo "### ssh connection test for server authentication denial..."
 ssh_test 255
 mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
 
 # put improper permissions on authorized_user_ids file, update, and
 # make sure ssh authentication FAILS
+echo "##################################################"
 echo "### setting group writability on authorized_user_ids and updating..."
 chmod g+w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
+echo "##################################################"
 echo "### ssh connection test for server authentication denial..."
 ssh_test 255
 chmod g-w "$TESTHOME"/.monkeysphere/authorized_user_ids
+echo "##################################################"
 echo "### setting other writability on authorized_user_ids and updating..."
 chmod o+w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
+echo "##################################################"
 echo "### ssh connection test for server authentication denial..."
 ssh_test 255
 chmod o-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 
+# FIXME: addtest: remove admin as id-certifier and check ssh failure
+
+# FIXME: addtest: revoke hostname on host key and check ssh failure
+
+# FIXME: addtest: revoke the host key and check ssh failure
 
 trap - EXIT
 
-echo
-echo "Monkeysphere basic tests completed successfully!"
-echo
+echo "##################################################"
+echo " Monkeysphere basic tests completed successfully!"
+echo "##################################################"
 
 cleanup
