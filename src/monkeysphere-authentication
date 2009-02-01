@@ -12,8 +12,6 @@
 # version 3 or later.
 
 ########################################################################
-set -e
-
 PGRM=$(basename $0)
 
 SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
@@ -57,9 +55,8 @@ subcommands:
  remove-id-certifier (c-) KEYID      remove a certification key
  list-id-certifiers (c)              list certification keys
 
- expert
-  diagnostics (d)                    monkeysphere authentication status
-  gpg-cmd CMD                        execute gpg command
+ expert <expert-subcommand>          run expert command
+ expert help                         expert command help
 
  version (v)                         show version number
  help (h,?)                          this help
@@ -182,6 +179,17 @@ case $COMMAND in
 	SUBCOMMAND="$1"
 	shift
 	case "$SUBCOMMAND" in
+	    'help'|'h'|'?')
+		cat <<EOF
+usage: $PGRM expert <subcommand> [options] [args]
+
+expert subcommands:
+ diagnostics (d)                     monkeysphere authentication status
+ gpg-cmd CMD                         execute gpg command
+
+EOF
+		;;
+
 	    'diagnostics'|'d')
 		source "${MASHAREDIR}/diagnostics"
 		diagnostics

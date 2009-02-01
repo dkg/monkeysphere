@@ -173,6 +173,7 @@ echo "### configuring monkeysphere..."
 mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/host
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication/authorized_keys
+mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/tmp
 cp etc/monkeysphere/monkeysphere-server.conf "$TEMPDIR"/monkeysphere-server.conf
 cat <<EOF >> "$TEMPDIR"/monkeysphere-server.conf
@@ -189,10 +190,10 @@ EOF
 # create a new host key
 echo "### generating server key..."
 # add gpg.conf with quick-random
-get_gpg_prng_arg >> "$MONKEYSPHERE_SYSCONFIGDIR"/gnupg-host/gpg.conf
+get_gpg_prng_arg >> "$MONKEYSPHERE_SYSCONFIGDIR"/host/gpg.conf
 echo | monkeysphere-host expert gen-key --length 1024 --expire 0 testhost
 # remove the gpg.conf
-rm "$MONKEYSPHERE_SYSCONFIGDIR"/gnupg-host/gpg.conf
+rm "$MONKEYSPHERE_SYSCONFIGDIR"/host/gpg.conf
 
 HOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
 

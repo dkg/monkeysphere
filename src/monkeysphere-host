@@ -3,12 +3,13 @@
 # monkeysphere-host: Monkeysphere host admin tool
 #
 # The monkeysphere scripts are written by:
-# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jameson Rollins <jrollins@finestructure.net>
 # Jamie McClelland <jm@mayfirst.org>
 # Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Micah Anderson <micah@riseup.net>
 #
-# They are Copyright 2008, and are all released under the GPL, version 3
-# or later.
+# They are Copyright 2008-2009, and are all released under the GPL,
+# version 3 or later.
 
 ########################################################################
 PGRM=$(basename $0)
@@ -50,14 +51,8 @@ subcommands:
  revoke-key (r)                      revoke host key
  publish-key (p)                     publish server host key to keyserver
 
- expert
-  import-key (i) [NAME[:PORT]]       import existing ssh key to gpg
-   --keyfile (-f) FILE                 key file to import
-   --expire (-e) EXPIRE                date to expire
-  gen-key (g) [NAME[:PORT]]          generate gpg key for the host
-   --length (-l) BITS                  key length in bits (2048)
-   --expire (-e) EXPIRE                date to expire
-  diagnostics (d)                    monkeysphere host status
+ expert <expert-subcommand>          run expert command
+ expert help                         expert command help
 
  version (v)                         show version number
  help (h,?)                          this help
@@ -146,7 +141,7 @@ unset KEYSERVER
 unset MONKEYSPHERE_USER
 
 # load configuration file
-[ -e ${MONKEYSPHERE_HOST_CONFIG:="${SYSCONFIGDIR}/monkeysphere-host.conf"} ] && . "$MONKEYSPHERE_SERVER_CONFIG"
+[ -e ${MONKEYSPHERE_HOST_CONFIG:="${SYSCONFIGDIR}/monkeysphere-host.conf"} ] && . "$MONKEYSPHERE_HOST_CONFIG"
 
 # set empty config variable with ones from the environment, or with
 # defaults
@@ -220,6 +215,22 @@ case $COMMAND in
 	SUBCOMMAND="$1"
 	shift
 	case "$SUBCOMMAND" in
+	    'help'|'h'|'?')
+		cat <<EOF
+usage: $PGRM expert <subcommand> [options] [args]
+
+expert subcommands:
+ import-key (i) [NAME[:PORT]]        import existing ssh key to gpg
+   --keyfile (-f) FILE                 key file to import
+   --expire (-e) EXPIRE                date to expire
+ gen-key (g) [NAME[:PORT]]           generate gpg key for the host
+   --length (-l) BITS                  key length in bits (2048)
+   --expire (-e) EXPIRE                date to expire
+ diagnostics (d)                     monkeysphere host status
+
+EOF
+		;;
+
 	    'import-key'|'i')
 		source "${MHSHAREDIR}/import_key"
 		import_key "$@"

@@ -15,27 +15,10 @@
 # established.  Can be added to ~/.ssh/config as follows:
 #  ProxyCommand monkeysphere-ssh-proxycommand %h %p
 
-########################################################################
-PGRM=$(basename $0)
+ssh_proxycommand() {
 
-SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
-export SYSSHAREDIR
-. "${SYSSHAREDIR}/common" || exit 1
-
-########################################################################
-# FUNCTIONS
-########################################################################
-
-usage() {
-    cat <<EOF >&2
-usage: ssh -o ProxyCommand="$(basename $0) %h %p" ...
-EOF
-}
-
-log() {
-    echo "$@" >&2
-}
-
+# "marginal case" ouput in the case that there is not a full
+# validation path to the host
 output_no_valid_key() {
     local sshKeyOffered
     local userID
@@ -250,3 +233,5 @@ if [ -z "$NO_CONNECT" ] ; then
 	exit 255
     fi
 fi
+
+}

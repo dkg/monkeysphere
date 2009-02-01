@@ -44,7 +44,8 @@ For more details, see:
 	failure "Could not connect to ssh-agent"
     fi
     
-    # get list of secret keys (to work around https://bugs.g10code.com/gnupg/issue945):
+    # get list of secret keys (to work around bug
+    # https://bugs.g10code.com/gnupg/issue945):
     secretkeys=$(gpg --list-secret-keys --with-colons --fixed-list-mode --fingerprint | \
 	grep '^fpr:' | cut -f10 -d: | awk '{ print "0x" $1 "!" }')
 
