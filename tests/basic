@@ -23,6 +23,9 @@ which socat >/dev/null || { echo "You must have socat installed to run this test
 
 ## FIXME: other checks?
 
+######################################################################
+### FUNCTIONS
+
 # gpg command for test admin user
 gpgadmin() {
     GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg "$@"
@@ -103,7 +106,9 @@ SSHD_PID=
 trap failed_cleanup EXIT
 
 
+######################################################################
 ### SETUP VARIABLES
+
 ## set up some variables to ensure that we're operating strictly in
 ## the tests, not system-wide:
 
@@ -138,6 +143,7 @@ export SOCKET="$TEMPDIR"/ssh-socket
 export DISPLAY=monkeys
 
 
+######################################################################
 ### CONFIGURE ENVIRONMENTS
 
 # copy in admin and testuser home to tmp
@@ -172,6 +178,7 @@ AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authentication/authorized_keys/%u
 EOF
 
 
+######################################################################
 ### SERVER HOST SETUP
 
 # set up monkeysphere host
@@ -199,12 +206,15 @@ echo "### certifying server host key..."
 GNUPGHOME="$MONKEYSPHERE_SYSCONFIGDIR"/host gpg --armor --export "$HOSTKEYID" | gpgadmin --import
 echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 
+# FIXME: add revoker?
+
 # FIXME: how can we test publish-key without flooding junk into the
 # keyservers?
 
 # FIXME: should we run "diagnostics" here to test setup?
 
 
+######################################################################
 ### SERVER AUTHENTICATION SETUP
 
 # set up monkeysphere authentication
@@ -226,6 +236,7 @@ echo y | monkeysphere-authentication add-id-certifier "$TEMPDIR"/admin/.gnupg/pu
 # FIXME: should we run "diagnostics" here to test setup?
 
 
+######################################################################
 ### TESTUSER SETUP
 
 # generate an auth subkey for the test user that expires in 2 days
@@ -249,6 +260,7 @@ echo "### update server authorized_keys file for this testuser..."
 monkeysphere-authentication update-users $(whoami)
 
 
+######################################################################
 ### TESTS
 
 # connect to test sshd, using monkeysphere-ssh-proxycommand to verify
@@ -292,6 +304,9 @@ chmod o-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 # FIXME: addtest: revoke hostname on host key and check ssh failure
 
 # FIXME: addtest: revoke the host key and check ssh failure
+
+
+######################################################################
 
 trap - EXIT
 

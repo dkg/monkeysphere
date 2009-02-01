@@ -23,6 +23,10 @@ connection authentication.
 
 \fBmonkeysphere-host\fP takes various subcommands:
 .TP
+.B show-key
+Output information about host's OpenPGP and SSH keys.  `s' may be used
+in place of `show-key'.
+.TP
 .B extend-key EXPIRE
 Extend the validity of the OpenPGP key for the host until EXPIRE from
 the present.  If EXPIRE is not specified, then the user will be
@@ -36,7 +40,6 @@ does:
       <n>y = key expires in n years
 .fi
 `e' may be used in place of `extend-key'.
-
 .TP
 .B add-hostname HOSTNAME
 Add a hostname user ID to the server host key.  `n+' may be used in
@@ -47,11 +50,12 @@ Revoke a hostname user ID from the server host key.  `n-' may be used
 in place of `revoke-hostname'.
 .TP
 .B add-revoker FINGERPRINT
-
+Add a revoker to the host's OpenPGP key.  `o' may be be used in place
+of `add-revoker'.
 .TP
-.B show-key
-Output gpg information about host's OpenPGP key.  `s' may be used in
-place of `show-key'.
+.B revoke-key
+Revoke the host's OpenPGP key.  `r' may be used in place of
+`revoke-key'.
 .TP
 .B publish-key
 Publish the host's OpenPGP key to the keyserver.  `p' may be used in
@@ -63,9 +67,11 @@ Output a brief usage summary.  `h' or `?' may be used in place of
 .TP
 .B version
 show version number
+
 .SH "EXPERT" SUBCOMMANDS
+
 Some commands are very unlikely to be needed by most administrators.
-These commands must follow the word `expert'.
+These commands must prefaced by the word `expert'.
 .TP
 .B gen-key [HOSTNAME]
 Generate a OpenPGP key for the host.  If HOSTNAME is not specified,
@@ -73,18 +79,8 @@ then the system fully-qualified domain name will be user.  An
 alternate key bit length can be specified with the `-l' or `--length'
 option (default 2048).  An expiration length can be specified with the
 `-e' or `--expire' option (prompt otherwise).  The expiration format
-is the same as that of \fBextend-key\fP, below.  A key revoker
-fingerprint can be specified with the `-r' or `--revoker' option.  `g'
-may be used in place of `gen-key'.
-
-.TP
-.B diagnostics
-Review the state of the server with respect to the MonkeySphere in
-general and report on suggested changes.  Among other checks, this
-includes making sure there is a valid host key, that the key is
-published, that the sshd configuration points to the right place, and
-that there are at least some valid identity certifiers.  `d' may be
-used in place of `diagnostics'.
+is the same as that of \fBextend-key\fP, below.  `g' may be used in
+place of `gen-key'.
 .TP
 .B import-key
 FIXME:
@@ -92,53 +88,63 @@ FIXME:
    --hostname (-h) NAME[:PORT]         hostname for key user ID
    --keyfile (-f) FILE                 key file to import
    --expire (-e) EXPIRE                date to expire
+.TP
+.B diagnostics
+Review the state of the monkeysphere server host key and report on
+suggested changes.  Among other checks, this includes making sure
+there is a valid host key, that the key is published, that the sshd
+configuration points to the right place, etc.  `d' may be used in
+place of `diagnostics'.
 
-.SH SETUP
+.SH SETUP HOST AUTHENTICATION
 
-In order to start using the monkeysphere, you must first generate an
-OpenPGP key for the server and convert that key to an ssh key that can
-be used by ssh for host authentication.  This can be done with the
-\fBgen-key\fP subcommand:
+To enable host verification via the monkeysphere, the host's key must
+be published to the Web of Trust.  This is not done by default.  To
+publish the host key to the keyservers, run the following command:
 
-$ monkeysphere-server gen-key
+$ monkeysphere-host publish-key
 
-To enable host verification via the monkeysphere, you must then
-publish the host's key to the Web of Trust using the \fBpublish-key\fP
-command to push the key to a keyserver.  You must also modify the
-sshd_config on the server to tell sshd where the new server host key
-is located:
+You must also modify the sshd_config on the server to tell sshd where
+the new server host key is located:
 
-HostKey /var/lib/monkeysphere/ssh_host_rsa_key
+HostKey /var/lib/monkeysphere/host/ssh_host_rsa_key
 
 In order for users logging into the system to be able to identify the
 host via the monkeysphere, at least one person (e.g. a server admin)
 will need to sign the host's key.  This is done using standard OpenPGP
-keysigning techniques, usually: pul the key from the keyserver, verify
-and sign the key, and then re-publish the signature.  Once an admin's
-signature is published, users logging into the host can use it to
-validate the host's key.
+keysigning techniques, usually: pull the key from the keyserver,
+verify and sign the key, and then re-publish the signature.  Once an
+admin's signature is published, users logging into the host can use it
+to validate the host's key.
 
+.SH ENVIRONMENT
+
+The following environment variables will override those specified in
+the config file (defaults in parentheses):
 .TP
 MONKEYSPHERE_LOG_LEVEL
 Set the log level (INFO).  Can be SILENT, ERROR, INFO, VERBOSE, DEBUG, in
 increasing order of verbosity.
 .TP
 MONKEYSPHERE_KEYSERVER
-OpenPGP keyserver to use (subkeys.pgp.net).
+OpenPGP keyserver to use (pool.sks-keyservers.net).
 
 .SH FILES
+
 .TP
 /etc/monkeysphere/monkeysphere-host.conf
 System monkeysphere-host config file.
 .TP
-/var/lib/monkeysphere/ssh_host_rsa_key
+/var/lib/monkeysphere/host/ssh_host_rsa_key
 Copy of the host's private key in ssh format, suitable for use by
 sshd.
 
 .SH AUTHOR
 
-Written by Jameson Rollins <jrollins@fifthhorseman.net>, Daniel Kahn
-Gillmor <dkg@fifthhorseman.net>
+Written by:
+Jameson Rollins <jrollins@fifthhorseman.net>,
+Daniel Kahn Gillmor <dkg@fifthhorseman.net>,
+Matthew Goins <mjgoins@openflows.com>
 
 .SH SEE ALSO
 
