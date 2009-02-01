@@ -47,6 +47,7 @@ usage: $PGRM <subcommand> [options] [args]
 Monkeysphere authentication admin tool.
 
 subcommands:
+ setup (s)                           setup monkeysphere user authentication
  update-users (u) [USER]...          update user authorized_keys files
  add-id-certifier (c+) KEYID         import and tsign a certification key
    --domain (-n) DOMAIN                limit ID certifications to DOMAIN
@@ -155,6 +156,11 @@ COMMAND="$1"
 shift
 
 case $COMMAND in
+    'setup'|'setup'|'s')
+	source "${MASHAREDIR}/setup"
+	setup "$@"
+	;;
+
     'update-users'|'update-user'|'u')
 	source "${MASHAREDIR}/update_users"
 	update_users "$@"
