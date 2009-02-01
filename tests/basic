@@ -19,7 +19,7 @@ set -o pipefail
 
 ## make sure that the right tools are installed to run the test.  the
 ## test has *more* requirements than plain ol' monkeysphere:
-which socat || { echo "You must have socat installed to run this test." ; exit 1; }
+which socat >/dev/null || { echo "You must have socat installed to run this test." ; exit 1; }
 
 ## FIXME: other checks?
 
@@ -107,7 +107,7 @@ trap failed_cleanup EXIT
 ## set up some variables to ensure that we're operating strictly in
 ## the tests, not system-wide:
 
-export TESTDIR=$(pwd)
+export TESTDIR=$(dirname "$0")
 
 # make temp dir
 TEMPDIR="$TESTDIR"/tmp
@@ -161,34 +161,22 @@ get_gpg_prng_arg >> "$GNUPGHOME"/gpg.conf
 
 # set up sshd
 echo "### configuring sshd..."
-cp etc/ssh/sshd_config "$SSHD_CONFIG"
+cp "$TESTDIR"/etc/ssh/sshd_config "$SSHD_CONFIG"
 # write the sshd_config
 cat <<EOF >> "$SSHD_CONFIG"
 HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
 AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authentication/authorized_keys/%u
 EOF
 
+
+### SERVER HOST SETUP
+
 # set up monkeysphere host
 echo "### configuring monkeysphere host..."
 mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/host
 
-# set up monkeysphere authentication
-echo "### configuring monkeysphere authentication..."
-mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication/{authorized_keys,core,sphere,tmp}
-cp etc/monkeysphere/monkeysphere-authentication.conf "$TEMPDIR"/
-cat <<EOF >> "$TEMPDIR"/monkeysphere-authentication.conf
-AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authentication/authorized_user_ids"
-EOF
-cat <<EOF > "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
-primary-keyring ${MONKEYSPHERE_SYSDATADIR}/authentication/sphere/pubring.gpg
-keyring ${MONKEYSPHERE_SYSDATADIR}/authentication/core/pubring.gpg
-EOF
-
-
-### SERVER TESTS
-
 # create a new host key
-echo "### generating server key..."
+echo "### generating server host key..."
 # add gpg.conf with quick-random
 get_gpg_prng_arg >> "$MONKEYSPHERE_SYSCONFIGDIR"/host/gpg.conf
 echo | monkeysphere-host expert gen-key --length 1024 --expire 0 testhost
@@ -199,12 +187,31 @@ HOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f
 
 # certify it with the "Admin's Key".
 # (this would normally be done via keyservers)
-echo "### certifying server key..."
-monkeysphere-authentication expert gpg-cmd "--armor --export $HOSTKEYID" | gpgadmin --import
+echo "### certifying server host key..."
+GNUPGHOME="$MONKEYSPHERE_SYSCONFIGDIR"/host gpg --armor --export "$HOSTKEYID" | gpgadmin --import
 echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 
 # FIXME: how can we test publish-key without flooding junk into the
 # keyservers?
+
+
+### SERVER AUTHENTICATION TESTS
+
+# set up monkeysphere authentication
+echo "### configuring monkeysphere authentication..."
+mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication/{authorized_keys,core,sphere,tmp}
+cp "$TESTDIR"/etc/monkeysphere/monkeysphere-authentication.conf "$TEMPDIR"/
+cat <<EOF >> "$TEMPDIR"/monkeysphere-authentication.conf
+AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authentication/authorized_user_ids"
+EOF
+cat <<EOF > "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
+primary-keyring ${MONKEYSPHERE_SYSDATADIR}/authentication/sphere/pubring.gpg
+keyring ${MONKEYSPHERE_SYSDATADIR}/authentication/core/pubring.gpg
+EOF
+
+# setup server authentication
+echo "### setting up server authentication..."
+monkeysphere-authentication setup
 
 # add admin as identity certifier for testhost
 echo "### adding admin as certifier..."
