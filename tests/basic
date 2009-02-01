@@ -123,7 +123,7 @@ export PATH="$TESTDIR"/../src:"$TESTDIR"/../src/keytrans:"$PATH"
 
 export MONKEYSPHERE_SYSDATADIR="$TEMPDIR"
 export MONKEYSPHERE_SYSCONFIGDIR="$TEMPDIR"
-export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src
+export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src/share
 export MONKEYSPHERE_MONKEYSPHERE_USER=$(whoami)
 export MONKEYSPHERE_CHECK_KEYSERVER=false
 export MONKEYSPHERE_LOG_LEVEL=DEBUG
@@ -168,15 +168,15 @@ HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
 AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authentication/authorized_keys/%u
 EOF
 
-# set up monkeysphere-server
-echo "### configuring monkeysphere..."
+# set up monkeysphere host
+echo "### configuring monkeysphere host..."
 mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/host
-mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication
-mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication/authorized_keys
-mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere
-mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/tmp
-cp etc/monkeysphere/monkeysphere-server.conf "$TEMPDIR"/monkeysphere-server.conf
-cat <<EOF >> "$TEMPDIR"/monkeysphere-server.conf
+
+# set up monkeysphere authentication
+echo "### configuring monkeysphere authentication..."
+mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication/{authorized_keys,core,sphere,tmp}
+cp etc/monkeysphere/monkeysphere-authentication.conf "$TEMPDIR"/
+cat <<EOF >> "$TEMPDIR"/monkeysphere-authentication.conf
 AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authentication/authorized_user_ids"
 EOF
 cat <<EOF > "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf

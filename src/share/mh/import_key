@@ -77,10 +77,9 @@ fingerprint=$(fingerprint_server_key)
 # export host ownertrust to authentication keyring
 log verbose "setting ultimate owner trust for host key..."
 echo "${fingerprint}:6:" | gpg_host "--import-ownertrust"
-echo "${fingerprint}:6:" | gpg_authentication "--import-ownertrust"
 
 # export public key to file
-gpg_authentication "--export-options export-minimal --armor --export 0x${fingerprint}\!" > "${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
+gpg_host "--export-options export-minimal --armor --export 0x${fingerprint}\!" > "${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
 log info "SSH host public key in OpenPGP form: ${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
 
 # show info about new key
