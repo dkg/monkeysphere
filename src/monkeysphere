@@ -167,12 +167,12 @@ case $COMMAND in
 	;;
 
     'import-subkey'|'i')
-	source "${MSHAREDIR}/import-key"
-	import_key "$@"
+	source "${MSHAREDIR}/import_subkey"
+	import_subkey "$@"
 	;;
 
     'gen-subkey'|'g')
-	source "${MSHAREDIR}/import_key"
+	source "${MSHAREDIR}/gen_subkey"
 	gen_subkey "$@"
 	;;
 
@@ -182,6 +182,7 @@ case $COMMAND in
 	;;
 
     'subkey-to-ssh-agent'|'s')
+	source "${MSHAREDIR}/subkey_to_ssh_agent"
 	subkey_to_ssh_agent "$@"
 	;;
 
