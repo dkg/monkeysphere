@@ -34,8 +34,10 @@ output_no_valid_key() {
 
     userID="ssh://${HOSTP}"
 
-    log "-------------------- Monkeysphere warning -------------------"
-    log "Monkeysphere found OpenPGP keys for this hostname, but none had full validity."
+    cat <<EOF | log info
+-------------------- Monkeysphere warning -------------------
+Monkeysphere found OpenPGP keys for this hostname, but none had full validity.
+EOF
 
     # retrieve the actual ssh key
     sshKeyOffered=$(ssh-keyscan -t rsa -p "$PORT" "$HOST" 2>/dev/null | awk '{ print $2, $3 }')
@@ -59,8 +61,10 @@ output_no_valid_key() {
 		# if one of keys found matches the one offered by the
 		# host, then output info
 		if [ "$sshKeyGPG" = "$sshKeyOffered" ] ; then
-		    log "An OpenPGP key matching the ssh key offered by the host was found:"
-		    log
+		    cat <<EOF | log info
+An OpenPGP key matching the ssh key offered by the host was found:
+
+EOF
 
 		    # do some crazy "Here Strings" redirection to get the key to
 		    # ssh-keygen, since it doesn't read from stdin cleanly
@@ -82,18 +86,23 @@ if (match($0,"^uid")) { ok=0; }
 if (match($0,"^uid.*'$userID'$")) { ok=1; print; }
 if (ok) { if (match($0,"^sig")) { print; } }
 }
-' >&2
-		    log
+' | log info
+		    echo | log info
 
 		    # output the other user IDs for reference
 		    if (echo "$gpgSigOut" | grep "^uid" | grep -v -q "$userID") ; then
-			log "Other user IDs on this key:"
-			echo "$gpgSigOut" | grep "^uid" | grep -v "$userID" >&2
-			log
+			cat <<EOF | log info
+Other user IDs on this key:
+
+EOF
+			echo "$gpgSigOut" | grep "^uid" | grep -v "$userID" | log info
+			echo | log info
 		    fi
 
 		    # output ssh fingerprint
-		    log "RSA key fingerprint is ${sshFingerprint}."
+		    cat <<EOF | log info
+RSA key fingerprint is ${sshFingerprint}.
+EOF
 
 		    # this whole process is in a "while read"
 		    # subshell.  the only way to get information out
@@ -110,16 +119,21 @@ if (ok) { if (match($0,"^sig")) { print; } }
     # if no key match was made (and the "while read" subshell returned
     # 1) output how many keys were found
     if (($? != 1)) ; then
-	log "None of the found keys matched the key offered by the host."
-	log "Run the following command for more info about the found keys:"
-	log "gpg --check-sigs --list-options show-uid-validity =${userID}"
+	cat <<EOF | log info
+None of the found keys matched the key offered by the host.
+Run the following command for more info about the found keys:
+gpg --check-sigs --list-options show-uid-validity =${userID}
+EOF
+
 	# FIXME: should we do anything extra here if the retrieved
 	# host key is actually in the known_hosts file and the ssh
 	# connection will succeed?  Should the user be warned?
 	# prompted?
     fi
 
-    log "-------------------- ssh continues below --------------------"
+    cat <<EOF | log info
+-------------------- ssh continues below --------------------
+EOF
 }
 
 ########################################################################
@@ -136,7 +150,7 @@ HOST="$1"
 PORT="$2"
 
 if [ -z "$HOST" ] ; then
-    log "Host not specified."
+    log error "Host not specified."
     usage
     exit 255
 fi
