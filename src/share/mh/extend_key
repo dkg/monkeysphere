@@ -15,7 +15,7 @@
 
 extend_key() {
 
-local fpr=$(fingerprint_server_key)
+local fpr=$(fingerprint_host_key)
 local extendTo="$1"
 
 # get the new expiration date

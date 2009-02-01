@@ -50,7 +50,7 @@ fi
 echo "Checking host GPG key..."
 if (( "$keysfound" < 1 )); then
     echo "! No host key found."
-    echo " - Recommendation: run 'monkeysphere-server gen-key'"
+    echo " - Recommendation: run 'monkeysphere-host gen-key' or 'monkeysphere-host import-key'"
     problemsfound=$(($problemsfound+1))
 elif (( "$keysfound" > 1 )); then
     echo "! More than one host key found?"
@@ -64,11 +64,11 @@ else
     if [ "$expire" ]; then
 	if (( "$expire"  < "$curdate" )); then
 	    echo "! Host key is expired."
-	    echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
+	    echo " - Recommendation: extend lifetime of key with 'monkeysphere-host extend-key'"
 	    problemsfound=$(($problemsfound+1))
 	elif (( "$expire" < "$warndate" )); then
 	    echo "! Host key expires in less than $warnwindow:" $(advance_date $(( $expire - $curdate )) seconds +%F)
-	    echo " - Recommendation: extend lifetime of key with 'monkeysphere-server extend-key'"
+	    echo " - Recommendation: extend lifetime of key with 'monkeysphere-host extend-key'"
 	    problemsfound=$(($problemsfound+1))
 	fi
     fi
@@ -97,7 +97,7 @@ else
 		# FIXME: recommend a way to resolve this
 		problemsfound=$(($problemsfound+1))
 	    elif (( "$expire" < "$warndate" )); then
-		echo "! User ID '$uid' expires in less than $warnwindow:" $(advance_date $(( $expire - $curdate )) seconds +%F)		
+		echo "! User ID '$uid' expires in less than $warnwindow:" $(advance_date $(( $expire - $curdate )) seconds +%F)
 		# FIXME: recommend a way to resolve this
 		problemsfound=$(($problemsfound+1))
 	    fi
@@ -149,35 +149,10 @@ fi
 #    directories housing them, etc (what should those values be?  can
 #    we make them as minimal as possible?)
 
-# FIXME: look to see that the ownertrust rules are set properly on the
-#    authentication keyring
-
-# FIXME: make sure that at least one identity certifier exists
-
-# FIXME: look at the timestamps on the monkeysphere-generated
-# authorized_keys files -- warn if they seem out-of-date.
-
-# FIXME: check for a cronjob that updates monkeysphere-generated
-# authorized_keys?
-
-echo
-echo "Checking for MonkeySphere-enabled public-key authentication for users ..."
-# Ensure that User ID authentication is enabled:
-if ! grep -q "^AuthorizedKeysFile[[:space:]]\+${SYSDATADIR}/authorized_keys/%u$" "$sshd_config"; then
-    echo "! $sshd_config does not point to monkeysphere authorized keys."
-    echo " - Recommendation: add a line to $sshd_config: 'AuthorizedKeysFile ${SYSDATADIR}/authorized_keys/%u'"
-    problemsfound=$(($problemsfound+1))
-fi
-if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' "$sshd_config" | grep -v "^AuthorizedKeysFile[[:space:]]\+${SYSDATADIR}/authorized_keys/%u$") ; then
-    echo "! $sshd_config refers to non-monkeysphere authorized_keys files:"
-    echo "$badauthorizedkeys"
-    echo " - Recommendation: remove the above AuthorizedKeysFile lines from $sshd_config"
-    problemsfound=$(($problemsfound+1))
-fi
 
 if [ "$problemsfound" -gt 0 ]; then
     echo "When the above $problemsfound issue"$(if [ "$problemsfound" -eq 1 ] ; then echo " is" ; else echo "s are" ; fi)" resolved, please re-run:"
-    echo "  monkeysphere-server diagnostics"
+    echo "  monkeysphere-host expert diagnostics"
 else
     echo "Everything seems to be in order!"
 fi

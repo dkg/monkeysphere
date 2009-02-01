@@ -27,7 +27,7 @@ fi
 
 userID="ssh://${1}"
 
-fingerprint=$(fingerprint_server_key)
+fingerprint=$(fingerprint_host_key)
 
 # match to only ultimately trusted user IDs
 tmpuidMatch="u:$(echo $userID | gpg_escape)"

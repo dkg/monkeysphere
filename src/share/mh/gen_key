@@ -24,7 +24,7 @@ local fingerprint
 
 # check for presense of secret key
 # FIXME: is this the proper test to be doing here?
-fingerprint_server_key >/dev/null \
+fingerprint_host_key >/dev/null \
 	&& failure "An OpenPGP host key already exists."
 
 # get options
@@ -83,7 +83,7 @@ log verbose "generating host key..."
 echo "$keyParameters" | gpg_host --batch --gen-key
 
 # find the key fingerprint of the newly generated key
-fingerprint=$(fingerprint_server_key)
+fingerprint=$(fingerprint_host_key)
 
 # translate the private key to ssh format, and export to a file
 # for sshs usage.
