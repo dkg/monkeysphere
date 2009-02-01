@@ -43,11 +43,11 @@ EOF
     if [ -z "$CORE_FPR" ] ; then
 	log info "Setting up Monkeysphere authentication trust core"
 
-	local CORE_UID=$(printf "Monkeysphere authentication trust core UID (random string: %s)" $(head -c21 | base64))
+	local CORE_UID=$(printf "Monkeysphere authentication trust core UID (random string: %s)" $(head -c21 </dev/urandom | base64))
     
 	if gpg_core --gen-key --batch <<EOF
 Key-Type: RSA
-Key-Length: 4096
+Key-Length: 2048
 Key-Usage: certify
 Name-Real: $CORE_UID
 

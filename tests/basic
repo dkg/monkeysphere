@@ -204,14 +204,11 @@ cp "$TESTDIR"/etc/monkeysphere/monkeysphere-authentication.conf "$TEMPDIR"/
 cat <<EOF >> "$TEMPDIR"/monkeysphere-authentication.conf
 AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authentication/authorized_user_ids"
 EOF
-cat <<EOF > "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
-primary-keyring ${MONKEYSPHERE_SYSDATADIR}/authentication/sphere/pubring.gpg
-keyring ${MONKEYSPHERE_SYSDATADIR}/authentication/core/pubring.gpg
-EOF
 
 # setup server authentication
 echo "### setting up server authentication..."
 monkeysphere-authentication setup
+get_gpg_prng_arg >> "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
 
 # add admin as identity certifier for testhost
 echo "### adding admin as certifier..."
