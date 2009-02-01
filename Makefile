@@ -53,10 +53,10 @@ install: all installman
 	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
 	install src/monkeysphere src/keytrans/openpgp2ssh src/keytrans/pem2openpgp $(DESTDIR)$(PREFIX)/bin
 	install src/monkeysphere-host src/monkeysphere-authentication $(DESTDIR)$(PREFIX)/sbin
-	install -m 0644 src/common $(DESTDIR)$(PREFIX)/share/monkeysphere
-	install -m 0644 src/subcommands/m/* $(DESTDIR)$(PREFIX)/share/monkeysphere/m
-	install -m 0644 src/subcommands/mh/* $(DESTDIR)$(PREFIX)/share/monkeysphere/mh
-	install -m 0644 src/subcommands/ma/* $(DESTDIR)$(PREFIX)/share/monkeysphere/ma
+	install -m 0644 src/share/common $(DESTDIR)$(PREFIX)/share/monkeysphere
+	install -m 0644 src/share/m/* $(DESTDIR)$(PREFIX)/share/monkeysphere/m
+	install -m 0644 src/share/mh/* $(DESTDIR)$(PREFIX)/share/monkeysphere/mh
+	install -m 0644 src/share/ma/* $(DESTDIR)$(PREFIX)/share/monkeysphere/ma
 	install doc/* $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
 	install -m 0644 etc/monkeysphere.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/monkeysphere.conf$(ETCSUFFIX)
 	install -m 0644 etc/monkeysphere-host.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/monkeysphere-host.conf$(ETCSUFFIX)
