@@ -19,12 +19,12 @@ local keys
 local key
 
 # find trusted keys in authentication keychain
-keys=$(gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-keys --with-colons --fingerprint" | \
+keys=$(gpg_sphere "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-keys --with-colons --fingerprint" | \
     grep ^pub: | cut -d: -f2,5 | egrep '^(u|f):' | cut -d: -f2)
 
 # output keys
 for key in $keys ; do
-    gpg_authentication "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key --fingerprint $key"
+    gpg_sphere "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key --fingerprint $key"
 done
 
 }

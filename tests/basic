@@ -5,7 +5,9 @@
 # Authors: 
 #   Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #   Jameson Rollins <jrollins@fifthhorseman.net>
-# Copyright: 2008
+#   Micah Anderson <micah@riseup.net> 
+#
+# Copyright: 2008-2009
 # License: GPL v3 or later
 
 # these tests should all be able to run as a non-privileged user.
@@ -163,22 +165,22 @@ cp etc/ssh/sshd_config "$SSHD_CONFIG"
 # write the sshd_config
 cat <<EOF >> "$SSHD_CONFIG"
 HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
-AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authorized_keys/%u
+AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authentication/authorized_keys/%u
 EOF
 
 # set up monkeysphere-server
 echo "### configuring monkeysphere..."
-mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/gnupg-host
-mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication
-mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authorized_keys
+mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/host
+mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication
+mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication/authorized_keys
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/tmp
 cp etc/monkeysphere/monkeysphere-server.conf "$TEMPDIR"/monkeysphere-server.conf
 cat <<EOF >> "$TEMPDIR"/monkeysphere-server.conf
-AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authorized_user_ids"
+AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authentication/authorized_user_ids"
 EOF
-cat <<EOF > "$MONKEYSPHERE_SYSDATADIR"/gnupg-authentication/gpg.conf
-primary-keyring ${MONKEYSPHERE_SYSDATADIR}/gnupg-authentication/pubring.gpg
-keyring ${MONKEYSPHERE_SYSDATADIR}/gnupg-host/pubring.gpg
+cat <<EOF > "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
+primary-keyring ${MONKEYSPHERE_SYSDATADIR}/authentication/sphere/pubring.gpg
+keyring ${MONKEYSPHERE_SYSDATADIR}/authentication/core/pubring.gpg
 EOF
 
 
@@ -188,16 +190,16 @@ EOF
 echo "### generating server key..."
 # add gpg.conf with quick-random
 get_gpg_prng_arg >> "$MONKEYSPHERE_SYSCONFIGDIR"/gnupg-host/gpg.conf
-echo | monkeysphere-server gen-key --length 1024 --expire 0 testhost
+echo | monkeysphere-host expert gen-key --length 1024 --expire 0 testhost
 # remove the gpg.conf
 rm "$MONKEYSPHERE_SYSCONFIGDIR"/gnupg-host/gpg.conf
 
-HOSTKEYID=$( monkeysphere-server show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
+HOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
 
 # certify it with the "Admin's Key".
 # (this would normally be done via keyservers)
 echo "### certifying server key..."
-monkeysphere-server gpg-authentication-cmd "--armor --export $HOSTKEYID" | gpgadmin --import
+monkeysphere-authentication expert gpg-cmd "--armor --export $HOSTKEYID" | gpgadmin --import
 echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 
 # FIXME: how can we test publish-key without flooding junk into the
@@ -205,7 +207,7 @@ echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 
 # add admin as identity certifier for testhost
 echo "### adding admin as certifier..."
-echo y | monkeysphere-server add-identity-certifier "$TEMPDIR"/admin/.gnupg/pubkey.gpg
+echo y | monkeysphere-authentication add-id-certifier "$TEMPDIR"/admin/.gnupg/pubkey.gpg
 
 
 ### TESTUSER TESTS
@@ -220,9 +222,9 @@ gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 
 # teach the "server" about the testuser's key
 echo "### export testuser key to server..."
-gpg --export testuser | monkeysphere-server gpg-authentication-cmd --import
+gpg --export testuser | monkeysphere-authentication gpg-cmd --import
 echo "### update server authorized_keys file for this testuser..."
-monkeysphere-server update-users $(whoami)
+monkeysphere-authentication update-users $(whoami)
 
 # connect to test sshd, using monkeysphere-ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
@@ -233,7 +235,7 @@ ssh_test
 # sure that the ssh authentication FAILS
 echo "### removing testuser authorized_user_ids and updating..."
 mv "$TESTHOME"/.monkeysphere/authorized_user_ids{,.bak}
-monkeysphere-server update-users $(whoami)
+monkeysphere-authentication update-users $(whoami)
 echo "### ssh connection test for server authentication denial..."
 ssh_test 255
 mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
@@ -242,13 +244,13 @@ mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
 # make sure ssh authentication FAILS
 echo "### setting group writability on authorized_user_ids and updating..."
 chmod g+w "$TESTHOME"/.monkeysphere/authorized_user_ids
-monkeysphere-server update-users $(whoami)
+monkeysphere-authentication update-users $(whoami)
 echo "### ssh connection test for server authentication denial..."
 ssh_test 255
 chmod g-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 echo "### setting other writability on authorized_user_ids and updating..."
 chmod o+w "$TESTHOME"/.monkeysphere/authorized_user_ids
-monkeysphere-server update-users $(whoami)
+monkeysphere-authentication update-users $(whoami)
 echo "### ssh connection test for server authentication denial..."
 ssh_test 255
 chmod o-w "$TESTHOME"/.monkeysphere/authorized_user_ids

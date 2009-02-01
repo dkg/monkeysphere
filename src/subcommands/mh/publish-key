@@ -24,6 +24,8 @@ fi
 fingerprint=$(fingerprint_server_key)
 
 # publish host key
-gpg_authentication "--keyserver $KEYSERVER --send-keys '0x${fingerprint}!'"
+# FIXME: need to define how to do this
+#gpg_authentication "--keyserver $KEYSERVER --send-keys '0x${fingerprint}!'"
+echo "not published!!!"
 
 }

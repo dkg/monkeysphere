@@ -17,7 +17,10 @@ SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
 export SYSSHAREDIR
 . "${SYSSHAREDIR}/common" || exit 1
 
-SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere/host"}
+# sharedir for host functions
+MHSHAREDIR="${SYSSHAREDIR}/mh"
+
+SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
 export SYSDATADIR
 
 # UTC date in ISO 8601 format if needed
@@ -75,7 +78,7 @@ su_monkeysphere_user() {
     fi
 }
 
-# function to interact with the host gnupg keyring
+# function to interact with the gpg keyring
 gpg_host() {
     local returnCode
 
@@ -86,15 +89,7 @@ gpg_host() {
     # user to be able to read the host pubring.  we realize this might
     # be problematic, but it's the simplest solution, without too much
     # loss of security.
-    gpg --no-permission-warning "$@"
-    returnCode="$?"
-
-    # always reset the permissions on the host pubring so that the
-    # monkeysphere user can read the trust signatures
-    chgrp "$MONKEYSPHERE_USER" "${GNUPGHOME_HOST}/pubring.gpg"
-    chmod g+r "${GNUPGHOME_HOST}/pubring.gpg"
-    
-    return "$returnCode"
+    gpg "$@"
 }
 
 # output just key fingerprint
@@ -148,12 +143,10 @@ return $ret
 
 # unset variables that should be defined only in config file
 unset KEYSERVER
-unset AUTHORIZED_USER_IDS
-unset RAW_AUTHORIZED_KEYS
 unset MONKEYSPHERE_USER
 
 # load configuration file
-[ -e ${MONKEYSPHERE_SERVER_CONFIG:="${SYSCONFIGDIR}/monkeysphere-server.conf"} ] && . "$MONKEYSPHERE_SERVER_CONFIG"
+[ -e ${MONKEYSPHERE_HOST_CONFIG:="${SYSCONFIGDIR}/monkeysphere-host.conf"} ] && . "$MONKEYSPHERE_SERVER_CONFIG"
 
 # set empty config variable with ones from the environment, or with
 # defaults
@@ -165,20 +158,15 @@ MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkey
 
 # other variables
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
-REQUIRED_USER_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_USER_KEY_CAPABILITY:="a"}
-GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${SYSDATADIR}/gnupg-host"}
-GNUPGHOME_AUTHENTICATION=${MONKEYSPHERE_GNUPGHOME_AUTHENTICATION:="${SYSDATADIR}/gnupg-authentication"}
+GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${SYSDATADIR}/host"}
 
 # export variables needed in su invocation
 export DATE
 export MODE
-export MONKEYSPHERE_USER
 export LOG_LEVEL
+export MONKEYSPHERE_USER
 export KEYSERVER
-export CHECK_KEYSERVER
-export REQUIRED_USER_KEY_CAPABILITY
 export GNUPGHOME_HOST
-export GNUPGHOME_AUTHENTICATION
 export GNUPGHOME
 
 # get subcommand
@@ -188,53 +176,62 @@ shift
 
 case $COMMAND in
     'show-key'|'show'|'s')
-	show_server_key
+	check_host_keyring
+	show_key
 	;;
 
     'extend-key'|'e')
 	check_host_keyring
+	source "${MHSHAREDIR}/extend_key"
 	extend_key "$@"
 	;;
 
     'add-hostname'|'add-name'|'n+')
 	check_host_keyring
+	source "${MHSHAREDIR}/add_hostname"
 	add_hostname "$@"
 	;;
 
     'revoke-hostname'|'revoke-name'|'n-')
 	check_host_keyring
+	source "${MHSHAREDIR}/revoke_hostname"
 	revoke_hostname "$@"
 	;;
 
     'add-revoker'|'o')
 	check_host_keyring
+	source "${MHSHAREDIR}/add_revoker"
 	add_revoker "$@"
 	;;
 
     'revoke-key'|'r')
 	check_host_keyring
+	source "${MHSHAREDIR}/revoke_key"
 	revoke_key "$@"
 	;;
 
     'publish-key'|'publish'|'p')
 	check_host_keyring
-	publish_server_key
+	source "${MHSHAREDIR}/publish_key"
+	publish_key
 	;;
 
     'expert'|'e')
-	check_user
 	SUBCOMMAND="$1"
 	shift
 	case "$SUBCOMMAND" in
 	    'import-key'|'i')
+		source "${MHSHAREDIR}/import_key"
 		import_key "$@"
 		;;
 
 	    'gen-key'|'g')
+		source "${MHSHAREDIR}/gen_key"
 		gen_key "$@"
 		;;
 
 	    'diagnostics'|'d')
+		source "${MHSHAREDIR}/diagnostics"
 		diagnostics
 		;;
 

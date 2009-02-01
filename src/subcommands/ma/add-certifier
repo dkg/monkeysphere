@@ -60,7 +60,7 @@ if [ -z "$keyID" ] ; then
 fi
 if [ -f "$keyID" ] ; then
     echo "Reading key from file '$keyID':"
-    importinfo=$(gpg_authentication "--import" < "$keyID" 2>&1) || failure "could not read key from '$keyID'"
+    importinfo=$(gpg_sphere "--import" < "$keyID" 2>&1) || failure "could not read key from '$keyID'"
     # FIXME: if this is tried when the key database is not
     # up-to-date, i got these errors (using set -x):
 
@@ -83,13 +83,13 @@ if [ -f "$keyID" ] ; then
     fi
 else
     # get the key from the key server
-    gpg_authentication "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" || failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
+    gpg_sphere "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" || failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
 fi
 
 export keyID
 
 # get the full fingerprint of a key ID
-fingerprint=$(gpg_authentication "--list-key --with-colons --with-fingerprint 0x${keyID}!" | \
+fingerprint=$(gpg_sphere "--list-key --with-colons --with-fingerprint 0x${keyID}!" | \
     grep '^fpr:' | grep "$keyID" | cut -d: -f10)
 
 if [ -z "$fingerprint" ] ; then
@@ -98,7 +98,7 @@ fi
 
 echo
 echo "key found:"
-gpg_authentication "--fingerprint 0x${fingerprint}!"
+gpg_sphere "--fingerprint 0x${fingerprint}!"
 
 echo "Are you sure you want to add the above key as a"
 read -p "certifier of users on this system? (y/N) " OK; OK=${OK:-N}
@@ -107,7 +107,7 @@ if [ "${OK/y/Y}" != 'Y' ] ; then
 fi
 
 # export the key to the host keyring
-gpg_authentication "--export 0x${fingerprint}!" | gpg_host --import
+gpg_sphere "--export 0x${fingerprint}!" | gpg_core --import
 
 if [ "$trust" = marginal ]; then
     trustval=1
@@ -132,10 +132,10 @@ EOF
 
 # ltsign the key
 if echo "$ltsignCommand" | \
-    gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
+    gpg_core --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
 
     # update the trustdb for the authentication keyring
-    gpg_authentication "--check-trustdb"
+    gpg_sphere "--check-trustdb"
 
     echo
     echo "Identity certifier added."
