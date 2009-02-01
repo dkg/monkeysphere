@@ -1,0 +1,112 @@
+# -*-shell-script-*-
+# This should be sourced by bash (though we welcome changes to make it POSIX sh compliant)
+
+# Monkeysphere subkey-to-ssh-agent subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@finestructure.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008-2009, and are all released under the GPL,
+# version 3 or later.
+
+# try to add all authentication subkeys to the agent
+
+subkey_to_ssh_agent() {
+    local sshaddresponse
+    local secretkeys
+    local authsubkeys
+    local workingdir
+    local keysuccess
+    local subkey
+    local publine
+    local kname
+
+    if ! test_gnu_dummy_s2k_extension ; then
+	failure "Your version of GnuTLS does not seem capable of using with gpg's exported subkeys.
+You may want to consider patching or upgrading to GnuTLS 2.6 or later.
+
+For more details, see:
+ http://lists.gnu.org/archive/html/gnutls-devel/2008-08/msg00005.html"
+    fi
+
+    # if there's no agent running, don't bother:
+    if [ -z "$SSH_AUTH_SOCK" ] || ! which ssh-add >/dev/null ; then
+	failure "No ssh-agent available."
+    fi
+
+    # and if it looks like it's running, but we can't actually talk to
+    # it, bail out:
+    ssh-add -l >/dev/null
+    sshaddresponse="$?"
+    if [ "$sshaddresponse" = "2" ]; then
+	failure "Could not connect to ssh-agent"
+    fi
+    
+    # get list of secret keys (to work around https://bugs.g10code.com/gnupg/issue945):
+    secretkeys=$(gpg --list-secret-keys --with-colons --fixed-list-mode --fingerprint | \
+	grep '^fpr:' | cut -f10 -d: | awk '{ print "0x" $1 "!" }')
+
+    if [ -z "$secretkeys" ]; then
+	failure "You have no secret keys in your keyring!
+You might want to run 'gpg --gen-key'."
+    fi
+    
+    authsubkeys=$(gpg --list-secret-keys --with-colons --fixed-list-mode \
+	--fingerprint --fingerprint $secretkeys | \
+	cut -f1,5,10,12 -d: | grep -A1 '^ssb:[^:]*::[^:]*a[^:]*$' | \
+	grep '^fpr::' | cut -f3 -d: | sort -u)
+
+    if [ -z "$authsubkeys" ]; then
+	failure "no authentication-capable subkeys available.
+You might want to 'monkeysphere gen-subkey'"
+    fi
+
+    workingdir=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+    umask 077
+    mkfifo "$workingdir/passphrase"
+    keysuccess=1
+
+    # FIXME: we're currently allowing any other options to get passed
+    # through to ssh-add.  should we limit it to known ones?  For
+    # example: -d or -c and/or -t <lifetime> 
+
+    for subkey in $authsubkeys; do 
+	# choose a label by which this key will be known in the agent:
+	# we are labelling the key by User ID instead of by
+	# fingerprint, but filtering out all / characters to make sure
+	# the filename is legit.
+
+	primaryuid=$(gpg --with-colons --list-key "0x${subkey}!" | grep '^pub:' | cut -f10 -d: | tr -d /)
+
+	#kname="[monkeysphere] $primaryuid"
+	kname="$primaryuid"
+
+	if [ "$1" = '-d' ]; then
+	    # we're removing the subkey:
+	    gpg --export "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname"
+	    (cd "$workingdir" && ssh-add -d "$kname")
+	else
+	    # we're adding the subkey:
+	    mkfifo "$workingdir/$kname"
+	    gpg --quiet --passphrase-fd 3 3<"$workingdir/passphrase" \
+		--export-options export-reset-subkey-passwd,export-minimal,no-export-attributes \
+		--export-secret-subkeys "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname" &
+	    (cd "$workingdir" && DISPLAY=nosuchdisplay SSH_ASKPASS=/bin/false ssh-add "$@" "$kname" </dev/null )&
+
+	    passphrase_prompt "Enter passphrase for key $kname: " "$workingdir/passphrase"
+	    wait %2
+	fi
+	keysuccess="$?"
+
+	rm -f "$workingdir/$kname"
+    done
+
+    rm -rf "$workingdir"
+
+    # FIXME: sort out the return values: we're just returning the
+    # success or failure of the final authentication subkey in this
+    # case.  What if earlier ones failed?
+    exit "$keysuccess"
+}

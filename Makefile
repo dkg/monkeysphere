@@ -47,17 +47,20 @@ clean:
 # this target is to be called from the tarball, not from the git
 # working dir!
 install: all installman
-	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/sbin $(DESTDIR)$(PREFIX)/share/monkeysphere
-	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
+	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/sbin
+	mkdir -p $(DESTDIR)$(PREFIX)/share/monkeysphere/m $(DESTDIR)$(PREFIX)/share/monkeysphere/mh $(DESTDIR)$(PREFIX)/share/monkeysphere/ma
 	mkdir -p $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
+	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
 	install src/monkeysphere src/keytrans/openpgp2ssh src/keytrans/pem2openpgp $(DESTDIR)$(PREFIX)/bin
-	install src/monkeysphere-authentication src/monkeysphere-host $(DESTDIR)$(PREFIX)/sbin
+	install src/monkeysphere-host src/monkeysphere-authentication $(DESTDIR)$(PREFIX)/sbin
 	install -m 0644 src/common $(DESTDIR)$(PREFIX)/share/monkeysphere
+	install -m 0644 src/subcommands/m/* $(DESTDIR)$(PREFIX)/share/monkeysphere/m
+	install -m 0644 src/subcommands/mh/* $(DESTDIR)$(PREFIX)/share/monkeysphere/mh
+	install -m 0644 src/subcommands/ma/* $(DESTDIR)$(PREFIX)/share/monkeysphere/ma
 	install doc/* $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
-	install -m 0644 etc/gnupg-host.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/gnupg-host.conf$(ETCSUFFIX)
-	install -m 0644 etc/gnupg-authentication.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/gnupg-authentication.conf$(ETCSUFFIX)
 	install -m 0644 etc/monkeysphere.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/monkeysphere.conf$(ETCSUFFIX)
-	install -m 0644 etc/monkeysphere-server.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/monkeysphere-server.conf$(ETCSUFFIX)
+	install -m 0644 etc/monkeysphere-host.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/monkeysphere-host.conf$(ETCSUFFIX)
+	install -m 0644 etc/monkeysphere-authentication.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/monkeysphere-authentication.conf$(ETCSUFFIX)
 
 installman:
 	mkdir -p $(DESTDIR)$(MANPREFIX)/man1 $(DESTDIR)$(MANPREFIX)/man7 $(DESTDIR)$(MANPREFIX)/man8

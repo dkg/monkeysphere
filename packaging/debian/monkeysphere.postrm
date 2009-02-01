@@ -2,8 +2,8 @@
 
 # postrm script for monkeysphere
 
-# Author: Jameson Rollins <jrollins@fifthhorseman.net>
-# Copyright 2008
+# Author: Jameson Rollins <jrollins@finestructure.net>
+# Copyright 2008-2009
 
 case $1 in
     purge)
