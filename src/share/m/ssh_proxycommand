@@ -1,7 +1,7 @@
 # -*-shell-script-*-
 # This should be sourced by bash (though we welcome changes to make it POSIX sh compliant)
 
-# monkeysphere-ssh-proxycommand: MonkeySphere ssh ProxyCommand hook
+# Monkeysphere ssh-proxycommand subcommand
 #
 # The monkeysphere scripts are written by:
 # Jameson Rollins <jrollins@finestructure.net>
@@ -13,7 +13,7 @@
 # This is meant to be run as an ssh ProxyCommand to initiate a
 # monkeysphere known_hosts update before an ssh connection to host is
 # established.  Can be added to ~/.ssh/config as follows:
-#  ProxyCommand monkeysphere-ssh-proxycommand %h %p
+#  ProxyCommand monkeysphere ssh-proxycommand %h %p
 
 ssh_proxycommand() {
 
