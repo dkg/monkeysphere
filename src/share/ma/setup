@@ -45,15 +45,14 @@ EOF
 
 	local CORE_UID=$(printf "Monkeysphere authentication trust core UID (random string: %s)" $(head -c21 </dev/urandom | base64))
     
-	if gpg_core --gen-key --batch <<EOF
-Key-Type: RSA
-Key-Length: 2048
-Key-Usage: certify
-Name-Real: $CORE_UID
+	local TMPLOC=$(mktemp -d ${MATMPDIR}/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
+	ssh-keygen -q -b 2048 -t rsa -N'' "${TMPLOC}/authkey" || failure "Could not generate new key for Monkeysphere authentication trust core"
 
-%commit
-%echo done
-EOF
+	# FIXME: pem2openpgp currently sets the A flag and a short
+	# expiration date.  We should set the C flag and no expiration
+	# date.
+	< "${TMPLOC}/authkey" pem2openpgp "$CORE_UID" | gpg --import || failure "Could not import new key for Monkeysphere authentication trust core"
+
 	then
 	    CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
 	    if [ -z "$CORE_FPR" ] ; then
