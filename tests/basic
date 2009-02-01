@@ -209,16 +209,12 @@ echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 
 # set up monkeysphere authentication
 echo "##################################################"
-echo "### configuring monkeysphere authentication..."
+echo "### setup monkeysphere authentication..."
 mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication/{authorized_keys,core,sphere,tmp}
 cp "$TESTDIR"/etc/monkeysphere/monkeysphere-authentication.conf "$TEMPDIR"/
 cat <<EOF >> "$TEMPDIR"/monkeysphere-authentication.conf
 AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authentication/authorized_user_ids"
 EOF
-
-# setup server authentication
-echo "##################################################"
-echo "### setting up server authentication..."
 monkeysphere-authentication setup
 get_gpg_prng_arg >> "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
 

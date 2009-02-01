@@ -90,12 +90,12 @@ fingerprint=$(fingerprint_server_key)
 # NOTE: assumes that the primary key is the proper key to use
 (umask 077 && \
 	gpg_host --export-secret-key "$fingerprint" | \
-	openpgp2ssh "$fingerprint" > "${SYSDATADIR}/ssh_host_rsa_key")
-log info "SSH host private key output to file: ${SYSDATADIR}/ssh_host_rsa_key"
-ssh-keygen -y -f "${SYSDATADIR}/ssh_host_rsa_key" > "${SYSDATADIR}/ssh_host_rsa_key.pub"
-log info "SSH host public key output to file: ${SYSDATADIR}/ssh_host_rsa_key.pub"
-gpg_host "--export-options export-minimal --armor --export 0x${fingerprint}\!" > "${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
-log info "SSH host public key in OpenPGP form: ${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
+	openpgp2ssh "$fingerprint" > "${MHDATADIR}/ssh_host_rsa_key")
+log info "SSH host private key output to file: ${MHDATADIR}/ssh_host_rsa_key"
+ssh-keygen -y -f "${MHDATADIR}/ssh_host_rsa_key" > "${MHDATADIR}/ssh_host_rsa_key.pub"
+log info "SSH host public key output to file: ${MHDATADIR}/ssh_host_rsa_key.pub"
+gpg_host "--export-options export-minimal --armor --export 0x${fingerprint}\!" > "${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
+log info "SSH host public key in OpenPGP form: ${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
 
 # show info about new key
 show_key

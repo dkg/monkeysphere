@@ -12,8 +12,9 @@
 # version 3 or later.
 
 setup() {
-    # make the core and the sphere:
-    mkdir -p "${SYSDATADIR}"/authentication
+    # make all needed directories
+    mkdir -p "${MADATADIR}"
+    mkdir -p "${MATMPDIR}"
     mkdir -p "${GNUPGHOME_SPHERE}"
     mkdir -p "${GNUPGHOME_CORE}"
 
@@ -46,14 +47,17 @@ EOF
 
 	local CORE_UID=$(printf "Monkeysphere authentication trust core UID (random string: %s)" $(head -c21 </dev/urandom | base64))
     
-	local TMPLOC=$(mktemp -d ${MATMPDIR}/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
-	ssh-keygen -q -b 2048 -t rsa -N'' "${TMPLOC}/authkey" || failure "Could not generate new key for Monkeysphere authentication trust core"
+	local TMPLOC=$(mktemp -d "${MATMPDIR}"/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
 
+	# generate the key with ssh-keygen...
+	ssh-keygen -q -b 1024 -t rsa -N '' -f "${TMPLOC}/authkey" || failure "Could not generate new key for Monkeysphere authentication trust core"
+	# and then translate to openpgp encoding and import
 	# FIXME: pem2openpgp currently sets the A flag and a short
 	# expiration date.  We should set the C flag and no expiration
 	# date.
 	< "${TMPLOC}/authkey" pem2openpgp "$CORE_UID" | gpg --import || failure "Could not import new key for Monkeysphere authentication trust core"
 
+	gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key
 	CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
 	if [ -z "$CORE_FPR" ] ; then
 	    failure "Failed to create Monkeysphere authentication trust core!"

@@ -18,11 +18,14 @@ SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
 export SYSSHAREDIR
 . "${SYSSHAREDIR}/common" || exit 1
 
+SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
+export SYSDATADIR
+
 # sharedir for host functions
 MHSHAREDIR="${SYSSHAREDIR}/mh"
 
-SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
-export SYSDATADIR
+# datadir for host functions
+MHDATADIR="${SYSDATADIR}/host"
 
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
@@ -114,8 +117,8 @@ show_key() {
     gpg_host "--fingerprint --list-key --list-options show-unusable-uids $fingerprintPGP" 2>/dev/null
     echo "OpenPGP fingerprint: $fingerprintPGP"
 
-    if [ -f "${SYSDATADIR}/ssh_host_rsa_key.pub" ] ; then
-	fingerprintSSH=$(ssh-keygen -l -f "${SYSDATADIR}/ssh_host_rsa_key.pub" | \
+    if [ -f "${MHDATADIR}/ssh_host_rsa_key.pub" ] ; then
+	fingerprintSSH=$(ssh-keygen -l -f "${MHDATADIR}/ssh_host_rsa_key.pub" | \
 	    awk '{ print $1, $2, $4 }')
 	echo "ssh fingerprint: $fingerprintSSH"
     else
@@ -144,7 +147,7 @@ MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkey
 
 # other variables
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
-GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${SYSDATADIR}/host"}
+GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${MHDATADIR}"}
 
 # export variables needed in su invocation
 export DATE
