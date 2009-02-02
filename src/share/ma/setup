@@ -49,34 +49,39 @@ EOF
     local CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
 
     if [ -z "$CORE_FPR" ] ; then
-	log info "Setting up Monkeysphere authentication trust core"
+	log info "Setting up Monkeysphere authentication trust core..."
 
 	local CORE_UID=$(printf "Monkeysphere authentication trust core UID (random string: %s)" $(head -c21 </dev/urandom | base64))
     
 	local TMPLOC=$(mktemp -d "${MATMPDIR}"/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
 
 	# generate the key with ssh-keygen...
+	log debug "generating ssh key..."
 	ssh-keygen -q -b 1024 -t rsa -N '' -f "${TMPLOC}/authkey" || failure "Could not generate new key for Monkeysphere authentication trust core"
 	# and then translate to openpgp encoding and import
 	# FIXME: pem2openpgp currently sets the A flag and a short
 	# expiration date.  We should set the C flag and no expiration
 	# date.
+	log debug "converting ssh key to pgp key and importing into core..."
 	< "${TMPLOC}/authkey" pem2openpgp "$CORE_UID" | gpg_core --import || failure "Could not import new key for Monkeysphere authentication trust core"
 
 	# get fingerprint of core key.  should definitely not be empty at this point
+	log debug "get core key fingerprint..."
 	CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
 	if [ -z "$CORE_FPR" ] ; then
 	    failure "Failed to create Monkeysphere authentication trust core!"
 	fi
 	
     else 
-	log verbose "This system has already set up the Monkeysphere authentication trust core"
+	log verbose "This system has already set up the Monkeysphere authentication trust core."
     fi
 
 
     # ensure that the authentication sphere checker has absolute ownertrust on the expected key.
+    log debug "set ultimate owner trust on core key in gpg_sphere..."
     printf "%s:6:\n" "$CORE_FPR" | gpg_sphere --import-ownertrust
     local ORIG_TRUST
+    log debug "check gpg_sphere owner trust set properly..."
     if ORIG_TRUST=$(gpg_sphere --export-ownertrust | grep '^[^#]') ; then
 	if [ "${CORE_FPR}:6:" != "$ORIG_TRUST" ] ; then
 	    failure "Monkeysphere authentication trust sphere should explicitly trust the core.  It does not have proper ownertrust settings."
@@ -88,7 +93,8 @@ EOF
     # ensure that we're using the extended trust model (1), and that
     # our preferences are reasonable (i.e. 3 marginal OR 1 fully
     # trusted certifications are sufficient to grant full validity.
+    log debug "check trust level of core key..."
     if [ "1:3:1" != $(gpg_sphere --with-colons --fixed-list-mode --list-keys | head -n1 | grep ^tru: cut -f3,6,7 -d:) ] ; then
-	failure "monkeysphere-preference does not have the expected trust model settings"
+	failure "monkeysphere-authentication does not have the expected trust model settings."
     fi
 }
