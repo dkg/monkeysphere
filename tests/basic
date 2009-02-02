@@ -220,7 +220,6 @@ echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 # set up monkeysphere authentication
 echo "##################################################"
 echo "### setup monkeysphere authentication..."
-mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication/{authorized_keys,core,sphere,tmp}
 cp "$TESTDIR"/etc/monkeysphere/monkeysphere-authentication.conf "$TEMPDIR"/
 cat <<EOF >> "$TEMPDIR"/monkeysphere-authentication.conf
 AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authentication/authorized_user_ids"

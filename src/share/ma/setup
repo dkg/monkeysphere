@@ -15,8 +15,11 @@ setup() {
     # make all needed directories
     mkdir -p "${MADATADIR}"
     mkdir -p "${MATMPDIR}"
-    mkdir -p "${GNUPGHOME_SPHERE}"
     mkdir -p "${GNUPGHOME_CORE}"
+    chmod 700 "${GNUPGHOME_CORE}"
+    mkdir -p "${GNUPGHOME_SPHERE}"
+    chmod 700 "${GNUPGHOME_SPHERE}"
+    mkdir -p "${MADATADIR}"/authorized_keys
 
     # deliberately replace the config files via truncation
     # FIXME: should we be dumping to tmp files and then moving atomically?
@@ -37,6 +40,11 @@ primary-keyring ${GNUPGHOME_SPHERE}/pubring.gpg
 list-options show-uid-validity
 EOF
 
+    # make sure the monkeysphere user owns everything in th sphere
+    # gnupghome
+    chown -R "$MONKEYPSHER_USER" "${GNUPGHOME_SPHERE}"
+    chgrp -R "$MONKEYPSHER_USER" "${GNUPGHOME_SPHERE}"
+
     # get fingerprint of core key.  this should be empty on unconfigured systems.
     local CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
 
@@ -53,7 +61,7 @@ EOF
 	# FIXME: pem2openpgp currently sets the A flag and a short
 	# expiration date.  We should set the C flag and no expiration
 	# date.
-	< "${TMPLOC}/authkey" pem2openpgp "$CORE_UID" | gpg --import || failure "Could not import new key for Monkeysphere authentication trust core"
+	< "${TMPLOC}/authkey" pem2openpgp "$CORE_UID" | gpg_core --import || failure "Could not import new key for Monkeysphere authentication trust core"
 
 	# get fingerprint of core key.  should definitely not be empty at this point
 	CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
