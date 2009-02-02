@@ -18,11 +18,14 @@ SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
 export SYSSHAREDIR
 . "${SYSSHAREDIR}/common" || exit 1
 
+SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
+export SYSDATADIR
+
 # sharedir for host functions
 MHSHAREDIR="${SYSSHAREDIR}/mh"
 
-SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
-export SYSDATADIR
+# datadir for host functions
+MHDATADIR="${SYSDATADIR}/host"
 
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
@@ -49,7 +52,7 @@ subcommands:
  revoke-hostname (n-) NAME[:PORT]    revoke hostname user ID
  add-revoker (o) FINGERPRINT         add a revoker to the host key
  revoke-key (r)                      revoke host key
- publish-key (p)                     publish server host key to keyserver
+ publish-key (p)                     publish host key to keyserver
 
  expert <expert-subcommand>          run expert command
  expert help                         expert command help
@@ -88,7 +91,7 @@ gpg_host() {
 }
 
 # output just key fingerprint
-fingerprint_server_key() {
+fingerprint_host_key() {
     # set the pipefail option so functions fails if can't read sec key
     set -o pipefail
 
@@ -99,8 +102,8 @@ fingerprint_server_key() {
 
 # function to check for host secret key
 check_host_keyring() {
-    fingerprint_server_key >/dev/null \
-	|| failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-server gen-key' first."
+    fingerprint_host_key >/dev/null \
+	|| failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-host import-key' first."
 }
 
 # show info about the host key
@@ -110,12 +113,12 @@ show_key() {
 
     # FIXME: you shouldn't have to be root to see the host key fingerprint
     check_host_keyring
-    fingerprintPGP=$(fingerprint_server_key)
+    fingerprintPGP=$(fingerprint_host_key)
     gpg_host "--fingerprint --list-key --list-options show-unusable-uids $fingerprintPGP" 2>/dev/null
     echo "OpenPGP fingerprint: $fingerprintPGP"
 
-    if [ -f "${SYSDATADIR}/ssh_host_rsa_key.pub" ] ; then
-	fingerprintSSH=$(ssh-keygen -l -f "${SYSDATADIR}/ssh_host_rsa_key.pub" | \
+    if [ -f "${MHDATADIR}/ssh_host_rsa_key.pub" ] ; then
+	fingerprintSSH=$(ssh-keygen -l -f "${MHDATADIR}/ssh_host_rsa_key.pub" | \
 	    awk '{ print $1, $2, $4 }')
 	echo "ssh fingerprint: $fingerprintSSH"
     else
@@ -144,7 +147,7 @@ MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkey
 
 # other variables
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
-GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${SYSDATADIR}/host"}
+GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${MHDATADIR}"}
 
 # export variables needed in su invocation
 export DATE

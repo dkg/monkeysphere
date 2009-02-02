@@ -20,7 +20,7 @@ local userID
 
 # check for presense of secret key
 # FIXME: is this the proper test to be doing here?
-fingerprint_server_key >/dev/null \
+fingerprint_host_key >/dev/null \
 	&& failure "An OpenPGP host key already exists."
 
 # get options
@@ -72,15 +72,15 @@ log verbose "importing ssh key..."
 	pem2openpgp "$userID" "$keyExpire" < "$sshKey" | gpg_host --import)
 
 # find the key fingerprint of the newly converted key
-fingerprint=$(fingerprint_server_key)
+fingerprint=$(fingerprint_host_key)
 
 # export host ownertrust to authentication keyring
 log verbose "setting ultimate owner trust for host key..."
 echo "${fingerprint}:6:" | gpg_host "--import-ownertrust"
 
 # export public key to file
-gpg_host "--export-options export-minimal --armor --export 0x${fingerprint}\!" > "${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
-log info "SSH host public key in OpenPGP form: ${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
+gpg_host "--export-options export-minimal --armor --export 0x${fingerprint}\!" > "${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
+log info "SSH host public key in OpenPGP form: ${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
 
 # show info about new key
 show_key

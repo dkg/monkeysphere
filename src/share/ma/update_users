@@ -35,7 +35,7 @@ MODE="authorized_keys"
 GNUPGHOME="$GNUPGHOME_SPHERE"
 
 # the authorized_keys directory
-authorizedKeysDir="${SYSDATADIR}/authentication/authorized_keys"
+authorizedKeysDir="${MADATADIR}/authorized_keys"
 
 # check to see if the gpg trust database has been initialized
 if [ ! -s "${GNUPGHOME}/trustdb.gpg" ] ; then

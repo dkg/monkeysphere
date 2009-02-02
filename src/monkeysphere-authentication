@@ -12,20 +12,25 @@
 # version 3 or later.
 
 ########################################################################
+set -e
+
 PGRM=$(basename $0)
 
 SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
 export SYSSHAREDIR
 . "${SYSSHAREDIR}/common" || exit 1
 
-# sharedir for authentication functions
-MASHAREDIR="${SYSSHAREDIR}/ma"
-
 SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
 export SYSDATADIR
 
+# sharedir for authentication functions
+MASHAREDIR="${SYSSHAREDIR}/ma"
+
+# datadir for authentication functions
+MADATADIR="${SYSDATADIR}/authentication"
+
 # temp directory to enable atomic moves of authorized_keys files
-MATMPDIR="${SYSDATADIR}/tmp"
+MATMPDIR="${MADATADIR}/tmp"
 export MSTMPDIR
 
 # UTC date in ISO 8601 format if needed
@@ -47,6 +52,7 @@ usage: $PGRM <subcommand> [options] [args]
 Monkeysphere authentication admin tool.
 
 subcommands:
+ setup (s)                           setup monkeysphere user authentication
  update-users (u) [USER]...          update user authorized_keys files
  add-id-certifier (c+) KEYID         import and tsign a certification key
    --domain (-n) DOMAIN                limit ID certifications to DOMAIN
@@ -134,8 +140,8 @@ MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkey
 # other variables
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
 REQUIRED_USER_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_USER_KEY_CAPABILITY:="a"}
-GNUPGHOME_CORE=${MONKEYSPHERE_GNUPGHOME_CORE:="${SYSDATADIR}/authentication/core"}
-GNUPGHOME_SPHERE=${MONKEYSPHERE_GNUPGHOME_SPHERE:="${SYSDATADIR}/authentication/sphere"}
+GNUPGHOME_CORE=${MONKEYSPHERE_GNUPGHOME_CORE:="${MADATADIR}/core"}
+GNUPGHOME_SPHERE=${MONKEYSPHERE_GNUPGHOME_SPHERE:="${MADATADIR}/sphere"}
 
 # export variables needed in su invocation
 export DATE
@@ -155,6 +161,11 @@ COMMAND="$1"
 shift
 
 case $COMMAND in
+    'setup'|'setup'|'s')
+	source "${MASHAREDIR}/setup"
+	setup "$@"
+	;;
+
     'update-users'|'update-user'|'u')
 	source "${MASHAREDIR}/update_users"
 	update_users "$@"

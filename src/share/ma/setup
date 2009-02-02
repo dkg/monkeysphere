@@ -1,0 +1,88 @@
+# -*-shell-script-*-
+# This should be sourced by bash (though we welcome changes to make it POSIX sh compliant)
+
+# Monkeysphere authentication setup subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@finestructure.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2009, and are all released under the GPL,
+# version 3 or later.
+
+setup() {
+    # make all needed directories
+    mkdir -p "${MADATADIR}"
+    mkdir -p "${MATMPDIR}"
+    mkdir -p "${GNUPGHOME_SPHERE}"
+    mkdir -p "${GNUPGHOME_CORE}"
+
+    # deliberately replace the config files via truncation
+    # FIXME: should we be dumping to tmp files and then moving atomically?
+    cat >"${GNUPGHOME_CORE}"/gpg.conf <<EOF
+# Monkeysphere trust core GnuPG configuration
+# This file is maintained by the Monkeysphere software.
+# Edits will be overwritten.
+no-greeting
+list-options show-uid-validity
+EOF
+    
+    cat >"${GNUPGHOME_SPHERE}"/gpg.conf <<EOF
+# Monkeysphere trust sphere GnuPG configuration
+# This file is maintained by the Monkeysphere software.
+# Edits will be overwritten.
+no-greeting
+primary-keyring ${GNUPGHOME_SPHERE}/pubring.gpg
+keyring ${GNUPGHOME_CORE}/pubring.gpg
+
+list-options show-uid-validity
+EOF
+
+    # fingerprint of core key.  this should be empty on unconfigured systems.
+    local CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
+
+    if [ -z "$CORE_FPR" ] ; then
+	log info "Setting up Monkeysphere authentication trust core"
+
+	local CORE_UID=$(printf "Monkeysphere authentication trust core UID (random string: %s)" $(head -c21 </dev/urandom | base64))
+    
+	local TMPLOC=$(mktemp -d "${MATMPDIR}"/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
+
+	# generate the key with ssh-keygen...
+	ssh-keygen -q -b 1024 -t rsa -N '' -f "${TMPLOC}/authkey" || failure "Could not generate new key for Monkeysphere authentication trust core"
+	# and then translate to openpgp encoding and import
+	# FIXME: pem2openpgp currently sets the A flag and a short
+	# expiration date.  We should set the C flag and no expiration
+	# date.
+	< "${TMPLOC}/authkey" pem2openpgp "$CORE_UID" | gpg --import || failure "Could not import new key for Monkeysphere authentication trust core"
+
+	gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key
+	CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
+	if [ -z "$CORE_FPR" ] ; then
+	    failure "Failed to create Monkeysphere authentication trust core!"
+	fi
+	
+    else 
+	log verbose "This system has already set up the Monkeysphere authentication trust core"
+    fi
+
+
+    # ensure that the authentication sphere checker has absolute ownertrust on the expected key.
+    printf "%s:6:\n" "$CORE_FPR" | gpg_sphere --import-ownertrust
+    local ORIG_TRUST
+    if ORIG_TRUST=$(gpg_sphere --export-ownertrust | grep '^[^#]') ; then
+	if [ "${CORE_FPR}:6:" != "$ORIG_TRUST" ] ; then
+	    failure "Monkeysphere authentication trust sphere should explicitly trust the core.  It does not have proper ownertrust settings."
+	fi
+    else
+	failure "Could not get monkeysphere-authentication trust guidelines."
+    fi
+
+    # ensure that we're using the extended trust model (1), and that
+    # our preferences are reasonable (i.e. 3 marginal OR 1 fully
+    # trusted certifications are sufficient to grant full validity.
+    if [ "1:3:1" != $(gpg_sphere --with-colons --fixed-list-mode --list-keys | head -n1 | grep ^tru: cut -f3,6,7 -d:) ] ; then
+	failure "monkeysphere-preference does not have the expected trust model settings"
+    fi
+}

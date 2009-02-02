@@ -34,7 +34,8 @@ failure() {
 
 # write output to stderr based on specified LOG_LEVEL the first
 # parameter is the priority of the output, and everything else is what
-# is echoed to stderr
+# is echoed to stderr.  If there is nothing else, then output comes
+# from stdin, and is not prefaced by log prefix.
 log() {
     local priority
     local level
@@ -79,8 +80,12 @@ log() {
 	    output=true
 	fi
 	if [ "$priority" = "$level" -a "$output" = 'true' ] ; then
-	    echo -n "ms: " >&2
-	    echo "$@" >&2
+	    if [ "$1" ] ; then
+		echo -n "ms: " >&2
+		echo "$@" >&2
+	    else
+		cat >&2
+	    fi
 	fi
     done
 }

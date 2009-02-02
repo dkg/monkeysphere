@@ -7,7 +7,7 @@ Trust
 
 .SH DESCRIPTION
 
-\fBMonkeySphere\fP is a framework to leverage the OpenPGP Web of Trust
+\fBMonkeysphere\fP is a framework to leverage the OpenPGP Web of Trust
 for ssh authentication.  OpenPGP keys are tracked via GnuPG, and added
 to the authorized_keys and known_hosts files used by ssh for
 connection authentication.
@@ -40,14 +40,17 @@ URI specification for the host, i.e. "ssh://host.full.domain[:port]".
 
 .SH AUTHOR
 
-Written by Jameson Rollins <jrollins@fifthhorseman.net>, Daniel Kahn
-Gillmor <dkg@fifthhorseman.net>
+Written by:
+Jameson Rollins <jrollins@fifthhorseman.net>,
+Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 
 .SH SEE ALSO
 
 .BR monkeysphere (1),
-.BR monkeysphere-server (8),
-.BR monkeysphere-ssh-proxycommand (1),
+.BR monkeysphere-host (8),
+.BR monkeysphere-authentication (8),
+.BR openpgp2ssh (1),
+.BR pem2openpgp (1),
 .BR gpg (1),
 .BR ssh (1),
 .BR http://tools.ietf.org/html/rfc4880,

@@ -21,7 +21,7 @@ if [ ${OK/y/Y} != 'Y' ] ; then
 fi
 
 # find the key fingerprint
-fingerprint=$(fingerprint_server_key)
+fingerprint=$(fingerprint_host_key)
 
 # publish host key
 # FIXME: need to define how to do this
