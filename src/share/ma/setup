@@ -34,12 +34,10 @@ EOF
 # Edits will be overwritten.
 no-greeting
 primary-keyring ${GNUPGHOME_SPHERE}/pubring.gpg
-keyring ${GNUPGHOME_CORE}/pubring.gpg
-
 list-options show-uid-validity
 EOF
 
-    # fingerprint of core key.  this should be empty on unconfigured systems.
+    # get fingerprint of core key.  this should be empty on unconfigured systems.
     local CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
 
     if [ -z "$CORE_FPR" ] ; then
@@ -57,7 +55,7 @@ EOF
 	# date.
 	< "${TMPLOC}/authkey" pem2openpgp "$CORE_UID" | gpg --import || failure "Could not import new key for Monkeysphere authentication trust core"
 
-	gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key
+	# get fingerprint of core key.  should definitely not be empty at this point
 	CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
 	if [ -z "$CORE_FPR" ] ; then
 	    failure "Failed to create Monkeysphere authentication trust core!"

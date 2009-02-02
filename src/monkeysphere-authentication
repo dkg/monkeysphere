@@ -85,8 +85,6 @@ su_monkeysphere_user() {
 
 # function to interact with the gpg core keyring
 gpg_core() {
-    local returnCode
-
     GNUPGHOME="$GNUPGHOME_CORE"
     export GNUPGHOME
 
@@ -94,15 +92,7 @@ gpg_core() {
     # user to be able to read the host pubring.  we realize this might
     # be problematic, but it's the simplest solution, without too much
     # loss of security.
-    gpg --no-permission-warning "$@"
-    returnCode="$?"
-
-    # always reset the permissions on the host pubring so that the
-    # monkeysphere user can read the trust signatures
-    chgrp "$MONKEYSPHERE_USER" "${GNUPGHOME_CORE}/pubring.gpg"
-    chmod g+r "${GNUPGHOME_CORE}/pubring.gpg"
-    
-    return "$returnCode"
+    gpg "$@"
 }
 
 # function to interact with the gpg sphere keyring
@@ -114,6 +104,12 @@ gpg_sphere() {
     export GNUPGHOME
 
     su_monkeysphere_user "gpg $@"
+}
+
+# export signatures from core to sphere
+gpg_core_sphere_sig_transfer() {
+    gpg_core --export-options export-local-sigs --export | \
+	gpg_sphere --import-options import-local-sigs --import
 }
 
 ########################################################################
