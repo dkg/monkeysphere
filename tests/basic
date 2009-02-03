@@ -132,6 +132,7 @@ export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src/share
 export MONKEYSPHERE_MONKEYSPHERE_USER=$(whoami)
 export MONKEYSPHERE_CHECK_KEYSERVER=false
 export MONKEYSPHERE_LOG_LEVEL=DEBUG
+export MONKEYSPHERE_CORE_KEYLENGTH=1024
 
 export SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
@@ -220,7 +221,6 @@ echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 # set up monkeysphere authentication
 echo "##################################################"
 echo "### setup monkeysphere authentication..."
-mkdir -p -m 700 "$MONKEYSPHERE_SYSDATADIR"/authentication/{authorized_keys,core,sphere,tmp}
 cp "$TESTDIR"/etc/monkeysphere/monkeysphere-authentication.conf "$TEMPDIR"/
 cat <<EOF >> "$TEMPDIR"/monkeysphere-authentication.conf
 AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authentication/authorized_user_ids"

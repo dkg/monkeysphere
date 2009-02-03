@@ -3,6 +3,20 @@
 
 # Monkeysphere authentication add-certifier subcommand
 #
+# This function adds a certifier whose signatures will be used to
+# calculate validity of keys used to connect to user accounts on the
+# server.  The specified certifier key is first retrieved from the Web
+# of Trust with the monkeysphere-user-controlled gpg_sphere keyring.
+# Once then new key is retrieved, it is imported into the core
+# keyring.  The gpg_core then ltsigns the key with the desired trust
+# level, and then the key is exported back to the gpg_sphere keyring.
+# The gpg_sphere has ultimate owner trust of the core key, so the core
+# ltsigs on the new certifier key can then be used by gpg_sphere
+# calculate validity for keys inserted in the authorized_keys file.
+#
+# This is all to keep the monkeysphere user that connects to the
+# keyservers from accessing the core secret key.
+#
 # The monkeysphere scripts are written by:
 # Jameson Rollins <jrollins@finestructure.net>
 # Jamie McClelland <jm@mayfirst.org>
@@ -10,9 +24,6 @@
 #
 # They are Copyright 2008-2009, and are all released under the GPL,
 # version 3 or later.
-
-# retrieve key from web of trust, import it into the host keyring, and
-# ltsign the key in the host keyring so that it may certify other keys
 
 add_certifier() {
 
@@ -59,7 +70,7 @@ if [ -z "$keyID" ] ; then
     failure "You must specify the key ID of a key to add, or specify a file to read the key from."
 fi
 if [ -f "$keyID" ] ; then
-    echo "Reading key from file '$keyID':"
+    log info "Reading key from file '$keyID':"
     importinfo=$(gpg_sphere "--import" < "$keyID" 2>&1) || failure "could not read key from '$keyID'"
     # FIXME: if this is tried when the key database is not
     # up-to-date, i got these errors (using set -x):
@@ -96,8 +107,7 @@ if [ -z "$fingerprint" ] ; then
     failure "Key '$keyID' not found."
 fi
 
-echo
-echo "key found:"
+log info -e "\nkey found:"
 gpg_sphere "--fingerprint 0x${fingerprint}!"
 
 echo "Are you sure you want to add the above key as a"
@@ -106,18 +116,24 @@ if [ "${OK/y/Y}" != 'Y' ] ; then
     failure "Identity certifier not added."
 fi
 
-# export the key to the host keyring
+# export the key to the core keyring so that the core can sign the
+# new certifier key
 gpg_sphere "--export 0x${fingerprint}!" | gpg_core --import
 
-if [ "$trust" = marginal ]; then
-    trustval=1
-elif [ "$trust" = full ]; then
-    trustval=2
-else
-    failure "Trust value requested ('$trust') was unclear (only 'marginal' or 'full' are supported)."
-fi
+case "$trust" in
+    'marginal')
+	trustval=1
+	;;
+    'full')
+	trustval=2
+	;;
+    *)
+	failure "Trust value requested ('$trust') was unclear (only 'marginal' or 'full' are supported)."
+	;;
+esac
 
-# ltsign command
+# this is the gpg "script" that gpg --edit-key will execute for the
+# core to sign certifier.
 # NOTE: *all* user IDs will be ltsigned
 ltsignCommand=$(cat <<EOF
 ltsign
@@ -130,15 +146,17 @@ save
 EOF
     )
 
-# ltsign the key
+# core ltsigns the newly imported certifier key
 if echo "$ltsignCommand" | \
     gpg_core --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
 
-    # update the trustdb for the authentication keyring
+    # transfer the new sigs back to the sphere keyring
+    gpg_core_sphere_sig_transfer
+
+    # update the sphere trustdb
     gpg_sphere "--check-trustdb"
 
-    echo
-    echo "Identity certifier added."
+    log info -e "\nIdentity certifier added."
 else
     failure "Problem adding identify certifier."
 fi
