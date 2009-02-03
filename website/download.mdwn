@@ -19,11 +19,13 @@ Monkeysphere relies on:
 
 ## Debian ##
 
-If you are running a [Debian](http://www.debian.org/) system, you can
-install Monkeysphere by following these directions:
+If you are running a [Debian](http://www.debian.org/) system, the
+[monkeysphere is now available in the unstable
+("sid") distribution](http://packages.debian.org/sid/monkeysphere).
 
-You can add this repo to your system by putting the following lines in
-`/etc/apt/sources.list.d/monkeysphere.list`:
+You can also install the Monkeysphere directly from the Monkeysphere
+Debian archive.  You can add this archive to your system by putting
+the following lines in `/etc/apt/sources.list.d/monkeysphere.list`:
 
 	deb http://archive.monkeysphere.info/debian experimental monkeysphere
 	deb-src http://archive.monkeysphere.info/debian experimental monkeysphere
