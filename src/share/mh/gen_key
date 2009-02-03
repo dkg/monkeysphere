@@ -16,7 +16,7 @@ gen_key() {
 local keyType="RSA"
 local keyLength="2048"
 local keyUsage="auth"
-local keyExpire
+local keyExpire="0"
 local hostName=$(hostname -f)
 local userID
 local keyParameters
@@ -34,26 +34,19 @@ while true ; do
 		keyLength="$2"
 		shift 2
 		;;
-	    -e|--expire)
-		keyExpire="$2"
-		shift 2
-		;;
 	    *)
 		if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
 		    failure "Unknown option '$1'.
 Type '$PGRM help' for usage."
 		fi
 		hostName="$1"
-		shift;
+		shift
 		break
 		;;
 	esac
 done
 
 userID="ssh://${hostName}"
-
-# prompt about key expiration if not specified
-keyExpire=$(get_gpg_expiration "$keyExpire")
 
 # set key parameters
 keyParameters=\
@@ -63,7 +56,7 @@ Key-Usage: $keyUsage
 Name-Real: $userID
 Expire-Date: $keyExpire"
 
-echo "The following key parameters will be used for the host private key:"
+echo "The following key parameters will be used for the host key:"
 echo "$keyParameters"
 
 read -p "Generate key? (Y/n) " OK; OK=${OK:=Y}
@@ -79,6 +72,10 @@ keyParameters=\
 %commit
 %echo done"
 
+# create host home
+mkdir -p "$GNUPGHOME_HOST"
+chmod 700 "$GNUPGHOME_HOST"
+
 log verbose "generating host key..."
 echo "$keyParameters" | gpg_host --batch --gen-key
 
@@ -88,13 +85,18 @@ fingerprint=$(fingerprint_host_key)
 # translate the private key to ssh format, and export to a file
 # for sshs usage.
 # NOTE: assumes that the primary key is the proper key to use
+log debug "exporting new secret key to ssh format..."
 (umask 077 && \
 	gpg_host --export-secret-key "$fingerprint" | \
 	openpgp2ssh "$fingerprint" > "${MHDATADIR}/ssh_host_rsa_key")
 log info "SSH host private key output to file: ${MHDATADIR}/ssh_host_rsa_key"
+
+log debug "creating ssh public key..."
 ssh-keygen -y -f "${MHDATADIR}/ssh_host_rsa_key" > "${MHDATADIR}/ssh_host_rsa_key.pub"
 log info "SSH host public key output to file: ${MHDATADIR}/ssh_host_rsa_key.pub"
-gpg_host "--export-options export-minimal --armor --export 0x${fingerprint}\!" > "${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
+
+log debug "exporting openpgp public key..."
+gpg_host --export-options export-minimal --armor --export "0x${fingerprint}!" > "${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
 log info "SSH host public key in OpenPGP form: ${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
 
 # show info about new key

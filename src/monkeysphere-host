@@ -12,6 +12,8 @@
 # version 3 or later.
 
 ########################################################################
+set -e
+
 PGRM=$(basename $0)
 
 SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
@@ -47,7 +49,7 @@ Monkeysphere host admin tool.
 
 subcommands:
  show-key (s)                        output all host key information
- extend-key (e) EXPIRE               extend host key expiration
+ set-expire (e) EXPIRE               set host key expiration
  add-hostname (n+) NAME[:PORT]       add hostname user ID to host key
  revoke-hostname (n-) NAME[:PORT]    revoke hostname user ID
  add-revoker (o) FINGERPRINT         add a revoker to the host key
@@ -114,7 +116,8 @@ show_key() {
     # FIXME: you shouldn't have to be root to see the host key fingerprint
     check_host_keyring
     fingerprintPGP=$(fingerprint_host_key)
-    gpg_host "--fingerprint --list-key --list-options show-unusable-uids $fingerprintPGP" 2>/dev/null
+
+    gpg_host --fingerprint --list-key --list-options show-unusable-uids "0x${fingerprintPGP}!" 2>/dev/null
     echo "OpenPGP fingerprint: $fingerprintPGP"
 
     if [ -f "${MHDATADIR}/ssh_host_rsa_key.pub" ] ; then
@@ -124,6 +127,9 @@ show_key() {
     else
 	log info "SSH host key not found."
     fi
+
+    # FIXME: show expiration date
+    # FIXME: other relevant key parameters?
 }
 
 ########################################################################
@@ -169,7 +175,8 @@ case $COMMAND in
 	show_key
 	;;
 
-    'extend-key'|'e')
+    # FIXME: what should we call this command?
+    'set-expire'|'extend-key'|'e')
 	check_host_keyring
 	source "${MHSHAREDIR}/extend_key"
 	extend_key "$@"
@@ -215,11 +222,8 @@ usage: $PGRM expert <subcommand> [options] [args]
 
 expert subcommands:
  import-key (i) [NAME[:PORT]]        import existing ssh key to gpg
-   --keyfile (-f) FILE                 key file to import
-   --expire (-e) EXPIRE                date to expire
  gen-key (g) [NAME[:PORT]]           generate gpg key for the host
    --length (-l) BITS                  key length in bits (2048)
-   --expire (-e) EXPIRE                date to expire
  diagnostics (d)                     monkeysphere host status
 
 EOF
