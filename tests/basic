@@ -32,6 +32,7 @@ which socat >/dev/null || { echo "You must have socat installed to run this test
 
 # gpg command for test admin user
 gpgadmin() {
+    chmod 0700 "$TEMPDIR"/admin
     GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg "$@"
 }
 
