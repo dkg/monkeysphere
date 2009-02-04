@@ -17,6 +17,10 @@ set -e
 # piped commands should return the code of the first non-zero return
 set -o pipefail
 
+export TESTDIR=$(dirname "$0")
+
+source "$TESTDIR"/common
+
 ## make sure that the right tools are installed to run the test.  the
 ## test has *more* requirements than plain ol' monkeysphere:
 which socat >/dev/null || { echo "You must have socat installed to run this test." ; exit 1; }
@@ -72,34 +76,6 @@ ssh_test() {
     fi
 }
 
-failed_cleanup() {
-    # FIXME: can we be more verbose here?
-    echo 'FAILED!'
-    read -p "press enter to cleanup and remove tmp:"
-
-    cleanup
-}
-
-get_gpg_prng_arg() {
-    if (gpg --quick-random --version >/dev/null 2>&1) ; then
-	echo quick-random
-    elif (gpg --debug-quick-random --version >/dev/null 2>&1) ; then
-	echo debug-quick-random
-    fi
-}
-
-cleanup() {
-    echo "### removing temp dir..."
-    rm -rf "$TEMPDIR"
-
-    if [ "$SSHD_PID" ] ; then
-	echo "### killing off lingering sshd..."
-	kill "$SSHD_PID"
-    fi
-
-    wait
-}
-
 SSHD_PID=
 
 ## setup trap
@@ -112,14 +88,13 @@ trap failed_cleanup EXIT
 ## set up some variables to ensure that we're operating strictly in
 ## the tests, not system-wide:
 
-export TESTDIR=$(dirname "$0")
-
 # make temp dir
 TEMPDIR="$TESTDIR"/tmp
 if [ -e "$TEMPDIR" ] ; then
     echo "tempdir '$TEMPDIR' already exists."
     exit 1
 fi
+mkdir -p "$TEMPDIR"
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
@@ -142,41 +117,6 @@ export SOCKET="$TEMPDIR"/ssh-socket
 # *anything* with any running X11 session.
 export DISPLAY=monkeys
 
-######################################################################
-### TEST KEY CONVERSION
-
-mkdir -p "$TEMPDIR"
-
-echo "##################################################"
-echo "### test key conversion..."
-export GNUPGHOME="$TEMPDIR"
-# generate a key
-gpg --batch --quick-random --gen-key <<EOF
-Key-Type: RSA
-Key-Length: 1024
-Key-Usage: sign
-Name-Real: testtest
-Expire-Date: 0
-
-%commit
-%echo done
-EOF
-# get the the key timestamp
-timestamp=$(gpg --list-key --with-colons --fixed-list-mode | \
-    grep ^pub: | cut -d: -f6)
-# export the key to a file
-gpg --export-secret-key | openpgp2ssh > \
-    "$TEMPDIR"/test.pem
-# reconvert key, and compare to key in gpg keyring
-diff -u \
-    <(gpg --export-secret-key | hd) \
-    <(PEM2OPENPGP_USAGE_FLAGS=sign,certify \
-    PEM2OPENPGP_TIMESTAMP="$timestamp" pem2openpgp testtest < \
-    "$TEMPDIR"/test.pem | hd )
-
-# clear out the temp dir
-rm -rf "$TEMPDIR"
-mkdir -p "$TEMPDIR"
 
 ######################################################################
 ### CONFIGURE ENVIRONMENTS
