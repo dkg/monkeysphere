@@ -361,7 +361,7 @@ if (defined $ENV{PEM2OPENPGP_TIMESTAMP}) {
 
 my $flags = 0;
 if (! defined $ENV{PEM2OPENPGP_USAGE_FLAGS}) {
-  $flags = $usage_flags->{authenticate};
+  $flags = $usage_flags->{certify};
 } else {
   my @ff = split(",", $ENV{PEM2OPENPGP_USAGE_FLAGS});
   foreach my $f (@ff) {
@@ -378,7 +378,7 @@ my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time},
 # FIXME: HARDCODED: what if someone wants to select a different set of
 # usage flags?  For now, we do only authentication because that's what
 # monkeysphere needs.
-my $usage_packet = pack('CCC', 2, $subpacket_types->{usage_flags}, $usage_flags->{authenticate});
+my $usage_packet = pack('CCC', 2, $subpacket_types->{usage_flags}, $flags);
 
 
 # FIXME: HARDCODED: how should we determine how far off to set the
