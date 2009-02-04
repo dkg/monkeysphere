@@ -365,8 +365,9 @@ if (! defined $ENV{PEM2OPENPGP_USAGE_FLAGS}) {
 } else {
   my @ff = split(",", $ENV{PEM2OPENPGP_USAGE_FLAGS});
   foreach my $f (@ff) {
-    if (! defined $usage_flags->{$f})
+    if (! defined $usage_flags->{$f}) {
       die "No such flag $f";
+    }
     $flags |= $usage_flags->{$f};
   }
 }
