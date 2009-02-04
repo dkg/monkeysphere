@@ -495,10 +495,7 @@ my $datatosign =
   $sig_data_to_be_hashed.
   $trailer;
 
-print STDERR $datatosign;
-
 my $data_hash = Digest::SHA1::sha1_hex($datatosign);
-
 
 my $issuer_packet = pack('CCa8', 9, $subpacket_types->{issuer}, $keyid);
 
