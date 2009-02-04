@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+# Tests to ensure that the monkeysphere is working
+
+# Authors: 
+#   Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#   Jameson Rollins <jrollins@fifthhorseman.net>
+#   Micah Anderson <micah@riseup.net> 
+#
+# Copyright: 2008-2009
+# License: GPL v3 or later
+
+# these tests should all be able to run as a non-privileged user.
+
+# all subcommands in this script should complete without failure:
+set -e
+# piped commands should return the code of the first non-zero return
+set -o pipefail
+
+export TESTDIR=$(dirname "$0")
+
+source "$TESTDIR"/common
+
+## setup trap
+trap failed_cleanup EXIT
+
+######################################################################
+### SETUP VARIABLES
+
+## set up some variables to ensure that we're operating strictly in
+## the tests, not system-wide:
+
+# make temp dir
+TEMPDIR="$TESTDIR"/tmp
+if [ -e "$TEMPDIR" ] ; then
+    echo "tempdir '$TEMPDIR' already exists."
+    exit 1
+fi
+mkdir -p "$TEMPDIR"
+
+# Use the local copy of executables first, instead of system ones.
+# This should help us test without installing.
+export PATH="$TESTDIR"/../src/keytrans:"$PATH"
+
+######################################################################
+### TEST KEYTRANS
+
+echo "##################################################"
+echo "### generating openpgp key..."
+export GNUPGHOME="$TEMPDIR"
+chmod 700 "$TEMPDIR"
+# generate a key
+gpg --batch --$(get_gpg_prng_arg) --gen-key <<EOF
+Key-Type: RSA
+Key-Length: 1024
+Key-Usage: sign
+Name-Real: testtest
+Expire-Date: 0
+
+%commit
+%echo done
+EOF
+
+echo "##################################################"
+echo "### retrieving key timestamp..."
+timestamp=$(gpg --list-key --with-colons --fixed-list-mode | \
+    grep ^pub: | cut -d: -f6)
+
+echo "##################################################"
+echo "### exporting key to ssh file..."
+gpg --export-secret-key | openpgp2ssh > \
+    "$TEMPDIR"/test.pem
+
+echo "##################################################"
+echo "### reconvert key, and compare to key in gpg keyring..."
+diff -u \
+    <(gpg --export-secret-key | hd) \
+    <(PEM2OPENPGP_USAGE_FLAGS=sign,certify \
+    PEM2OPENPGP_TIMESTAMP="$timestamp" pem2openpgp testtest < \
+    "$TEMPDIR"/test.pem | hd )
+
+trap - EXIT
+
+echo "##################################################"
+echo " Monkeysphere keytrans test completed successfully!"
+echo "##################################################"
+
+cleanup

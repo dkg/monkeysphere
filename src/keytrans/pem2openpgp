@@ -38,6 +38,11 @@ my $uid = shift;
 # hostname_long() from Sys::Hostname::Long ?
 
 
+my $old_format_packet_lengths = { one => 0,
+				  two => 1,
+				  four => 2,
+				  indeterminate => 3,
+};
 
 # see RFC 4880 section 9.1 (ignoring deprecated algorithms for now)
 my $asym_algos = { rsa => 1,
@@ -185,11 +190,17 @@ sub modular_multi_inverse {
   my $a = shift;
   my $b = shift;
 
+
+  my $origdivisor = $b->copy();
+
   my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
   my $x = Crypt::OpenSSL::Bignum->zero();
   my $y = Crypt::OpenSSL::Bignum->one();
   my $lastx = Crypt::OpenSSL::Bignum->one();
   my $lasty = Crypt::OpenSSL::Bignum->zero();
+
+  my $finalquotient;
+  my $finalremainder;
 
   while (! $b->is_zero()) {
     my ($quotient, $remainder) = $a->div($b, $ctx);
@@ -210,7 +221,12 @@ sub modular_multi_inverse {
     die "did this math wrong.\n";
   }
 
-  return $lastx;
+  # let's make sure that we return a positive value because RFC 4880,
+  # section 3.2 only allows unsigned values:
+
+  ($finalquotient, $finalremainder) = $lastx->add($origdivisor)->div($origdivisor, $ctx);
+
+  return $finalremainder;
 }
 
 
@@ -221,26 +237,37 @@ sub modular_multi_inverse {
 sub make_packet {
   my $type = shift;
   my $body = shift;
+  my $options = shift;
 
   my $len = length($body);
+  my $pseudolen = $len;
+
+  # if the caller wants to use at least N octets of packet length,
+  # pretend that we're using that many.
+  if (defined $options && defined $options->{'packet_length'}) {
+      $pseudolen = 2**($options->{'packet_length'} * 8) - 1;
+  }
+  if ($pseudolen < $len) {
+      $pseudolen = $len;
+  }
 
   my $lenbytes;
   my $lencode;
 
-  if ($len < 2**8) {
-    $lenbytes = 0;
+  if ($pseudolen < 2**8) {
+    $lenbytes = $old_format_packet_lengths->{one};
     $lencode = 'C';
-  } elsif ($len < 2**16) {
-    $lenbytes = 1;
+  } elsif ($pseudolen < 2**16) {
+    $lenbytes = $old_format_packet_lengths->{two};
     $lencode = 'n';
-  } elsif ($len < 2**31) {
+  } elsif ($pseudolen < 2**31) {
     ## not testing against full 32 bits because i don't want to deal
     ## with potential overflow.
-    $lenbytes = 2;
+    $lenbytes = $old_format_packet_lengths->{four};
     $lencode = 'N';
   } else {
     ## what the hell do we do here?
-    $lenbytes = 3;
+    $lenbytes = $old_format_packet_lengths->{indeterminate};
     $lencode = '';
   }
 
@@ -287,10 +314,12 @@ sub make_rsa_sec_key_body {
   # we're not using $a and $b, but we need them to get to $c.
   my ($n, $e, $d, $p, $q) = $key->get_key_parameters();
 
+  my $c3 = modular_multi_inverse($p, $q);
+
   my $secret_material = mpi_pack($d).
     mpi_pack($p).
       mpi_pack($q).
-	mpi_pack(modular_multi_inverse($p, $q));
+	mpi_pack($c3);
 
   # according to Crypt::OpenSSL::RSA, the closest value we can get out
   # of get_key_parameters is 1/q mod p; but according to sec 5.5.3 of
@@ -349,27 +378,43 @@ my $hash_algo = pack('C', $digests->{sha1});
 # this script more than once against the same key (because the
 # timestamps will differ).  How can we prevent this?
 
-# could an environment variable (if set) override the current time, to
+# this environment variable (if set) overrides the current time, to
 # be able to create a standard key?  If we read the key from a file
 # instead of stdin, should we use the creation time on the file?
-my $timestamp = time();
+my $timestamp = 0;
+if (defined $ENV{PEM2OPENPGP_TIMESTAMP}) {
+  $timestamp = ($ENV{PEM2OPENPGP_TIMESTAMP} + 0);
+} else {
+  $timestamp = time();
+}
 
 my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $timestamp);
 
 
-# FIXME: HARDCODED: what if someone wants to select a different set of
-# usage flags?  For now, we do only authentication because that's what
-# monkeysphere needs.
-my $usage_packet = pack('CCC', 2, $subpacket_types->{usage_flags}, $usage_flags->{authenticate});
+my $flags = 0;
+if (! defined $ENV{PEM2OPENPGP_USAGE_FLAGS}) {
+  $flags = $usage_flags->{certify};
+} else {
+  my @ff = split(",", $ENV{PEM2OPENPGP_USAGE_FLAGS});
+  foreach my $f (@ff) {
+    if (! defined $usage_flags->{$f}) {
+      die "No such flag $f";
+    }
+    $flags |= $usage_flags->{$f};
+  }
+}
+
+my $usage_packet = pack('CCC', 2, $subpacket_types->{usage_flags}, $flags);
 
 
-# FIXME: HARDCODED: how should we determine how far off to set the
-# expiration date?  default is to expire in 2 days, which is insanely
-# short (but good for testing).  The user ought to be able to decide
-# this directly, rather than having to do "monkeysphere-server
-# extend-key".
-my $expires_in = 86400*2;
-my $expiration_packet = pack('CCN', 5, $subpacket_types->{key_expiration_time}, $expires_in);
+# how should we determine how far off to set the expiration date?
+# default is no expiration.  Specify the timestamp in seconds from the
+# key creation.
+my $expiration_packet = '';
+if (defined $ENV{PEM2OPENPGP_EXPIRATION}) {
+  my $expires_in = $ENV{PEM2OPENPGP_EXPIRATION} + 0;
+  $expiration_packet = pack('CCN', 5, $subpacket_types->{key_expiration_time}, $expires_in);
+}
 
 
 # prefer AES-256, AES-192, AES-128, CAST5, 3DES:
@@ -426,7 +471,10 @@ my $sig_data_to_be_hashed =
 my $pubkey = make_rsa_pub_key_body($rsa, $timestamp);
 my $seckey = make_rsa_sec_key_body($rsa, $timestamp);
 
-my $key_data = make_packet($packet_types->{pubkey}, $pubkey);
+# this is for signing.  it needs to be an old-style header with a
+# 2-packet octet count.
+
+my $key_data = make_packet($packet_types->{pubkey}, $pubkey, {'packet_length'=>2});
 
 # take the last 8 bytes of the fingerprint as the keyid:
 my $keyid = substr(fingerprint($rsa, $timestamp), 20 - 8, 8);
@@ -448,7 +496,6 @@ my $datatosign =
   $trailer;
 
 my $data_hash = Digest::SHA1::sha1_hex($datatosign);
-
 
 my $issuer_packet = pack('CCa8', 9, $subpacket_types->{issuer}, $keyid);
 
