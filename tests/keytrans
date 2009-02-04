@@ -40,21 +40,13 @@ mkdir -p "$TEMPDIR"
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
-export PATH="$TESTDIR"/../src:"$TESTDIR"/../src/keytrans:"$PATH"
-
-export MONKEYSPHERE_SYSDATADIR="$TEMPDIR"
-export MONKEYSPHERE_SYSCONFIGDIR="$TEMPDIR"
-export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src/share
-export MONKEYSPHERE_MONKEYSPHERE_USER=$(whoami)
-export MONKEYSPHERE_CHECK_KEYSERVER=false
-export MONKEYSPHERE_LOG_LEVEL=DEBUG
-
+export PATH="$TESTDIR"/../src/keytrans:"$PATH"
 
 ######################################################################
 ### TEST KEYTRANS
 
 echo "##################################################"
-echo "### test key conversion..."
+echo "### generating openpgp key..."
 export GNUPGHOME="$TEMPDIR"
 chmod 700 "$TEMPDIR"
 # generate a key
@@ -68,19 +60,21 @@ Expire-Date: 0
 %commit
 %echo done
 EOF
-# get the the key timestamp
+
+echo "##################################################"
+echo "### retrieving key timestamp..."
 timestamp=$(gpg --list-key --with-colons --fixed-list-mode | \
     grep ^pub: | cut -d: -f6)
-# export the key to a file
+
+echo "##################################################"
+echo "### exporting key to ssh file..."
 gpg --export-secret-key | openpgp2ssh > \
     "$TEMPDIR"/test.pem
-# reconvert key, and compare to key in gpg keyring
+
+echo "##################################################"
+echo "### reconvert key, and compare to key in gpg keyring..."
 diff -u \
     <(gpg --export-secret-key | hd) \
     <(PEM2OPENPGP_USAGE_FLAGS=sign,certify \
     PEM2OPENPGP_TIMESTAMP="$timestamp" pem2openpgp testtest < \
     "$TEMPDIR"/test.pem | hd )
-
-# clear out the temp dir
-rm -rf "$TEMPDIR"
-mkdir -p "$TEMPDIR"
