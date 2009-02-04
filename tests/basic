@@ -89,12 +89,8 @@ trap failed_cleanup EXIT
 ## the tests, not system-wide:
 
 # make temp dir
-TEMPDIR="$TESTDIR"/tmp
-if [ -e "$TEMPDIR" ] ; then
-    echo "tempdir '$TEMPDIR' already exists."
-    exit 1
-fi
-mkdir -p "$TEMPDIR"
+mkdir -p "$TESTDIR"/tmp
+TEMPDIR=$(mktemp -d ${TMPDIR:-"$TESTDIR"/tmp}/monkeyspheretest.XXXXXXX)
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
@@ -130,6 +126,7 @@ cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
 # set up environment for testuser
 export TESTHOME="$TEMPDIR"/testuser
 export GNUPGHOME="$TESTHOME"/.gnupg
+chmod 0700 "$GNUPGHOME"
 export SSH_ASKPASS="$TESTHOME"/.ssh/askpass
 export MONKEYSPHERE_HOME="$TESTHOME"/.monkeysphere
 cat <<EOF >> "$TESTHOME"/.ssh/config
@@ -236,7 +233,7 @@ gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 # teach the "server" about the testuser's key
 echo "##################################################"
 echo "### export testuser key to server..."
-gpg --export testuser | monkeysphere-authentication gpg-cmd --import
+gpg --export testuser | monkeysphere-authentication expert gpg-cmd --import
 
 # update authorized_keys for user
 echo "##################################################"
