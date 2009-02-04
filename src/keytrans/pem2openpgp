@@ -38,6 +38,11 @@ my $uid = shift;
 # hostname_long() from Sys::Hostname::Long ?
 
 
+my $old_format_packet_lengths = { one => 0,
+				  two => 1,
+				  four => 2,
+				  indeterminate => 3,
+};
 
 # see RFC 4880 section 9.1 (ignoring deprecated algorithms for now)
 my $asym_algos = { rsa => 1,
@@ -232,26 +237,37 @@ sub modular_multi_inverse {
 sub make_packet {
   my $type = shift;
   my $body = shift;
+  my $options = shift;
 
   my $len = length($body);
+  my $pseudolen = $len;
+
+  # if the caller wants to use at least N octets of packet length,
+  # pretend that we're using that many.
+  if (defined $options && defined $options->{'packet_length'}) {
+      $pseudolen = 2**($options->{'packet_length'} * 8) - 1;
+  }
+  if ($pseudolen < $len) {
+      $pseudolen = $len;
+  }
 
   my $lenbytes;
   my $lencode;
 
-  if ($len < 2**8) {
-    $lenbytes = 0;
+  if ($pseudolen < 2**8) {
+    $lenbytes = $old_format_packet_lengths->{one};
     $lencode = 'C';
-  } elsif ($len < 2**16) {
-    $lenbytes = 1;
+  } elsif ($pseudolen < 2**16) {
+    $lenbytes = $old_format_packet_lengths->{two};
     $lencode = 'n';
-  } elsif ($len < 2**31) {
+  } elsif ($pseudolen < 2**31) {
     ## not testing against full 32 bits because i don't want to deal
     ## with potential overflow.
-    $lenbytes = 2;
+    $lenbytes = $old_format_packet_lengths->{four};
     $lencode = 'N';
   } else {
     ## what the hell do we do here?
-    $lenbytes = 3;
+    $lenbytes = $old_format_packet_lengths->{indeterminate};
     $lencode = '';
   }
 
@@ -455,7 +471,10 @@ my $sig_data_to_be_hashed =
 my $pubkey = make_rsa_pub_key_body($rsa, $timestamp);
 my $seckey = make_rsa_sec_key_body($rsa, $timestamp);
 
-my $key_data = make_packet($packet_types->{pubkey}, $pubkey);
+# this is for signing.  it needs to be an old-style header with a
+# 2-packet octet count.
+
+my $key_data = make_packet($packet_types->{pubkey}, $pubkey, {'packet_length'=>2});
 
 # take the last 8 bytes of the fingerprint as the keyid:
 my $keyid = substr(fingerprint($rsa, $timestamp), 20 - 8, 8);
@@ -475,6 +494,8 @@ my $datatosign =
   $uid_data.
   $sig_data_to_be_hashed.
   $trailer;
+
+print STDERR $datatosign;
 
 my $data_hash = Digest::SHA1::sha1_hex($datatosign);
 
