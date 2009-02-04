@@ -27,8 +27,9 @@ $extendTo
 save
 EOF
 
-echo
-echo "NOTE: Host key expiration date adjusted, but not yet published."
-echo "Run '$PGRM publish-key' to publish the new expiration date."
+cat <<EOF | log info
+NOTE: Host key expiration date adjusted, but not yet published.
+Run '$PGRM publish-key' to publish the new expiration date.
+EOF
 
 }

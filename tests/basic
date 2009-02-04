@@ -182,25 +182,35 @@ EOF
 ######################################################################
 ### SERVER HOST SETUP
 
-# set up monkeysphere host
-echo "##################################################"
-echo "### configuring monkeysphere host..."
-mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/host
-
 # create a new host key
 echo "##################################################"
-echo "### generating server host key..."
+echo "### testing host key generation..."
+mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/host
 # add gpg.conf with quick-random
 get_gpg_prng_arg >> "$MONKEYSPHERE_SYSCONFIGDIR"/host/gpg.conf
-echo | monkeysphere-host expert gen-key --length 1024 --expire 0 testhost
-# remove the gpg.conf
-rm "$MONKEYSPHERE_SYSCONFIGDIR"/host/gpg.conf
+echo | monkeysphere-host expert gen-key --length 1024 testhost
 
-# FIXME: need to test import-key as well
+# remove the host home for the next test
+rm -rf "$MONKEYSPHERE_SYSCONFIGDIR"/host
 
+# import host key
+echo "##################################################"
+echo "### testing host key importing..."
+ssh-keygen -b 1024 -t rsa -N '' -f "$TEMPDIR"/ssh_host_rsa_key
+monkeysphere-host expert import-key testhost < "$TEMPDIR"/ssh_host_rsa_key
+
+# change host key expiration
+echo "##################################################"
+echo "### setting host key expiration..."
+monkeysphere-host set-expire 1
+monkeysphere-host show-key
+# FIXME: how do we check that the expiration has really been set?
+
+echo "##################################################"
+echo "### getting host key fingerprint..."
 HOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
 
-# certify it with the "Admin's Key".
+# certify host key with the "Admin's Key".
 # (this would normally be done via keyservers)
 echo "##################################################"
 echo "### certifying server host key..."
@@ -301,6 +311,7 @@ chmod o-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 
 # FIXME: addtest: remove admin as id-certifier and check ssh failure
 
+# FIXME: addtest: add hostname on host key
 # FIXME: addtest: revoke hostname on host key and check ssh failure
 
 # FIXME: addtest: revoke the host key and check ssh failure

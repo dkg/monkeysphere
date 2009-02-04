@@ -13,73 +13,34 @@
 
 import_key() {
 
-local hostName=$(hostname -f)
-local keyFile="/etc/ssh/ssh_host_rsa_key"
-local keyExpire
+local hostName
 local userID
+local fingerprint
 
 # check for presense of secret key
 # FIXME: is this the proper test to be doing here?
 fingerprint_host_key >/dev/null \
 	&& failure "An OpenPGP host key already exists."
 
-# get options
-while true ; do
-	case "$1" in
-	    -f|--keyfile)
-		keyFile="$2"
-		shift 2
-		;;
-	    -e|--expire)
-		keyExpire="$2"
-		shift 2
-		;;
-	    *)
-		if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
-		    failure "Unknown option '$1'.
-Type '$PGRM help' for usage."
-		fi
-		hostName="$1"
-		shift
-		;;
-		break
-		;;
-	esac
-done
-
-if [ ! -f "$keyFile" ] ; then
-	failure "SSH secret key file '$keyFile' not found."
-fi
+hostName=${1:-$(hostname -f)}
 
 userID="ssh://${hostName}"
 
-# prompt about key expiration if not specified
-keyExpire=$(get_gpg_expiration "$keyExpire")
-
-echo "The following key parameters will be used for the host private key:"
-echo "Import: $keyFile"
-echo "Name-Real: $userID"
-echo "Expire-Date: $keyExpire"
-
-read -p "Import key? (Y/n) " OK; OK=${OK:=Y}
-if [ ${OK/y/Y} != 'Y' ] ; then
-	failure "aborting."
-fi
+# create host home
+mkdir -p "$GNUPGHOME_HOST"
+chmod 700 "$GNUPGHOME_HOST"
 
 log verbose "importing ssh key..."
 # translate ssh key to a private key
 (umask 077 && \
-	pem2openpgp "$userID" "$keyExpire" < "$sshKey" | gpg_host --import)
+	pem2openpgp "$userID" | gpg_host --import)
 
 # find the key fingerprint of the newly converted key
 fingerprint=$(fingerprint_host_key)
 
-# export host ownertrust to authentication keyring
-log verbose "setting ultimate owner trust for host key..."
-echo "${fingerprint}:6:" | gpg_host "--import-ownertrust"
-
 # export public key to file
-gpg_host "--export-options export-minimal --armor --export 0x${fingerprint}\!" > "${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
+log debug "exporting openpgp public key..."
+gpg_host --export-options export-minimal --armor --export "0x${fingerprint}!" > "${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
 log info "SSH host public key in OpenPGP form: ${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
 
 # show info about new key
