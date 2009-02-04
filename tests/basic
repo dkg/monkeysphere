@@ -120,7 +120,6 @@ if [ -e "$TEMPDIR" ] ; then
     echo "tempdir '$TEMPDIR' already exists."
     exit 1
 fi
-mkdir "$TEMPDIR"
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
@@ -143,6 +142,41 @@ export SOCKET="$TEMPDIR"/ssh-socket
 # *anything* with any running X11 session.
 export DISPLAY=monkeys
 
+######################################################################
+### TEST KEY CONVERSION
+
+mkdir -p "$TEMPDIR"
+
+echo "##################################################"
+echo "### test key conversion..."
+export GNUPGHOME="$TEMPDIR"
+# generate a key
+gpg --batch --quick-random --gen-key <<EOF
+Key-Type: RSA
+Key-Length: 1024
+Key-Usage: sign
+Name-Real: testtest
+Expire-Date: 0
+
+%commit
+%echo done
+EOF
+# get the the key timestamp
+timestamp=$(gpg --list-key --with-colons --fixed-list-mode | \
+    grep ^pub: | cut -d: -f6)
+# export the key to a file
+gpg --export-secret-key | openpgp2ssh > \
+    "$TEMPDIR"/test.pem
+# reconvert key, and compare to key in gpg keyring
+diff -u \
+    <(gpg --export-secret-key | hd) \
+    <(PEM2OPENPGP_USAGE_FLAGS=sign,certify \
+    PEM2OPENPGP_TIMESTAMP="$timestamp" pem2openpgp testtest < \
+    "$TEMPDIR"/test.pem | hd )
+
+# clear out the temp dir
+rm -rf "$TEMPDIR"
+mkdir -p "$TEMPDIR"
 
 ######################################################################
 ### CONFIGURE ENVIRONMENTS
@@ -154,7 +188,7 @@ cp -a "$TESTDIR"/home/admin "$TEMPDIR"/
 cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
 
 # set up environment for testuser
-TESTHOME="$TEMPDIR"/testuser
+export TESTHOME="$TEMPDIR"/testuser
 export GNUPGHOME="$TESTHOME"/.gnupg
 export SSH_ASKPASS="$TESTHOME"/.ssh/askpass
 export MONKEYSPHERE_HOME="$TESTHOME"/.monkeysphere
