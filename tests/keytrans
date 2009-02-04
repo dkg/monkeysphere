@@ -78,3 +78,11 @@ diff -u \
     <(PEM2OPENPGP_USAGE_FLAGS=sign,certify \
     PEM2OPENPGP_TIMESTAMP="$timestamp" pem2openpgp testtest < \
     "$TEMPDIR"/test.pem | hd )
+
+trap - EXIT
+
+echo "##################################################"
+echo " Monkeysphere keytrans test completed successfully!"
+echo "##################################################"
+
+cleanup
