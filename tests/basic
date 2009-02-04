@@ -90,7 +90,7 @@ trap failed_cleanup EXIT
 
 # make temp dir
 mkdir -p "$TESTDIR"/tmp
-TEMPDIR=$(mktemp -d ${TMPDIR:-"$TESTDIR"/tmp}/monkeyspheretest.XXXXXXX)
+TEMPDIR=$(mktemp -d ${TMPDIR:-$(cd "$TESTDIR" && printf "%s" $(pwd)/tmp)}/monkeyspheretest.XXXXXXX)
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
