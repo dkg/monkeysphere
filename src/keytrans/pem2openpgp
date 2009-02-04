@@ -349,7 +349,7 @@ my $hash_algo = pack('C', $digests->{sha1});
 # this script more than once against the same key (because the
 # timestamps will differ).  How can we prevent this?
 
-# could an environment variable (if set) override the current time, to
+# this environment variable (if set) overrides the current time, to
 # be able to create a standard key?  If we read the key from a file
 # instead of stdin, should we use the creation time on the file?
 my $timestamp = 0;
@@ -358,6 +358,9 @@ if (defined $ENV{PEM2OPENPGP_TIMESTAMP}) {
 } else {
   $timestamp = time();
 }
+
+my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $timestamp);
+
 
 my $flags = 0;
 if (! defined $ENV{PEM2OPENPGP_USAGE_FLAGS}) {
@@ -372,22 +375,17 @@ if (! defined $ENV{PEM2OPENPGP_USAGE_FLAGS}) {
   }
 }
 
-my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $timestamp);
-
-
-# FIXME: HARDCODED: what if someone wants to select a different set of
-# usage flags?  For now, we do only authentication because that's what
-# monkeysphere needs.
 my $usage_packet = pack('CCC', 2, $subpacket_types->{usage_flags}, $flags);
 
 
-# FIXME: HARDCODED: how should we determine how far off to set the
-# expiration date?  default is to expire in 2 days, which is insanely
-# short (but good for testing).  The user ought to be able to decide
-# this directly, rather than having to do "monkeysphere-server
-# extend-key".
-my $expires_in = 86400*2;
-my $expiration_packet = pack('CCN', 5, $subpacket_types->{key_expiration_time}, $expires_in);
+# how should we determine how far off to set the expiration date?
+# default is no expiration.  Specify the timestamp in seconds from the
+# key creation.
+my $expiration_packet = '';
+if (defined $ENV{PEM2OPENPGP_EXPIRATION}) {
+  my $expires_in = $ENV{PEM2OPENPGP_EXPIRATION} + 0;
+  $expiration_packet = pack('CCN', 5, $subpacket_types->{key_expiration_time}, $expires_in);
+}
 
 
 # prefer AES-256, AES-192, AES-128, CAST5, 3DES:
