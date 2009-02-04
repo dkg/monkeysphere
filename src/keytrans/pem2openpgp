@@ -185,11 +185,17 @@ sub modular_multi_inverse {
   my $a = shift;
   my $b = shift;
 
+
+  my $origdivisor = $b->copy();
+
   my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
   my $x = Crypt::OpenSSL::Bignum->zero();
   my $y = Crypt::OpenSSL::Bignum->one();
   my $lastx = Crypt::OpenSSL::Bignum->one();
   my $lasty = Crypt::OpenSSL::Bignum->zero();
+
+  my $finalquotient;
+  my $finalremainder;
 
   while (! $b->is_zero()) {
     my ($quotient, $remainder) = $a->div($b, $ctx);
@@ -210,7 +216,12 @@ sub modular_multi_inverse {
     die "did this math wrong.\n";
   }
 
-  return $lastx;
+  # let's make sure that we return a positive value because RFC 4880,
+  # section 3.2 only allows unsigned values:
+
+  ($finalquotient, $finalremainder) = $lastx->add($origdivisor)->div($origdivisor, $ctx);
+
+  return $finalremainder;
 }
 
 
@@ -287,10 +298,12 @@ sub make_rsa_sec_key_body {
   # we're not using $a and $b, but we need them to get to $c.
   my ($n, $e, $d, $p, $q) = $key->get_key_parameters();
 
+  my $c3 = modular_multi_inverse($p, $q);
+
   my $secret_material = mpi_pack($d).
     mpi_pack($p).
       mpi_pack($q).
-	mpi_pack(modular_multi_inverse($p, $q));
+	mpi_pack($c3);
 
   # according to Crypt::OpenSSL::RSA, the closest value we can get out
   # of get_key_parameters is 1/q mod p; but according to sec 5.5.3 of
