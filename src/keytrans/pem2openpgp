@@ -352,7 +352,21 @@ my $hash_algo = pack('C', $digests->{sha1});
 # could an environment variable (if set) override the current time, to
 # be able to create a standard key?  If we read the key from a file
 # instead of stdin, should we use the creation time on the file?
-my $timestamp = time();
+my $timestamp = $ENV{PEM2OPENPGP_TIMESTAMP};
+if (! defined $timestamp)
+  $timestamp = time();
+
+my $flags = 0;
+if (! defined $ENV{PEM2OPENPGP_USAGE_FLAGS})
+  $flags = $usage_flags->{authenticate};
+else {
+  my @ff = split(",", $ENV{PEM2OPENPGP_USAGE_FLAGS});
+  foreach $f (@ff) {
+    if (! defined $usage_flags->{$f})
+      die "No such flag $f";
+    $flags |= $usage_flags->{$f};
+  }
+}
 
 my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $timestamp);
 
