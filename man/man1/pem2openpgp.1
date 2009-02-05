@@ -4,24 +4,82 @@
 .Os
 .Sh NAME
 pem2openpgp
-.Nd translate PEM encoded keys to OpenPGP keys
+.Nd translate PEM-encoded RSA keys to OpenPGP certificates
 .Sh SYNOPSIS
-.Nm pem2openpgp $USERID < mykey.pem 
+.Nm pem2openpgp "$USERID" < mykey.pem | gpg --import
 .Pp
-.Nm ??? gpg --export $KEYID | openpgp2ssh $KEYID
-.Pp
-.Nm ????gpg --export-secret-key $KEYID | openpgp2ssh $KEYID
+.Nm PEM2OPENPGP_EXPIRATION=$((86400 * $DAYS)) PEM2OPENPGP_USAGE_FLAGS=authentication,certify pem2openpgp "$USERID" <mykey.pem
 .Sh DESCRIPTION
 .Nm
-WRITE ME!!!
+is a low-level utility for transforming raw, PEM-encoded RSA secret
+keys into OpenPGP-formatted certificates.  The generated certificates
+include the secret key material, so they should be handled carefully.
+.Pp
+It works as an element within a pipeline: feed it the raw key on
+stdin, supply the desired User ID as a command line argument.  Note
+that you may need to quote the string to ensure that it is entirely in
+a single argument.
+.Pp
+Other choices about how to generate the new OpenPGP certificate are
+governed by environment variables.
+.Sh ENVIRONMENT
+The following environment variables influence the behavior of
+.Nm :
+.Pp
+.ti 3
+\fBPEM2OPENPGP_TIMESTAMP\fP controls the timestamp (measured in
+seconds since the UNIX epoch) indicated as the creation time (a.k.a
+"not valid before") of the generated certificate.  By default,
+.Nm
+uses the current time.
+.Pp
+.ti 3
+\fBPEM2OPENPGP_USAGE_FLAGS\fP should contain a comma-separated list of
+valid OpenPGP usage flags (see section 5.2.3.21 of RFC 4880 for what
+these mean).  The available choices are: certify, sign, encrypt_comms,
+encrypt_storage, encrypt (this means both encrypt_comms and
+encrypt_storage), authenticate, split, shared.  By default, 
+.Nm
+only sets the certify flag.
+.Pp
+.ti 3
+\fBPEM2OPENPGP_EXPIRATION\fP sets an expiration (measured in seconds
+after the creation time of the key) in each self-signature packet.  By
+default, no expiration subpacket is included.
+.Pp
+.ti 3
+\fBPEM2OPENPGP_NEWKEY\fP indicates that
+.Nm
+should ignore stdin, and instead generate a new key internally and
+build the certificate based on this new key.  Set this variable to the
+number of bits for the new key (e.g. 2048).  By default (when this is
+unset), 
+.Nm
+will read the key from stdin.
 .Sh AUTHOR
 .Nm
 and this man page were written by Daniel Kahn Gillmor
 <dkg@fifthhorseman.net>.
 .Sh BUGS
+Only handles RSA keys at the moment.  It would be nice to handle DSA
+keys as well.
+.Pp
+Currently only creates certificates with a single User ID.  Should be
+able to create certificates with multiple User IDs.
+.Pp
+Currently only accepts unencrypted RSA keys.  It should be able to
+deal with passphrase-locked key material.
+.Pp
+Currently outputs OpenPGP certificates with cleartext secret key
+material.  It would be good to be able to lock the output with a
+passphrase.
+.Pp
+If you find other bugs, please report them at
+https://labs.riseup.net/code/projects/show/monkeysphere
 .Sh SEE ALSO
 .Xr openpgp2ssh 1,
 .Xr monkeysphere 1 ,
 .Xr monkeysphere 7 ,
 .Xr ssh 1 ,
-.Xr monkeysphere-server 8
+.Xr monkeysphere-host 8 ,
+.Xr monkeysphere-authentication 8
