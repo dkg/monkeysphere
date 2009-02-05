@@ -246,7 +246,7 @@ monkeysphere-authentication update-users $(whoami)
 ######################################################################
 ### TESTS
 
-# connect to test sshd, using monkeysphere-ssh-proxycommand to verify
+# connect to test sshd, using monkeysphere ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
 echo "##################################################"
 echo "### ssh connection test for success..."
