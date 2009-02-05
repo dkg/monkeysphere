@@ -17,7 +17,8 @@ set -e
 # piped commands should return the code of the first non-zero return
 set -o pipefail
 
-export TESTDIR=$(dirname "$0")
+# make sure the TESTDIR is an absolute path, not a relative one.
+export TESTDIR=$(cd $(dirname "$0") && pwd)
 
 source "$TESTDIR"/common
 
@@ -91,7 +92,7 @@ trap failed_cleanup EXIT
 
 # make temp dir
 mkdir -p "$TESTDIR"/tmp
-TEMPDIR=$(mktemp -d ${TMPDIR:-$(cd "$TESTDIR" && printf "%s" $(pwd)/tmp)}/monkeyspheretest.XXXXXXX)
+TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/monkeyspheretest.XXXXXXX)"
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
