@@ -347,13 +347,16 @@ sub fingerprint {
   return Digest::SHA1::sha1(pack('Cn', 0x99, length($rsabody)).$rsabody);
 }
 
-# we're just not dealing with newline business right now.  slurp in
-# the whole file.
-undef $/;
-my $buf = <STDIN>;
 
-
-my $rsa = Crypt::OpenSSL::RSA->new_private_key($buf);
+my $rsa;
+if (defined $ENV{PEM2OPENPGP_NEWKEY}) {
+  $rsa = Crypt::OpenSSL::RSA->generate_key($ENV{PEM2OPENPGP_NEWKEY});
+} else {
+  # we're just not dealing with newline business right now.  slurp in
+  # the whole file.
+  undef $/;
+  $rsa = Crypt::OpenSSL::RSA->new_private_key(<STDIN>);
+}
 
 $rsa->use_sha1_hash();
 
