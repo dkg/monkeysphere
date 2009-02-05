@@ -17,7 +17,7 @@ local hostName
 local userID
 local fingerprint
 
-# check for presense of secret key
+# check for presence of secret key
 # FIXME: is this the proper test to be doing here?
 fingerprint_host_key >/dev/null \
 	&& failure "An OpenPGP host key already exists."
@@ -32,8 +32,7 @@ chmod 700 "$GNUPGHOME_HOST"
 
 log verbose "importing ssh key..."
 # translate ssh key to a private key
-(umask 077 && \
-	pem2openpgp "$userID" | gpg_host --import)
+PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" | gpg_host --import
 
 # find the key fingerprint of the newly converted key
 fingerprint=$(fingerprint_host_key)
