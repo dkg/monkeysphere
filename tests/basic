@@ -206,7 +206,7 @@ echo "##################################################"
 echo "### setup monkeysphere authentication..."
 cp "$TESTDIR"/etc/monkeysphere/monkeysphere-authentication.conf "$TEMPDIR"/
 cat <<EOF >> "$TEMPDIR"/monkeysphere-authentication.conf
-AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authentication/authorized_user_ids"
+AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authorized_user_ids"
 EOF
 monkeysphere-authentication setup
 get_gpg_prng_arg >> "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
