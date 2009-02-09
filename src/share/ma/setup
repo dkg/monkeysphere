@@ -53,17 +53,8 @@ EOF
 
 	local CORE_UID=$(printf "Monkeysphere authentication trust core UID (random string: %s)" $(head -c21 </dev/urandom | base64))
     
-	local TMPLOC=$(mktemp -d "${MATMPDIR}"/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
-
-	# generate the key with ssh-keygen...
-	log debug "generating ssh key ($CORE_KEYLENGTH bits)..."
-	ssh-keygen -q -b "$CORE_KEYLENGTH" -t rsa -N '' -f "${TMPLOC}/authkey" || failure "Could not generate new key for Monkeysphere authentication trust core"
-	# and then translate to openpgp encoding and import
-	# FIXME: pem2openpgp currently sets the A flag and a short
-	# expiration date.  We should set the C flag and no expiration
-	# date.
-	log debug "converting ssh key to openpgp key and importing into core..."
-	< "${TMPLOC}/authkey" pem2openpgp "$CORE_UID" | gpg_core --import || failure "Could not import new key for Monkeysphere authentication trust core"
+	log debug "generating monkeysphere authentication trust core key ($CORE_KEYLENGTH bits)..."
+	PEM2OPENPGP_USAGE_FLAGS=certify PEM2OPENPGP_NEWKEY=$CORE_KEYLENGTH pem2openpgp "$CORE_UID" | gpg_core --import || failure "Could not import new key for Monkeysphere authentication trust core"
 
 	# get fingerprint of core key.  should definitely not be empty at this point
 	log debug "get core key fingerprint..."

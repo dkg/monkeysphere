@@ -1,0 +1,45 @@
+[[meta title="Plans for The Golden Bezoar"]]
+
+A workday with several Monkeysphere contributors on 2009-01-31
+resulted in a significant reorganization of the project in several
+areas, primarily driven by the realization that there are two
+fundamentally different concepts on the server side: 
+
+* publishing host keys via the Web-of-Trust (WoT), and
+* authenticating users via the WoT.
+
+For simplicity and clarity, those two concepts should be independent
+from each other, but earlier releases of the Monkeysphere tangled the
+two up together more than we probably should have.
+
+So the next release, version 0.23 (a.k.a. *The Golden Bezoar*) will
+have the following significant changes:
+
+* __user interface__: `/usr/sbin/monkeysphere-server` is no more, and
+  its functionality will be split out into
+  `/usr/sbin/monkeysphere-host` (for functionality dealing with
+  publishing the ssh host key through the WoT) and
+  `/usr/sbin/monkeysphere-authentication` (for functionality dealing
+  with authenticating users via the
+  WoT). `/usr/bin/monkeysphere-ssh-proxycommand` has been folded into
+  `/usr/bin/monkeysphere` itself as a new subcommand.
+
+* __code__: the subfunctions are now stored in their own separate
+  files, and sourced as-needed by the three top-level commands.  The
+  test suite has also been re-written to reflect the above UI changes.
+
+* __documentation__: in addition to making the man pages reflect the
+  above UI changes, we're rewriting the "getting started"
+  [documentation](/doc/) to use the conceptually-cleaner distinctions
+  above.
+
+* __data storage__: `/var/lib/monkeysphere` itself has been
+  re-organized with the aim of keeping the host/authentication
+  distinction clear, simplifying the internal use of `gpg`, and
+  facilitating privilege-separated access.
+
+*The Golden Bezoar* will also feature the ability to painlessly
+publish your current ssh host key to the WoT without needing to re-key
+the server.  If you're considering adopting the Monkeysphere in the
+near future, we recommend waiting for 0.23 to be released, as it
+should be conceptually clearer and easier to use.

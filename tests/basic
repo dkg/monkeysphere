@@ -17,7 +17,8 @@ set -e
 # piped commands should return the code of the first non-zero return
 set -o pipefail
 
-export TESTDIR=$(dirname "$0")
+# make sure the TESTDIR is an absolute path, not a relative one.
+export TESTDIR=$(cd $(dirname "$0") && pwd)
 
 source "$TESTDIR"/common
 
@@ -32,6 +33,7 @@ which socat >/dev/null || { echo "You must have socat installed to run this test
 
 # gpg command for test admin user
 gpgadmin() {
+    chmod 0700 "$TEMPDIR"/admin
     GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg "$@"
 }
 
@@ -89,12 +91,8 @@ trap failed_cleanup EXIT
 ## the tests, not system-wide:
 
 # make temp dir
-TEMPDIR="$TESTDIR"/tmp
-if [ -e "$TEMPDIR" ] ; then
-    echo "tempdir '$TEMPDIR' already exists."
-    exit 1
-fi
-mkdir -p "$TEMPDIR"
+mkdir -p "$TESTDIR"/tmp
+TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/monkeyspheretest.XXXXXXX")
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
@@ -130,6 +128,7 @@ cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
 # set up environment for testuser
 export TESTHOME="$TEMPDIR"/testuser
 export GNUPGHOME="$TESTHOME"/.gnupg
+chmod 0700 "$GNUPGHOME"
 export SSH_ASKPASS="$TESTHOME"/.ssh/askpass
 export MONKEYSPHERE_HOME="$TESTHOME"/.monkeysphere
 cat <<EOF >> "$TESTHOME"/.ssh/config
@@ -207,7 +206,7 @@ echo "##################################################"
 echo "### setup monkeysphere authentication..."
 cp "$TESTDIR"/etc/monkeysphere/monkeysphere-authentication.conf "$TEMPDIR"/
 cat <<EOF >> "$TEMPDIR"/monkeysphere-authentication.conf
-AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authentication/authorized_user_ids"
+AUTHORIZED_USER_IDS="$MONKEYSPHERE_HOME/authorized_user_ids"
 EOF
 monkeysphere-authentication setup
 get_gpg_prng_arg >> "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
@@ -236,7 +235,7 @@ gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 # teach the "server" about the testuser's key
 echo "##################################################"
 echo "### export testuser key to server..."
-gpg --export testuser | monkeysphere-authentication gpg-cmd --import
+gpg --export testuser | monkeysphere-authentication expert gpg-cmd --import
 
 # update authorized_keys for user
 echo "##################################################"
@@ -247,7 +246,7 @@ monkeysphere-authentication update-users $(whoami)
 ######################################################################
 ### TESTS
 
-# connect to test sshd, using monkeysphere-ssh-proxycommand to verify
+# connect to test sshd, using monkeysphere ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
 echo "##################################################"
 echo "### ssh connection test for success..."
