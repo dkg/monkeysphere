@@ -15,12 +15,10 @@ import_key() {
 
 local hostName
 local userID
-local fingerprint
 
-# check for presence of secret key
-# FIXME: is this the proper test to be doing here?
-fingerprint_host_key >/dev/null \
-	&& failure "An OpenPGP host key already exists."
+# check for presense of a key
+[ "$FINGERPRINT" ] && \
+    failure "An OpenPGP host key already exists."
 
 hostName=${1:-$(hostname -f)}
 

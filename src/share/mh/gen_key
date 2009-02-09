@@ -13,19 +13,16 @@
 
 gen_key() {
 
+local hostName=$(hostname -f)
 local keyType="RSA"
 local keyLength="2048"
 local keyUsage="auth"
 local keyExpire="0"
-local hostName=$(hostname -f)
 local userID
-local keyParameters
-local fingerprint
 
-# check for presense of secret key
-# FIXME: is this the proper test to be doing here?
-fingerprint_host_key >/dev/null \
-	&& failure "An OpenPGP host key already exists."
+# check for presense of a key
+[ "$FINGERPRINT" ] && \
+    failure "An OpenPGP host key already exists."
 
 # get options
 while true ; do
@@ -39,45 +36,30 @@ while true ; do
 		    failure "Unknown option '$1'.
 Type '$PGRM help' for usage."
 		fi
-		hostName="$1"
-		shift
 		break
 		;;
 	esac
 done
 
+hostName="$1"
 userID="ssh://${hostName}"
-
-# set key parameters
-keyParameters=\
-"Key-Type: $keyType
-Key-Length: $keyLength
-Key-Usage: $keyUsage
-Name-Real: $userID
-Expire-Date: $keyExpire"
-
-echo "The following key parameters will be used for the host key:"
-echo "$keyParameters"
-
-read -p "Generate key? (Y/n) " OK; OK=${OK:=Y}
-if [ ${OK/y/Y} != 'Y' ] ; then
-	failure "aborting."
-fi
-
-# add commit command
-# must include blank line!
-keyParameters=\
-"${keyParameters}
-
-%commit
-%echo done"
 
 # create host home
 mkdir -p "$GNUPGHOME_HOST"
 chmod 700 "$GNUPGHOME_HOST"
 
-log verbose "generating host key..."
-echo "$keyParameters" | gpg_host --batch --gen-key
+log debug "generating host key..."
+gpg_host --batch --gen-key <<EOF
+Key-Type: $keyType
+Key-Length: $keyLength
+Key-Usage: $keyUsage
+Name-Real: $userID
+Expire-Date: $keyExpire
+
+%commit
+%echo done
+
+EOF
 
 # find the key fingerprint of the newly converted key
 HOST_FINGERPRINT=$(fingerprint_host_key)
@@ -86,15 +68,15 @@ export HOST_FINGERPRINT
 # translate the private key to ssh format, and export to a file
 # for sshs usage.
 # NOTE: assumes that the primary key is the proper key to use
-log debug "exporting new secret key to ssh format..."
+log debug "exporting ssh secret key..."
 (umask 077 && \
 	gpg_host --export-secret-key "$HOST_FINGERPRINT" | \
-	openpgp2ssh "$fingerprint" > "${MHDATADIR}/ssh_host_rsa_key")
+	openpgp2ssh "$HOST_FINGERPRINT" > "${MHDATADIR}/ssh_host_rsa_key")
 log info "SSH host private key output to file: ${MHDATADIR}/ssh_host_rsa_key"
 
 log debug "creating ssh public key..."
-ssh-keygen -y -f "${MHDATADIR}/ssh_host_rsa_key" > "${MHDATADIR}/ssh_host_rsa_key.pub"
-log info "SSH host public key output to file: ${MHDATADIR}/ssh_host_rsa_key.pub"
+ssh-keygen -y -f "${MHDATADIR}/ssh_host_rsa_key" > "${SYSDATADIR}/ssh_host_rsa_key.pub"
+log info "SSH host public key output to file: ${SYSDATADIR}/ssh_host_rsa_key.pub"
 
 # export public key to file
 gpg_host_export_to_ssh_file
