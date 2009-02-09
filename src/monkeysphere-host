@@ -97,6 +97,19 @@ gpg_host_edit() {
 	"0x${HOST_FINGERPRINT}!" "$@"
 }
 
+# export the host key to stdout
+gpg_host_export() {
+    gpg_host --export --armor --export-options export-minimal \
+	"0x${HOST_FINGERPRINT}!"
+}
+
+# export the host key to the monkeysphere host file key
+gpg_host_export_to_ssh_file() {
+    log debug "exporting openpgp public key..."
+    gpg_host_export > "${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
+    log info "SSH host public key in OpenPGP form: ${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
+}
+
 # output just key fingerprint
 fingerprint_host_key() {
     # set the pipefail option so functions fails if can't read sec key

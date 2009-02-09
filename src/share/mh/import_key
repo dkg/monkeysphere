@@ -32,15 +32,15 @@ chmod 700 "$GNUPGHOME_HOST"
 
 log verbose "importing ssh key..."
 # translate ssh key to a private key
-PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" | gpg_host --import
+PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" | \
+    gpg_host --import
 
 # find the key fingerprint of the newly converted key
-fingerprint=$(fingerprint_host_key)
+HOST_FINGERPRINT=$(fingerprint_host_key)
+export HOST_FINGERPRINT
 
 # export public key to file
-log debug "exporting openpgp public key..."
-gpg_host --export-options export-minimal --armor --export "0x${fingerprint}!" > "${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
-log info "SSH host public key in OpenPGP form: ${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
+gpg_host_export_to_ssh_file
 
 # show info about new key
 show_key

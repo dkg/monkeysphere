@@ -79,15 +79,16 @@ chmod 700 "$GNUPGHOME_HOST"
 log verbose "generating host key..."
 echo "$keyParameters" | gpg_host --batch --gen-key
 
-# find the key fingerprint of the newly generated key
-fingerprint=$(fingerprint_host_key)
+# find the key fingerprint of the newly converted key
+HOST_FINGERPRINT=$(fingerprint_host_key)
+export HOST_FINGERPRINT
 
 # translate the private key to ssh format, and export to a file
 # for sshs usage.
 # NOTE: assumes that the primary key is the proper key to use
 log debug "exporting new secret key to ssh format..."
 (umask 077 && \
-	gpg_host --export-secret-key "$fingerprint" | \
+	gpg_host --export-secret-key "$HOST_FINGERPRINT" | \
 	openpgp2ssh "$fingerprint" > "${MHDATADIR}/ssh_host_rsa_key")
 log info "SSH host private key output to file: ${MHDATADIR}/ssh_host_rsa_key"
 
@@ -95,9 +96,8 @@ log debug "creating ssh public key..."
 ssh-keygen -y -f "${MHDATADIR}/ssh_host_rsa_key" > "${MHDATADIR}/ssh_host_rsa_key.pub"
 log info "SSH host public key output to file: ${MHDATADIR}/ssh_host_rsa_key.pub"
 
-log debug "exporting openpgp public key..."
-gpg_host --export-options export-minimal --armor --export "0x${fingerprint}!" > "${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
-log info "SSH host public key in OpenPGP form: ${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
+# export public key to file
+gpg_host_export_to_ssh_file
 
 # show info about new key
 show_key
