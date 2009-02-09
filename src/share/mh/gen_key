@@ -75,8 +75,8 @@ log debug "exporting ssh secret key..."
 log info "SSH host private key output to file: ${MHDATADIR}/ssh_host_rsa_key"
 
 log debug "creating ssh public key..."
-ssh-keygen -y -f "${MHDATADIR}/ssh_host_rsa_key" > "${SYSDATADIR}/ssh_host_rsa_key.pub"
-log info "SSH host public key output to file: ${SYSDATADIR}/ssh_host_rsa_key.pub"
+ssh-keygen -y -f "${MHDATADIR}/ssh_host_rsa_key" > "$HOST_KEY_PUB"
+log info "SSH host public key output to file: $HOST_KEY_PUB"
 
 # export public key to file
 gpg_host_export_to_ssh_file

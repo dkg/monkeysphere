@@ -14,6 +14,9 @@
 ########################################################################
 set -e
 
+# set the pipefail option so pipelines fail on first command failure
+set -o pipefail
+
 PGRM=$(basename $0)
 
 SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
@@ -106,15 +109,13 @@ gpg_host_export() {
 # export the host key to the monkeysphere host file key
 gpg_host_export_to_ssh_file() {
     log debug "exporting openpgp public key..."
-    gpg_host_export > "${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
-    log info "SSH host public key in OpenPGP form: ${MHDATADIR}/ssh_host_rsa_key.pub.gpg"
+
+    gpg_host_export > "$HOST_KEY_PUB_GPG"
+    log info "SSH host public key in OpenPGP form: $HOST_KEY_PUB_GPG"
 }
 
 # output just key fingerprint
 fingerprint_host_key() {
-    # set the pipefail option so functions fails if can't read sec key
-    set -o pipefail
-
     gpg_host --list-secret-keys --fingerprint \
 	--with-colons --fixed-list-mode 2> /dev/null | \
 	grep '^fpr:' | head -1 | cut -d: -f10 2>/dev/null
@@ -163,12 +164,13 @@ show_key() {
 
     echo "OpenPGP fingerprint: $HOST_FINGERPRINT"
 
-    if [ -f "${MHDATADIR}/ssh_host_rsa_key.pub" ] ; then
-	fingerprintSSH=$(ssh-keygen -l -f "${MHDATADIR}/ssh_host_rsa_key.pub" | \
+    if [ -f "$HOST_KEY_PUB" ] ; then
+	fingerprintSSH=$(ssh-keygen -l -f "$HOST_KEY_PUB" | \
 	    awk '{ print $1, $2, $4 }')
+
 	echo "ssh fingerprint: $fingerprintSSH"
     else
-	log info "SSH host key not found."
+	log error "SSH host key not found."
     fi
 
     # FIXME: show expiration date
@@ -201,6 +203,10 @@ GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${MHDATADIR}"}
 # host key fingerprint
 HOST_FINGERPRINT=$(fingerprint_host_key)
 
+# host pub key files
+HOST_KEY_PUB="${SYSDATADIR}/ssh_host_rsa_key.pub"
+HOST_KEY_PUB_GPG="${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
+
 # export variables needed in su invocation
 export DATE
 export MODE
@@ -219,42 +225,42 @@ shift
 
 case $COMMAND in
     'show-key'|'show'|'s')
-	check_host_keyring
+	check_host_fail
 	show_key
 	;;
 
     'set-expire'|'extend-key'|'e')
-	check_host_keyring
+	check_host_fail
 	source "${MHSHAREDIR}/set_expire"
 	set_expire "$@"
 	;;
 
     'add-hostname'|'add-name'|'n+')
-	check_host_keyring
+	check_host_fail
 	source "${MHSHAREDIR}/add_hostname"
 	add_hostname "$@"
 	;;
 
     'revoke-hostname'|'revoke-name'|'n-')
-	check_host_keyring
+	check_host_fail
 	source "${MHSHAREDIR}/revoke_hostname"
 	revoke_hostname "$@"
 	;;
 
     'add-revoker'|'o')
-	check_host_keyring
+	check_host_fail
 	source "${MHSHAREDIR}/add_revoker"
 	add_revoker "$@"
 	;;
 
     'revoke-key'|'r')
-	check_host_keyring
+	check_host_fail
 	source "${MHSHAREDIR}/revoke_key"
 	revoke_key "$@"
 	;;
 
     'publish-key'|'publish'|'p')
-	check_host_keyring
+	check_host_fail
 	source "${MHSHAREDIR}/publish_key"
 	publish_key
 	;;
