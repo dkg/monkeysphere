@@ -68,19 +68,6 @@ subcommands:
 EOF
 }
 
-# function to run command as monkeysphere user
-su_monkeysphere_user() {
-    # if the current user is the monkeysphere user, then just eval
-    # command
-    if [ $(id -un) = "$MONKEYSPHERE_USER" ] ; then
-	eval "$@"
-
-    # otherwise su command as monkeysphere user
-    else
-	su "$MONKEYSPHERE_USER" -c "$@"
-    fi
-}
-
 # function to interact with the gpg keyring
 gpg_host() {
     GNUPGHOME="$GNUPGHOME_HOST" gpg "$@"
