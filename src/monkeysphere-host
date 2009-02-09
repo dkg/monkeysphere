@@ -102,10 +102,13 @@ gpg_host_export_to_ssh_file() {
 }
 
 # output just key fingerprint
-fingerprint_host_key() {
+# FIXME: should not have to be priviledged user to get host
+# fingerprint.  should be taken from publicly accessible key files,
+# instead of the keyring.
+get_host_fingerprint() {
     gpg_host --list-secret-keys --fingerprint \
 	--with-colons --fixed-list-mode 2> /dev/null | \
-	grep '^fpr:' | head -1 | cut -d: -f10 2>/dev/null
+	grep '^fpr:' | head -1 | cut -d: -f10 2>/dev/null || true
 }
 
 # output the index of a user ID on the host key
@@ -142,12 +145,9 @@ check_host_fail() {
 show_key() {
     local fingerprintSSH
 
-    # FIXME: should not have to be priviledged user to see this info.
-    # should be taken from publicly accessible key files, instead of
-    # the keyring.
-
     gpg_host --fingerprint --list-key --list-options show-unusable-uids \
 	"0x${HOST_FINGERPRINT}!" 2>/dev/null
+    # FIXME: make sure expiration date is shown
 
     echo "OpenPGP fingerprint: $HOST_FINGERPRINT"
 
@@ -160,7 +160,6 @@ show_key() {
 	log error "SSH host key not found."
     fi
 
-    # FIXME: show expiration date
     # FIXME: other relevant key parameters?
 }
 
@@ -188,7 +187,7 @@ CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
 GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${MHDATADIR}"}
 
 # host key fingerprint
-HOST_FINGERPRINT=$(fingerprint_host_key)
+HOST_FINGERPRINT=$(get_host_fingerprint)
 
 # host pub key files
 HOST_KEY_PUB="${SYSDATADIR}/ssh_host_rsa_key.pub"

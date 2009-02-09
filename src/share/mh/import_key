@@ -17,7 +17,7 @@ local hostName
 local userID
 
 # check for presense of a key
-[ "$FINGERPRINT" ] && \
+[ "$HOST_FINGERPRINT" ] && \
     failure "An OpenPGP host key already exists."
 
 hostName=${1:-$(hostname -f)}
@@ -34,7 +34,7 @@ PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" | \
     gpg_host --import
 
 # find the key fingerprint of the newly converted key
-HOST_FINGERPRINT=$(fingerprint_host_key)
+HOST_FINGERPRINT=$(get_host_fingerprint)
 export HOST_FINGERPRINT
 
 # export public key to file

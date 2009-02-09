@@ -21,7 +21,7 @@ local keyExpire="0"
 local userID
 
 # check for presense of a key
-[ "$FINGERPRINT" ] && \
+[ "$HOST_FINGERPRINT" ] && \
     failure "An OpenPGP host key already exists."
 
 # get options
@@ -62,7 +62,7 @@ Expire-Date: $keyExpire
 EOF
 
 # find the key fingerprint of the newly converted key
-HOST_FINGERPRINT=$(fingerprint_host_key)
+HOST_FINGERPRINT=$(get_host_fingerprint)
 export HOST_FINGERPRINT
 
 # translate the private key to ssh format, and export to a file
