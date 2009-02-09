@@ -14,7 +14,7 @@
 # They are Copyright 2008-2009, and are all released under the GPL,
 # version 3 or later.
 
-set-expire() {
+set_expire() {
 
 local extendTo
 
