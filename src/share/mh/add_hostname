@@ -27,18 +27,9 @@ fi
 
 userID="ssh://${1}"
 
-fingerprint=$(fingerprint_host_key)
-
-# match to only ultimately trusted user IDs
-tmpuidMatch="u:$(echo $userID | gpg_escape)"
-
-# find the index of the requsted user ID
-# NOTE: this is based on circumstantial evidence that the order of
-# this output is the appropriate index
-if line=$(gpg_host --list-keys --with-colons --fixed-list-mode "0x${fingerprint}!" \
-    | egrep '^(uid|uat):' | cut -f2,10 -d: | grep -n -x -F "$tmpuidMatch") ; then
+# test that the desired user ID does not already exist
+find_host_userid > /dev/null && \
     failure "Host userID '$userID' already exists."
-fi
 
 echo "The following user ID will be added to the host key:"
 echo "  $userID"
@@ -58,8 +49,7 @@ EOF
 )
 
 # execute edit-key script
-if echo "$adduidCommand" | \
-    gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
+if echo "$adduidCommand" | gpg_host_edit ; then
 
     show_key
 

@@ -80,16 +80,21 @@ su_monkeysphere_user() {
 
 # function to interact with the gpg keyring
 gpg_host() {
-    local returnCode
+    GNUPGHOME="$GNUPGHOME_HOST" gpg "$@"
+}
 
-    GNUPGHOME="$GNUPGHOME_HOST"
-    export GNUPGHOME
+# command to list the info about the host key, in colon format
+gpg_host_list() {
+    gpg_host --list-keys --with-colons --fixed-list-mode \
+	--with-fingerprint --with-fingerprint \
+	"0x${HOST_FINGERPRINT}!"
 
-    # NOTE: we supress this warning because we need the monkeysphere
-    # user to be able to read the host pubring.  we realize this might
-    # be problematic, but it's the simplest solution, without too much
-    # loss of security.
-    gpg "$@"
+}
+
+# command for edit key scripts, takes scripts on stdin
+gpg_host_edit() {
+    gpg_host --quiet --command-fd 0 --edit-key \
+	"0x${HOST_FINGERPRINT}!" "$@"
 }
 
 # output just key fingerprint
@@ -102,23 +107,48 @@ fingerprint_host_key() {
 	grep '^fpr:' | head -1 | cut -d: -f10 2>/dev/null
 }
 
+# output the index of a user ID on the host key
+# return 1 if user ID not found
+find_host_userid() {
+    local userID="$1"
+    local tmpuidMatch
+    local line
+
+    # match to only ultimately trusted user IDs
+    tmpuidMatch="u:$(echo $userID | gpg_escape)"
+
+    # find the index of the requsted user ID
+    # NOTE: this is based on circumstantial evidence that the order of
+    # this output is the appropriate index
+    line=$(gpg_host_list | egrep '^(uid|uat):' | cut -f2,10 -d: | \
+	grep -n -x -F "$tmpuidMatch" 2>/dev/null)
+
+    if [ "$line" ] ; then
+	echo ${line%%:*}
+	return 0
+    else
+	return 1
+    fi
+}
+
 # function to check for host secret key
-check_host_keyring() {
-    fingerprint_host_key >/dev/null \
-	|| failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-host import-key' first."
+check_host_fail() {
+    [ "$HOST_FINGERPRINT" ] || \
+	failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-host expert import-key' first."
 }
 
 # show info about the host key
 show_key() {
-    local fingerprintPGP
     local fingerprintSSH
 
-    # FIXME: you shouldn't have to be root to see the host key fingerprint
-    check_host_keyring
-    fingerprintPGP=$(fingerprint_host_key)
+    # FIXME: should not have to be priviledged user to see this info.
+    # should be taken from publicly accessible key files, instead of
+    # the keyring.
 
-    gpg_host --fingerprint --list-key --list-options show-unusable-uids "0x${fingerprintPGP}!" 2>/dev/null
-    echo "OpenPGP fingerprint: $fingerprintPGP"
+    gpg_host --fingerprint --list-key --list-options show-unusable-uids \
+	"0x${HOST_FINGERPRINT}!" 2>/dev/null
+
+    echo "OpenPGP fingerprint: $HOST_FINGERPRINT"
 
     if [ -f "${MHDATADIR}/ssh_host_rsa_key.pub" ] ; then
 	fingerprintSSH=$(ssh-keygen -l -f "${MHDATADIR}/ssh_host_rsa_key.pub" | \
@@ -155,6 +185,9 @@ MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkey
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
 GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${MHDATADIR}"}
 
+# host key fingerprint
+HOST_FINGERPRINT=$(fingerprint_host_key)
+
 # export variables needed in su invocation
 export DATE
 export MODE
@@ -163,11 +196,13 @@ export MONKEYSPHERE_USER
 export KEYSERVER
 export GNUPGHOME_HOST
 export GNUPGHOME
+export HOST_FINGERPRINT
 
 # get subcommand
 COMMAND="$1"
 [ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
 shift
+
 
 case $COMMAND in
     'show-key'|'show'|'s')
@@ -175,11 +210,10 @@ case $COMMAND in
 	show_key
 	;;
 
-    # FIXME: what should we call this command?
     'set-expire'|'extend-key'|'e')
 	check_host_keyring
-	source "${MHSHAREDIR}/extend_key"
-	extend_key "$@"
+	source "${MHSHAREDIR}/set_expire"
+	set_expire "$@"
 	;;
 
     'add-hostname'|'add-name'|'n+')
@@ -212,7 +246,7 @@ case $COMMAND in
 	publish_key
 	;;
 
-    'expert'|'e')
+    'expert')
 	SUBCOMMAND="$1"
 	shift
 	case "$SUBCOMMAND" in
