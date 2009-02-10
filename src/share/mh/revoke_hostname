@@ -38,20 +38,9 @@ fi
 
 userID="ssh://${1}"
 
-fingerprint=$(fingerprint_host_key)
-
-# match to only ultimately trusted user IDs
-tmpuidMatch="u:$(echo $userID | gpg_escape)"
-
-# find the index of the requsted user ID
-# NOTE: this is based on circumstantial evidence that the order of
-# this output is the appropriate index
-if line=$(gpg_host --list-keys --with-colons --fixed-list-mode "0x${fingerprint}!" \
-    | egrep '^(uid|uat):' | cut -f2,10 -d: | grep -n -x -F "$tmpuidMatch") ; then
-    uidIndex=${line%%:*}
-else
-    failure "No non-revoked user ID '$userID' is found."
-fi
+# make sure the user ID to revoke
+uidIndex=$(find_host_userid) || \
+    failure "No non-revoked user ID found matching '$userID'."
 
 echo "The following host key user ID will be revoked:"
 echo "  $userID"
@@ -60,15 +49,13 @@ if [ ${OK/y/Y} != 'Y' ] ; then
     failure "User ID not revoked."
 fi
 
-message="Hostname removed by monkeysphere-server $DATE"
-
 # edit-key script command to revoke user ID
 revuidCommand=$(cat <<EOF
 $uidIndex
 revuid
 y
 4
-$message
+Hostname removed by monkeysphere-host: $DATE
 
 y
 save
@@ -76,8 +63,7 @@ EOF
     )	
 
 # execute edit-key script
-if echo "$revuidCommand" | \
-    gpg_host --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
+if echo "$revuidCommand" | gpg_host_edit ; then
 
     show_key
 

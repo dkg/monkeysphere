@@ -15,7 +15,92 @@
 
 add_revoker() {
 
+local domain=
+local trust=full
+local depth=1
+local keyID
+local importinfo
+local fingerprint
+local ltsignCommand
+local trustval
+
+keyID="$1"
+if [ -z "$keyID" ] ; then
+    failure "You must specify the key ID of a revoker key, or specify a file to read the key from."
+fi
+if [ -f "$keyID" ] ; then
+    log info "Reading key from file '$keyID':"
+    importinfo=$(gpg_host --import < "$keyID" 2>&1) || failure "could not read key from '$keyID'"
+    # FIXME: if this is tried when the key database is not
+    # up-to-date, i got these errors (using set -x):
+
+    # ++ su -m monkeysphere -c '\''gpg --import'\''
+    # Warning: using insecure memory!
+    # gpg: key D21739E9: public key "Daniel Kahn Gillmor <dkg@fifthhorseman.net>" imported
+    # gpg: Total number processed: 1
+    # gpg:               imported: 1  (RSA: 1)
+    # gpg: can'\''t create `/var/monkeysphere/gnupg-host/pubring.gpg.tmp'\'': Permission denied
+    # gpg: failed to rebuild keyring cache: Permission denied
+    # gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+    # gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+    # gpg: next trustdb check due at 2009-01-10'
+    # + failure 'could not read key from '\''/root/dkg.gpg'\'''
+    # + echo 'could not read key from '\''/root/dkg.gpg'\'''
+
+    keyID=$(echo "$importinfo" | grep '^gpg: key ' | cut -f2 -d: | cut -f3 -d\ )
+    if [ -z "$keyID" ] || [ $(echo "$keyID" | wc -l) -ne 1 ] ; then
+	failure "There was not exactly one gpg key in the file."
+    fi
+else
+    # create a temporary directory for storing the downloaded key
+    TMPLOC=$(mktemp -d ${MHTMPDIR}/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
+
+    # download the key from the keyserver as the monkeysphere user
+    su_monkeysphere_user \
+	"GNUPGHOME=$TMPLOC gpg --keyserver $KEYSERVER --recv-key 0x${keyID}!"
+
+    # export the new key to the host keyring
+    su_monkeysphere_user "GNUPGHOME=$TMPLOC gpg --export 0x${keyID}!" \
+	| gpg_host --import
+fi
+
+export keyID
+
+# get the full fingerprint of the revoker key ID
+fingerprint=$(gpg_host --list-key --with-colons --with-fingerprint "0x${keyID}!" \
+    | grep '^fpr:' | grep "$keyID" | cut -d: -f10)
+
+if [ -z "$fingerprint" ] ; then
+    failure "Key '$keyID' not found."
+fi
+
+log info -e "\nkey found:"
+gpg_host --fingerprint "0x${fingerprint}!"
+
+echo "Are you sure you want to add the above key as a"
+read -p "revoker of the host key? (y/N) " OK; OK=${OK:-N}
+if [ "${OK/y/Y}" != 'Y' ] ; then
+    failure "Revoker not added."
+fi
+
+# edit-key script to add revoker
+# NOTE: *all* user IDs will be ltsigned
+addrevokerCommand=$(cat <<EOF
+addrevoker
+
+EOF
+    )
+
 # FIXME: implement!
 failure "not implemented yet!"
+
+# core ltsigns the newly imported revoker key
+if echo "$addrevokerCommand" | \
+    gpg_core_edit ; then
+
+    log info -e "\nRevoker added."
+else
+    failure "Problem adding revoker."
+fi
 
 }

@@ -1,7 +1,10 @@
 # -*-shell-script-*-
 # This should be sourced by bash (though we welcome changes to make it POSIX sh compliant)
 
-# Monkeysphere host extend-key subcommand
+# Monkeysphere host set-expire subcommand
+#
+# This is a function to set the expiration date of the monkeysphere
+# host key.
 #
 # The monkeysphere scripts are written by:
 # Jameson Rollins <jrollins@finestructure.net>
@@ -11,18 +14,14 @@
 # They are Copyright 2008-2009, and are all released under the GPL,
 # version 3 or later.
 
-# extend the lifetime of a host key:
+set_expire() {
 
-extend_key() {
-
-local fpr=$(fingerprint_host_key)
-local extendTo="$1"
+local extendTo
 
 # get the new expiration date
-extendTo=$(get_gpg_expiration "$extendTo")
+extendTo=$(get_gpg_expiration "$1")
 
-gpg_host --quiet --command-fd 0 --edit-key "$fpr" <<EOF 
-expire
+gpg_host_edit expire <<EOF
 $extendTo
 save
 EOF
