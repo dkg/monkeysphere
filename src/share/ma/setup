@@ -85,7 +85,10 @@ EOF
     # our preferences are reasonable (i.e. 3 marginal OR 1 fully
     # trusted certifications are sufficient to grant full validity.
     log debug "check trust level of core key..."
-    if [ "1:3:1" != $(gpg_sphere --with-colons --fixed-list-mode --list-keys | head -n1 | grep ^tru: cut -f3,6,7 -d:) ] ; then
+    local TRUST_LEVEL=$(gpg_sphere --with-colons --fixed-list-mode --list-keys \
+	| head -n1 | grep "^tru:" | cut -d: -f3,6,7)
+    log debug "trust level: $TRUST_LEVEL"
+    if [ "$TRUST_LEVEL" != '1:3:1' ] ; then
 	failure "monkeysphere-authentication does not have the expected trust model settings."
     fi
 }
