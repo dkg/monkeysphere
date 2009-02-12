@@ -215,8 +215,11 @@ echo "##################################################"
 echo "### adding admin as certifier..."
 monkeysphere-authentication add-id-certifier -y "$TEMPDIR"/admin/.gnupg/pubkey.gpg
 
-# FIXME: should we run "diagnostics" here to test setup?
+echo "##################################################"
+echo "### list certifiers..."
+monkeysphere-authentication list-certifiers
 
+# FIXME: should we run "diagnostics" here to test setup?
 
 ######################################################################
 ### TESTUSER SETUP
