@@ -44,7 +44,7 @@ EOF
 
     # make sure the monkeysphere user owns everything in the sphere
     # gnupghome
-    log debuf "fix sphere gnupg home ownership..."
+    log debug "fix sphere gnupg home ownership..."
     chown -R "$MONKEYSPHERE_USER" "${GNUPGHOME_SPHERE}"
     chgrp -R "$MONKEYSPHERE_USER" "${GNUPGHOME_SPHERE}"
 
