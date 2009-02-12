@@ -40,10 +40,10 @@ primary-keyring ${GNUPGHOME_SPHERE}/pubring.gpg
 list-options show-uid-validity
 EOF
 
-    # make sure the monkeysphere user owns everything in th sphere
+    # make sure the monkeysphere user owns everything in the sphere
     # gnupghome
-    chown -R "$MONKEYPSHER_USER" "${GNUPGHOME_SPHERE}"
-    chgrp -R "$MONKEYPSHER_USER" "${GNUPGHOME_SPHERE}"
+    chown -R "$MONKEYPSHERE_USER" "${GNUPGHOME_SPHERE}"
+    chgrp -R "$MONKEYPSHERE_USER" "${GNUPGHOME_SPHERE}"
 
     # get fingerprint of core key.  this should be empty on unconfigured systems.
     local CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )

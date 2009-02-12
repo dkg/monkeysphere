@@ -123,6 +123,9 @@ create_gpg_pub_file() {
 
 # load the host fingerprint into the fingerprint variable, using the
 # export gpg pub key file
+# FIXME: this seems much less than ideal, with all this temp keyring
+# stuff.  is there a way we can do this without having to create temp
+# files?
 load_fingerprint() {
     if [ -f "$HOST_KEY_PUB_GPG" ] ; then
 	HOST_FINGERPRINT=$( \
