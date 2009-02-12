@@ -38,7 +38,6 @@ EOF
 # This file is maintained by the Monkeysphere software.
 # Edits will be overwritten.
 no-greeting
-primary-keyring ${GNUPGHOME_SPHERE}/pubring.gpg
 list-options show-uid-validity
 EOF
 
