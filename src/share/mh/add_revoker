@@ -74,7 +74,7 @@ if [ -z "$fingerprint" ] ; then
     failure "Key '$keyID' not found."
 fi
 
-log info -e "\nkey found:"
+log info "key found:"
 gpg_host --fingerprint "0x${fingerprint}!"
 
 echo "Are you sure you want to add the above key as a"
@@ -98,7 +98,7 @@ failure "not implemented yet!"
 if echo "$addrevokerCommand" | \
     gpg_core_edit ; then
 
-    log info -e "\nRevoker added."
+    log info "Revoker added."
 else
     failure "Problem adding revoker."
 fi

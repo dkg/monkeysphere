@@ -41,7 +41,8 @@ if gpg_sphere "--delete-key --batch --yes 0x${keyID}!" ; then
     # update the trustdb for the authentication keyring
     gpg_sphere "--check-trustdb"
 
-    log info -e "\nIdentity certifier removed."
+    log info ""
+    log info "Identity certifier removed."
 else
     failure "Problem removing identity certifier."
 fi
