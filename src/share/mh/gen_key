@@ -20,10 +20,6 @@ local keyUsage="auth"
 local keyExpire="0"
 local userID
 
-# check for presense of a key
-[ "$HOST_FINGERPRINT" ] && \
-    failure "An OpenPGP host key already exists."
-
 # get options
 while true ; do
 	case "$1" in
@@ -61,25 +57,17 @@ Expire-Date: $keyExpire
 
 EOF
 
-# find the key fingerprint of the newly converted key
-HOST_FINGERPRINT=$(get_host_fingerprint)
-export HOST_FINGERPRINT
+# load the new host fpr into the fpr variable
+load_fingerprint_secret
 
-# translate the private key to ssh format, and export to a file
-# for sshs usage.
-# NOTE: assumes that the primary key is the proper key to use
-log debug "exporting ssh secret key..."
-(umask 077 && \
-	gpg_host --export-secret-key "$HOST_FINGERPRINT" | \
-	openpgp2ssh "$HOST_FINGERPRINT" > "${MHDATADIR}/ssh_host_rsa_key")
-log info "SSH host private key output to file: ${MHDATADIR}/ssh_host_rsa_key"
+# export to ssh secret key file
+create_ssh_sec_file
 
-log debug "creating ssh public key..."
-ssh-keygen -y -f "${MHDATADIR}/ssh_host_rsa_key" > "$HOST_KEY_PUB"
-log info "SSH host public key output to file: $HOST_KEY_PUB"
+# export to ssh public key file
+create_ssh_pub_file
 
-# export public key to file
-gpg_host_export_to_ssh_file
+# export to gpg public key to file
+create_gpg_pub_file
 
 # show info about new key
 show_key

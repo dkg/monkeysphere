@@ -16,10 +16,6 @@ import_key() {
 local hostName
 local userID
 
-# check for presense of a key
-[ "$HOST_FINGERPRINT" ] && \
-    failure "An OpenPGP host key already exists."
-
 hostName=${1:-$(hostname -f)}
 
 userID="ssh://${hostName}"
@@ -33,12 +29,11 @@ log verbose "importing ssh key..."
 PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" | \
     gpg_host --import
 
-# find the key fingerprint of the newly converted key
-HOST_FINGERPRINT=$(get_host_fingerprint)
-export HOST_FINGERPRINT
+# load the new host fpr into the fpr variable
+load_fingerprint_secret
 
-# export public key to file
-gpg_host_export_to_ssh_file
+# export to gpg public key to file
+create_gpg_pub_file
 
 # show info about new key
 show_key

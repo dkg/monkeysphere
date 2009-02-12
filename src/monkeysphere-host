@@ -32,6 +32,10 @@ MHSHAREDIR="${SYSSHAREDIR}/mh"
 # datadir for host functions
 MHDATADIR="${SYSDATADIR}/host"
 
+# host pub key files
+HOST_KEY_PUB="${SYSDATADIR}/ssh_host_rsa_key.pub"
+HOST_KEY_PUB_GPG="${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
+
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
 
@@ -93,22 +97,71 @@ gpg_host_export() {
 	"0x${HOST_FINGERPRINT}!"
 }
 
-# export the host key to the monkeysphere host file key
-gpg_host_export_to_ssh_file() {
-    log debug "exporting openpgp public key..."
-
-    gpg_host_export > "$HOST_KEY_PUB_GPG"
-    log info "SSH host public key in OpenPGP form: $HOST_KEY_PUB_GPG"
+# export the host secret key to the monkeysphere ssh sec key file
+# NOTE: assumes that the primary key is the proper key to use
+create_ssh_sec_file() {
+    log debug "creating ssh secret key file..."
+    (umask 077 && \
+	gpg_host --export-secret-key "$HOST_FINGERPRINT" | \
+	openpgp2ssh "$HOST_FINGERPRINT" > "${MHDATADIR}/ssh_host_rsa_key")
+    log info "SSH host secret key file: ${MHDATADIR}/ssh_host_rsa_key"
 }
 
-# output just key fingerprint
-# FIXME: should not have to be priviledged user to get host
-# fingerprint.  should be taken from publicly accessible key files,
-# instead of the keyring.
-get_host_fingerprint() {
-    gpg_host --list-secret-keys --fingerprint \
-	--with-colons --fixed-list-mode 2> /dev/null | \
-	grep '^fpr:' | head -1 | cut -d: -f10 2>/dev/null || true
+# export the host public key to the monkeysphere ssh pub key file
+create_ssh_pub_file() {
+    log debug "creating ssh public key file..."
+    ssh-keygen -y -f "${MHDATADIR}/ssh_host_rsa_key" > "$HOST_KEY_PUB"
+    log info "SSH host public key file: $HOST_KEY_PUB"
+}
+
+# export the host public key to the monkeysphere gpg pub key file
+create_gpg_pub_file() {
+    log debug "creating openpgp public key file..."
+    gpg_host_export > "$HOST_KEY_PUB_GPG"
+    log info "GPG host public key file: $HOST_KEY_PUB_GPG"
+}
+
+# load the host fingerprint into the fingerprint variable, using the
+# export gpg pub key file
+load_fingerprint() {
+    if [ -f "$HOST_KEY_PUB_GPG" ] ; then
+	HOST_FINGERPRINT=$( \
+	    (FUBAR=$(mktemp -d) && export GNUPGHOME="$FUBAR" \
+	    && gpg --quiet --import \
+	    && gpg --quiet --list-keys --with-colons --with-fingerprint \
+	    && rm -rf "$FUBAR") <"$HOST_KEY_PUB_GPG" \
+	    | grep '^fpr:' | cut -d: -f10 )
+    else
+	HOST_FINGERPRINT=
+    fi
+}
+
+# load the host fingerprint into the fingerprint variable, using the
+# gpg host secret key
+load_fingerprint_secret() {
+    HOST_FINGERPRINT=$( \
+	gpg_host --quiet --list-secret-key \
+	--with-colons --with-fingerprint \
+	| grep '^fpr:' | cut -d: -f10 )
+}
+
+# output host key ssh fingerprint
+load_ssh_fingerprint() {
+    [ -f "$HOST_KEY_PUB" ] || return 0
+    HOST_FINGERPRINT_SSH=$(ssh-keygen -l -f "$HOST_KEY_PUB" \
+	| awk '{ print $1, $2, $4 }')
+}
+
+# fail if host key present
+check_host_key() {
+    [ -z "$HOST_FINGERPRINT" ] \
+	|| failure "An OpenPGP host key already exists."
+}
+
+# fail if host key not present
+check_host_no_key() {
+    [ "$HOST_FINGERPRINT" ] \
+	|| failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-host expert import-key' first."
 }
 
 # output the index of a user ID on the host key
@@ -135,27 +188,18 @@ find_host_userid() {
     fi
 }
 
-# function to check for host secret key
-check_host_fail() {
-    [ "$HOST_FINGERPRINT" ] || \
-	failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-host expert import-key' first."
-}
-
 # show info about the host key
 show_key() {
-    local fingerprintSSH
-
     gpg_host --fingerprint --list-key --list-options show-unusable-uids \
 	"0x${HOST_FINGERPRINT}!" 2>/dev/null
     # FIXME: make sure expiration date is shown
 
     echo "OpenPGP fingerprint: $HOST_FINGERPRINT"
 
-    if [ -f "$HOST_KEY_PUB" ] ; then
-	fingerprintSSH=$(ssh-keygen -l -f "$HOST_KEY_PUB" | \
-	    awk '{ print $1, $2, $4 }')
+    load_ssh_fingerprint
 
-	echo "ssh fingerprint: $fingerprintSSH"
+    if [ "$HOST_FINGERPRINT_SSH" ] ; then
+	echo "ssh fingerprint: $HOST_FINGERPRINT_SSH"
     else
 	log error "SSH host key not found."
     fi
@@ -186,13 +230,6 @@ MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkey
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
 GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${MHDATADIR}"}
 
-# host key fingerprint
-HOST_FINGERPRINT=$(get_host_fingerprint)
-
-# host pub key files
-HOST_KEY_PUB="${SYSDATADIR}/ssh_host_rsa_key.pub"
-HOST_KEY_PUB_GPG="${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
-
 # export variables needed in su invocation
 export DATE
 export MODE
@@ -201,52 +238,59 @@ export MONKEYSPHERE_USER
 export KEYSERVER
 export GNUPGHOME_HOST
 export GNUPGHOME
-export HOST_FINGERPRINT
+export HOST_FINGERPRINT=
+export HOST_FINGERPRINT_SSH=
 
 # get subcommand
 COMMAND="$1"
 [ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
 shift
 
-
 case $COMMAND in
     'show-key'|'show'|'s')
-	check_host_fail
+	load_fingerprint
+	check_host_no_key
 	show_key
 	;;
 
     'set-expire'|'extend-key'|'e')
-	check_host_fail
+	load_fingerprint
+	check_host_no_key
 	source "${MHSHAREDIR}/set_expire"
 	set_expire "$@"
 	;;
 
     'add-hostname'|'add-name'|'n+')
-	check_host_fail
+	load_fingerprint
+	check_host_no_key
 	source "${MHSHAREDIR}/add_hostname"
 	add_hostname "$@"
 	;;
 
     'revoke-hostname'|'revoke-name'|'n-')
-	check_host_fail
+	load_fingerprint
+	check_host_no_key
 	source "${MHSHAREDIR}/revoke_hostname"
 	revoke_hostname "$@"
 	;;
 
     'add-revoker'|'o')
-	check_host_fail
+	load_fingerprint
+	check_host_no_key
 	source "${MHSHAREDIR}/add_revoker"
 	add_revoker "$@"
 	;;
 
     'revoke-key'|'r')
-	check_host_fail
+	load_fingerprint
+	check_host_no_key
 	source "${MHSHAREDIR}/revoke_key"
 	revoke_key "$@"
 	;;
 
     'publish-key'|'publish'|'p')
-	check_host_fail
+	load_fingerprint
+	check_host_no_key
 	source "${MHSHAREDIR}/publish_key"
 	publish_key
 	;;
@@ -269,11 +313,15 @@ EOF
 		;;
 
 	    'import-key'|'i')
+		load_fingerprint
+		check_host_key
 		source "${MHSHAREDIR}/import_key"
 		import_key "$@"
 		;;
 
 	    'gen-key'|'g')
+		load_fingerprint
+		check_host_key
 		source "${MHSHAREDIR}/gen_key"
 		gen_key "$@"
 		;;
