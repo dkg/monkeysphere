@@ -75,17 +75,12 @@ gpg_core() {
     GNUPGHOME="$GNUPGHOME_CORE"
     export GNUPGHOME
 
-    # NOTE: we supress this warning because we need the monkeysphere
-    # user to be able to read the host pubring.  we realize this might
-    # be problematic, but it's the simplest solution, without too much
-    # loss of security.
     gpg "$@"
 }
 
 # function to interact with the gpg sphere keyring
-# FIXME: this function requires basically accepts only a single
-# argument because of problems with quote expansion.  this needs to be
-# fixed/improved.
+# FIXME: this function requires only a single argument because of
+# problems with quote expansion.  this needs to be fixed/improved.
 gpg_sphere() {
     GNUPGHOME="$GNUPGHOME_SPHERE"
     export GNUPGHOME
@@ -93,8 +88,18 @@ gpg_sphere() {
     su_monkeysphere_user "gpg $@"
 }
 
+# load the core fingerprint into the fingerprint variable, using the
+# gpg host secret key
+core_fingerprint() {
+    log debug "determining core key fingerprint..."
+    gpg_core --quiet --list-secret-key \
+	--with-colons --fixed-list-mode --with-fingerprint \
+	| grep ^fpr: | cut -d: -f10
+}
+
 # export signatures from core to sphere
 gpg_core_sphere_sig_transfer() {
+    log debug "exporting core local sigs to sphere..."
     gpg_core --export-options export-local-sigs --export | \
 	gpg_sphere --import-options import-local-sigs --import
 }
