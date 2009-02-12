@@ -23,7 +23,7 @@ setup() {
 
     # deliberately replace the config files via truncation
     # FIXME: should we be dumping to tmp files and then moving atomically?
-    log debug "write core gpg.conf..."
+    log debug "writing core gpg.conf..."
     cat >"${GNUPGHOME_CORE}"/gpg.conf <<EOF
 # Monkeysphere trust core GnuPG configuration
 # This file is maintained by the Monkeysphere software.
@@ -32,7 +32,7 @@ no-greeting
 list-options show-uid-validity
 EOF
 
-    log debug "write sphere gpg.conf..."
+    log debug "writing sphere gpg.conf..."
     cat >"${GNUPGHOME_SPHERE}"/gpg.conf <<EOF
 # Monkeysphere trust sphere GnuPG configuration
 # This file is maintained by the Monkeysphere software.
@@ -44,7 +44,7 @@ EOF
 
     # make sure the monkeysphere user owns everything in the sphere
     # gnupghome
-    log debuf "fix sphere gnupg home ownership..."
+    log debuf "fixing sphere gnupg home ownership..."
     chown -R "$MONKEYSPHERE_USER" "${GNUPGHOME_SPHERE}"
     chgrp -R "$MONKEYSPHERE_USER" "${GNUPGHOME_SPHERE}"
 
@@ -75,16 +75,16 @@ EOF
     fi
 
     # export the core key to the sphere keyring
-    log debug "export core pub key to sphere keyring..."
+    log debug "exporting core pub key to sphere keyring..."
     gpg_core --export | gpg_sphere --import
 
     # ensure that the authentication sphere checker has absolute ownertrust on the expected key.
-    log debug "set ultimate owner trust on core key in gpg_sphere..."
+    log debug "setting ultimate owner trust on core key in gpg_sphere..."
     printf "%s:6:\n" "$CORE_FPR" | gpg_sphere --import-ownertrust
     gpg_sphere --export-ownertrust | log debug
 
     # check the owner trust
-    log debug "check gpg_sphere owner trust set properly..."
+    log debug "checking gpg_sphere owner trust set properly..."
     local ORIG_TRUST
     if ORIG_TRUST=$(gpg_sphere --export-ownertrust | grep '^[^#]') ; then
 	if [ "${CORE_FPR}:6:" != "$ORIG_TRUST" ] ; then

@@ -174,7 +174,6 @@ monkeysphere-host expert import-key testhost < "$TEMPDIR"/ssh_host_rsa_key
 echo "##################################################"
 echo "### setting host key expiration..."
 monkeysphere-host set-expire 1
-monkeysphere-host show-key
 # FIXME: how do we check that the expiration has really been set?
 
 echo "##################################################"

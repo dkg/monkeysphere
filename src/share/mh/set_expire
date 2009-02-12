@@ -21,6 +21,9 @@ local extendTo
 # get the new expiration date
 extendTo=$(get_gpg_expiration "$1")
 
+log info "setting host key expiration to ${extendTo}:"
+
+log debug "executing host expire script..."
 gpg_host_edit expire <<EOF
 $extendTo
 save
