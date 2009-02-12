@@ -18,13 +18,20 @@ list_certifiers() {
 local keys
 local key
 
-# find trusted keys in authentication keychain
-keys=$(gpg_sphere "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-keys --with-colons --fingerprint" | \
-    grep ^pub: | cut -d: -f2,5 | egrep '^(u|f):' | cut -d: -f2)
+# find trusted keys in sphere keychain
+log debug "finding trusted keys..."
+
+# NOTE: looking for only 'f' keys here (used to be '(u|f)'), since the
+# only key that should be 'u' is the core key, which is not
+# technically a certifier in the sense we're worried about.  Is this
+# not correct?  Should we be sorting out the certifier keys in a
+# different way?
+keys=$(gpg_sphere "--list-keys --with-colons --fingerprint" | \
+    grep ^pub: | cut -d: -f2,5 | egrep '^f:' | cut -d: -f2)
 
 # output keys
 for key in $keys ; do
-    gpg_sphere "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key --fingerprint $key"
+    gpg_sphere "--list-key --fingerprint 0x${key}!"
 done
 
 }

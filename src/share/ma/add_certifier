@@ -102,7 +102,7 @@ fi
 
 export keyID
 
-# get the full fingerprint of a key ID
+# get the full fingerprint of new certifier key
 log debug "getting fingerprint of certifier key..."
 fingerprint=$(gpg_sphere "--list-key --with-colons --with-fingerprint 0x${keyID}!" \
     | grep '^fpr:' | grep "$keyID" | cut -d: -f10)
@@ -126,6 +126,7 @@ fi
 
 # export the key to the core keyring so that the core can sign the
 # new certifier key
+log debug "exporting retrieved certifier key to core keyring..."
 gpg_sphere "--export 0x${fingerprint}!" | gpg_core --import
 
 case "$trust" in
@@ -154,6 +155,7 @@ EOF
     )
 
 # core ltsigns the newly imported certifier key
+log debug "executing core ltsign script..."
 if echo "$ltsignCommand" | \
     gpg_core --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
 
@@ -161,6 +163,7 @@ if echo "$ltsignCommand" | \
     gpg_core_sphere_sig_transfer
 
     # update the sphere trustdb
+    log debug "updating sphere trustdb..."
     gpg_sphere "--check-trustdb"
 
     log info "Identity certifier added."
