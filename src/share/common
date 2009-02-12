@@ -136,6 +136,7 @@ lock() {
 	    else
 		lockfile -r 20 "${file}.lock" || failure "unable to lock '$file'"
 	    fi
+	    log debug "lock created on '$file'."
 	    ;;
 	touch)	
 	    if [ -n "$use_lockfileprogs" ] ; then
@@ -143,6 +144,7 @@ lock() {
 	    else
 		: Nothing to do here
 	    fi
+	    log debug "lock touched on '$file'."
 	    ;;
 	remove)
 	    if [ -n "$use_lockfileprogs" ] ; then
@@ -150,6 +152,7 @@ lock() {
 	    else
 		rm -f "${file}.lock"
 	    fi
+	    log debug "lock removed on '$file'."
 	    ;;
 	*)
 	    failure "bad argument for lock subfunction '$action'"
@@ -429,6 +432,8 @@ check_key_file_permissions() {
 
     uname="$1"
     path="$2"
+
+    log debug "checking path permission '$path'..."
 
     # return 255 if cannot stat file
     if ! stat=$(ls -ld "$path" 2>/dev/null) ; then
@@ -1018,6 +1023,8 @@ update_authorized_keys() {
 
     # remove the lockfile and the trap
     lock remove "$AUTHORIZED_KEYS"
+
+    # remove the trap
     trap - EXIT
 
     # note if the authorized_keys file was updated
