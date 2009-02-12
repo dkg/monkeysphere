@@ -90,13 +90,16 @@ trap failed_cleanup EXIT
 ## set up some variables to ensure that we're operating strictly in
 ## the tests, not system-wide:
 
-# make temp dir
-# FIXME: I believe that /tmp can not be used as the temp dir here,
-# since the permissions on /tmp are usually such that they will not
-# pass the monkeysphere/ssh path permission checking.  at least this
-# is my experience.
-#TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/monkeyspheretest.XXXXXXX")
-TEMPDIR=$(mktemp -d "${TESTDIR}/tmp/monkeyspheretest.XXXXXXX")
+# set up temp dir
+
+# NOTE: /tmp can not be used as the temp dir here, since the
+# permissions on /tmp are usually such that they will not pass the
+# monkeysphere/ssh path permission checking.  If you need to use a
+# different location than the current source, please set $TMPDIR
+# somewhere with tighter permissions.
+
+mkdir -p "$TESTDIR"/tmp
+TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/monkeyspheretest.XXXXXXX")
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
