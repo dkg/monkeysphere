@@ -96,11 +96,11 @@ EOF
     # ensure that we're using the extended trust model (1), and that
     # our preferences are reasonable (i.e. 3 marginal OR 1 fully
     # trusted certifications are sufficient to grant full validity.
-    log debug "checking trust level of core key..."
-    local TRUST_LEVEL=$(gpg_sphere --with-colons --fixed-list-mode --list-keys \
+    log debug "checking trust model for authentication ..."
+    local TRUST_MODEL=$(gpg_sphere --with-colons --fixed-list-mode --list-keys \
 	| head -n1 | grep "^tru:" | cut -d: -f3,6,7)
-    log debug "sphere trust level of core: $TRUST_LEVEL"
-    if [ "$TRUST_LEVEL" != '1:3:1' ] ; then
+    log debug "sphere trust model: $TRUST_MODEL"
+    if [ "$TRUST_MODEL" != '1:3:1' ] ; then
 	failure "monkeysphere-authentication does not have the expected trust model settings."
     fi
 }
