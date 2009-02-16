@@ -13,7 +13,7 @@
 
 gen_key() {
 
-local hostName=$(hostname -f)
+local hostName
 local keyType="RSA"
 local keyLength="2048"
 local keyUsage="auth"
@@ -37,7 +37,7 @@ Type '$PGRM help' for usage."
 	esac
 done
 
-hostName="$1"
+hostName=${1:-$(hostname -f)}
 userID="ssh://${hostName}"
 
 # create host home
@@ -60,11 +60,18 @@ EOF
 # load the new host fpr into the fpr variable
 load_fingerprint_secret
 
-# export to ssh secret key file
-create_ssh_sec_file
+# export the host secret key to the monkeysphere ssh sec key file
+# NOTE: assumes that the primary key is the proper key to use
+log debug "creating ssh secret key file..."
+(umask 077 && \
+    gpg_host --export-secret-key "$HOST_FINGERPRINT" | \
+    openpgp2ssh "$HOST_FINGERPRINT" > "${MHDATADIR}/ssh_host_rsa_key")
+log info "SSH host secret key file: ${MHDATADIR}/ssh_host_rsa_key"
 
-# export to ssh public key file
-create_ssh_pub_file
+# export the host public key to the monkeysphere ssh pub key file
+log debug "creating ssh public key file..."
+ssh-keygen -y -f "${MHDATADIR}/ssh_host_rsa_key" > "$HOST_KEY_PUB"
+log info "SSH host public key file: $HOST_KEY_PUB"
 
 # export to gpg public key to file
 create_gpg_pub_file

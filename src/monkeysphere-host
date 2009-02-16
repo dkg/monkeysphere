@@ -97,23 +97,6 @@ gpg_host_export() {
 	"0x${HOST_FINGERPRINT}!"
 }
 
-# export the host secret key to the monkeysphere ssh sec key file
-# NOTE: assumes that the primary key is the proper key to use
-create_ssh_sec_file() {
-    log debug "creating ssh secret key file..."
-    (umask 077 && \
-	gpg_host --export-secret-key "$HOST_FINGERPRINT" | \
-	openpgp2ssh "$HOST_FINGERPRINT" > "${MHDATADIR}/ssh_host_rsa_key")
-    log info "SSH host secret key file: ${MHDATADIR}/ssh_host_rsa_key"
-}
-
-# export the host public key to the monkeysphere ssh pub key file
-create_ssh_pub_file() {
-    log debug "creating ssh public key file..."
-    ssh-keygen -y -f "${MHDATADIR}/ssh_host_rsa_key" > "$HOST_KEY_PUB"
-    log info "SSH host public key file: $HOST_KEY_PUB"
-}
-
 # export the host public key to the monkeysphere gpg pub key file
 create_gpg_pub_file() {
     log debug "creating openpgp public key file..."
@@ -194,7 +177,7 @@ find_host_userid() {
 # show info about the host key
 show_key() {
     gpg_host --fingerprint --list-key --list-options show-unusable-uids \
-	"0x${HOST_FINGERPRINT}!" 2>/dev/null
+	"0x${HOST_FINGERPRINT}!" 2>/dev/null || true
     # FIXME: make sure expiration date is shown
 
     echo "OpenPGP fingerprint: $HOST_FINGERPRINT"
@@ -307,7 +290,7 @@ case $COMMAND in
 usage: $PGRM expert <subcommand> [options] [args]
 
 expert subcommands:
- import-key (i) [NAME[:PORT]]        import existing ssh key to gpg
+ import-key (i) FILE [NAME[:PORT]]   import existing ssh key to gpg
  gen-key (g) [NAME[:PORT]]           generate gpg key for the host
    --length (-l) BITS                  key length in bits (2048)
  diagnostics (d)                     monkeysphere host status
