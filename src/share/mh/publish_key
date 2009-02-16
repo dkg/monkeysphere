@@ -20,12 +20,7 @@ if [ ${OK/y/Y} != 'Y' ] ; then
     failure "key not published."
 fi
 
-# find the key fingerprint
-fingerprint=$(fingerprint_host_key)
-
 # publish host key
-# FIXME: need to define how to do this
-#gpg_authentication "--keyserver $KEYSERVER --send-keys '0x${fingerprint}!'"
-echo "not published!!!"
+gpg_sphere "--keyserver $KEYSERVER --send-keys '0x${HOST_FINGERPRINT}!'"
 
 }
