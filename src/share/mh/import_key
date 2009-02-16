@@ -32,6 +32,9 @@ PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" | \
 # load the new host fpr into the fpr variable
 load_fingerprint_secret
 
+# export to ssh public key file
+create_ssh_pub_file
+
 # export to gpg public key to file
 create_gpg_pub_file
 
