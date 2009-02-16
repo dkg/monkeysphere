@@ -32,6 +32,10 @@ MHSHAREDIR="${SYSSHAREDIR}/mh"
 # datadir for host functions
 MHDATADIR="${SYSDATADIR}/host"
 
+# temp directory for temp gnupghome directories for add_revoker
+MHTMPDIR="${MHDATADIR}/tmp"
+export MHTMPDIR
+
 # host pub key files
 HOST_KEY_PUB="${SYSDATADIR}/ssh_host_rsa_key.pub"
 HOST_KEY_PUB_GPG="${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"

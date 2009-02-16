@@ -24,8 +24,10 @@ hostName=${2:-$(hostname -f)}
 userID="ssh://${hostName}"
 
 # create host home
-mkdir -p "$GNUPGHOME_HOST"
-chmod 700 "$GNUPGHOME_HOST"
+mkdir -p "${MHDATADIR}"
+mkdir -p "${MHTMPDIR}"
+mkdir -p "${GNUPGHOME_HOST}"
+chmod 700 "${GNUPGHOME_HOST}"
 
 log verbose "importing ssh key..."
 # translate ssh key to a private key
