@@ -13,11 +13,14 @@
 
 import_key() {
 
+local keyFile
 local hostName
 local userID
 
-hostName=${1:-$(hostname -f)}
+keyFile="$1"
+[ -f "$keyFile" ]
 
+hostName=${2:-$(hostname -f)}
 userID="ssh://${hostName}"
 
 # create host home
@@ -26,14 +29,16 @@ chmod 700 "$GNUPGHOME_HOST"
 
 log verbose "importing ssh key..."
 # translate ssh key to a private key
-PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" | \
-    gpg_host --import
+PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" <"$keyFile" \
+    | gpg_host --import
 
 # load the new host fpr into the fpr variable
 load_fingerprint_secret
 
-# export to ssh public key file
-create_ssh_pub_file
+# export the host public key to the monkeysphere ssh pub key file
+log debug "creating ssh public key file..."
+ssh-keygen -y -f "$keyFile" > "$HOST_KEY_PUB"
+log info "SSH host public key file: $HOST_KEY_PUB"
 
 # export to gpg public key to file
 create_gpg_pub_file
