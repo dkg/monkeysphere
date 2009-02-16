@@ -31,7 +31,7 @@ MADATADIR="${SYSDATADIR}/authentication"
 
 # temp directory to enable atomic moves of authorized_keys files
 MATMPDIR="${MADATADIR}/tmp"
-export MSTMPDIR
+export MATMPDIR
 
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
