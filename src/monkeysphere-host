@@ -37,8 +37,7 @@ MHTMPDIR="${MHDATADIR}/tmp"
 export MHTMPDIR
 
 # host pub key files
-HOST_KEY_PUB="${SYSDATADIR}/ssh_host_rsa_key.pub"
-HOST_KEY_PUB_GPG="${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
+HOST_KEY_FILE="${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
 
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
@@ -95,17 +94,12 @@ gpg_host_edit() {
 	"0x${HOST_FINGERPRINT}!" "$@"
 }
 
-# export the host key to stdout
-gpg_host_export() {
-    gpg_host --export --armor --export-options export-minimal \
-	"0x${HOST_FINGERPRINT}!"
-}
-
 # export the host public key to the monkeysphere gpg pub key file
 create_gpg_pub_file() {
     log debug "creating openpgp public key file..."
-    gpg_host_export > "$HOST_KEY_PUB_GPG"
-    log info "GPG host public key file: $HOST_KEY_PUB_GPG"
+    gpg_host --export --armor --export-options export-minimal \
+	"0x${HOST_FINGERPRINT}!" > "$HOST_KEY_FILE"
+    log info "GPG host public key file: $HOST_KEY_FILE"
 }
 
 # load the host fingerprint into the fingerprint variable, using the
@@ -114,12 +108,12 @@ create_gpg_pub_file() {
 # stuff.  is there a way we can do this without having to create temp
 # files?
 load_fingerprint() {
-    if [ -f "$HOST_KEY_PUB_GPG" ] ; then
+    if [ -f "$HOST_KEY_FILE" ] ; then
 	HOST_FINGERPRINT=$( \
 	    (FUBAR=$(mktemp -d) && export GNUPGHOME="$FUBAR" \
 	    && gpg --quiet --import \
 	    && gpg --quiet --list-keys --with-colons --with-fingerprint \
-	    && rm -rf "$FUBAR") <"$HOST_KEY_PUB_GPG" \
+	    && rm -rf "$FUBAR") <"$HOST_KEY_FILE" \
 	    | grep '^fpr:' | cut -d: -f10 )
     else
 	HOST_FINGERPRINT=
@@ -133,13 +127,6 @@ load_fingerprint_secret() {
 	gpg_host --quiet --list-secret-key \
 	--with-colons --with-fingerprint \
 	| grep '^fpr:' | cut -d: -f10 )
-}
-
-# output host key ssh fingerprint
-load_ssh_fingerprint() {
-    [ -f "$HOST_KEY_PUB" ] || return 0
-    HOST_FINGERPRINT_SSH=$(ssh-keygen -l -f "$HOST_KEY_PUB" \
-	| awk '{ print $1, $2, $4 }')
 }
 
 # fail if host key present
@@ -186,13 +173,11 @@ show_key() {
 
     echo "OpenPGP fingerprint: $HOST_FINGERPRINT"
 
-    load_ssh_fingerprint
-
-    if [ "$HOST_FINGERPRINT_SSH" ] ; then
-	echo "ssh fingerprint: $HOST_FINGERPRINT_SSH"
-    else
-	log error "SSH host key not found."
-    fi
+    echo -n "ssh fingerprint: "
+    ssh-keygen -l -f /dev/stdin \
+	<<<$( gpg_host --export FEE16FA3 2>/dev/null \
+	| openpgp2ssh 8445B5203A8443B4B04F637DD4DE66B2FEE16FA3 2>/dev/null) \
+	| awk '{ print $1, $2, $4 }'
 
     # FIXME: other relevant key parameters?
 }
@@ -229,7 +214,6 @@ export KEYSERVER
 export GNUPGHOME_HOST
 export GNUPGHOME
 export HOST_FINGERPRINT=
-export HOST_FINGERPRINT_SSH=
 
 # get subcommand
 COMMAND="$1"
@@ -294,7 +278,7 @@ case $COMMAND in
 usage: $PGRM expert <subcommand> [options] [args]
 
 expert subcommands:
- import-key (i) FILE [NAME[:PORT]]   import existing ssh key to gpg
+ import-key (i) [NAME[:PORT]]        import existing ssh key to gpg
  gen-key (g) [NAME[:PORT]]           generate gpg key for the host
    --length (-l) BITS                  key length in bits (2048)
  diagnostics (d)                     monkeysphere host status

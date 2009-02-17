@@ -13,14 +13,10 @@
 
 import_key() {
 
-local keyFile
 local hostName
 local userID
 
-keyFile="$1"
-[ -f "$keyFile" ]
-
-hostName=${2:-$(hostname -f)}
+hostName=${1:-$(hostname -f)}
 userID="ssh://${hostName}"
 
 # create host home
@@ -31,16 +27,14 @@ chmod 700 "${GNUPGHOME_HOST}"
 
 log verbose "importing ssh key..."
 # translate ssh key to a private key
-PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" <"$keyFile" \
+PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" \
     | gpg_host --import
 
-# load the new host fpr into the fpr variable
+# load the new host fpr into the fpr variable.  this is so we can
+# create the gpg pub key file.  we have to do this from the secret key
+# ring since we obviously don't have the gpg pub key file yet, since
+# that's what we're trying to produce (see below).
 load_fingerprint_secret
-
-# export the host public key to the monkeysphere ssh pub key file
-log debug "creating ssh public key file..."
-ssh-keygen -y -f "$keyFile" > "$HOST_KEY_PUB"
-log info "SSH host public key file: $HOST_KEY_PUB"
 
 # export to gpg public key to file
 create_gpg_pub_file
