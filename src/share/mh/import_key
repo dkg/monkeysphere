@@ -14,9 +14,27 @@
 import_key() {
 
 local hostName
+local domain
 local userID
 
-hostName=${1:-$(hostname -f)}
+hostName="$1"
+
+# use the default hostname if not specified
+if [ -z "$hostName" ] ; then
+    hostName=$(hostname -f)
+    # test that the domain is not obviously illegitimate
+    domain=${foo##*.}
+    case $domain in
+	'local'|'localdomain')
+	    failure "Host domain '$domain' is not legitimate.  Aborting key import."
+	    ;;
+    esac
+    # test that there are at least two parts
+    if (( $(echo "$hostName" | tr . ' ' | wc -w) < 2 )) ; then
+	failure "Host name '$hostName' is not legitimate.  Aborting key import."
+    fi
+fi
+
 userID="ssh://${hostName}"
 
 # create host home
