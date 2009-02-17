@@ -181,7 +181,8 @@ show_key() {
 	| grep '^fpr:' | cut -d: -f10 )
 
     # list the host key info
-    gpg --list-key --fingerprint --list-options show-unusable-uids 2>/dev/null
+    gpg --list-keys --fingerprint \
+	--list-options show-unusable-uids 2>/dev/null
 
     # list the pgp fingerprint
     echo "OpenPGP fingerprint: $HOST_FINGERPRINT"

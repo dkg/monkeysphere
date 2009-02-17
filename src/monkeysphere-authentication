@@ -86,8 +86,8 @@ gpg_sphere() {
     su_monkeysphere_user "gpg $@"
 }
 
-# load the core fingerprint into the fingerprint variable, using the
-# gpg host secret key
+# output to stdout the core fingerprint from the gpg core secret
+# keyring
 core_fingerprint() {
     log debug "determining core key fingerprint..."
     gpg_core --quiet --list-secret-key \

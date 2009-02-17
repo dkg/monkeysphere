@@ -170,16 +170,16 @@ echo "### import host key..."
 ssh-keygen -b 1024 -t rsa -N '' -f "$TEMPDIR"/ssh_host_rsa_key
 monkeysphere-host import-key testhost < "$TEMPDIR"/ssh_host_rsa_key
 
+echo "##################################################"
+echo "### getting host key fingerprint..."
+HOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
+echo "$HOSTKEYID"
+
 # change host key expiration
 echo "##################################################"
 echo "### setting host key expiration..."
 monkeysphere-host set-expire 1
 # FIXME: how do we check that the expiration has really been set?
-
-echo "##################################################"
-echo "### getting host key fingerprint..."
-HOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
-echo "$HOSTKEYID"
 
 # certify host key with the "Admin's Key".
 # (this would normally be done via keyservers)
@@ -236,7 +236,7 @@ gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 # teach the "server" about the testuser's key
 echo "##################################################"
 echo "### export testuser key to server..."
-gpg --export testuser | monkeysphere-authentication expert gpg-cmd --import
+gpg --export testuser | monkeysphere-authentication gpg-cmd --import
 
 # update authorized_keys for user
 echo "##################################################"
