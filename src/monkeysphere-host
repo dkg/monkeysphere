@@ -131,14 +131,14 @@ load_fingerprint_secret() {
 
 # fail if host key present
 check_host_key() {
-    [ -z "$HOST_FINGERPRINT" ] \
+    [ ! -s "$HOST_KEY_FILE" ] \
 	|| failure "An OpenPGP host key already exists."
 }
 
 # fail if host key not present
 check_host_no_key() {
-    [ "$HOST_FINGERPRINT" ] \
-	|| failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-host expert import-key' first."
+    [ -s "$HOST_KEY_FILE" ] \
+	|| failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-host import-key' first."
 }
 
 # output the index of a user ID on the host key
@@ -167,18 +167,34 @@ find_host_userid() {
 
 # show info about the host key
 show_key() {
-    gpg_host --fingerprint --list-key --list-options show-unusable-uids \
-	"0x${HOST_FINGERPRINT}!" 2>/dev/null || true
-    # FIXME: make sure expiration date is shown
+    local GNUPGHOME
 
+    # tmp gpghome dir
+    export GNUPGHOME=$(mktemp -d)
+
+    # trap to remove tmp dir if break
+    trap "rm -rf $GNUPGHOME" EXIT
+
+    gpg --quiet --import <"$HOST_KEY_FILE"
+
+    HOST_FINGERPRINT=$(gpg --quiet --list-keys --with-colons --with-fingerprint \
+	| grep '^fpr:' | cut -d: -f10 )
+
+    # list the host key info
+    gpg --list-key --fingerprint --list-options show-unusable-uids 2>/dev/null
+
+    # list the pgp fingerprint
     echo "OpenPGP fingerprint: $HOST_FINGERPRINT"
 
+    # list the ssh fingerprint
     echo -n "ssh fingerprint: "
     ssh-keygen -l -f /dev/stdin \
 	<<<$(openpgp2ssh <"$HOST_KEY_FILE" 2>/dev/null) \
 	| awk '{ print $1, $2, $4 }'
 
-    # FIXME: other relevant key parameters?
+    # remove the tmp file
+    trap - EXIT
+    rm -rf "$GNUPGHOME"
 }
 
 ########################################################################
@@ -221,61 +237,60 @@ shift
 
 case $COMMAND in
     'show-key'|'show'|'s')
-	load_fingerprint
 	check_host_no_key
 	show_key
 	;;
 
     'set-expire'|'extend-key'|'e')
-	load_fingerprint
 	check_host_no_key
+	load_fingerprint
 	source "${MHSHAREDIR}/set_expire"
 	set_expire "$@"
 	;;
 
     'add-hostname'|'add-name'|'n+')
-	load_fingerprint
 	check_host_no_key
+	load_fingerprint
 	source "${MHSHAREDIR}/add_hostname"
 	add_hostname "$@"
 	;;
 
     'revoke-hostname'|'revoke-name'|'n-')
-	load_fingerprint
 	check_host_no_key
+	load_fingerprint
 	source "${MHSHAREDIR}/revoke_hostname"
 	revoke_hostname "$@"
 	;;
 
     'add-revoker'|'o')
-	load_fingerprint
 	check_host_no_key
+	load_fingerprint
 	source "${MHSHAREDIR}/add_revoker"
 	add_revoker "$@"
 	;;
 
     'revoke-key'|'r')
-	load_fingerprint
 	check_host_no_key
+	load_fingerprint
 	source "${MHSHAREDIR}/revoke_key"
 	revoke_key "$@"
 	;;
 
     'publish-key'|'publish'|'p')
-	load_fingerprint
 	check_host_no_key
+	load_fingerprint
 	source "${MHSHAREDIR}/publish_key"
 	publish_key
 	;;
 
     'import-key'|'i')
-	load_fingerprint
 	check_host_key
 	source "${MHSHAREDIR}/import_key"
 	import_key "$@"
 	;;
 
     'diagnostics'|'d')
+	load_fingerprint
 	source "${MHSHAREDIR}/diagnostics"
 	diagnostics
 	;;
