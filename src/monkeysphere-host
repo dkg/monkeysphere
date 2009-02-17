@@ -66,12 +66,12 @@ subcommands:
  revoke-key (r)                      revoke host key
  publish-key (p)                     publish host key to keyserver
 
- expert <expert-subcommand>          run expert command
- expert help                         expert command help
+ import-key (i) [NAME[:PORT]]        import existing ssh key to gpg
 
  version (v)                         show version number
  help (h,?)                          this help
 
+See ${PGRM}(8) for more info.
 EOF
 }
 
@@ -269,47 +269,16 @@ case $COMMAND in
 	publish_key
 	;;
 
-    'expert')
-	SUBCOMMAND="$1"
-	shift
-	case "$SUBCOMMAND" in
-	    'help'|'h'|'?')
-		cat <<EOF
-usage: $PGRM expert <subcommand> [options] [args]
+    'import-key'|'i')
+	load_fingerprint
+	check_host_key
+	source "${MHSHAREDIR}/import_key"
+	import_key "$@"
+	;;
 
-expert subcommands:
- import-key (i) [NAME[:PORT]]        import existing ssh key to gpg
- gen-key (g) [NAME[:PORT]]           generate gpg key for the host
-   --length (-l) BITS                  key length in bits (2048)
- diagnostics (d)                     monkeysphere host status
-
-EOF
-		;;
-
-	    'import-key'|'i')
-		load_fingerprint
-		check_host_key
-		source "${MHSHAREDIR}/import_key"
-		import_key "$@"
-		;;
-
-	    'gen-key'|'g')
-		load_fingerprint
-		check_host_key
-		source "${MHSHAREDIR}/gen_key"
-		gen_key "$@"
-		;;
-
-	    'diagnostics'|'d')
-		source "${MHSHAREDIR}/diagnostics"
-		diagnostics
-		;;
-
-	    *)
-		failure "Unknown expert subcommand: '$COMMAND'
-Type '$PGRM help' for usage."
-		;;
-	esac
+    'diagnostics'|'d')
+	source "${MHSHAREDIR}/diagnostics"
+	diagnostics
 	;;
 
     'version'|'v')

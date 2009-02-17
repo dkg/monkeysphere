@@ -61,12 +61,10 @@ subcommands:
  remove-id-certifier (c-) KEYID      remove a certification key
  list-id-certifiers (c)              list certification keys
 
- expert <expert-subcommand>          run expert command
- expert help                         expert command help
-
  version (v)                         show version number
  help (h,?)                          this help
 
+See ${PGRM}(8) for more info.
 EOF
 }
 
@@ -176,35 +174,13 @@ case $COMMAND in
 	list_certifiers "$@"
 	;;
 
-    'expert')
-	SUBCOMMAND="$1"
-	shift
-	case "$SUBCOMMAND" in
-	    'help'|'h'|'?')
-		cat <<EOF
-usage: $PGRM expert <subcommand> [options] [args]
+    'diagnostics'|'d')
+	source "${MASHAREDIR}/diagnostics"
+	diagnostics
+	;;
 
-expert subcommands:
- diagnostics (d)                     monkeysphere authentication status
- gpg-cmd CMD                         execute gpg command
-
-EOF
-		;;
-
-	    'diagnostics'|'d')
-		source "${MASHAREDIR}/diagnostics"
-		diagnostics
-		;;
-
-	    'gpg-cmd')
-		gpg_sphere "$@"
-		;;
-
-	    *)
-		failure "Unknown expert subcommand: '$COMMAND'
-Type '$PGRM help' for usage."
-		;;
-	esac
+    'gpg-cmd')
+	gpg_sphere "$@"
 	;;
 
     'version'|'v')
