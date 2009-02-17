@@ -175,8 +175,7 @@ show_key() {
 
     echo -n "ssh fingerprint: "
     ssh-keygen -l -f /dev/stdin \
-	<<<$( gpg_host --export "$HOST_FINGERPRINT" 2>/dev/null \
-	| openpgp2ssh "$HOST_FINGERPRINT" 2>/dev/null) \
+	<<<$(openpgp2ssh <"$HOST_KEY_FILE" 2>/dev/null) \
 	| awk '{ print $1, $2, $4 }'
 
     # FIXME: other relevant key parameters?
