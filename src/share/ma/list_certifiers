@@ -17,21 +17,42 @@ list_certifiers() {
 
 local keys
 local key
+local authfpr
 
 # find trusted keys in sphere keychain
 log debug "finding trusted keys..."
 
-# NOTE: looking for only 'f' keys here (used to be '(u|f)'), since the
-# only key that should be 'u' is the core key, which is not
-# technically a certifier in the sense we're worried about.  Is this
-# not correct?  Should we be sorting out the certifier keys in a
-# different way?
-keys=$(gpg_sphere "--list-keys --with-colons --fingerprint" | \
-    grep ^pub: | cut -d: -f2,5 | egrep '^f:' | cut -d: -f2)
+# FIXME: this assumes that the keygrip (16 hex chars) is unique; we're
+# only searching by keygrip at the moment.
 
-# output keys
-for key in $keys ; do
-    gpg_sphere "--list-key --fingerprint 0x${key}!"
+authgrip=$(core_fingerprint | cut -b 25-40)
+
+# We're walking the list of known signatures, and extracting all trust
+# signatures made by the core fingerprint and known to the sphere
+# keyring.
+
+# for each one of these, we're printing (colon-delimited): the
+# fingerprint, the trust depth, the trust level (60 == marginal, 120
+# == full), and the domain regex (if any):
+
+gpg_sphere "--fingerprint --with-colons --fixed-list-mode --check-sigs" | \
+    cut -f 1,2,5,8,9,10 -d: | \
+    egrep '^(fpr:::::|sig:!:'"$authgrip"':[[:digit:]]+ [[:digit:]]+:)' | \
+    while IFS=: read -r type validity grip trustparams trustdomain fpr ; do
+    case $type in
+	'fpr') # this is a new key
+	    keyfpr=$fpr
+	    ;;
+	'sig') # print all trust signatures, including regexes if present
+	    trustdepth=${trustparams%% *}
+	    trustlevel=${trustparams##* }
+
+	    # FIXME: this is clumsy and not human-friendly.  we should
+	    # print out more human-readable information, if possible.
+	    printf "%s:%d:%d:%s\n" "$keyfpr" "$trustdepth" "$trustlevel" "$trustdomain"
+	    ;;
+    esac
 done
+
 
 }
