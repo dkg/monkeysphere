@@ -24,8 +24,10 @@ authentication.
 \fBmonkeysphere-authentication\fP takes various subcommands.
 .TP
 .B setup
-Setup the server for Monkeysphere user authentication.  `s' may be
-used in place of `setup'.
+Setup the server for Monkeysphere user authentication.  This command
+is idempotent, which means it can be run multiple times to make sure
+the setup is correct, without adversely affecting existing setups.
+`s' may be used in place of `setup'.
 .TP
 .B update-users [ACCOUNT]...
 Rebuild the monkeysphere-controlled authorized_keys files.  For each

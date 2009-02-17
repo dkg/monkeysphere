@@ -70,7 +70,7 @@ EOF
 	fi
 	
     else 
-	log verbose "This system has already set up the Monkeysphere authentication trust core."
+	log verbose "Monkeysphere authentication trust core already exists."
     fi
 
     # export the core key to the sphere keyring
@@ -91,6 +91,7 @@ EOF
 	fi
     else
 	failure "Could not get monkeysphere-authentication trust guidelines."
+	# FIXME: what does this mean?  should we suggest how to fix?
     fi
 
     # ensure that we're using the extended trust model (1), and that
@@ -102,5 +103,6 @@ EOF
     log debug "sphere trust model: $TRUST_MODEL"
     if [ "$TRUST_MODEL" != '1:3:1' ] ; then
 	failure "monkeysphere-authentication does not have the expected trust model settings."
+	# FIXME: what does this mean?  should we suggest how to fix?
     fi
 }

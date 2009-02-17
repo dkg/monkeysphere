@@ -95,6 +95,14 @@ core_fingerprint() {
 	| grep ^fpr: | cut -d: -f10
 }
 
+# fail if authentication has not been setup
+check_no_setup() {
+    # FIXME: what is the right test to do here?
+    [ -d "$MADATADIR" ] \
+	|| failure "This host appears to have not yet been set up for Monkeysphere authentication.
+Please run 'monkeysphere-authentication setup' first."
+}
+
 # export signatures from core to sphere
 gpg_core_sphere_sig_transfer() {
     log debug "exporting core local sigs to sphere..."
@@ -155,21 +163,25 @@ case $COMMAND in
 	;;
 
     'update-users'|'update-user'|'u')
+	check_no_setup
 	source "${MASHAREDIR}/update_users"
 	update_users "$@"
 	;;
 
     'add-identity-certifier'|'add-id-certifier'|'add-certifier'|'c+')
+	check_no_setup
 	source "${MASHAREDIR}/add_certifier"
 	add_certifier "$@"
 	;;
 
     'remove-identity-certifier'|'remove-id-certifier'|'remove-certifier'|'c-')
+	check_no_setup
 	source "${MASHAREDIR}/remove_certifier"
 	remove_certifier "$@"
 	;;
 
     'list-identity-certifiers'|'list-id-certifiers'|'list-certifiers'|'list-certifier'|'c')
+	check_no_setup
 	source "${MASHAREDIR}/list_certifiers"
 	list_certifiers "$@"
 	;;
@@ -180,6 +192,7 @@ case $COMMAND in
 	;;
 
     'gpg-cmd')
+	check_no_setup
 	gpg_sphere "$@"
 	;;
 
