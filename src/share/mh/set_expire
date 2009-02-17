@@ -29,6 +29,8 @@ $extendTo
 save
 EOF
 
+update_gpg_pub_file
+
 cat <<EOF | log info
 NOTE: Host key expiration date adjusted, but not yet published.
 Run '$PGRM publish-key' to publish the new expiration date.

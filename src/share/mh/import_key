@@ -61,7 +61,7 @@ printf "%s:6:\n" "$HOST_FINGERPRINT" | gpg_host --import-ownertrust
 gpg_host --check-trustdb
 
 # export to gpg public key to file
-create_gpg_pub_file
+update_gpg_pub_file
 
 # show info about new key
 show_key

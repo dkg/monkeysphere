@@ -97,11 +97,10 @@ gpg_host_edit() {
 }
 
 # export the host public key to the monkeysphere gpg pub key file
-create_gpg_pub_file() {
-    log debug "creating openpgp public key file..."
+update_gpg_pub_file() {
+    log debug "updating openpgp public key file '$HOST_KEY_FILE'..."
     gpg_host --export --armor --export-options export-minimal \
 	"0x${HOST_FINGERPRINT}!" > "$HOST_KEY_FILE"
-    log info "GPG host public key file: $HOST_KEY_FILE"
 }
 
 # load the host fingerprint into the fingerprint variable, using the
@@ -140,7 +139,8 @@ check_host_key() {
 # fail if host key not present
 check_host_no_key() {
     [ -s "$HOST_KEY_FILE" ] \
-	|| failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-host import-key' first."
+	|| failure "You don't appear to have a Monkeysphere host key on this server.
+Please run 'monkeysphere-host import-key' first."
 }
 
 # output the index of a user ID on the host key
@@ -184,7 +184,7 @@ show_key() {
 
     # list the host key info
     # FIXME: make no-show-keyring work so we don't have to do the grep'ing
-    # FIXME: why is this not showing key expiration?
+    # FIXME: can we show uid validity somehow?
     gpg --list-keys --fingerprint \
 	--list-options show-unusable-uids 2>/dev/null \
 	| grep -v "^${GNUPGHOME}/pubring.gpg$" \

@@ -65,6 +65,8 @@ EOF
 # execute edit-key script
 if echo "$revuidCommand" | gpg_host_edit ; then
 
+    update_gpg_pub_file
+
     show_key
 
     echo
