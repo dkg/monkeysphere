@@ -84,7 +84,6 @@ if [ "${OK/y/Y}" != 'Y' ] ; then
 fi
 
 # edit-key script to add revoker
-# NOTE: *all* user IDs will be ltsigned
 addrevokerCommand=$(cat <<EOF
 addrevoker
 

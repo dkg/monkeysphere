@@ -30,7 +30,7 @@ fi
 echo "WARNING: There is a known bug in this function."
 echo "This function has been known to occasionally revoke the wrong user ID."
 echo "Please see the following bug report for more information:"
-echo "http://web.monkeysphere.info/bugs/revoke-hostname-revoking-wrong-userid/"
+echo "https://labs.riseup.net/code/issues/show/422"
 read -p "Are you sure you would like to proceed? (y/N) " OK; OK=${OK:=N}
 if [ ${OK/y/Y} != 'Y' ] ; then
     failure "aborting."

@@ -89,6 +89,8 @@ gpg_host_list() {
 }
 
 # command for edit key scripts, takes scripts on stdin
+# FIXME: should we supress all the edit script spew?  or pipe it
+# through log debug?
 gpg_host_edit() {
     gpg_host --quiet --command-fd 0 --edit-key \
 	"0x${HOST_FINGERPRINT}!" "$@"
@@ -106,7 +108,7 @@ create_gpg_pub_file() {
 # export gpg pub key file
 # FIXME: this seems much less than ideal, with all this temp keyring
 # stuff.  is there a way we can do this without having to create temp
-# files?
+# files?  what if we stored the fingerprint in MHDATADIR/fingerprint?
 load_fingerprint() {
     if [ -f "$HOST_KEY_FILE" ] ; then
 	HOST_FINGERPRINT=$( \
@@ -181,8 +183,12 @@ show_key() {
 	| grep '^fpr:' | cut -d: -f10 )
 
     # list the host key info
+    # FIXME: make no-show-keyring work so we don't have to do the grep'ing
+    # FIXME: why is this not showing key expiration?
     gpg --list-keys --fingerprint \
-	--list-options show-unusable-uids 2>/dev/null
+	--list-options show-unusable-uids 2>/dev/null \
+	| grep -v "^${GNUPGHOME}/pubring.gpg$" \
+	| egrep -v '^-+$'
 
     # list the pgp fingerprint
     echo "OpenPGP fingerprint: $HOST_FINGERPRINT"
