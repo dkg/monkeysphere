@@ -151,14 +151,15 @@ EOF
 # core ltsigns the newly imported certifier key
 log debug "executing core ltsign script..."
 if echo "$ltsignCommand" | \
-    gpg_core --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
+    gpg_core --quiet --command-fd 0 --no-tty --edit-key "0x${fingerprint}!" \
+     2>&1 | log debug ; then
 
     # transfer the new sigs back to the sphere keyring
     gpg_core_sphere_sig_transfer
 
     # update the sphere trustdb
     log debug "updating sphere trustdb..."
-    gpg_sphere "--check-trustdb"
+    gpg_sphere "--check-trustdb" 2>&1 | log debug
 
     log info "Identity certifier added."
 else

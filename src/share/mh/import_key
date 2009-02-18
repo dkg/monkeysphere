@@ -46,7 +46,7 @@ chmod 700 "${GNUPGHOME_HOST}"
 log verbose "importing ssh key..."
 # translate ssh key to a private key
 PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" \
-    | gpg_host --import
+    | gpg_host --import 2>&1 | log debug
 
 # load the new host fpr into the fpr variable.  this is so we can
 # create the gpg pub key file.  we have to do this from the secret key
@@ -56,6 +56,8 @@ load_fingerprint_secret
 
 # export to gpg public key to file
 update_gpg_pub_file
+
+log info "host key imported:"
 
 # show info about new key
 show_key

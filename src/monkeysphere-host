@@ -80,7 +80,8 @@ gpg_host() {
     GNUPGHOME="$GNUPGHOME_HOST" gpg "$@"
 }
 
-# command to list the info about the host key, in colon format
+# command to list the info about the host key, in colon format, to
+# stdout
 gpg_host_list() {
     gpg_host --list-keys --with-colons --fixed-list-mode \
 	--with-fingerprint --with-fingerprint \
@@ -92,8 +93,9 @@ gpg_host_list() {
 # FIXME: should we supress all the edit script spew?  or pipe it
 # through log debug?
 gpg_host_edit() {
-    gpg_host --quiet --command-fd 0 --edit-key \
-	"0x${HOST_FINGERPRINT}!" "$@"
+    gpg_host --no-greeting --quiet \
+	--command-fd 0 --no-tty --edit-key \
+	"0x${HOST_FINGERPRINT}!" "$@" 2>&1 | log debug
 }
 
 # export the host public key to the monkeysphere gpg pub key file
