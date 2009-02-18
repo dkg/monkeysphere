@@ -90,7 +90,14 @@ trap failed_cleanup EXIT
 ## set up some variables to ensure that we're operating strictly in
 ## the tests, not system-wide:
 
-# make temp dir
+# set up temp dir
+
+# NOTE: /tmp can not be used as the temp dir here, since the
+# permissions on /tmp are usually such that they will not pass the
+# monkeysphere/ssh path permission checking.  If you need to use a
+# different location than the current source, please set $TMPDIR
+# somewhere with tighter permissions.
+
 mkdir -p "$TESTDIR"/tmp
 TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/monkeyspheretest.XXXXXXX")
 
@@ -121,10 +128,8 @@ export DISPLAY=monkeys
 
 # copy in admin and testuser home to tmp
 echo "##################################################"
-echo "### copying admin and testuser homes..."
-cp -a "$TESTDIR"/home/admin "$TEMPDIR"/
+echo "### configuring testuser home..."
 cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
-
 # set up environment for testuser
 export TESTHOME="$TEMPDIR"/testuser
 export GNUPGHOME="$TESTHOME"/.gnupg
@@ -141,6 +146,10 @@ KNOWN_HOSTS=$TESTHOME/.ssh/known_hosts
 EOF
 get_gpg_prng_arg >> "$GNUPGHOME"/gpg.conf
 
+echo "##################################################"
+echo "### configuring admin home..."
+cp -a "$TESTDIR"/home/admin "$TEMPDIR"/
+
 # set up sshd
 echo "##################################################"
 echo "### configuring sshd..."
@@ -155,33 +164,22 @@ EOF
 ######################################################################
 ### SERVER HOST SETUP
 
-# create a new host key
-echo "##################################################"
-echo "### testing host key generation..."
-mkdir -p -m 750 "$MONKEYSPHERE_SYSDATADIR"/host
-# add gpg.conf with quick-random
-get_gpg_prng_arg >> "$MONKEYSPHERE_SYSCONFIGDIR"/host/gpg.conf
-echo | monkeysphere-host expert gen-key --length 1024 testhost
-
-# remove the host home for the next test
-rm -rf "$MONKEYSPHERE_SYSCONFIGDIR"/host
-
 # import host key
 echo "##################################################"
-echo "### testing host key importing..."
+echo "### import host key..."
 ssh-keygen -b 1024 -t rsa -N '' -f "$TEMPDIR"/ssh_host_rsa_key
-monkeysphere-host expert import-key testhost < "$TEMPDIR"/ssh_host_rsa_key
+monkeysphere-host import-key testhost < "$TEMPDIR"/ssh_host_rsa_key
+
+echo "##################################################"
+echo "### getting host key fingerprint..."
+HOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
+echo "$HOSTKEYID"
 
 # change host key expiration
 echo "##################################################"
 echo "### setting host key expiration..."
 monkeysphere-host set-expire 1
-monkeysphere-host show-key
 # FIXME: how do we check that the expiration has really been set?
-
-echo "##################################################"
-echo "### getting host key fingerprint..."
-HOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
 
 # certify host key with the "Admin's Key".
 # (this would normally be done via keyservers)
@@ -214,10 +212,13 @@ get_gpg_prng_arg >> "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
 # add admin as identity certifier for testhost
 echo "##################################################"
 echo "### adding admin as certifier..."
-echo y | monkeysphere-authentication add-id-certifier "$TEMPDIR"/admin/.gnupg/pubkey.gpg
+monkeysphere-authentication add-id-certifier -y "$TEMPDIR"/admin/.gnupg/pubkey.gpg
+
+echo "##################################################"
+echo "### list certifiers..."
+monkeysphere-authentication list-certifiers
 
 # FIXME: should we run "diagnostics" here to test setup?
-
 
 ######################################################################
 ### TESTUSER SETUP
@@ -235,12 +236,14 @@ gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 # teach the "server" about the testuser's key
 echo "##################################################"
 echo "### export testuser key to server..."
-gpg --export testuser | monkeysphere-authentication expert gpg-cmd --import
+gpg --export testuser | monkeysphere-authentication gpg-cmd --import
 
 # update authorized_keys for user
 echo "##################################################"
 echo "### update server authorized_keys file for this testuser..."
 monkeysphere-authentication update-users $(whoami)
+# FIXME: this is maybe not failing properly for:
+# ms: improper group or other writability on path '/tmp'.
 
 
 ######################################################################

@@ -61,33 +61,13 @@ Revoke the host's OpenPGP key.  `r' may be used in place of
 Publish the host's OpenPGP key to the keyserver.  `p' may be used in
 place of `publish-key'.
 .TP
-.B help
-Output a brief usage summary.  `h' or `?' may be used in place of
-`help'.
-.TP
-.B version
-show version number
-
-.SH "EXPERT" SUBCOMMANDS
-
-Some commands are very unlikely to be needed by most administrators.
-These commands must prefaced by the word `expert'.
-.TP
-.B gen-key [HOSTNAME]
-Generate a OpenPGP key for the host.  If HOSTNAME is not specified,
-then the system fully-qualified domain name will be user.  An
-alternate key bit length can be specified with the `-l' or `--length'
-option (default 2048).  An expiration length can be specified with the
-`-e' or `--expire' option (prompt otherwise).  The expiration format
-is the same as that of \fBextend-key\fP, below.  `g' may be used in
-place of `gen-key'.
-.TP
-.B import-key
-FIXME:
-  import-key (i)                     import existing ssh key to gpg
-   --hostname (-h) NAME[:PORT]         hostname for key user ID
-   --keyfile (-f) FILE                 key file to import
-   --expire (-e) EXPIRE                date to expire
+.B import-key [NAME[:PORT]]
+Import a pem-encoded ssh secret host key, from stdin.  NAME[:PORT] is
+used to specify the hostname (and port) used in the user ID of the new
+OpenPGP key.  If NAME is not specified, then the system
+fully-qualified domain name will be used (ie. `hostname -f').  If PORT
+is not specified, the no port is added to the user ID, which means
+port 22 is assumed.  `i' may be used in place of `import-key'.
 .TP
 .B diagnostics
 Review the state of the monkeysphere server host key and report on
@@ -95,6 +75,13 @@ suggested changes.  Among other checks, this includes making sure
 there is a valid host key, that the key is published, that the sshd
 configuration points to the right place, etc.  `d' may be used in
 place of `diagnostics'.
+.TP
+.B help
+Output a brief usage summary.  `h' or `?' may be used in place of
+`help'.
+.TP
+.B version
+show version number
 
 .SH SETUP HOST AUTHENTICATION
 
@@ -103,11 +90,6 @@ be published to the Web of Trust.  This is not done by default.  To
 publish the host key to the keyservers, run the following command:
 
 $ monkeysphere-host publish-key
-
-You must also modify the sshd_config on the server to tell sshd where
-the new server host key is located:
-
-HostKey /var/lib/monkeysphere/host/ssh_host_rsa_key
 
 In order for users logging into the system to be able to identify the
 host via the monkeysphere, at least one person (e.g. a server admin)

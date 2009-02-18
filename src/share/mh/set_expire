@@ -21,10 +21,24 @@ local extendTo
 # get the new expiration date
 extendTo=$(get_gpg_expiration "$1")
 
+if [ "$PROMPT" = "true" ] ; then
+    read -p "Are you sure you want to change the expiration on the host key to '$extendTo'? (y/N) " OK; OK=${OK:-N}
+    if [ "${OK/y/Y}" != 'Y' ] ; then
+	failure "expiration not set."
+    fi
+else
+    log debug "extending without prompting."
+fi
+
+log info "setting host key expiration to ${extendTo}:"
+
+log debug "executing host expire script..."
 gpg_host_edit expire <<EOF
 $extendTo
 save
 EOF
+
+update_gpg_pub_file
 
 cat <<EOF | log info
 NOTE: Host key expiration date adjusted, but not yet published.

@@ -152,7 +152,7 @@ fi
 
 if [ "$problemsfound" -gt 0 ]; then
     echo "When the above $problemsfound issue"$(if [ "$problemsfound" -eq 1 ] ; then echo " is" ; else echo "s are" ; fi)" resolved, please re-run:"
-    echo "  monkeysphere-host expert diagnostics"
+    echo "  monkeysphere-host diagnostics"
 else
     echo "Everything seems to be in order!"
 fi

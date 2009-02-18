@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# This is a post-install script for monkeysphere, to transition an old
+# (<=0.22) setup to the new (>0.22) setup
+
+SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
+
+MADATADIR="${SYSDATADIR}/authentication"
+MHDATADIR="${SYSDATADIR}/host"
+
+############################################################
+### transfer host setup
+
+if [ -d "$SYSDATADIR"/gnupg-host ] ; then
+
+    if [ -s "$SYSDATADIR"/ssh_host_rsa_key ] ; then
+
+	# This would be simple, but it would generate a new pgp key,
+	#and we don't want that, right?
+	#monkeysphere-host expert import_key "$SYSDATADIR"/ssh_host_rsa_key
+
+	# create host home
+	mkdir -p "${MHDATADIR}"
+	mkdir -p "${MHTMPDIR}"
+	mkdir -p "${GNUPGHOME_HOST}"
+	chmod 700 "${GNUPGHOME_HOST}"
+
+	# transfer the host secret key from the old home to the new
+	GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --export-secret-keys \
+	    GNUPGHOME="$MHDATADIR" gpg --import
+
+	# make sure the ssh_host_rsa_key.pub and ssh_host_rsa_key.pub.gpg
+	# files exist
+
+	# anything else?
+
+    fi
+
+    #rm -rf "$SYSDATADIR"/gnupg-host
+
+fi
+
+############################################################
+### transfer authentication setup
+
+# should we test for something else/better than the existence of this
+# directory to know that we should go through the setup?
+if [ -d "$SYSDATADIR"/gnupg-authentication ] ; then
+
+    # run the authentication setup
+    monkeysphere-authentication setup
+
+    # transfer certifiers
+    # FIXME: how?
+    # i think we'll need to run something like
+    # gpg_core_sphere_sig_transfer after transfering certifiers ltsigs
+
+    # do we need to do some sort of transfer of ownertrust?
+
+    # move the authorized_keys directory
+    mv "$SYSDATADIR"/authorized_keys "$MADATADIR"/
+
+    # do we need to transfer anything else?  running update-users will
+    # regenerate everything else in the sphere keyring, right?
+
+    #rm -rf "$SYSDATADIR"/gnupg-authentication
+
+fi
+

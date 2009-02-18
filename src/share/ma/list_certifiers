@@ -17,14 +17,42 @@ list_certifiers() {
 
 local keys
 local key
+local authfpr
 
-# find trusted keys in authentication keychain
-keys=$(gpg_sphere "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-keys --with-colons --fingerprint" | \
-    grep ^pub: | cut -d: -f2,5 | egrep '^(u|f):' | cut -d: -f2)
+# find trusted keys in sphere keychain
+log debug "finding trusted keys..."
 
-# output keys
-for key in $keys ; do
-    gpg_sphere "--no-options --list-options show-uid-validity --keyring ${GNUPGHOME_AUTHENTICATION}/pubring.gpg --list-key --fingerprint $key"
+# FIXME: this assumes that the keygrip (16 hex chars) is unique; we're
+# only searching by keygrip at the moment.
+
+authgrip=$(core_fingerprint | cut -b 25-40)
+
+# We're walking the list of known signatures, and extracting all trust
+# signatures made by the core fingerprint and known to the sphere
+# keyring.
+
+# for each one of these, we're printing (colon-delimited): the
+# fingerprint, the trust depth, the trust level (60 == marginal, 120
+# == full), and the domain regex (if any):
+
+gpg_sphere "--fingerprint --with-colons --fixed-list-mode --check-sigs" | \
+    cut -f 1,2,5,8,9,10 -d: | \
+    egrep '^(fpr:::::|sig:!:'"$authgrip"':[[:digit:]]+ [[:digit:]]+:)' | \
+    while IFS=: read -r type validity grip trustparams trustdomain fpr ; do
+    case $type in
+	'fpr') # this is a new key
+	    keyfpr=$fpr
+	    ;;
+	'sig') # print all trust signatures, including regexes if present
+	    trustdepth=${trustparams%% *}
+	    trustlevel=${trustparams##* }
+
+	    # FIXME: this is clumsy and not human-friendly.  we should
+	    # print out more human-readable information, if possible.
+	    printf "%s:%d:%d:%s\n" "$keyfpr" "$trustdepth" "$trustlevel" "$trustdomain"
+	    ;;
+    esac
 done
+
 
 }

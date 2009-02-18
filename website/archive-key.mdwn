@@ -37,7 +37,7 @@ If you have properly verified this key, you can add it to your apt
 keyring for proper cryptographic verification of the archive and its
 packages by doing the following:
 
-	 $ sudo gpg -a --export EB8AF314 | apt-key add -
+	 $ gpg -a --export EB8AF314 | sudo apt-key add -
 	 OK
 	 $ aptitude update
 	 ...

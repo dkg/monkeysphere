@@ -31,7 +31,7 @@ MADATADIR="${SYSDATADIR}/authentication"
 
 # temp directory to enable atomic moves of authorized_keys files
 MATMPDIR="${MADATADIR}/tmp"
-export MSTMPDIR
+export MATMPDIR
 
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
@@ -61,12 +61,10 @@ subcommands:
  remove-id-certifier (c-) KEYID      remove a certification key
  list-id-certifiers (c)              list certification keys
 
- expert <expert-subcommand>          run expert command
- expert help                         expert command help
-
  version (v)                         show version number
  help (h,?)                          this help
 
+See ${PGRM}(8) for more info.
 EOF
 }
 
@@ -75,17 +73,12 @@ gpg_core() {
     GNUPGHOME="$GNUPGHOME_CORE"
     export GNUPGHOME
 
-    # NOTE: we supress this warning because we need the monkeysphere
-    # user to be able to read the host pubring.  we realize this might
-    # be problematic, but it's the simplest solution, without too much
-    # loss of security.
     gpg "$@"
 }
 
 # function to interact with the gpg sphere keyring
-# FIXME: this function requires basically accepts only a single
-# argument because of problems with quote expansion.  this needs to be
-# fixed/improved.
+# FIXME: this function requires only a single argument because of
+# problems with quote expansion.  this needs to be fixed/improved.
 gpg_sphere() {
     GNUPGHOME="$GNUPGHOME_SPHERE"
     export GNUPGHOME
@@ -93,21 +86,42 @@ gpg_sphere() {
     su_monkeysphere_user "gpg $@"
 }
 
+# output to stdout the core fingerprint from the gpg core secret
+# keyring
+core_fingerprint() {
+    log debug "determining core key fingerprint..."
+    gpg_core --quiet --list-secret-key \
+	--with-colons --fixed-list-mode --with-fingerprint \
+	| grep ^fpr: | cut -d: -f10
+}
+
+# fail if authentication has not been setup
+check_no_setup() {
+    # FIXME: what is the right test to do here?
+    [ -d "$MADATADIR" ] \
+	|| failure "This host appears to have not yet been set up for Monkeysphere authentication.
+Please run 'monkeysphere-authentication setup' first."
+}
+
 # export signatures from core to sphere
 gpg_core_sphere_sig_transfer() {
+    log debug "exporting core local sigs to sphere..."
     gpg_core --export-options export-local-sigs --export | \
-	gpg_sphere --import-options import-local-sigs --import
+	gpg_sphere "--import-options import-local-sigs --import"
 }
 
 ########################################################################
 # MAIN
 ########################################################################
 
-# unset variables that should be defined only in config file
+# unset variables that should be defined only in config file of in
+# MONKEYSPHERE_ variables
+unset LOG_LEVEL
 unset KEYSERVER
 unset AUTHORIZED_USER_IDS
 unset RAW_AUTHORIZED_KEYS
 unset MONKEYSPHERE_USER
+unset PROMPT
 
 # load configuration file
 [ -e ${MONKEYSPHERE_AUTHENTICATION_CONFIG:="${SYSCONFIGDIR}/monkeysphere-authentication.conf"} ] && . "$MONKEYSPHERE_AUTHENTICATION_CONFIG"
@@ -119,6 +133,7 @@ KEYSERVER=${MONKEYSPHERE_KEYSERVER:=${KEYSERVER:="pool.sks-keyservers.net"}}
 AUTHORIZED_USER_IDS=${MONKEYSPHERE_AUTHORIZED_USER_IDS:=${AUTHORIZED_USER_IDS:="%h/.monkeysphere/authorized_user_ids"}}
 RAW_AUTHORIZED_KEYS=${MONKEYSPHERE_RAW_AUTHORIZED_KEYS:=${RAW_AUTHORIZED_KEYS:="%h/.ssh/authorized_keys"}}
 MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkeysphere"}}
+PROMPT=${MONKEYSPHERE_PROMPT:=${PROMPT:="true"}}
 
 # other variables
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
@@ -131,8 +146,9 @@ CORE_KEYLENGTH=${MONKEYSPHERE_CORE_KEYLENGTH:="2048"}
 export DATE
 export MODE
 export LOG_LEVEL
-export MONKEYSPHERE_USER
 export KEYSERVER
+export MONKEYSPHERE_USER
+export PROMPT
 export CHECK_KEYSERVER
 export REQUIRED_USER_KEY_CAPABILITY
 export GNUPGHOME_CORE
@@ -152,54 +168,37 @@ case $COMMAND in
 	;;
 
     'update-users'|'update-user'|'u')
+	check_no_setup
 	source "${MASHAREDIR}/update_users"
 	update_users "$@"
 	;;
 
     'add-identity-certifier'|'add-id-certifier'|'add-certifier'|'c+')
+	check_no_setup
 	source "${MASHAREDIR}/add_certifier"
 	add_certifier "$@"
 	;;
 
     'remove-identity-certifier'|'remove-id-certifier'|'remove-certifier'|'c-')
+	check_no_setup
 	source "${MASHAREDIR}/remove_certifier"
 	remove_certifier "$@"
 	;;
 
     'list-identity-certifiers'|'list-id-certifiers'|'list-certifiers'|'list-certifier'|'c')
+	check_no_setup
 	source "${MASHAREDIR}/list_certifiers"
 	list_certifiers "$@"
 	;;
 
-    'expert')
-	SUBCOMMAND="$1"
-	shift
-	case "$SUBCOMMAND" in
-	    'help'|'h'|'?')
-		cat <<EOF
-usage: $PGRM expert <subcommand> [options] [args]
+    'diagnostics'|'d')
+	source "${MASHAREDIR}/diagnostics"
+	diagnostics
+	;;
 
-expert subcommands:
- diagnostics (d)                     monkeysphere authentication status
- gpg-cmd CMD                         execute gpg command
-
-EOF
-		;;
-
-	    'diagnostics'|'d')
-		source "${MASHAREDIR}/diagnostics"
-		diagnostics
-		;;
-
-	    'gpg-cmd')
-		gpg_sphere "$@"
-		;;
-
-	    *)
-		failure "Unknown expert subcommand: '$COMMAND'
-Type '$PGRM help' for usage."
-		;;
-	esac
+    'gpg-cmd')
+	check_no_setup
+	gpg_sphere "$@"
 	;;
 
     'version'|'v')

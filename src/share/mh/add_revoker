@@ -53,7 +53,7 @@ if [ -f "$keyID" ] ; then
     fi
 else
     # create a temporary directory for storing the downloaded key
-    TMPLOC=$(mktemp -d ${MHTMPDIR}/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
+    TMPLOC=$(mktemp -d "${MHTMPDIR}"/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
 
     # download the key from the keyserver as the monkeysphere user
     su_monkeysphere_user \
@@ -74,17 +74,20 @@ if [ -z "$fingerprint" ] ; then
     failure "Key '$keyID' not found."
 fi
 
-log info -e "\nkey found:"
+log info "key found:"
 gpg_host --fingerprint "0x${fingerprint}!"
 
-echo "Are you sure you want to add the above key as a"
-read -p "revoker of the host key? (y/N) " OK; OK=${OK:-N}
-if [ "${OK/y/Y}" != 'Y' ] ; then
-    failure "Revoker not added."
+if [ "$PROMPT" = "true" ] ; then
+    echo "Are you sure you want to add the above key as a"
+    read -p "revoker of the host key? (y/N) " OK; OK=${OK:-N}
+    if [ "${OK/y/Y}" != 'Y' ] ; then
+	failure "revoker not added."
+    fi
+else
+    log debug "adding revoker without prompting."
 fi
 
 # edit-key script to add revoker
-# NOTE: *all* user IDs will be ltsigned
 addrevokerCommand=$(cat <<EOF
 addrevoker
 
@@ -98,7 +101,9 @@ failure "not implemented yet!"
 if echo "$addrevokerCommand" | \
     gpg_core_edit ; then
 
-    log info -e "\nRevoker added."
+    update_gpg_pub_file
+
+    log info "Revoker added."
 else
     failure "Problem adding revoker."
 fi

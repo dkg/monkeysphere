@@ -23,6 +23,7 @@ setup() {
 
     # deliberately replace the config files via truncation
     # FIXME: should we be dumping to tmp files and then moving atomically?
+    log debug "writing core gpg.conf..."
     cat >"${GNUPGHOME_CORE}"/gpg.conf <<EOF
 # Monkeysphere trust core GnuPG configuration
 # This file is maintained by the Monkeysphere software.
@@ -30,62 +31,78 @@ setup() {
 no-greeting
 list-options show-uid-validity
 EOF
-    
+
+    log debug "writing sphere gpg.conf..."
     cat >"${GNUPGHOME_SPHERE}"/gpg.conf <<EOF
 # Monkeysphere trust sphere GnuPG configuration
 # This file is maintained by the Monkeysphere software.
 # Edits will be overwritten.
 no-greeting
-primary-keyring ${GNUPGHOME_SPHERE}/pubring.gpg
 list-options show-uid-validity
 EOF
 
-    # make sure the monkeysphere user owns everything in th sphere
+    # make sure the monkeysphere user owns everything in the sphere
     # gnupghome
-    chown -R "$MONKEYPSHER_USER" "${GNUPGHOME_SPHERE}"
-    chgrp -R "$MONKEYPSHER_USER" "${GNUPGHOME_SPHERE}"
+    log debuf "fixing sphere gnupg home ownership..."
+    chown -R "$MONKEYSPHERE_USER" "${GNUPGHOME_SPHERE}"
+    chgrp -R "$MONKEYSPHERE_USER" "${GNUPGHOME_SPHERE}"
 
     # get fingerprint of core key.  this should be empty on unconfigured systems.
-    local CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
+    local CORE_FPR=$(core_fingerprint)
+    log debug "core fingerprint: $CORE_FPR"
 
     if [ -z "$CORE_FPR" ] ; then
-	log info "Setting up Monkeysphere authentication trust core..."
+	log info "setting up Monkeysphere authentication trust core..."
 
 	local CORE_UID=$(printf "Monkeysphere authentication trust core UID (random string: %s)" $(head -c21 </dev/urandom | base64))
     
 	log debug "generating monkeysphere authentication trust core key ($CORE_KEYLENGTH bits)..."
-	PEM2OPENPGP_USAGE_FLAGS=certify PEM2OPENPGP_NEWKEY=$CORE_KEYLENGTH pem2openpgp "$CORE_UID" | gpg_core --import || failure "Could not import new key for Monkeysphere authentication trust core"
+	PEM2OPENPGP_USAGE_FLAGS=certify \
+	    PEM2OPENPGP_NEWKEY=$CORE_KEYLENGTH pem2openpgp "$CORE_UID" \
+	    | gpg_core --import \
+	    || failure "Could not import new key for Monkeysphere authentication trust core"
 
 	# get fingerprint of core key.  should definitely not be empty at this point
-	log debug "get core key fingerprint..."
-	CORE_FPR=$(gpg_core --with-colons --fixed-list-mode --fingerprint --list-secret-key | grep ^fpr: | cut -f10 -d: )
+	CORE_FPR=$(core_fingerprint)
+	log debug "core fingerprint: $CORE_FPR"
 	if [ -z "$CORE_FPR" ] ; then
 	    failure "Failed to create Monkeysphere authentication trust core!"
 	fi
 	
     else 
-	log verbose "This system has already set up the Monkeysphere authentication trust core."
+	log verbose "Monkeysphere authentication trust core already exists."
     fi
 
+    # export the core key to the sphere keyring
+    log debug "exporting core pub key to sphere keyring..."
+    gpg_core --export | gpg_sphere --import
 
     # ensure that the authentication sphere checker has absolute ownertrust on the expected key.
-    log debug "set ultimate owner trust on core key in gpg_sphere..."
+    log debug "setting ultimate owner trust on core key in gpg_sphere..."
     printf "%s:6:\n" "$CORE_FPR" | gpg_sphere --import-ownertrust
+    gpg_sphere --export-ownertrust | log debug
+
+    # check the owner trust
+    log debug "checking gpg_sphere owner trust set properly..."
     local ORIG_TRUST
-    log debug "check gpg_sphere owner trust set properly..."
     if ORIG_TRUST=$(gpg_sphere --export-ownertrust | grep '^[^#]') ; then
 	if [ "${CORE_FPR}:6:" != "$ORIG_TRUST" ] ; then
 	    failure "Monkeysphere authentication trust sphere should explicitly trust the core.  It does not have proper ownertrust settings."
 	fi
     else
 	failure "Could not get monkeysphere-authentication trust guidelines."
+	# FIXME: what does this mean?  should we suggest how to fix?
     fi
 
     # ensure that we're using the extended trust model (1), and that
     # our preferences are reasonable (i.e. 3 marginal OR 1 fully
     # trusted certifications are sufficient to grant full validity.
-    log debug "check trust level of core key..."
-    if [ "1:3:1" != $(gpg_sphere --with-colons --fixed-list-mode --list-keys | head -n1 | grep ^tru: cut -f3,6,7 -d:) ] ; then
+    log debug "checking trust model for authentication ..."
+    local TRUST_MODEL=$(gpg_sphere "--with-colons --fixed-list-mode --list-keys" \
+	| head -n1 | grep "^tru:" | cut -d: -f3,6,7)
+    log debug "sphere trust model: $TRUST_MODEL"
+    if [ "$TRUST_MODEL" != '1:3:1' ] ; then
 	failure "monkeysphere-authentication does not have the expected trust model settings."
+	# FIXME: what does this mean?  should we suggest how to fix?
     fi
 }

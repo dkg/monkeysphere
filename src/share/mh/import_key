@@ -14,31 +14,48 @@
 import_key() {
 
 local hostName
+local domain
 local userID
 
-# check for presense of a key
-[ "$HOST_FINGERPRINT" ] && \
-    failure "An OpenPGP host key already exists."
+hostName="$1"
 
-hostName=${1:-$(hostname -f)}
+# use the default hostname if not specified
+if [ -z "$hostName" ] ; then
+    hostName=$(hostname -f)
+    # test that the domain is not obviously illegitimate
+    domain=${foo##*.}
+    case $domain in
+	'local'|'localdomain')
+	    failure "Host domain '$domain' is not legitimate.  Aborting key import."
+	    ;;
+    esac
+    # test that there are at least two parts
+    if (( $(echo "$hostName" | tr . ' ' | wc -w) < 2 )) ; then
+	failure "Host name '$hostName' is not legitimate.  Aborting key import."
+    fi
+fi
 
 userID="ssh://${hostName}"
 
 # create host home
-mkdir -p "$GNUPGHOME_HOST"
-chmod 700 "$GNUPGHOME_HOST"
+mkdir -p "${MHDATADIR}"
+mkdir -p "${MHTMPDIR}"
+mkdir -p "${GNUPGHOME_HOST}"
+chmod 700 "${GNUPGHOME_HOST}"
 
 log verbose "importing ssh key..."
 # translate ssh key to a private key
-PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" | \
-    gpg_host --import
+PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" \
+    | gpg_host --import
 
-# find the key fingerprint of the newly converted key
-HOST_FINGERPRINT=$(get_host_fingerprint)
-export HOST_FINGERPRINT
+# load the new host fpr into the fpr variable.  this is so we can
+# create the gpg pub key file.  we have to do this from the secret key
+# ring since we obviously don't have the gpg pub key file yet, since
+# that's what we're trying to produce (see below).
+load_fingerprint_secret
 
-# export public key to file
-gpg_host_export_to_ssh_file
+# export to gpg public key to file
+update_gpg_pub_file
 
 # show info about new key
 show_key

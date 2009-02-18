@@ -32,6 +32,13 @@ MHSHAREDIR="${SYSSHAREDIR}/mh"
 # datadir for host functions
 MHDATADIR="${SYSDATADIR}/host"
 
+# temp directory for temp gnupghome directories for add_revoker
+MHTMPDIR="${MHDATADIR}/tmp"
+export MHTMPDIR
+
+# host pub key files
+HOST_KEY_FILE="${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
+
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
 
@@ -59,12 +66,12 @@ subcommands:
  revoke-key (r)                      revoke host key
  publish-key (p)                     publish host key to keyserver
 
- expert <expert-subcommand>          run expert command
- expert help                         expert command help
+ import-key (i) [NAME[:PORT]]        import existing ssh key to gpg
 
  version (v)                         show version number
  help (h,?)                          this help
 
+See ${PGRM}(8) for more info.
 EOF
 }
 
@@ -82,33 +89,58 @@ gpg_host_list() {
 }
 
 # command for edit key scripts, takes scripts on stdin
+# FIXME: should we supress all the edit script spew?  or pipe it
+# through log debug?
 gpg_host_edit() {
     gpg_host --quiet --command-fd 0 --edit-key \
 	"0x${HOST_FINGERPRINT}!" "$@"
 }
 
-# export the host key to stdout
-gpg_host_export() {
+# export the host public key to the monkeysphere gpg pub key file
+update_gpg_pub_file() {
+    log debug "updating openpgp public key file '$HOST_KEY_FILE'..."
     gpg_host --export --armor --export-options export-minimal \
-	"0x${HOST_FINGERPRINT}!"
+	"0x${HOST_FINGERPRINT}!" > "$HOST_KEY_FILE"
 }
 
-# export the host key to the monkeysphere host file key
-gpg_host_export_to_ssh_file() {
-    log debug "exporting openpgp public key..."
-
-    gpg_host_export > "$HOST_KEY_PUB_GPG"
-    log info "SSH host public key in OpenPGP form: $HOST_KEY_PUB_GPG"
+# load the host fingerprint into the fingerprint variable, using the
+# export gpg pub key file
+# FIXME: this seems much less than ideal, with all this temp keyring
+# stuff.  is there a way we can do this without having to create temp
+# files?  what if we stored the fingerprint in MHDATADIR/fingerprint?
+load_fingerprint() {
+    if [ -f "$HOST_KEY_FILE" ] ; then
+	HOST_FINGERPRINT=$( \
+	    (FUBAR=$(mktemp -d) && export GNUPGHOME="$FUBAR" \
+	    && gpg --quiet --import \
+	    && gpg --quiet --list-keys --with-colons --with-fingerprint \
+	    && rm -rf "$FUBAR") <"$HOST_KEY_FILE" \
+	    | grep '^fpr:' | cut -d: -f10 )
+    else
+	HOST_FINGERPRINT=
+    fi
 }
 
-# output just key fingerprint
-# FIXME: should not have to be priviledged user to get host
-# fingerprint.  should be taken from publicly accessible key files,
-# instead of the keyring.
-get_host_fingerprint() {
-    gpg_host --list-secret-keys --fingerprint \
-	--with-colons --fixed-list-mode 2> /dev/null | \
-	grep '^fpr:' | head -1 | cut -d: -f10 2>/dev/null || true
+# load the host fingerprint into the fingerprint variable, using the
+# gpg host secret key
+load_fingerprint_secret() {
+    HOST_FINGERPRINT=$( \
+	gpg_host --quiet --list-secret-key \
+	--with-colons --with-fingerprint \
+	| grep '^fpr:' | cut -d: -f10 )
+}
+
+# fail if host key present
+check_host_key() {
+    [ ! -s "$HOST_KEY_FILE" ] \
+	|| failure "An OpenPGP host key already exists."
+}
+
+# fail if host key not present
+check_host_no_key() {
+    [ -s "$HOST_KEY_FILE" ] \
+	|| failure "You don't appear to have a Monkeysphere host key on this server.
+Please run 'monkeysphere-host import-key' first."
 }
 
 # output the index of a user ID on the host key
@@ -135,41 +167,54 @@ find_host_userid() {
     fi
 }
 
-# function to check for host secret key
-check_host_fail() {
-    [ "$HOST_FINGERPRINT" ] || \
-	failure "You don't appear to have a Monkeysphere host key on this server.  Please run 'monkeysphere-host expert import-key' first."
-}
-
 # show info about the host key
 show_key() {
-    local fingerprintSSH
+    local GNUPGHOME
 
-    gpg_host --fingerprint --list-key --list-options show-unusable-uids \
-	"0x${HOST_FINGERPRINT}!" 2>/dev/null
-    # FIXME: make sure expiration date is shown
+    # tmp gpghome dir
+    export GNUPGHOME=$(mktemp -d)
 
+    # trap to remove tmp dir if break
+    trap "rm -rf $GNUPGHOME" EXIT
+
+    # import the host key into the tmp dir
+    gpg --quiet --import <"$HOST_KEY_FILE"
+
+    HOST_FINGERPRINT=$(gpg --quiet --list-keys --with-colons --with-fingerprint \
+	| grep '^fpr:' | cut -d: -f10 )
+
+    # list the host key info
+    # FIXME: make no-show-keyring work so we don't have to do the grep'ing
+    # FIXME: can we show uid validity somehow?
+    gpg --list-keys --fingerprint \
+	--list-options show-unusable-uids 2>/dev/null \
+	| grep -v "^${GNUPGHOME}/pubring.gpg$" \
+	| egrep -v '^-+$'
+
+    # list the pgp fingerprint
     echo "OpenPGP fingerprint: $HOST_FINGERPRINT"
 
-    if [ -f "$HOST_KEY_PUB" ] ; then
-	fingerprintSSH=$(ssh-keygen -l -f "$HOST_KEY_PUB" | \
-	    awk '{ print $1, $2, $4 }')
+    # list the ssh fingerprint
+    echo -n "ssh fingerprint: "
+    ssh-keygen -l -f /dev/stdin \
+	<<<$(openpgp2ssh <"$HOST_KEY_FILE" 2>/dev/null) \
+	| awk '{ print $1, $2, $4 }'
 
-	echo "ssh fingerprint: $fingerprintSSH"
-    else
-	log error "SSH host key not found."
-    fi
-
-    # FIXME: other relevant key parameters?
+    # remove the tmp file
+    trap - EXIT
+    rm -rf "$GNUPGHOME"
 }
 
 ########################################################################
 # MAIN
 ########################################################################
 
-# unset variables that should be defined only in config file
+# unset variables that should be defined only in config file of in
+# MONKEYSPHERE_ variables
+unset LOG_LEVEL
 unset KEYSERVER
 unset MONKEYSPHERE_USER
+unset PROMPT
 
 # load configuration file
 [ -e ${MONKEYSPHERE_HOST_CONFIG:="${SYSCONFIGDIR}/monkeysphere-host.conf"} ] && . "$MONKEYSPHERE_HOST_CONFIG"
@@ -178,116 +223,88 @@ unset MONKEYSPHERE_USER
 # defaults
 LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=${LOG_LEVEL:="INFO"}}
 KEYSERVER=${MONKEYSPHERE_KEYSERVER:=${KEYSERVER:="pool.sks-keyservers.net"}}
-AUTHORIZED_USER_IDS=${MONKEYSPHERE_AUTHORIZED_USER_IDS:=${AUTHORIZED_USER_IDS:="%h/.monkeysphere/authorized_user_ids"}}
-RAW_AUTHORIZED_KEYS=${MONKEYSPHERE_RAW_AUTHORIZED_KEYS:=${RAW_AUTHORIZED_KEYS:="%h/.ssh/authorized_keys"}}
 MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkeysphere"}}
+PROMPT=${MONKEYSPHERE_PROMPT:=${PROMPT:="true"}}
 
 # other variables
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
 GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${MHDATADIR}"}
 
-# host key fingerprint
-HOST_FINGERPRINT=$(get_host_fingerprint)
-
-# host pub key files
-HOST_KEY_PUB="${SYSDATADIR}/ssh_host_rsa_key.pub"
-HOST_KEY_PUB_GPG="${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
-
 # export variables needed in su invocation
 export DATE
 export MODE
 export LOG_LEVEL
-export MONKEYSPHERE_USER
 export KEYSERVER
+export MONKEYSPHERE_USER
+export PROMPT
+export CHECK_KEYSERVER
 export GNUPGHOME_HOST
 export GNUPGHOME
-export HOST_FINGERPRINT
+export HOST_FINGERPRINT=
 
 # get subcommand
 COMMAND="$1"
 [ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
 shift
 
-
 case $COMMAND in
     'show-key'|'show'|'s')
-	check_host_fail
+	check_host_no_key
 	show_key
 	;;
 
     'set-expire'|'extend-key'|'e')
-	check_host_fail
+	check_host_no_key
+	load_fingerprint
 	source "${MHSHAREDIR}/set_expire"
 	set_expire "$@"
 	;;
 
     'add-hostname'|'add-name'|'n+')
-	check_host_fail
+	check_host_no_key
+	load_fingerprint
 	source "${MHSHAREDIR}/add_hostname"
 	add_hostname "$@"
 	;;
 
     'revoke-hostname'|'revoke-name'|'n-')
-	check_host_fail
+	check_host_no_key
+	load_fingerprint
 	source "${MHSHAREDIR}/revoke_hostname"
 	revoke_hostname "$@"
 	;;
 
     'add-revoker'|'o')
-	check_host_fail
+	check_host_no_key
+	load_fingerprint
 	source "${MHSHAREDIR}/add_revoker"
 	add_revoker "$@"
 	;;
 
     'revoke-key'|'r')
-	check_host_fail
+	check_host_no_key
+	load_fingerprint
 	source "${MHSHAREDIR}/revoke_key"
 	revoke_key "$@"
 	;;
 
     'publish-key'|'publish'|'p')
-	check_host_fail
+	check_host_no_key
+	load_fingerprint
 	source "${MHSHAREDIR}/publish_key"
 	publish_key
 	;;
 
-    'expert')
-	SUBCOMMAND="$1"
-	shift
-	case "$SUBCOMMAND" in
-	    'help'|'h'|'?')
-		cat <<EOF
-usage: $PGRM expert <subcommand> [options] [args]
+    'import-key'|'i')
+	check_host_key
+	source "${MHSHAREDIR}/import_key"
+	import_key "$@"
+	;;
 
-expert subcommands:
- import-key (i) [NAME[:PORT]]        import existing ssh key to gpg
- gen-key (g) [NAME[:PORT]]           generate gpg key for the host
-   --length (-l) BITS                  key length in bits (2048)
- diagnostics (d)                     monkeysphere host status
-
-EOF
-		;;
-
-	    'import-key'|'i')
-		source "${MHSHAREDIR}/import_key"
-		import_key "$@"
-		;;
-
-	    'gen-key'|'g')
-		source "${MHSHAREDIR}/gen_key"
-		gen_key "$@"
-		;;
-
-	    'diagnostics'|'d')
-		source "${MHSHAREDIR}/diagnostics"
-		diagnostics
-		;;
-
-	    *)
-		failure "Unknown expert subcommand: '$COMMAND'
-Type '$PGRM help' for usage."
-		;;
-	esac
+    'diagnostics'|'d')
+	load_fingerprint
+	source "${MHSHAREDIR}/diagnostics"
+	diagnostics
 	;;
 
     'version'|'v')

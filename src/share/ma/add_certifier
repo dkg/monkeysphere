@@ -90,30 +90,37 @@ if [ -f "$keyID" ] ; then
     fi
 else
     # get the key from the key server
+    log debug "retrieving key from keyserver..."
     gpg_sphere "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" || failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
 fi
 
 export keyID
 
-# get the full fingerprint of a key ID
-fingerprint=$(gpg_sphere "--list-key --with-colons --with-fingerprint 0x${keyID}!" | \
-    grep '^fpr:' | grep "$keyID" | cut -d: -f10)
+# get the full fingerprint of new certifier key
+log debug "getting fingerprint of certifier key..."
+fingerprint=$(gpg_sphere "--list-key --with-colons --with-fingerprint 0x${keyID}!" \
+    | grep '^fpr:' | grep "$keyID" | cut -d: -f10)
 
 if [ -z "$fingerprint" ] ; then
     failure "Key '$keyID' not found."
 fi
 
-log info -e "\nkey found:"
+log info "key found:"
 gpg_sphere "--fingerprint 0x${fingerprint}!"
 
-echo "Are you sure you want to add the above key as a"
-read -p "certifier of users on this system? (y/N) " OK; OK=${OK:-N}
-if [ "${OK/y/Y}" != 'Y' ] ; then
-    failure "Identity certifier not added."
+if [ "$PROMPT" = "true" ] ; then
+    echo "Are you sure you want to add the above key as a"
+    read -p "certifier of users on this system? (y/N) " OK; OK=${OK:-N}
+    if [ "${OK/y/Y}" != 'Y' ] ; then
+	failure "Identity certifier not added."
+    fi
+else
+    log debug "adding key without prompting."
 fi
 
 # export the key to the core keyring so that the core can sign the
 # new certifier key
+log debug "exporting retrieved certifier key to core keyring..."
 gpg_sphere "--export 0x${fingerprint}!" | gpg_core --import
 
 case "$trust" in
@@ -142,6 +149,7 @@ EOF
     )
 
 # core ltsigns the newly imported certifier key
+log debug "executing core ltsign script..."
 if echo "$ltsignCommand" | \
     gpg_core --quiet --command-fd 0 --edit-key "0x${fingerprint}!" ; then
 
@@ -149,9 +157,10 @@ if echo "$ltsignCommand" | \
     gpg_core_sphere_sig_transfer
 
     # update the sphere trustdb
+    log debug "updating sphere trustdb..."
     gpg_sphere "--check-trustdb"
 
-    log info -e "\nIdentity certifier added."
+    log info "Identity certifier added."
 else
     failure "Problem adding identify certifier."
 fi

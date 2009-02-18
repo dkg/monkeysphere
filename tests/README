@@ -1,0 +1,31 @@
+Monkeysphere test infrastructure
+================================
+
+These are scripts to test various aspects of the Monkeysphere system.
+
+Some notes about getting started working on the monkeysphere test
+infrastructure:
+
+- the tests can and should be run as a non-privileged user.  since the
+  tests do potentially destructive things (like wiping out and
+  recreating gpg keyrings) they should definitely *not* be run as
+  root.  it may even be advisable to run them as a different,
+  dedicated user, so that any goofs you make while updating the test
+  infrastructure don't compromise your main account.
+
+- you do not need the monkeysphere package installed locally, though
+  you will need the monkeysphere dependencies installed locally.
+
+- the idea with this script is to do the following:
+
+  - set up test server infrastructure
+  - test the server setup
+  - set up test user
+  - test an ssh connection between test user and test server
+  - modify server/user setup and rerun ssh_test to make sure it
+    suceeds/fails as expected
+
+- there are various FIXMEs in the script that outline some of the
+  further testing that should be undertaken.
+
+- good documentation in the code in the form of comments are needed.
