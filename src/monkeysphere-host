@@ -209,7 +209,7 @@ show_key() {
 # MAIN
 ########################################################################
 
-# unset variables that should be defined only in config file of in
+# unset variables that should be defined only in config file or in
 # MONKEYSPHERE_ variables
 unset LOG_LEVEL
 unset KEYSERVER
