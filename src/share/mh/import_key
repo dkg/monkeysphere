@@ -54,12 +54,6 @@ PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" \
 # that's what we're trying to produce (see below).
 load_fingerprint_secret
 
-# set ultimate owner trust on the newly imported key
-printf "%s:6:\n" "$HOST_FINGERPRINT" | gpg_host --import-ownertrust
-
-# update trustdb
-gpg_host --check-trustdb
-
 # export to gpg public key to file
 update_gpg_pub_file
 
