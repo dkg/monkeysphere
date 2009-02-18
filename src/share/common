@@ -92,15 +92,22 @@ log() {
 
 # run command as monkeysphere user
 su_monkeysphere_user() {
-    # if the current user is the monkeysphere user, then just eval
-    # command
-    if [ $(id -un) = "$MONKEYSPHERE_USER" ] ; then
-	bash -c "$@"
+    case $(id -un) in
+	# if monkeysphere user, run the command under bash
+	"$MONKEYSPHERE_USER")
+	    bash -c "$@"
+	    ;;
 
-    # otherwise su command as monkeysphere user
-    else
-	su "$MONKEYSPHERE_USER" -c "$@"
-    fi
+         # if root, su command as monkeysphere user
+	'root')
+	    su "$MONKEYSPHERE_USER" -c "$@"
+	    ;;
+
+	# otherwise, fail
+	*)
+	    log error "non-privileged user."
+	    ;;
+    esac
 }
 
 # cut out all comments(#) and blank lines from standard input
