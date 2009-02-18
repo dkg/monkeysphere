@@ -242,7 +242,7 @@ gpg --export testuser | monkeysphere-authentication gpg-cmd --import
 echo "##################################################"
 echo "### update server authorized_keys file for this testuser..."
 monkeysphere-authentication update-users $(whoami)
-# FIXME: NOT FAILING PROPERLY FOR:
+# FIXME: this is maybe not failing properly for:
 # ms: improper group or other writability on path '/tmp'.
 
 

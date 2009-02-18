@@ -31,11 +31,15 @@ userID="ssh://${1}"
 find_host_userid > /dev/null && \
     failure "Host userID '$userID' already exists."
 
-echo "The following user ID will be added to the host key:"
-echo "  $userID"
-read -p "Are you sure you would like to add this user ID? (y/N) " OK; OK=${OK:=N}
-if [ ${OK/y/Y} != 'Y' ] ; then
-    failure "User ID not added."
+if [ "$PROMPT" = "true" ] ; then
+    echo "The following user ID will be added to the host key:"
+    echo "  $userID"
+    read -p "Are you sure you would like to add this user ID? (y/N) " OK; OK=${OK:=N}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "User ID not added."
+    fi
+else
+    log debug "adding user ID without prompting."
 fi
 
 # edit-key script command to add user ID

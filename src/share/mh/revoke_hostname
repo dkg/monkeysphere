@@ -42,11 +42,15 @@ userID="ssh://${1}"
 uidIndex=$(find_host_userid) || \
     failure "No non-revoked user ID found matching '$userID'."
 
-echo "The following host key user ID will be revoked:"
-echo "  $userID"
-read -p "Are you sure you would like to revoke this user ID? (y/N) " OK; OK=${OK:=N}
-if [ ${OK/y/Y} != 'Y' ] ; then
-    failure "User ID not revoked."
+if [ "$PROMPT" = "true" ] ; then
+    echo "The following host key user ID will be revoked:"
+    echo "  $userID"
+    read -p "Are you sure you would like to revoke this user ID? (y/N) " OK; OK=${OK:=N}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "User ID not revoked."
+    fi
+else
+    log debug "revoking user ID without prompting."
 fi
 
 # edit-key script command to revoke user ID

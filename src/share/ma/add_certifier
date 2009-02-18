@@ -36,8 +36,6 @@ local fingerprint
 local ltsignCommand
 local trustval
 
-PROMPT=true
-
 # get options
 while true ; do
     case "$1" in
@@ -52,10 +50,6 @@ while true ; do
 	-d|--depth)
 	    depth="$2"
 	    shift 2
-	    ;;
-	-y)
-	    PROMPT=false
-	    shift 1
 	    ;;
 	*)
 	    if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
@@ -114,7 +108,7 @@ fi
 log info "key found:"
 gpg_sphere "--fingerprint 0x${fingerprint}!"
 
-if [ "$PROMPT" = true ] ; then
+if [ "$PROMPT" = "true" ] ; then
     echo "Are you sure you want to add the above key as a"
     read -p "certifier of users on this system? (y/N) " OK; OK=${OK:-N}
     if [ "${OK/y/Y}" != 'Y' ] ; then

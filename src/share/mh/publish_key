@@ -15,12 +15,33 @@
 
 publish_key() {
 
-read -p "Really publish host key to $KEYSERVER? (y/N) " OK; OK=${OK:=N}
-if [ ${OK/y/Y} != 'Y' ] ; then
-    failure "key not published."
+local GNUPGHOME
+
+if [ "$PROMPT" = "true" ] ; then
+    read -p "Really publish host key to $KEYSERVER? (y/N) " OK; OK=${OK:=N}
+    if [ ${OK/y/Y} != 'Y' ] ; then
+	failure "key not published."
+    fi
+else
+    log debug "publishing key without prompting."
 fi
 
+# create a temporary gnupg directory from which to publish the key
+export GNUPGHOME=$(mktemp -d)
+
+# trap to remove tmp dir if break
+trap "rm -rf $GNUPGHOME" EXIT
+
+# import the host key into the tmp dir
+su_monkeysphere_user \
+    "gpg --quiet --import" <"$HOST_KEY_FILE"
+
 # publish host key
-gpg_sphere "--keyserver $KEYSERVER --send-keys '0x${HOST_FINGERPRINT}!'"
+su_monkeysphere_user \
+    "gpg --keyserver $KEYSERVER --send-keys '0x${HOST_FINGERPRINT}!'"
+
+# remove the tmp file
+trap - EXIT
+rm -rf "$GNUPGHOME"
 
 }
