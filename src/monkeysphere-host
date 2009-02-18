@@ -93,7 +93,8 @@ gpg_host_list() {
 # FIXME: should we supress all the edit script spew?  or pipe it
 # through log debug?
 gpg_host_edit() {
-    gpg_host --quiet --command-fd 0 --no-tty --edit-key \
+    gpg_host --no-greeting --quiet \
+	--command-fd 0 --no-tty --edit-key \
 	"0x${HOST_FINGERPRINT}!" "$@" 2>&1 | log debug
 }
 
