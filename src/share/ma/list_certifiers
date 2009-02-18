@@ -18,6 +18,9 @@ list_certifiers() {
 local keys
 local key
 local authfpr
+local keyfpr
+local uid
+local printedfpr
 
 # find trusted keys in sphere keychain
 log debug "finding trusted keys..."
@@ -37,19 +40,48 @@ authgrip=$(core_fingerprint | cut -b 25-40)
 
 gpg_sphere "--fingerprint --with-colons --fixed-list-mode --check-sigs" | \
     cut -f 1,2,5,8,9,10 -d: | \
-    egrep '^(fpr:::::|sig:!:'"$authgrip"':[[:digit:]]+ [[:digit:]]+:)' | \
+    egrep '^(fpr:::::|uat:|uid:|sig:!:'"$authgrip"':[[:digit:]]+ [[:digit:]]+:)' | \
     while IFS=: read -r type validity grip trustparams trustdomain fpr ; do
     case $type in
 	'fpr') # this is a new key
 	    keyfpr=$fpr
+	    uid=
+	    printedfpr=no
 	    ;;
-	'sig') # print all trust signatures, including regexes if present
-	    trustdepth=${trustparams%% *}
-	    trustlevel=${trustparams##* }
+	'uid') # here comes a user id (if we don't have a key, or the
+	       # uid has no calculated validity, we will not bother
+	       # with it):
+	    if [ "$keyfpr" ] && [ "$validity" = 'f' ] ; then
+		uid="$fpr"
+	    else
+		uid=
+	    fi
+	    ;;
+	'uat') # this is a user attribute. DETAILS.gz states that the
+	       # 10th field is the number of user attribute
+	       # subpackets, followed by the total number of bytes of
+	       # the subpackets:
+	    if [ "$keyfpr" ] && [ "$validity" = 'f' ] ; then
+		uid=$(printf "%d JPEG(?) image(s), total %d bytes" \
+		    "${fpr%% *}" "${fpr##* }")
+	    else
+		uid=
+	    fi
+	    ;;
+	'sig') # print all trust signatures, including regexes if
+	       # present, assuming that
+	    if [ "$keyfpr" ] && [ "$uid" ] ; then
+		trustdepth=${trustparams%% *}
+		trustlevel=${trustparams##* }
+		if [ "$printedfpr" = no ] ; then
+		    printf "%s:\n" "$keyfpr"
+		    printedfpr=yes
+		fi
 
 	    # FIXME: this is clumsy and not human-friendly.  we should
 	    # print out more human-readable information, if possible.
-	    printf "%s:%d:%d:%s\n" "$keyfpr" "$trustdepth" "$trustlevel" "$trustdomain"
+		printf " :%s:%d:%d:%s\n" "$uid" "$trustdepth" "$trustlevel" "$trustdomain"
+	    fi
 	    ;;
     esac
 done
