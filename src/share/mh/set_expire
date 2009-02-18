@@ -30,7 +30,7 @@ else
     log debug "extending without prompting."
 fi
 
-log info "setting host key expiration to ${extendTo}:"
+log info "setting host key expiration to ${extendTo}."
 
 log debug "executing host expire script..."
 gpg_host_edit expire <<EOF

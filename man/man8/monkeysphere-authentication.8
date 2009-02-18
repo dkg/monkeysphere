@@ -21,13 +21,7 @@ authentication.
 
 .SH SUBCOMMANDS
 
-\fBmonkeysphere-authentication\fP takes various subcommands.
-.TP
-.B setup
-Setup the server for Monkeysphere user authentication.  This command
-is idempotent, which means it can be run multiple times to make sure
-the setup is correct, without adversely affecting existing setups.
-`s' may be used in place of `setup'.
+\fBmonkeysphere-authentication\fP takes various subcommands:
 .TP
 .B update-users [ACCOUNT]...
 Rebuild the monkeysphere-controlled authorized_keys files.  For each
@@ -62,6 +56,21 @@ Instruct system to ignore user identity certifications made by KEYID.
 List key IDs trusted by the system to certify user identities.  `c'
 may be used in place of `list-id-certifiers'.
 .TP
+.B help
+Output a brief usage summary.  `h' or `?' may be used in place of
+`help'.
+.TP
+.B version
+show version number
+
+Other commands:
+.TP
+.B setup
+Setup the server for Monkeysphere user authentication.  This command
+is idempotent and run automatically by the other commands, and should
+therefore not usually need to be run manually.  `s' may be used in
+place of `setup'.
+.TP
 .B diagnostics
 Review the state of the server with respect to authentication.  `d'
 may be used in place of `diagnostics'.
@@ -72,13 +81,6 @@ authentication "sphere" keyring.  This takes a single argument
 (multiple gpg arguments need to be quoted).  Use this command with
 caution, as modifying the authentication sphere keyring can affect ssh
 user authentication.
-.TP
-.B help
-Output a brief usage summary.  `h' or `?' may be used in place of
-`help'.
-.TP
-.B version
-show version number
 
 .SH SETUP USER AUTHENTICATION
 
