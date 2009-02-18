@@ -112,6 +112,7 @@ export MONKEYSPHERE_MONKEYSPHERE_USER=$(whoami)
 export MONKEYSPHERE_CHECK_KEYSERVER=false
 export MONKEYSPHERE_LOG_LEVEL=DEBUG
 export MONKEYSPHERE_CORE_KEYLENGTH=1024
+export MONKEYSPHERE_PROMPT=false
 
 export SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
@@ -212,7 +213,7 @@ get_gpg_prng_arg >> "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
 # add admin as identity certifier for testhost
 echo "##################################################"
 echo "### adding admin as certifier..."
-monkeysphere-authentication add-id-certifier -y "$TEMPDIR"/admin/.gnupg/pubkey.gpg
+monkeysphere-authentication add-id-certifier "$TEMPDIR"/admin/.gnupg/pubkey.gpg
 
 echo "##################################################"
 echo "### list certifiers..."
