@@ -64,7 +64,7 @@ if [ -d "$SYSDATADIR"/gnupg-host ] ; then
 	# than one, but we'll transfer all tsigs made by any key that
 	# had been given ultimate ownertrust):
 	for authgrip in $(GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --export-ownertrust | \
-	    grep ':6:$'
+	    grep ':6:$' | \
 	    sed -r 's/^[A-F0-9]{24}([A-F0-9]{16}):6:$/\1/') ; do
 	    
 	# we're assuming that old id certifiers were only added by old
