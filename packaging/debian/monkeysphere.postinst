@@ -17,8 +17,8 @@ if ! getent passwd monkeysphere >/dev/null ; then
 	monkeysphere
 fi
 
-# try to transition from 0.22 to 0.23:
-/usr/share/monkeysphere/transition_0.22_0.23
+# try to transition from to 0.23:
+/usr/share/monkeysphere/transitions/0.23
 
 # setup monkeysphere authentication
 monkeysphere-authentication setup

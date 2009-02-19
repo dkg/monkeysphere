@@ -85,8 +85,6 @@ gpg_host_list() {
 }
 
 # command for edit key scripts, takes scripts on stdin
-# FIXME: should we supress all the edit script spew?  or pipe it
-# through log debug?
 gpg_host_edit() {
     gpg_host --command-fd 0 --edit-key "0x${HOST_FINGERPRINT}!" "$@"
 }
