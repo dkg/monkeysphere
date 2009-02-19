@@ -110,7 +110,7 @@ load_fingerprint() {
 	    && rm -rf "$FUBAR") <"$HOST_KEY_FILE" \
 	    | grep '^fpr:' | cut -d: -f10 )
     else
-	HOST_FINGERPRINT=
+	failure "host key gpg pub file not found."
     fi
 }
 
@@ -293,6 +293,7 @@ case $COMMAND in
 	;;
 
     'update-gpg-pub-file')
+	load_fingerprint_secret
 	update_gpg_pub_file
 	;;
 

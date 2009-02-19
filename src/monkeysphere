@@ -69,6 +69,10 @@ KNOWN_HOSTS="${HOME}/.ssh/known_hosts"
 HASH_KNOWN_HOSTS="true"
 AUTHORIZED_KEYS="${HOME}/.ssh/authorized_keys"
 
+# unset the check keyserver variable, since that needs to have
+# different defaults for the different functions
+unset CHECK_KEYSERVER
+
 # load global config
 [ -r "${SYSCONFIGDIR}/monkeysphere.conf" ] \
     && . "${SYSCONFIGDIR}/monkeysphere.conf"
@@ -115,7 +119,7 @@ shift
 case $COMMAND in
     'update-known_hosts'|'update-known-hosts'|'k')
 	# whether or not to check keyservers
-	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
+	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
 
 	# if hosts are specified on the command line, process just
 	# those hosts
@@ -133,7 +137,7 @@ case $COMMAND in
 
     'update-authorized_keys'|'update-authorized-keys'|'a')
 	# whether or not to check keyservers
-	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
+	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
 
 	# process authorized_user_ids file
 	process_authorized_user_ids "$AUTHORIZED_USER_IDS"
