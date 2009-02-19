@@ -84,7 +84,8 @@ if [ -f "$keyID" ] ; then
     # + failure 'could not read key from '\''/root/dkg.gpg'\'''
     # + echo 'could not read key from '\''/root/dkg.gpg'\'''
 
-    keyID=$(echo "$importinfo" | grep '^gpg: key ' | cut -f2 -d: | cut -f3 -d\ )
+    keyID=$(echo "$importinfo" | grep '^gpg: key ' | cut -f2 -d: | cut -f3 -d\ ) || \
+	failure "There were no gpg keys in the file."
     if [ -z "$keyID" ] || [ $(echo "$keyID" | wc -l) -ne 1 ] ; then
 	failure "There was not exactly one gpg key in the file."
     fi
