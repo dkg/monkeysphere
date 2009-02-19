@@ -14,40 +14,46 @@
 # import an existing ssh key as a gpg subkey
 
 import_subkey() {
-    local keyFile="~/.ssh/id_rsa"
-    local keyExpire
+    local sshKeyFile
     local keyID
-    local gpgOut
-    local userID
+    local gpgSecOut
+    local fifoDir
 
-    # get options
-    while true ; do
-	case "$1" in
-	    -f|--keyfile)
-		keyFile="$2"
-		shift 2
-		;;
-	    -e|--expire)
-		keyExpire="$2"
-		shift 2
-		;;
-	    *)
-		if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
-		    failure "Unknown option '$1'.
-Type '$PGRM help' for usage."
-		fi
-		break
-		;;
-	esac
-    done
+    sshKeyFile="$1"
+    shift
 
-    log verbose "importing ssh key..."
+    # check that key file specified
+    if [ -z "$sshKeyFile" ] ; then
+	failure "Must specify ssh key file to import, or specify '-' for stdin."
+    fi
+
+    # check that the keyID is unique
+    keyID=$(check_gpg_sec_key_id "$@")
+
+    # check that an authentication subkey does not already exist
+    check_gpg_authentication_subkey "$keyID"
+
+    # setup the temp fifo dir for retrieving the key password
+    log debug "creating password fifo..."
     fifoDir=$(msmktempdir)
+    trap "rm -rf $fifoDir" EXIT
     (umask 077 && mkfifo "$fifoDir/pass")
-    ssh2openpgp | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
 
+    # import ssh key to as authentication subkey
+    if [ "$sshKeyFile" = '-' ] ; then
+	log verbose "importing ssh key from stdin..."
+	ssh2openpgp \
+	    | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
+    else
+	log verbose "importing ssh key from file '$sshKeyFile'..."
+	ssh2openpgp <"$sshKeyFile" \
+	    | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
+    fi
+
+    # get the password if needed
     passphrase_prompt  "Please enter your passphrase for $keyID: " "$fifoDir/pass"
 
+    trap - EXIT
     rm -rf "$fifoDir"
     wait
     log verbose "done."

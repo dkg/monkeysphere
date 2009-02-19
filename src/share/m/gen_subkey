@@ -15,20 +15,16 @@
 
 gen_subkey(){
     local keyLength
-    local keyExpire
+    local gpgSecOut
     local keyID
-    local gpgOut
-    local userID
+    local editCommands
+    local fifoDir
 
     # get options
     while true ; do
 	case "$1" in
 	    -l|--length)
 		keyLength="$2"
-		shift 2
-		;;
-	    -e|--expire)
-		keyExpire="$2"
 		shift 2
 		;;
 	    *)
@@ -41,67 +37,11 @@ Type '$PGRM help' for usage."
 	esac
     done
 
-    case "$#" in
-	0)
-	    gpgSecOut=$(gpg --quiet --fixed-list-mode --list-secret-keys --with-colons 2>/dev/null | egrep '^sec:')
-	    ;;
-	1)
-	    gpgSecOut=$(gpg --quiet --fixed-list-mode --list-secret-keys --with-colons "$1" | egrep '^sec:') || failure
-	    ;;
-	*)
-	    failure "You must specify only a single primary key ID."
-	    ;;
-    esac
+    # check that the keyID is unique
+    keyID=$(check_gpg_sec_key_id "$@")
 
-    # check that only a single secret key was found
-    case $(echo "$gpgSecOut" | grep -c '^sec:') in
-	0)
-	    failure "No secret keys found.  Create an OpenPGP key with the following command:
- gpg --gen-key"
-	    ;;
-	1)
-	    keyID=$(echo "$gpgSecOut" | cut -d: -f5)
-	    ;;
-	*)
-	    echo "Multiple primary secret keys found:"
-	    echo "$gpgSecOut" | cut -d: -f5
-	    failure "Please specify which primary key to use."
-	    ;;
-    esac
-
-    # check that a valid authentication key does not already exist
-    IFS=$'\n'
-    for line in $(gpg --quiet --fixed-list-mode --list-keys --with-colons "$keyID") ; do
-	type=$(echo "$line" | cut -d: -f1)
-	validity=$(echo "$line" | cut -d: -f2)
-	usage=$(echo "$line" | cut -d: -f12)
-
-	# look at keys only
-	if [ "$type" != 'pub' -a "$type" != 'sub' ] ; then
-	    continue
-	fi
-	# check for authentication capability
-	if ! check_capability "$usage" 'a' ; then
-	    continue
-	fi
-	# if authentication key is valid, prompt to continue
-	if [ "$validity" = 'u' ] ; then
-	    log error "A valid authentication key already exists for primary key '$keyID'."
-	    if [ "$PROMPT" = "true" ] ; then
-		read -p "Are you sure you would like to generate another one? (y/N) " OK; OK=${OK:N}
-		if [ "${OK/y/Y}" != 'Y' ] ; then
-		    failure "aborting."
-		fi
-		break
-	    else
-		failure "aborting."
-	    fi
-	fi
-    done
-
-    # set subkey defaults
-    # prompt about key expiration if not specified
-    keyExpire=$(get_gpg_expiration "$keyExpire")
+    # check that an authentication subkey does not already exist
+    check_gpg_authentication_subkey "$keyID"
 
     # generate the list of commands that will be passed to edit-key
     editCommands=$(cat <<EOF
@@ -112,19 +52,24 @@ E
 A
 Q
 $keyLength
-$keyExpire
+0
 save
 EOF
 )
 
-    log verbose "generating subkey..."
+    # setup the temp fifo dir for retrieving the key password
+    log debug "creating password fifo..."
     fifoDir=$(msmktempdir)
+    trap "rm -rf $fifoDir" EXIT
     (umask 077 && mkfifo "$fifoDir/pass")
+
+    log verbose "generating subkey..."
     echo "$editCommands" | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
 
     # FIXME: this needs to fail more gracefully if the passphrase is incorrect
     passphrase_prompt  "Please enter your passphrase for $keyID: " "$fifoDir/pass"
 
+    trap - EXIT
     rm -rf "$fifoDir"
     wait
     log verbose "done."
