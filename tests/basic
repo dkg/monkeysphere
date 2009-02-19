@@ -185,7 +185,7 @@ EOF
 echo "##################################################"
 echo "### import host key..."
 ssh-keygen -b 1024 -t rsa -N '' -f "$TEMPDIR"/ssh_host_rsa_key
-monkeysphere-host import-key testhost < "$TEMPDIR"/ssh_host_rsa_key
+monkeysphere-host import-key "$TEMPDIR"/ssh_host_rsa_key testhost
 
 echo "##################################################"
 echo "### getting host key fingerprint..."

@@ -13,11 +13,13 @@
 
 import_key() {
 
+local sshKeyFile
 local hostName
 local domain
 local userID
 
-hostName="$1"
+sshKeyFile="$1"
+hostName="$2"
 
 # use the default hostname if not specified
 if [ -z "$hostName" ] ; then
@@ -42,10 +44,19 @@ mkdir -p "${MHDATADIR}"
 mkdir -p "${GNUPGHOME_HOST}"
 chmod 700 "${GNUPGHOME_HOST}"
 
-log verbose "importing ssh key..."
-# translate ssh key to a private key
-PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" \
-    | gpg_host --import
+# import ssh key to a private key
+if [ -z "$sshKeyFile" ] ; then
+    failure "Must specify ssh key file to import, or specify '-' for stdin."
+elif [ "$sshKeyFile" = '-' ] ; then
+    log verbose "importing ssh key from stdin..."
+    PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" \
+	| gpg_host --import
+else
+    log verbose "importing ssh key from file '$sshKeyFile'..."
+    PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" \
+	<"$sshKeyFile" \
+	| gpg_host --import
+fi
 
 # load the new host fpr into the fpr variable.  this is so we can
 # create the gpg pub key file.  we have to do this from the secret key
