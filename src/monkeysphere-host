@@ -54,6 +54,7 @@ usage: $PGRM <subcommand> [options] [args]
 Monkeysphere host admin tool.
 
 subcommands:
+ import-key (i) [NAME[:PORT]]        import existing ssh key to gpg
  show-key (s)                        output all host key information
  set-expire (e) EXPIRE               set host key expiration
  add-hostname (n+) NAME[:PORT]       add hostname user ID to host key
@@ -61,8 +62,6 @@ subcommands:
  add-revoker (o) FINGERPRINT         add a revoker to the host key
  revoke-key (r)                      revoke host key
  publish-key (p)                     publish host key to keyserver
-
- import-key (i) [NAME[:PORT]]        import existing ssh key to gpg
 
  version (v)                         show version number
  help (h,?)                          this help
