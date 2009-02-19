@@ -18,8 +18,10 @@ monkeysphere (0.23~pre-1) UNRELEASED; urgency=low
   * added version output option
   * check that existing authentication keys are valid in gen_key
      function.
+  * add transition infrastructure for major changes between releases (see
+    transitions/README.txt)
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Thu, 12 Feb 2009 21:50:54 -0500
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 19 Feb 2009 02:14:44 -0500
 
 monkeysphere (0.22-1) unstable; urgency=low
 
