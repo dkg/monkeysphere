@@ -15,8 +15,6 @@
 # established.  Can be added to ~/.ssh/config as follows:
 #  ProxyCommand monkeysphere ssh-proxycommand %h %p
 
-ssh_proxycommand() {
-
 # "marginal case" ouput in the case that there is not a full
 # validation path to the host
 output_no_valid_key() {
@@ -136,10 +134,9 @@ EOF
 EOF
 }
 
-########################################################################
 
-# export the monkeysphere log level
-export MONKEYSPHERE_LOG_LEVEL
+# the ssh proxycommand function itself
+ssh_proxycommand() {
 
 if [ "$1" = '--no-connect' ] ; then
     NO_CONNECT='true'
@@ -170,12 +167,13 @@ URI="ssh://${HOSTP}"
 # intentionally different than that of running monkeyesphere normally,
 # and keyserver checking is intentionally done under certain
 # circumstances.  This can be overridden by setting the
-# MONKEYSPHERE_CHECK_KEYSERVER environment variable.
+# MONKEYSPHERE_CHECK_KEYSERVER environment variable, or by setting the
+# CHECK_KEYSERVER variable in the monkeysphere.conf file.
 
 # if the host is in the gpg keyring...
 if gpg --list-key ="${URI}" 2>&1 >/dev/null ; then
     # do not check the keyserver
-    CHECK_KEYSERVER="false"
+    CHECK_KEYSERVER=${CHECK_KEYSERVER:="false"}
 
 # if the host is NOT in the keyring...
 else
@@ -188,20 +186,22 @@ else
 	# FIXME: more nuanced checking should be done here to properly
 	# take into consideration hosts that join monkeysphere by
 	# converting an existing and known ssh key
-	CHECK_KEYSERVER="false"
+	CHECK_KEYSERVER=${CHECK_KEYSERVER:="false"}
 
     # if the host key is not found in the known_hosts file...
     else
 	# check the keyserver
-	CHECK_KEYSERVER="true"
+	CHECK_KEYSERVER=${CHECK_KEYSERVER:="true"}
     fi
 fi
-# set and export the variable for use by monkeysphere
-MONKEYSPHERE_CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="$CHECK_KEYSERVER"}
-export MONKEYSPHERE_CHECK_KEYSERVER
+
+# finally look in the MONKEYSPHERE_ environment variable for a
+# CHECK_KEYSERVER setting to override all else
+CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
 
 # update the known_hosts file for the host
-monkeysphere update-known_hosts "$HOSTP"
+source "${MSHAREDIR}/update_known_hosts"
+update_known_hosts "$HOSTP"
 
 # output on depending on the return of the update-known_hosts
 # subcommand, which is (ultimately) the return code of the

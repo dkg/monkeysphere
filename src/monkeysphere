@@ -63,41 +63,38 @@ EOF
 # MAIN
 ########################################################################
 
-# unset variables that should be defined only in config file
-unset KEYSERVER
-unset CHECK_KEYSERVER
-unset KNOWN_HOSTS
-unset HASH_KNOWN_HOSTS
-unset AUTHORIZED_KEYS
+# set unset default variables
+GNUPGHOME=${GNUPGHOME:="${HOME}/.gnupg"}
+KNOWN_HOSTS="${HOME}/.ssh/known_hosts"
+HASH_KNOWN_HOSTS="true"
+AUTHORIZED_KEYS="${HOME}/.ssh/authorized_keys"
 
 # load global config
-[ -r "${SYSCONFIGDIR}/monkeysphere.conf" ] && . "${SYSCONFIGDIR}/monkeysphere.conf"
+[ -r "${SYSCONFIGDIR}/monkeysphere.conf" ] \
+    && . "${SYSCONFIGDIR}/monkeysphere.conf"
 
 # set monkeysphere home directory
 MONKEYSPHERE_HOME=${MONKEYSPHERE_HOME:="${HOME}/.monkeysphere"}
 mkdir -p -m 0700 "$MONKEYSPHERE_HOME"
 
 # load local config
-[ -e ${MONKEYSPHERE_CONFIG:="${MONKEYSPHERE_HOME}/monkeysphere.conf"} ] && . "$MONKEYSPHERE_CONFIG"
+[ -e ${MONKEYSPHERE_CONFIG:="${MONKEYSPHERE_HOME}/monkeysphere.conf"} ] \
+    && . "$MONKEYSPHERE_CONFIG"
 
-# set empty config variables with ones from the environment, or from
-# config file, or with defaults
-LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=${LOG_LEVEL:="INFO"}}
-GNUPGHOME=${MONKEYSPHERE_GNUPGHOME:=${GNUPGHOME:="${HOME}/.gnupg"}}
-KEYSERVER=${MONKEYSPHERE_KEYSERVER:="$KEYSERVER"}
-# if keyserver not specified in env or monkeysphere.conf,
-# look in gpg.conf
+# set empty config variables with ones from the environment
+GNUPGHOME=${MONKEYSPHERE_GNUPGHOME:=$GNUPGHOME}
+LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=$LOG_LEVEL}
+KEYSERVER=${MONKEYSPHERE_KEYSERVER:=$KEYSERVER}
+# if keyserver not specified in env or conf, then look in gpg.conf
 if [ -z "$KEYSERVER" ] ; then
     if [ -f "${GNUPGHOME}/gpg.conf" ] ; then
 	KEYSERVER=$(grep -e "^[[:space:]]*keyserver " "${GNUPGHOME}/gpg.conf" | tail -1 | awk '{ print $2 }')
     fi
 fi
-# if it's still not specified, use the default
-KEYSERVER=${KEYSERVER:="subkeys.pgp.net"}
-CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
-KNOWN_HOSTS=${MONKEYSPHERE_KNOWN_HOSTS:=${KNOWN_HOSTS:="${HOME}/.ssh/known_hosts"}}
-HASH_KNOWN_HOSTS=${MONKEYSPHERE_HASH_KNOWN_HOSTS:=${HASH_KNOWN_HOSTS:="true"}}
-AUTHORIZED_KEYS=${MONKEYSPHERE_AUTHORIZED_KEYS:=${AUTHORIZED_KEYS:="${HOME}/.ssh/authorized_keys"}}
+PROMPT=${MONKEYSPHERE_PROMPT:=$PROMPT}
+KNOWN_HOSTS=${MONKEYSPHERE_KNOWN_HOSTS:=$KNOWN_HOSTS}
+HASH_KNOWN_HOSTS=${MONKEYSPHERE_HASH_KNOWN_HOSTS:=$HASH_KNOWN_HOSTS}
+AUTHORIZED_KEYS=${MONKEYSPHERE_AUTHORIZED_KEYS:=$AUTHORIZED_KEYS}
 
 # other variables not in config file
 AUTHORIZED_USER_IDS=${MONKEYSPHERE_AUTHORIZED_USER_IDS:="${MONKEYSPHERE_HOME}/authorized_user_ids"}
@@ -117,49 +114,26 @@ shift
 
 case $COMMAND in
     'update-known_hosts'|'update-known-hosts'|'k')
-	MODE='known_hosts'
+	# whether or not to check keyservers
+	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
 
-	# touch the known_hosts file so that the file permission check
-	# below won't fail upon not finding the file
-	(umask 0022 && touch "$KNOWN_HOSTS")
-
-	# check permissions on the known_hosts file path
-	check_key_file_permissions "$USER" "$KNOWN_HOSTS" || failure
-
-        # if hosts are specified on the command line, process just
-        # those hosts
+	# if hosts are specified on the command line, process just
+	# those hosts
 	if [ "$1" ] ; then
 	    update_known_hosts "$@"
 	    RETURN="$?"
 
-        # otherwise, if no hosts are specified, process every host
-        # in the user's known_hosts file
+	# otherwise, if no hosts are specified, process every host
+	# in the user's known_hosts file
 	else
-	    # exit if the known_hosts file does not exist
-	    if [ ! -e "$KNOWN_HOSTS" ] ; then
-		log error "known_hosts file '$KNOWN_HOSTS' does not exist."
-		exit
-	    fi
-
 	    process_known_hosts
 	    RETURN="$?"
 	fi
 	;;
 
     'update-authorized_keys'|'update-authorized-keys'|'a')
-	MODE='authorized_keys'
-
-	# check permissions on the authorized_user_ids file path
-	check_key_file_permissions "$USER" "$AUTHORIZED_USER_IDS" || failure
-
-	# check permissions on the authorized_keys file path
-	check_key_file_permissions "$USER" "$AUTHORIZED_KEYS" || failure
-
-        # exit if the authorized_user_ids file is empty
-	if [ ! -e "$AUTHORIZED_USER_IDS" ] ; then
-	    log error "authorized_user_ids file '$AUTHORIZED_USER_IDS' does not exist."
-	    exit
-	fi
+	# whether or not to check keyservers
+	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
 
 	# process authorized_user_ids file
 	process_authorized_user_ids "$AUTHORIZED_USER_IDS"

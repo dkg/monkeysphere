@@ -23,6 +23,21 @@ export SYSCONFIGDIR
 # monkeysphere version
 VERSION=__VERSION__
 
+# default log level
+LOG_LEVEL="INFO"
+
+# default keyserver
+KEYSERVER="pool.sks-keyservers.net"
+
+# whether or not to check keyservers by defaul
+CHECK_KEYSERVER="true"
+
+# default monkeysphere user
+MONKEYSPHERE_USER="monkeysphere"
+
+# default about whether or not to prompt
+PROMPT="true"
+
 ########################################################################
 ### UTILITY FUNCTIONS
 
@@ -800,6 +815,9 @@ process_host_known_hosts() {
     local sshKey
     local tmpfile
 
+    # set the key processing mode
+    export MODE='known_hosts'
+
     host="$1"
     userID="ssh://${host}"
 
@@ -879,6 +897,13 @@ update_known_hosts() {
     nHostsOK=0
     nHostsBAD=0
 
+    # touch the known_hosts file so that the file permission check
+    # below won't fail upon not finding the file
+    (umask 0022 && touch "$KNOWN_HOSTS")
+
+    # check permissions on the known_hosts file path
+    check_key_file_permissions "$USER" "$KNOWN_HOSTS" || failure
+
     # create a lockfile on known_hosts:
     lock create "$KNOWN_HOSTS"
     # FIXME: we're discarding any pre-existing EXIT trap; is this bad?
@@ -933,6 +958,11 @@ update_known_hosts() {
 process_known_hosts() {
     local hosts
 
+    # exit if the known_hosts file does not exist
+    if [ ! -e "$KNOWN_HOSTS" ] ; then
+	failure "known_hosts file '$KNOWN_HOSTS' does not exist."
+    fi
+
     log debug "processing known_hosts file..."
 
     hosts=$(meat "$KNOWN_HOSTS" | cut -d ' ' -f 1 | grep -v '^|.*$' | tr , ' ' | tr '\n' ' ')
@@ -955,6 +985,9 @@ process_uid_authorized_keys() {
     local nKeysOK
     local ok
     local sshKey
+
+    # set the key processing mode
+    export MODE='authorized_keys'
 
     userID="$1"
 
@@ -1016,6 +1049,9 @@ update_authorized_keys() {
 
     nIDsOK=0
     nIDsBAD=0
+
+    # check permissions on the authorized_keys file path
+    check_key_file_permissions "$USER" "$AUTHORIZED_KEYS" || failure
 
     # create a lockfile on authorized_keys
     lock create "$AUTHORIZED_KEYS"
@@ -1081,6 +1117,14 @@ process_authorized_user_ids() {
     local userIDs
 
     authorizedUserIDs="$1"
+
+    # exit if the authorized_user_ids file is empty
+    if [ ! -e "$authorizedUserIDs" ] ; then
+	failure "authorized_user_ids file '$authorizedUserIDs' does not exist."
+    fi
+
+    # check permissions on the authorized_user_ids file path
+    check_key_file_permissions "$USER" "$authorizedUserIDs" || failure
 
     log debug "processing authorized_user_ids file..."
 

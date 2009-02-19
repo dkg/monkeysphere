@@ -204,38 +204,31 @@ show_key() {
 # MAIN
 ########################################################################
 
-# unset variables that should be defined only in config file or in
-# MONKEYSPHERE_ variables
-unset LOG_LEVEL
-unset KEYSERVER
-unset MONKEYSPHERE_USER
-unset PROMPT
-
 # load configuration file
-[ -e ${MONKEYSPHERE_HOST_CONFIG:="${SYSCONFIGDIR}/monkeysphere-host.conf"} ] && . "$MONKEYSPHERE_HOST_CONFIG"
+[ -e ${MONKEYSPHERE_HOST_CONFIG:="${SYSCONFIGDIR}/monkeysphere-host.conf"} ] \
+    && . "$MONKEYSPHERE_HOST_CONFIG"
 
 # set empty config variable with ones from the environment, or with
 # defaults
-LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=${LOG_LEVEL:="INFO"}}
-KEYSERVER=${MONKEYSPHERE_KEYSERVER:=${KEYSERVER:="pool.sks-keyservers.net"}}
-MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkeysphere"}}
-PROMPT=${MONKEYSPHERE_PROMPT:=${PROMPT:="true"}}
+LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=$LOG_LEVEL}
+KEYSERVER=${MONKEYSPHERE_KEYSERVER:=$KEYSERVER}
+CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
+MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=$MONKEYSPHERE_USER}
+PROMPT=${MONKEYSPHERE_PROMPT:=$PROMPT}
 
 # other variables
-CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
 GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${MHDATADIR}"}
 
 # export variables needed in su invocation
 export DATE
-export MODE
 export LOG_LEVEL
 export KEYSERVER
+export CHECK_KEYSERVER
 export MONKEYSPHERE_USER
 export PROMPT
-export CHECK_KEYSERVER
 export GNUPGHOME_HOST
 export GNUPGHOME
-export HOST_FINGERPRINT=
+export HOST_FINGERPRINT
 
 # get subcommand
 COMMAND="$1"
@@ -300,6 +293,10 @@ case $COMMAND in
 	load_fingerprint
 	source "${MHSHAREDIR}/diagnostics"
 	diagnostics
+	;;
+
+    'update-gpg-pub-file')
+	update_gpg_pub_file
 	;;
 
     'version'|'v')
