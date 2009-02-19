@@ -291,7 +291,7 @@ get_gpg_expiration() {
 
     keyExpire="$1"
 
-    if [ -z "$keyExpire" ]; then
+    if [ -z "$keyExpire" -a "$PROMPT" = 'true' ]; then
 	cat >&2 <<EOF
 Please specify how long the key should be valid.
          0 = key does not expire
