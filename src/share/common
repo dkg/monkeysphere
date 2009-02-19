@@ -21,7 +21,7 @@ SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"/etc/monkeysphere"}
 export SYSCONFIGDIR
 
 # monkeysphere version
-VERSION=__VERSION__
+VERSION=0.23~pre
 
 # default log level
 LOG_LEVEL="INFO"

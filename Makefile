@@ -2,7 +2,7 @@
 
 # Makefile for monkeysphere
 
-# (c) 2008 Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# (c) 2008-2009 Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Licensed under GPL v3 or later
 
 MONKEYSPHERE_VERSION = `head -n1 packaging/debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/'`
@@ -29,7 +29,6 @@ tarball: clean
 
 debian-package: tarball
 	tar xzf monkeysphere_$(MONKEYSPHERE_VERSION).orig.tar.gz
-	sed -i "s|__VERSION__|$(MONKEYSPHERE_VERSION)|g" monkeysphere-$(MONKEYSPHERE_VERSION)/src/share/common
 	cp -a packaging/debian monkeysphere-$(MONKEYSPHERE_VERSION)
 	(cd monkeysphere-$(MONKEYSPHERE_VERSION) && debuild -uc -us)
 	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
@@ -54,6 +53,7 @@ install: all installman
 	install src/monkeysphere src/keytrans/openpgp2ssh src/keytrans/pem2openpgp $(DESTDIR)$(PREFIX)/bin
 	install src/monkeysphere-host src/monkeysphere-authentication $(DESTDIR)$(PREFIX)/sbin
 	install -m 0644 src/share/common $(DESTDIR)$(PREFIX)/share/monkeysphere
+	install -m 0644 src/share/transition* $(DESTDIR)$(PREFIX)/share/monkeysphere
 	install -m 0644 src/share/m/* $(DESTDIR)$(PREFIX)/share/monkeysphere/m
 	install -m 0644 src/share/mh/* $(DESTDIR)$(PREFIX)/share/monkeysphere/mh
 	install -m 0644 src/share/ma/* $(DESTDIR)$(PREFIX)/share/monkeysphere/ma
