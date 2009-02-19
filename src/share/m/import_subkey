@@ -33,6 +33,9 @@ import_subkey() {
     # check that an authentication subkey does not already exist
     check_gpg_authentication_subkey "$keyID"
 
+    # FIXME: implement!
+    failure "implement me!"
+
     # setup the temp fifo dir for retrieving the key password
     log debug "creating password fifo..."
     fifoDir=$(msmktempdir)
@@ -42,11 +45,11 @@ import_subkey() {
     # import ssh key to as authentication subkey
     if [ "$sshKeyFile" = '-' ] ; then
 	log verbose "importing ssh key from stdin..."
-	ssh2openpgp \
+	PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" \
 	    | gpg_user --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
     else
 	log verbose "importing ssh key from file '$sshKeyFile'..."
-	ssh2openpgp <"$sshKeyFile" \
+	PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" <"$sshKeyFile" \
 	    | gpg_user --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
     fi
 
