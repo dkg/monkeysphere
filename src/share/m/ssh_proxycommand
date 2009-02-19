@@ -64,11 +64,11 @@ An OpenPGP key matching the ssh key offered by the host was found:
 
 EOF
 
-		    # do some crazy "Here Strings" redirection to get the key to
-		    # ssh-keygen, since it doesn't read from stdin cleanly
-		    sshFingerprint=$(ssh-keygen -l -f /dev/stdin \
-			<<<$(echo "$sshKeyGPG") | \
+		    sshKeyGPGFile=$(msmktempfile)
+		    printf "%s" "$sshKeyGPG" >"$sshKeyGPGFile"
+		    sshFingerprint=$(ssh-keygen -l -f "$sshKeyGPGFile" \
 			awk '{ print $2 }')
+		    rm -f "$sshKeyGPGFile"
 
 		    # get the sigs for the matching key
 		    gpgSigOut=$(gpg --check-sigs \

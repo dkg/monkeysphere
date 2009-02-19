@@ -149,9 +149,14 @@ cutline() {
     head --line="$1" "$2" | tail -1
 }
 
-# make a temporary directly
+# make a temporary directory
 msmktempdir() {
-    mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX
+    mktemp -d ${TMPDIR:-/tmp}/monkeysphere.XXXXXXXXXX
+}
+
+# make a temporary file
+msmktempfile() {
+    mktemp ${TMPDIR:-/tmp}/monkeysphere.XXXXXXXXXX
 }
 
 # this is a wrapper for doing lock functions.
