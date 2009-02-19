@@ -67,28 +67,17 @@ if [ -z "$keyID" ] ; then
 fi
 if [ -f "$keyID" ] ; then
     log info "Reading key from file '$keyID':"
-    importinfo=$(gpg_sphere "--import" < "$keyID" 2>&1) || failure "could not read key from '$keyID'"
-    # FIXME: if this is tried when the key database is not
-    # up-to-date, i got these errors (using set -x):
 
-    # ++ su -m monkeysphere -c '\''gpg --import'\''
-    # Warning: using insecure memory!
-    # gpg: key D21739E9: public key "Daniel Kahn Gillmor <dkg@fifthhorseman.net>" imported
-    # gpg: Total number processed: 1
-    # gpg:               imported: 1  (RSA: 1)
-    # gpg: can'\''t create `/var/monkeysphere/gnupg-host/pubring.gpg.tmp'\'': Permission denied
-    # gpg: failed to rebuild keyring cache: Permission denied
-    # gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
-    # gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
-    # gpg: next trustdb check due at 2009-01-10'
-    # + failure 'could not read key from '\''/root/dkg.gpg'\'''
-    # + echo 'could not read key from '\''/root/dkg.gpg'\'''
+    fingerprints=$(su_monkeysphere_user \
+	". ${SYSSHAREDIR}/common; list_primary_fingerprints" < "$keyID")
 
-    keyID=$(echo "$importinfo" | grep '^gpg: key ' | cut -f2 -d: | cut -f3 -d\ ) || \
-	failure "There were no gpg keys in the file $keyID."
-    if [ -z "$keyID" ] || [ $(echo "$keyID" | wc -l) -ne 1 ] ; then
+    if [ $(printf "%s" "$fingerprints" | egrep -c '^[A-F0-9]{40}$') -ne 1 ] ; then
 	failure "There was not exactly one gpg key in the file."
     fi
+
+    gpg_sphere "--import" < "$keyID" || failure "could not read key from '$keyID'"
+
+    keyID="$fingerprints"
 else
     # get the key from the key server
     log debug "retrieving key from keyserver..."

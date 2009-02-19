@@ -1100,3 +1100,14 @@ process_authorized_user_ids() {
 
     update_authorized_keys "${userIDs[@]}"
 }
+
+# takes a gpg key or keys on stdin, and outputs a list of
+# fingerprints, one per line:
+list_primary_fingerprints() {
+    local file="$1"
+    local fake=$(msmktempdir)
+    GNUPGHOME="$fake" gpg --no-tty --quiet --import
+    GNUPGHOME="$fake" gpg --with-colons --fingerprint --list-keys | \
+	awk -F: '/^fpr:/{ print $10 }'
+    rm -rf "$fake"
+}
