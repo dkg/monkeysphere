@@ -53,14 +53,14 @@ if [ -f "$keyID" ] ; then
     fi
 else
     # create a temporary directory for storing the downloaded key
-    TMPLOC=$(mktemp -d "${MHTMPDIR}"/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
+    TMPLOC=$(msmktempdir) || failure "Could not create temporary directory!"
 
     # download the key from the keyserver as the monkeysphere user
     su_monkeysphere_user \
-	"GNUPGHOME=$TMPLOC gpg --keyserver $KEYSERVER --recv-key 0x${keyID}!"
+	"GNUPGHOME=$TMPLOC gpg --quiet --keyserver $KEYSERVER --recv-key 0x${keyID}!"
 
     # export the new key to the host keyring
-    su_monkeysphere_user "GNUPGHOME=$TMPLOC gpg --export 0x${keyID}!" \
+    su_monkeysphere_user "GNUPGHOME=$TMPLOC gpg --quiet --export 0x${keyID}!" \
 	| gpg_host --import
 fi
 

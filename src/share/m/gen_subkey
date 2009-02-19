@@ -114,7 +114,7 @@ EOF
 )
 
     log verbose "generating subkey..."
-    fifoDir=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+    fifoDir=$(msmktempdir)
     (umask 077 && mkfifo "$fifoDir/pass")
     echo "$editCommands" | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
 

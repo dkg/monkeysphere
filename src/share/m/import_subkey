@@ -42,7 +42,7 @@ Type '$PGRM help' for usage."
     done
 
     log verbose "importing ssh key..."
-    fifoDir=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+    fifoDir=$(msmktempdir)
     (umask 077 && mkfifo "$fifoDir/pass")
     ssh2openpgp | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
 
