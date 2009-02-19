@@ -131,22 +131,29 @@ The following environment variables will override those specified in
 the config file (defaults in parentheses):
 .TP
 MONKEYSPHERE_MONKEYSPHERE_USER
-User to control authentication keychain (monkeysphere).
+User to control authentication keychain. (monkeysphere)
 .TP
 MONKEYSPHERE_LOG_LEVEL
-Set the log level (INFO).  Can be SILENT, ERROR, INFO, VERBOSE, DEBUG, in
-increasing order of verbosity.
+Set the log level.  Can be SILENT, ERROR, INFO, VERBOSE, DEBUG, in
+increasing order of verbosity. (INFO)
 .TP
 MONKEYSPHERE_KEYSERVER
-OpenPGP keyserver to use (pool.sks-keyservers.net).
+OpenPGP keyserver to use. (pool.sks-keyservers.net)
 .TP
 MONKEYSPHERE_AUTHORIZED_USER_IDS
-Path to user authorized_user_ids file
-(%h/.monkeysphere/authorized_user_ids).
+Path to user's authorized_user_ids file. %h gets replaced with the
+user's homedir, %u with the username.
+(%h/.monkeysphere/authorized_user_ids)
 .TP
 MONKEYSPHERE_RAW_AUTHORIZED_KEYS
-Path to user-controlled authorized_keys file.  `-' means not to add
-user-controlled file (%h/.ssh/authorized_keys).
+Path to regular ssh-style authorized_keys file to append to
+monkeysphere-generated authorized_keys.  `none' means not to add any
+raw authorized_keys file.  %h gets replaced with the user's homedir,
+%u with the username. (%h/.ssh/authorized_keys)
+.TP
+MONKEYSPHERE_PROMPT
+If set to `false', never prompt the user for confirmation. (true)
+
 
 .SH FILES
 
