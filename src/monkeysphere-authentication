@@ -75,7 +75,7 @@ gpg_core() {
     GNUPGHOME="$GNUPGHOME_CORE"
     export GNUPGHOME
 
-    gpg "$@"
+    gpg --no-greeting --quiet --no-tty "$@"
 }
 
 # function to interact with the gpg sphere keyring
@@ -85,15 +85,15 @@ gpg_sphere() {
     GNUPGHOME="$GNUPGHOME_SPHERE"
     export GNUPGHOME
 
-    su_monkeysphere_user "gpg $@"
+    su_monkeysphere_user "gpg --no-greeting --quiet --no-tty $@"
 }
 
 # output to stdout the core fingerprint from the gpg core secret
 # keyring
 core_fingerprint() {
     log debug "determining core key fingerprint..."
-    gpg_core --quiet --list-secret-key \
-	--with-colons --fixed-list-mode --with-fingerprint \
+    gpg_core --list-secret-key --with-colons \
+	--fixed-list-mode --with-fingerprint \
 	| grep ^fpr: | cut -d: -f10
 }
 
@@ -101,8 +101,7 @@ core_fingerprint() {
 gpg_core_sphere_sig_transfer() {
     log debug "exporting core local sigs to sphere..."
     gpg_core --export-options export-local-sigs --export | \
-	gpg_sphere "--import-options import-local-sigs --import" \
-	2>&1 | log debug
+	gpg_sphere "--import-options import-local-sigs --import"
 }
 
 ########################################################################
