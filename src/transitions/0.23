@@ -1,10 +1,24 @@
 #!/bin/bash
 
-# this script should run without any errors.
-set -e
-
 # This is a post-install script for monkeysphere, to transition an old
-# (<0.23) setup to the new (>=0.23) setup
+# (<0.23) setup to the new (>=0.23) setup.
+
+# You should be able to run this script after any version >= 0.23 is
+# installed.  This script should be well-behaved, even if it is run
+# repeatedly.
+
+# Written by
+# Jameson Rollins <jrollins@finestructure.net>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# Copyright 2009, released under the GPL, version 3 or later
+
+# NOTE: the reverse operation (downgrading) is not directly supported,
+# and MAY LOCK YOU OUT OF YOUR SYSTEM, depending on how you have
+# configured the monkeysphere!
+
+# any unexpected errors should cause this script to bail:
+set -e
 
 SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
 
@@ -29,7 +43,9 @@ is_domain_name() {
     printf "%s" "$1" | egrep -q '^[[:alnum:]][[:alnum:]-.]*[[:alnum:]]$'
 }
 
-# run the authentication setup
+# run the authentication setup (this is also the first chance to bail
+# if 0.23 is not fully-installed, because m-a did not exist before
+# 0.23)
 monkeysphere-authentication setup
 
 # before 0.23, the old gnupg-host data directory used to contain the

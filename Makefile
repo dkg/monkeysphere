@@ -47,13 +47,13 @@ clean:
 # working dir!
 install: all installman
 	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/sbin
-	mkdir -p $(DESTDIR)$(PREFIX)/share/monkeysphere/m $(DESTDIR)$(PREFIX)/share/monkeysphere/mh $(DESTDIR)$(PREFIX)/share/monkeysphere/ma
+	mkdir -p $(DESTDIR)$(PREFIX)/share/monkeysphere/m $(DESTDIR)$(PREFIX)/share/monkeysphere/mh $(DESTDIR)$(PREFIX)/share/monkeysphere/ma $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions
 	mkdir -p $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
 	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
 	install src/monkeysphere src/keytrans/openpgp2ssh src/keytrans/pem2openpgp $(DESTDIR)$(PREFIX)/bin
 	install src/monkeysphere-host src/monkeysphere-authentication $(DESTDIR)$(PREFIX)/sbin
 	install -m 0644 src/share/common $(DESTDIR)$(PREFIX)/share/monkeysphere
-	install -m 0644 src/share/transition* $(DESTDIR)$(PREFIX)/share/monkeysphere
+	install -m 0644 src/transitions/* $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions
 	install -m 0644 src/share/m/* $(DESTDIR)$(PREFIX)/share/monkeysphere/m
 	install -m 0644 src/share/mh/* $(DESTDIR)$(PREFIX)/share/monkeysphere/mh
 	install -m 0644 src/share/ma/* $(DESTDIR)$(PREFIX)/share/monkeysphere/ma
