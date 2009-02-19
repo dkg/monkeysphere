@@ -79,7 +79,7 @@ gpg_host --fingerprint "0x${fingerprint}!"
 
 if [ "$PROMPT" = "true" ] ; then
     echo "Are you sure you want to add the above key as a"
-    read -p "revoker of the host key? (y/N) " OK; OK=${OK:-N}
+    read -p "revoker of the host key? (Y/n) " OK; OK=${OK:-Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then
 	failure "revoker not added."
     fi

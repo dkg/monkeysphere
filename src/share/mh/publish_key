@@ -18,8 +18,8 @@ publish_key() {
 local GNUPGHOME
 
 if [ "$PROMPT" = "true" ] ; then
-    read -p "Really publish host key to $KEYSERVER? (y/N) " OK; OK=${OK:=N}
-    if [ ${OK/y/Y} != 'Y' ] ; then
+    read -p "Really publish host key to $KEYSERVER? (Y/n) " OK; OK=${OK:=Y}
+    if [ "${OK/y/Y}" != 'Y' ] ; then
 	failure "key not published."
     fi
 else

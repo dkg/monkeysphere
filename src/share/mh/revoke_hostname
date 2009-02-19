@@ -45,8 +45,8 @@ uidIndex=$(find_host_userid) || \
 if [ "$PROMPT" = "true" ] ; then
     echo "The following host key user ID will be revoked:"
     echo "  $userID"
-    read -p "Are you sure you would like to revoke this user ID? (y/N) " OK; OK=${OK:=N}
-    if [ ${OK/y/Y} != 'Y' ] ; then
+    read -p "Are you sure you would like to revoke this user ID? (N/y) " OK; OK=${OK:=Y}
+    if [ "${OK/y/Y}" != 'Y' ] ; then
 	failure "User ID not revoked."
     fi
 else

@@ -86,12 +86,16 @@ Type '$PGRM help' for usage."
 	fi
 	# if authentication key is valid, prompt to continue
 	if [ "$validity" = 'u' ] ; then
-	    echo "A valid authentication key already exists for primary key '$keyID'."
-	    read -p "Are you sure you would like to generate another one? (y/N) " OK; OK=${OK:N}
-	    if [ "${OK/y/Y}" != 'Y' ] ; then
+	    log error "A valid authentication key already exists for primary key '$keyID'."
+	    if [ "$PROMPT" = "true" ] ; then
+		read -p "Are you sure you would like to generate another one? (y/N) " OK; OK=${OK:N}
+		if [ "${OK/y/Y}" != 'Y' ] ; then
+		    failure "aborting."
+		fi
+		break
+	    else
 		failure "aborting."
 	    fi
-	    break
 	fi
     done
 
