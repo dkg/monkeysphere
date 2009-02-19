@@ -148,7 +148,7 @@ if echo "$ltsignCommand" | \
 
     # update the sphere trustdb
     log debug "updating sphere trustdb..."
-    gpg_sphere "--check-trustdb"
+    gpg_sphere "--check-trustdb" 2>&1 | log debug
 
     log info "Identity certifier added."
 else
