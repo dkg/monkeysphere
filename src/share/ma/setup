@@ -29,7 +29,6 @@ setup() {
 # This file is maintained by the Monkeysphere software.
 # Edits will be overwritten.
 no-greeting
-list-options show-uid-validity
 EOF
 
     log debug "writing sphere gpg.conf..."
