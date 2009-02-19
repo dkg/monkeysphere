@@ -13,13 +13,17 @@
 
 setup() {
     # make all needed directories
+    log debug "make authentication directory structure..."
     mkdir -p "${MADATADIR}"
+    chmod 750 "${MADATADIR}"
+    chgrp "$MONKEYSPHERE_USER" "${MADATADIR}"
     mkdir -p "${MATMPDIR}"
+    chmod 750 "${MATMPDIR}"
+    chgrp "$MONKEYSPHERE_USER" "${MATMPDIR}"
     mkdir -p "${GNUPGHOME_CORE}"
     chmod 700 "${GNUPGHOME_CORE}"
     mkdir -p "${GNUPGHOME_SPHERE}"
     chmod 700 "${GNUPGHOME_SPHERE}"
-    mkdir -p "${SYSDATADIR}"/authorized_keys
 
     # deliberately replace the config files via truncation
     # FIXME: should we be dumping to tmp files and then moving atomically?
