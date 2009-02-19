@@ -79,7 +79,7 @@ if [ -d "$SYSDATADIR"/gnupg-host ] ; then
 	    # one of those certifications (even if later
 	    # certifications had different parameters).
 	    
-	    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --fingerprint --with-colons --fixed-list-mode --check-sigs | \
+	    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --fingerprint --with-colons --fixed-list-mode --check-sigs | \
 		cut -f 1,2,5,8,9,10 -d: | \
 		egrep '^(fpr:::::|sig:!:'"$authgrip"':[[:digit:]]+ [[:digit:]]+:)' | \
 		while IFS=: read -r type validity grip trustparams trustdomain fpr ; do
@@ -127,7 +127,7 @@ if [ -d "$SYSDATADIR"/gnupg-host ] ; then
 			    # clear the fingerprint so that we don't
 			    # make additional tsigs on it if more uids
 			    # are present:
-			    $keyfpr=
+			    keyfpr=
 			fi
 			;;
 		esac
@@ -141,14 +141,14 @@ if [ -d "$SYSDATADIR"/gnupg-host ] ; then
 	log "Not transferring host key info because host directory already exists.\n"
     else
 	if [ -s "$SYSDATADIR"/ssh_host_rsa_key ] || \
-	    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --with-colons --list-secret-keys | grep -q '^sec:' ; then
+	    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --with-colons --list-secret-keys | grep -q '^sec:' ; then
 	    
 	# create host home
 	    mkdir -p "${MHDATADIR}"
 	    chmod 0700 "${MHDATADIR}"
 	    
 	    log "importing host key from old monkeysphere installation\n"
-	    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --export-secret-keys \
+	    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg  --no-permission-warning --export-secret-keys | \
 		GNUPGHOME="$MHDATADIR" gpg --import
 	    
 	    monkeysphere-host update-gpg-pub-file
