@@ -1,0 +1,22 @@
+monkeysphere (0.23-1) unstable; urgency=low
+
+  * There has been a major interface and data refactoring. Please see the
+    man pages for details.  Major changes are listed here:
+  * For end users: monkeysphere-ssh-proxycommand is no more.
+    its functionality has been folded into monkeysphere as a subcommand.
+    So if you are currently using: 
+     ssh -oProxyCommand='monkeysphere-ssh-proxycommand %h %p'
+    plese use instead:
+     ssh -oProxyCommand='monkeysphere ssh-proxycommand %h %p'
+  * For sysadmins: monkeysphere-server has been split into
+    monkeysphere-host (for publishing the ssh host key of your machine)
+    and monkeysphere-authentication (for setting up your machine to
+    authenticate users via the OpenPGP Web of Trust)
+  * For too-curious sysadmins: the layout of /var/lib/monkeysphere has
+    changed dramatically.  If you did any tricky tweaking of the files in
+    there, you probably want to check that your changes have been
+    preserved after the upgrade.  The old files can be found in
+    /var/lib/monkeysphere/backup-from-0.23-transition.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 18 Feb 2009 21:29:22 -0500
+
