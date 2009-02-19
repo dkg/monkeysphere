@@ -43,7 +43,7 @@ EOF
     # found?
 
     # get the gpg info for userid
-    gpgOut=$(gpg --list-key --fixed-list-mode --with-colon \
+    gpgOut=$(gpg_user --list-key --fixed-list-mode --with-colon \
 	--with-fingerprint --with-fingerprint \
 	="$userID" 2>/dev/null)
 
@@ -71,7 +71,7 @@ EOF
 		    rm -f "$sshKeyGPGFile"
 
 		    # get the sigs for the matching key
-		    gpgSigOut=$(gpg --check-sigs \
+		    gpgSigOut=$(gpg_user --check-sigs \
 			--list-options show-uid-validity \
 			"$keyid")
 
@@ -171,7 +171,7 @@ URI="ssh://${HOSTP}"
 # CHECK_KEYSERVER variable in the monkeysphere.conf file.
 
 # if the host is in the gpg keyring...
-if gpg --list-key ="${URI}" 2>&1 >/dev/null ; then
+if gpg_user --list-key ="${URI}" 2>&1 >/dev/null ; then
     # do not check the keyserver
     CHECK_KEYSERVER=${CHECK_KEYSERVER:="false"}
 

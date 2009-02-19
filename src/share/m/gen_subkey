@@ -64,7 +64,7 @@ EOF
     (umask 077 && mkfifo "$fifoDir/pass")
 
     log verbose "generating subkey..."
-    echo "$editCommands" | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
+    echo "$editCommands" | gpg_user --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
 
     # FIXME: this needs to fail more gracefully if the passphrase is incorrect
     passphrase_prompt  "Please enter your passphrase for $keyID: " "$fifoDir/pass"

@@ -56,6 +56,11 @@ subcommands:
 EOF
 }
 
+# user gpg command to define common options
+gpg_user() {
+    gpg --no-greeting --quiet --no-tty "$@"
+}
+
 # take a secret key ID and check that only zero or one ID is provided,
 # and that it corresponds to only a single secret key ID
 check_gpg_sec_key_id() {
@@ -63,10 +68,10 @@ check_gpg_sec_key_id() {
 
     case "$#" in
 	0)
-	    gpgSecOut=$(gpg --quiet --fixed-list-mode --list-secret-keys --with-colons 2>/dev/null | egrep '^sec:')
+	    gpgSecOut=$(gpg_user --fixed-list-mode --list-secret-keys --with-colons 2>/dev/null | egrep '^sec:')
 	    ;;
 	1)
-	    gpgSecOut=$(gpg --quiet --fixed-list-mode --list-secret-keys --with-colons "$keyID" | egrep '^sec:') || failure
+	    gpgSecOut=$(gpg_user --fixed-list-mode --list-secret-keys --with-colons "$keyID" | egrep '^sec:') || failure
 	    ;;
 	*)
 	    failure "You must specify only a single primary key ID."
@@ -104,7 +109,7 @@ check_gpg_authentication_subkey() {
 
     # check that a valid authentication key does not already exist
     IFS=$'\n'
-    for line in $(gpg --quiet --fixed-list-mode --list-keys --with-colons "$keyID") ; do
+    for line in $(gpg_user --fixed-list-mode --list-keys --with-colons "$keyID") ; do
 	type=$(echo "$line" | cut -d: -f1)
 	validity=$(echo "$line" | cut -d: -f2)
 	usage=$(echo "$line" | cut -d: -f12)
@@ -119,7 +124,7 @@ check_gpg_authentication_subkey() {
 	fi
 	# if authentication key is valid, prompt to continue
 	if [ "$validity" = 'u' ] ; then
-	    log error "A valid authentication key already exists for primary key '$keyID'."
+	    echo "A valid authentication key already exists for primary key '$keyID'."
 	    if [ "$PROMPT" = "true" ] ; then
 		read -p "Are you sure you would like to generate another one? (y/N) " OK; OK=${OK:N}
 		if [ "${OK/y/Y}" != 'Y' ] ; then

@@ -43,11 +43,11 @@ import_subkey() {
     if [ "$sshKeyFile" = '-' ] ; then
 	log verbose "importing ssh key from stdin..."
 	ssh2openpgp \
-	    | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
+	    | gpg_user --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
     else
 	log verbose "importing ssh key from file '$sshKeyFile'..."
 	ssh2openpgp <"$sshKeyFile" \
-	    | gpg --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
+	    | gpg_user --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
     fi
 
     # get the password if needed
