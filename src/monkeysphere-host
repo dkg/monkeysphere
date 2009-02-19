@@ -32,10 +32,6 @@ MHSHAREDIR="${SYSSHAREDIR}/mh"
 # datadir for host functions
 MHDATADIR="${SYSDATADIR}/host"
 
-# temp directory for temp gnupghome directories for add_revoker
-MHTMPDIR="${MHDATADIR}/tmp"
-export MHTMPDIR
-
 # host pub key files
 HOST_KEY_FILE="${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
 
@@ -171,7 +167,7 @@ show_key() {
     local GNUPGHOME
 
     # tmp gpghome dir
-    export GNUPGHOME=$(mktemp -d)
+    export GNUPGHOME=$(msmktempdir)
 
     # trap to remove tmp dir if break
     trap "rm -rf $GNUPGHOME" EXIT

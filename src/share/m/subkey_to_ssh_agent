@@ -64,7 +64,7 @@ You might want to run 'gpg --gen-key'."
 You might want to 'monkeysphere gen-subkey'"
     fi
 
-    workingdir=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+    workingdir=$(msmktempdir)
     umask 077
     mkfifo "$workingdir/passphrase"
     keysuccess=1

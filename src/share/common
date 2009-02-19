@@ -134,6 +134,11 @@ cutline() {
     head --line="$1" "$2" | tail -1
 }
 
+# make a temporary directly
+msmktempdir() {
+    mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX
+}
+
 # this is a wrapper for doing lock functions.
 #
 # it lets us depend on either lockfile-progs (preferred) or procmail's

@@ -53,7 +53,7 @@ if [ -f "$keyID" ] ; then
     fi
 else
     # create a temporary directory for storing the downloaded key
-    TMPLOC=$(mktemp -d "${MHTMPDIR}"/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
+    TMPLOC=$(msmktempdir) || failure "Could not create temporary directory!"
 
     # download the key from the keyserver as the monkeysphere user
     su_monkeysphere_user \

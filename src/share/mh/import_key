@@ -39,7 +39,6 @@ userID="ssh://${hostName}"
 
 # create host home
 mkdir -p "${MHDATADIR}"
-mkdir -p "${MHTMPDIR}"
 mkdir -p "${GNUPGHOME_HOST}"
 chmod 700 "${GNUPGHOME_HOST}"
 
