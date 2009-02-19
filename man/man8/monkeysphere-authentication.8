@@ -37,8 +37,11 @@ monkeysphere-controlled authorized_keys file.  If no accounts are
 specified, then all accounts on the system are processed.  `u' may be
 used in place of `update-users'.
 .TP
-.B add-id-certifier KEYID
+.B add-id-certifier KEYID|FILE
 Instruct system to trust user identity certifications made by KEYID.
+The key ID will be loaded from the keyserver.  A file may be loaded
+instead of pulling the key from the keyserver by specifying the path
+to the file as the argument, or by specifying `-` to load from stdin.
 Using the `-n' or `--domain' option allows you to indicate that you
 only trust the given KEYID to make identifications within a specific
 domain (e.g. "trust KEYID to certify user identities within the
