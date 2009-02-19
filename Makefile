@@ -53,7 +53,7 @@ install: all installman
 	install src/monkeysphere src/keytrans/openpgp2ssh src/keytrans/pem2openpgp $(DESTDIR)$(PREFIX)/bin
 	install src/monkeysphere-host src/monkeysphere-authentication $(DESTDIR)$(PREFIX)/sbin
 	install -m 0644 src/share/common $(DESTDIR)$(PREFIX)/share/monkeysphere
-	install -m 0644 src/transitions/* $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions
+	install -m 0744 src/transitions/* $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions
 	install -m 0644 src/share/m/* $(DESTDIR)$(PREFIX)/share/monkeysphere/m
 	install -m 0644 src/share/mh/* $(DESTDIR)$(PREFIX)/share/monkeysphere/mh
 	install -m 0644 src/share/ma/* $(DESTDIR)$(PREFIX)/share/monkeysphere/ma
