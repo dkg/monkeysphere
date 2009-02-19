@@ -56,8 +56,8 @@ if [ -d "$SYSDATADIR"/gnupg-host ] ; then
 ### transfer identity certifiers, if they don't already exist in the
 ### current setup:
 
-    if [ monkeysphere-authentication list-identity-certifiers | \
-	grep -q '^[A-F0-9]{40}:$' ] ; then
+    if monkeysphere-authentication list-identity-certifiers | \
+	grep -q '^[A-F0-9]{40}:$' ; then
 	log 'There are already certifiers in the new system!\nNot transferring any certifiers.\n'
     else
 	# get the old host keygrip (don't know why there would be more
