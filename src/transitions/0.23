@@ -121,7 +121,7 @@ if [ -d "$SYSDATADIR"/gnupg-host ] ; then
 
 			    CERTKEY=$(mktemp ${TMPDIR:-/tmp}/mstransition.XXXXXXXX)
 			    log "Adding identity certifier with fingerprint %s\n" "$keyfpr"
-			    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --export "0x$keyfpr" --export-clean >"$CERTKEY"
+			    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --export "0x$keyfpr" --export-options export-clean >"$CERTKEY"
 			    MONKEYSPHERE_PROMPT=false monkeysphere-authentication add-identity-certifier $finaldomain --trust "$truststring" --depth "$trustdepth" "$CERTKEY"
 			    rm -f "$CERTKEY"
 			    # clear the fingerprint so that we don't
@@ -149,7 +149,7 @@ if [ -d "$SYSDATADIR"/gnupg-host ] ; then
 	    
 	    log "importing host key from old monkeysphere installation\n"
 	    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --export-secret-keys | \
-		GNUPGHOME="$MHDATADIR" gpg --import
+		GNUPGHOME="$MHDATADIR" gpg --quiet --no-tty --import
 	    
 	    monkeysphere-host update-gpg-pub-file
 	else
@@ -171,7 +171,7 @@ fi
 # the new authentication keyring.
 if [ -d "${SYSDATADIR}/gnupg-authentication" ] ; then
 
-    GNUPGHOME="${SYSDATADIR}/gnupg-authentication" gpg --export | \
+    GNUPGHOME="${SYSDATADIR}/gnupg-authentication" gpg --no-permission-warning --export | \
 	monkeysphere-authentication gpg-cmd --import
 
     mkdir -p "$STASHDIR"
