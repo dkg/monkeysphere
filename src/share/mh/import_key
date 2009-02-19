@@ -21,7 +21,7 @@ hostName="$1"
 
 # use the default hostname if not specified
 if [ -z "$hostName" ] ; then
-    hostName=$(hostname -f)
+    hostName=$(hostname -f) || failure "Could not determine hostname."
     # test that the domain is not obviously illegitimate
     domain=${foo##*.}
     case $domain in
