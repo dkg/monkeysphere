@@ -13,6 +13,11 @@
 
 # import an existing ssh key as a gpg subkey
 
+## 2009-02-20 00:49:11-0500: This is not implemented yet, because we
+## don't currently have a good way to manipulate the user's OpenPGP
+## secret key such that we could make a proper subkey binding
+## signature.
+
 import_subkey() {
     local sshKeyFile
     local keyID
@@ -20,7 +25,7 @@ import_subkey() {
     local fifoDir
 
     # FIXME: implement!
-    failure "implement me!"
+    failure "import-subkey is not implemented yet.  We welcome patches.  Sorry!"
 
     sshKeyFile="$1"
     shift
