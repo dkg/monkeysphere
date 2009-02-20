@@ -12,11 +12,11 @@
 
  * [Advanced Monkeysphere usage](/advanced-user)
  * [Signing host keys](/signing-host-keys)
- * [Understandingn trust models](/trust-models)
+ * [Understanding trust models](/trust-models)
 
 ## Under the hood ##
 
- * [Developing the monkeysphere](/community)
+ * [Developing the Monkeysphere](/community)
  * [Technical details](/technical-details)
 
 ## References ##

@@ -36,7 +36,7 @@ to the "Host *" section of your `~/.ssh/config` file:
 	ProxyCommand monkeysphere ssh-proxycommand %h %p
 
 The "Host *" section specifies what ssh options to use for all
-connections. If you don't already have a "Host *" line, you can add it
+connections. If you don't already have a "Host \*" line, you can add it
 by entering:
 
 	Host *
