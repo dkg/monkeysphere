@@ -100,7 +100,6 @@ fi
 addrevokerCommand=$(cat <<EOF
 addrevoker
 $fingerprint
-B65D085B94117B813160B659ED34CEABE27BAABC
 y
 save
 
