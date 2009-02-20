@@ -51,6 +51,9 @@ while true ; do
 	    depth="$2"
 	    shift 2
 	    ;;
+	-)
+	    break
+	    ;;
 	*)
 	    if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
 		failure "Unknown option '$1'.
@@ -62,29 +65,47 @@ Type '$PGRM help' for usage."
 done
 
 keyID="$1"
+
+# check that key ID or file is specified
 if [ -z "$keyID" ] ; then
     failure "You must specify the key ID of a key to add, or specify a file to read the key from."
 fi
-if [ -f "$keyID" ] ; then
-    log info "Reading key from file '$keyID':"
 
-    fingerprints=$(su_monkeysphere_user \
+# if file is specified
+if [ -f "$keyID" -o "$keyID" = '-' ] ; then
+    # load the key from stdin
+    if [ "$keyID" = '-' ] ; then
+	local keyID=$(msmktempfile)
+	trap "rm -f $keyID" EXIT
+	log verbose "reading key from stdin..."
+	cat > "$keyID"
+
+    # load the key from the file
+    elif [ -f "$keyID" ] ; then
+	log verbose "reading key from file '$keyID'..."
+    fi
+
+    # check the key is ok as monkeysphere user before loading
+    log debug "checking keys in file..."
+    fingerprint=$(su_monkeysphere_user \
 	". ${SYSSHAREDIR}/common; list_primary_fingerprints" < "$keyID")
 
-    if [ $(printf "%s" "$fingerprints" | egrep -c '^[A-F0-9]{40}$') -ne 1 ] ; then
+    if [ $(printf "%s" "$fingerprint" | egrep -c '^[A-F0-9]{40}$') -ne 1 ] ; then
 	failure "There was not exactly one gpg key in the file."
     fi
 
-    gpg_sphere "--import" < "$keyID" || failure "could not read key from '$keyID'"
+    # load the key
+    gpg_sphere "--import" <"$keyID" \
+	|| failure "could not read key from '$keyID'"
 
-    keyID="$fingerprints"
+    keyID="$fingerprint"
+
+# else, get the key from the keyserver
 else
-    # get the key from the key server
-    log debug "retrieving key from keyserver..."
-    gpg_sphere "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" || failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
+    log verbose "searching keyserver $KEYSERVER for keyID $keyID..."
+    gpg_sphere "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" \
+	|| failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
 fi
-
-export keyID
 
 # get the full fingerprint of new certifier key
 log debug "getting fingerprint of certifier key..."

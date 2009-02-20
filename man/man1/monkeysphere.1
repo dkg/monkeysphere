@@ -58,22 +58,22 @@ were found but none were acceptable.  `a' may be used in place of
 .TP
 .B gen-subkey [KEYID]
 Generate an authentication subkey for a private key in your GnuPG
-keyring.  For the primary key with the specified key ID, generate a
-subkey with "authentication" capability that can be used for
-monkeysphere transactions.  An expiration length can be specified with
-the `-e' or `--expire' option (prompt otherwise).  If no key ID is
+keyring.  KEYID is the key ID for the primary key for which the subkey
+with "authentication" capability will be generated.  If no key ID is
 specified, but only one key exists in the secret keyring, that key
-will be used.  `g' may be used in place of `gen-subkey'.
+will be used.  The length of the generated key can be specified with
+the `--length` or `-l` option.  `g' may be used in place of
+`gen-subkey'.
 .TP
 .B ssh-proxycommand
-an ssh proxy command that can be used
-to trigger a monkeysphere update of the ssh known_hosts file for a
-host that is being connected to with ssh.  This works by updating the
-known_hosts file for the host first, before an attempted connection to
-the host is made.  Once the known_hosts file has been updated, a TCP
-connection to the host is made by exec'ing netcat(1).  Regular ssh
-communication is then done over this netcat TCP connection (see
-ProxyCommand in ssh_config(5) for more info).
+An ssh ProxyCommand that can be used to trigger a monkeysphere update
+of the ssh known_hosts file for a host that is being connected to with
+ssh.  This works by updating the known_hosts file for the host first,
+before an attempted connection to the host is made.  Once the
+known_hosts file has been updated, a TCP connection to the host is
+made by exec'ing netcat(1).  Regular ssh communication is then done
+over this netcat TCP connection (see ProxyCommand in ssh_config(5) for
+more info).
 
 This command is meant to be run as the ssh "ProxyCommand".  This can
 either be done by specifying the proxy command on the command line:
@@ -108,9 +108,10 @@ change in the future, possibly by adding a deferred check, so that
 hosts that go from non-monkeysphere-enabled to monkeysphere-enabled
 will be properly checked.
 
-Setting the MONKEYSPHERE_CHECK_KEYSERVER
-variable (to `true' or `false') will override the keyserver-checking policy
-defined above.
+Setting the CHECK_KEYSERVER variable in the config file or the
+MONKEYSPHERE_CHECK_KEYSERVER environment variable to either `true' or
+`false' will override the keyserver-checking policy defined above and
+either always or never check the keyserver for host key updates.
 
 .TP
 .B subkey-to-ssh-agent [ssh-add arguments]

@@ -59,7 +59,7 @@ subcommands:
  set-expire (e) [EXPIRE]             set host key expiration
  add-hostname (n+) NAME[:PORT]       add hostname user ID to host key
  revoke-hostname (n-) NAME[:PORT]    revoke hostname user ID
- add-revoker (o) FINGERPRINT         add a revoker to the host key
+ add-revoker (o) [KEYID|FILE]        add a revoker to the host key
  revoke-key (r)                      revoke host key
  publish-key (p)                     publish host key to keyserver
 

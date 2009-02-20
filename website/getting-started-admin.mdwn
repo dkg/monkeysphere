@@ -4,11 +4,11 @@ Monkeysphere Server Administrator README
 As the administrator of an SSH server, you can take advantage of the
 monkeysphere in two ways:
 
-1. you can publish the host key of your machine so that your users can
-have it automatically verified, and
+1. you can publish the host key of your machine to the Web of Trust
+(WoT) so that your users can have it automatically verified, and
 
 2. you can set up your machine to automatically identify connecting
-users by their presence in the OpenPGP web of trust.
+users by their presence in the OpenPGP Web of Trust.
 
 These things are not mutually required, and it is in fact possible to
 do one without the other.  However, it is highly recommend that you at
@@ -18,26 +18,28 @@ least the host key into the Web of Trust so that your users can be
 sure they're connecting to the correct machine.
 
 
-Monkeysphere for host verification
-==================================
+Monkeysphere for host verification (monkeysphere-host)
+======================================================
 
 Server host key publication
 ---------------------------
 
-To begin, you must first generate a server host key:
+To begin, you must first import an ssh host key.  This assumes that
+you have the ssh server installed, and that you have generated a host
+RSA key.  Once that has been done, import the key:
 
-	# monkeysphere-server gen-key
+	# monkeysphere-host /etc/ssh/ssh\_host\_rsa\_key
 
 This will generate the key for server with the service URI
-(`ssh://server.example.net`).  Output the new key information with the
-'show-key' command:
+(`ssh://server.example.net`).  You can output the new key information
+with the 'show-key' command:
 
-	# monkeysphere-server show-key
+	# monkeysphere-host show-key
 
-Once the key has been generated, it needs to be publish to the Web of
+Once the key has been imported, it needs to be publish to the Web of
 Trust:
 
-	# monkeysphere-server publish-key
+	# monkeysphere-host publish-key
 
 The server admin should now sign the server key so that people in the
 admin's web of trust can identify the server without manual host key
@@ -56,48 +58,16 @@ keyservers:
 
 	$ gpg --send-key '=ssh://server.example.net'
 
-Update OpenSSH configuration files
-----------------------------------
+See http://web.monkeysphere.info/signing-host-keys/ for more info
+signing host keys.
 
-To use the newly-generated host key for ssh connections, put the
-following line in `/etc/ssh/sshd_config` (be sure to comment out or
-remove any other HostKey references):
-
-	HostKey /var/lib/monkeysphere/ssh_host_rsa_key
-
-FIXME: What about DSA host keys?  The SSH RFC seems to require
-implementations support DSA, though OpenSSH will work without a DSA
-host key.
-
-
-Monkeysphere for user authentication
-====================================
+Monkeysphere for user authentication (monkeysphere-authentication)
+==================================================================
 
 A host can maintain ssh `authorized_keys` files automatically for its
 users with the Monkeysphere.  These `authorized_keys` files can then
 be used to enable users to use the monkeysphere to authenticate to
 your machine using the OpenPGP web of trust.
-
-Before this can happen, the host must first have a host key to use for
-user key verification.  If you have not already generated a host key
-(as in the host verification instructions above), generate one now:
-
-	# monkeysphere-server gen-key
-
-Update OpenSSH configuration files
-----------------------------------
-
-SSH must be configured to point to the monkeysphere generated
-`authorized_keys` file.  Add this line to `/etc/ssh/sshd_config`
-(again, making sure that no other AuthorizedKeysFile directive is left
-uncommented):
-
-	AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
-
-You'll need to restart `sshd` to have your changes take effect.  As
-with any change to `sshd_config`, be sure to retain an existing
-session to the machine while you test your changes so you don't get
-locked out.
 
 Monkeysphere authorized_keys maintenance
 ----------------------------------------
@@ -113,22 +83,36 @@ means that the server must fully trust at least one person whose
 signature on the connecting user's key would validate the relevant
 user ID.  The individuals trusted to identify users like this are
 known in the Monkeysphere as "Identity Certifiers".  In a simple
-scenario, the host's administrator would be trusted identity certifer.
-If the admin's OpenPGP keyid is `$GPGID`, then on the server run:
+scenario, the host's administrator would be a trusted identity
+certifer.  If the admin's OpenPGP keyid is `$GPGID`, then on the
+server run:
 
-	# monkeysphere-server add-identity-certifier $GPGID
+	# monkeysphere-authentication add-identity-certifier $GPGID
 
 To update the monkeysphere `authorized_keys` file for user "bob" using
 the current set of identity certifiers, run:
 
-	# monkeysphere-server update-users bob
+	# monkeysphere-authentication update-users bob
 
 To update the monkeysphere `authorized_keys` file for all users on the
 the system, run the same command with no arguments:
 
-	# monkeysphere-server update-users
+	# monkeysphere-authentication update-users
 
 You probably want to set up a regularly scheduled job (e.g. with cron)
 to take care of this automatically.
 
-FIXME: document other likely problems and troubleshooting techniques
+Update OpenSSH server AuthorizedKeysFile configuration
+------------------------------------------------------
+
+SSH must be configured to point to the monkeysphere generated
+`authorized_keys` file.  Add this line to `/etc/ssh/sshd_config`
+(again, making sure that no other AuthorizedKeysFile directive is left
+uncommented):
+
+	AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
+
+You'll need to restart `sshd` to have your changes take effect.  As
+with any change to `sshd_config`, be sure to retain an existing
+session to the machine while you test your changes so you don't get
+locked out.

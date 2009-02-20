@@ -58,8 +58,11 @@ place of `add-hostname'.
 Revoke a hostname user ID from the server host key.  `n-' may be used
 in place of `revoke-hostname'.
 .TP
-.B add-revoker FINGERPRINT
-Add a revoker to the host's OpenPGP key.  `o' may be be used in place
+.B add-revoker KEYID|FILE
+Add a revoker to the host's OpenPGP key.  The key ID will be loaded
+from the keyserver.  A file may be loaded instead of pulling the key
+from the keyserver by specifying the path to the file as the argument,
+or by specifying `-` to load from stdin.  `o' may be be used in place
 of `add-revoker'.
 .TP
 .B revoke-key

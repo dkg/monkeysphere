@@ -25,48 +25,62 @@ local ltsignCommand
 local trustval
 
 keyID="$1"
+
+# check that key ID or file is specified
 if [ -z "$keyID" ] ; then
     failure "You must specify the key ID of a revoker key, or specify a file to read the key from."
 fi
-if [ -f "$keyID" ] ; then
-    log info "Reading key from file '$keyID':"
-    importinfo=$(gpg_host --import < "$keyID" 2>&1) || failure "could not read key from '$keyID'"
-    # FIXME: if this is tried when the key database is not
-    # up-to-date, i got these errors (using set -x):
 
-    # ++ su -m monkeysphere -c '\''gpg --import'\''
-    # Warning: using insecure memory!
-    # gpg: key D21739E9: public key "Daniel Kahn Gillmor <dkg@fifthhorseman.net>" imported
-    # gpg: Total number processed: 1
-    # gpg:               imported: 1  (RSA: 1)
-    # gpg: can'\''t create `/var/monkeysphere/gnupg-host/pubring.gpg.tmp'\'': Permission denied
-    # gpg: failed to rebuild keyring cache: Permission denied
-    # gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
-    # gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
-    # gpg: next trustdb check due at 2009-01-10'
-    # + failure 'could not read key from '\''/root/dkg.gpg'\'''
-    # + echo 'could not read key from '\''/root/dkg.gpg'\'''
+# if file is specified
+if [ -f "$keyID" -o "$keyID" = '-' ] ; then
+    # load the key from stdin
+    if [ "$keyID" = '-' ] ; then
+	local keyID=$(msmktempfile)
+	trap "rm -f $keyID" EXIT
+	log verbose "reading key from stdin..."
+	cat > "$keyID"
 
-    keyID=$(echo "$importinfo" | grep '^gpg: key ' | cut -f2 -d: | cut -f3 -d\ )
-    if [ -z "$keyID" ] || [ $(echo "$keyID" | wc -l) -ne 1 ] ; then
+    # load the key from the file
+    elif [ -f "$keyID" ] ; then
+	log verbose "reading key from file '$keyID'..."
+    fi
+
+    # check the key is ok as monkeysphere user before loading
+    log debug "checking keys in file..."
+    fingerprint=$(su_monkeysphere_user \
+	". ${SYSSHAREDIR}/common; list_primary_fingerprints" < "$keyID")
+
+    if [ $(printf "%s" "$fingerprint" | egrep -c '^[A-F0-9]{40}$') -ne 1 ] ; then
 	failure "There was not exactly one gpg key in the file."
     fi
+
+    # load the key
+    gpg_host --import <"$keyID" \
+	|| failure "could not read key from '$keyID'"
+
+    keyID="$fingerprint"
+
+# else, get the key from the keyserver
 else
     # create a temporary directory for storing the downloaded key
-    TMPLOC=$(msmktempdir) || failure "Could not create temporary directory!"
+    local TMPLOC=$(msmktempdir)
+    chmod 0700 "$GNUPGHOME"
+    chown "$MONKEYSPHERE_USER":"$MONKEYSPHERE_USER" "$GNUPGHOME"
 
     # download the key from the keyserver as the monkeysphere user
+    log verbose "searching keyserver $KEYSERVER for keyID $keyID..."
     su_monkeysphere_user \
-	"GNUPGHOME=$TMPLOC gpg --quiet --keyserver $KEYSERVER --recv-key 0x${keyID}!"
+	"GNUPGHOME=$TMPLOC gpg --quiet --keyserver $KEYSERVER --recv-key 0x${keyID}!" \
+	|| failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
 
     # export the new key to the host keyring
+    log verbose "loading key $keyID..."
     su_monkeysphere_user "GNUPGHOME=$TMPLOC gpg --quiet --export 0x${keyID}!" \
 	| gpg_host --import
 fi
 
-export keyID
-
-# get the full fingerprint of the revoker key ID
+# get the full fingerprint of new revoker key
+log debug "getting fingerprint of revoker key..."
 fingerprint=$(gpg_host --list-key --with-colons --with-fingerprint "0x${keyID}!" \
     | grep '^fpr:' | grep "$keyID" | cut -d: -f10)
 

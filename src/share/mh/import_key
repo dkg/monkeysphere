@@ -21,6 +21,11 @@ local userID
 sshKeyFile="$1"
 hostName="$2"
 
+# check that key file specified
+if [ -z "$sshKeyFile" ] ; then
+    failure "Must specify ssh key file to import, or specify '-' for stdin."
+fi
+
 # use the default hostname if not specified
 if [ -z "$hostName" ] ; then
     hostName=$(hostname -f) || failure "Could not determine hostname."
@@ -45,9 +50,7 @@ mkdir -p "${GNUPGHOME_HOST}"
 chmod 700 "${GNUPGHOME_HOST}"
 
 # import ssh key to a private key
-if [ -z "$sshKeyFile" ] ; then
-    failure "Must specify ssh key file to import, or specify '-' for stdin."
-elif [ "$sshKeyFile" = '-' ] ; then
+if [ "$sshKeyFile" = '-' ] ; then
     log verbose "importing ssh key from stdin..."
     PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" \
 	| gpg_host --import

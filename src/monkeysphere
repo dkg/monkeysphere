@@ -45,18 +45,96 @@ Monkeysphere client tool.
 subcommands:
  update-known_hosts (k) [HOST]...    update known_hosts file
  update-authorized_keys (a)          update authorized_keys file
- import-subkey (i)                   import existing ssh key as gpg subkey
-   --keyfile (-f) FILE                 key file to import
-   --expire (-e) EXPIRE                date to expire
  gen-subkey (g) [KEYID]              generate an authentication subkey
    --length (-l) BITS                  key length in bits (2048)
-   --expire (-e) EXPIRE                date to expire
  ssh-proxycommand                    monkeysphere ssh ProxyCommand
  subkey-to-ssh-agent (s)             store authentication subkey in ssh-agent
  version (v)                         show version number
  help (h,?)                          this help
 
 EOF
+}
+
+# user gpg command to define common options
+gpg_user() {
+    gpg --no-greeting --quiet --no-tty "$@"
+}
+
+# take a secret key ID and check that only zero or one ID is provided,
+# and that it corresponds to only a single secret key ID
+check_gpg_sec_key_id() {
+    local gpgSecOut
+
+    case "$#" in
+	0)
+	    gpgSecOut=$(gpg_user --fixed-list-mode --list-secret-keys --with-colons 2>/dev/null | egrep '^sec:')
+	    ;;
+	1)
+	    gpgSecOut=$(gpg_user --fixed-list-mode --list-secret-keys --with-colons "$keyID" | egrep '^sec:') || failure
+	    ;;
+	*)
+	    failure "You must specify only a single primary key ID."
+	    ;;
+    esac
+
+    # check that only a single secret key was found
+    case $(echo "$gpgSecOut" | grep -c '^sec:') in
+	0)
+	    failure "No secret keys found.  Create an OpenPGP key with the following command:
+ gpg --gen-key"
+	    ;;
+	1)
+	    echo "$gpgSecOut" | cut -d: -f5
+	    ;;
+	*)
+	    echo "Multiple primary secret keys found:" | log error
+	    echo "$gpgSecOut" | cut -d: -f5 | log error
+	    echo "Please specify which primary key to use." | log error
+	    failure
+	    ;;
+    esac
+}
+
+# check that a valid authentication subkey does not already exist
+check_gpg_authentication_subkey() {
+    local keyID
+    local IFS
+    local line
+    local type
+    local validity
+    local usage
+
+    keyID="$1"
+
+    # check that a valid authentication key does not already exist
+    IFS=$'\n'
+    for line in $(gpg_user --fixed-list-mode --list-keys --with-colons "$keyID") ; do
+	type=$(echo "$line" | cut -d: -f1)
+	validity=$(echo "$line" | cut -d: -f2)
+	usage=$(echo "$line" | cut -d: -f12)
+
+	# look at keys only
+	if [ "$type" != 'pub' -a "$type" != 'sub' ] ; then
+	    continue
+	fi
+	# check for authentication capability
+	if ! check_capability "$usage" 'a' ; then
+	    continue
+	fi
+	# if authentication key is valid, prompt to continue
+	if [ "$validity" = 'u' ] ; then
+	    echo "A valid authentication key already exists for primary key '$keyID'."
+	    if [ "$PROMPT" = "true" ] ; then
+		read -p "Are you sure you would like to generate another one? (y/N) " OK; OK=${OK:N}
+		if [ "${OK/y/Y}" != 'Y' ] ; then
+		    failure "aborting."
+		fi
+		break
+	    else
+		failure "aborting."
+	    fi
+	fi
+    done
 }
 
 ########################################################################
