@@ -66,8 +66,11 @@ or by specifying `-` to load from stdin.  `o' may be be used in place
 of `add-revoker'.
 .TP
 .B revoke-key
-Revoke the host's OpenPGP key.  `r' may be used in place of
-`revoke-key'.
+Revoke the host's OpenPGP key.  This will ask you a series of
+questions, and then generate a key revocation certificate on standard
+out.  If you publish this revocation certificate to the public
+keyservers, your host key will be permanently revoked.  `r' may be
+used in place of `revoke-key'.
 .TP
 .B publish-key
 Publish the host's OpenPGP key to the keyserver.  `p' may be used in
