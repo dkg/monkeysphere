@@ -25,13 +25,10 @@ local expire
 local uid
 local fingerprint
 local badhostkeys
-local sshd_config
 local problemsfound=0
 
 report_cruft
 
-# FIXME: what's the correct, cross-platform answer?
-sshd_config=/etc/ssh/sshd_config
 seckey=$(gpg_host --list-secret-keys --fingerprint --with-colons --fixed-list-mode)
 keysfound=$(echo "$seckey" | grep -c ^sec:)
 curdate=$(date +%s)
@@ -52,7 +49,7 @@ fi
 echo "Checking host GPG key..."
 if (( "$keysfound" < 1 )); then
     echo "! No host key found."
-    echo " - Recommendation: run 'monkeysphere-host gen-key' or 'monkeysphere-host import-key'"
+    echo " - Recommendation: run 'monkeysphere-host import-key'"
     problemsfound=$(($problemsfound+1))
 elif (( "$keysfound" > 1 )); then
     echo "! More than one host key found?"
@@ -116,35 +113,9 @@ else
 # FIXME: propose adding a revoker to the host key if none exist (do we
 #   have a way to do that after key generation?)
 
-    # Ensure that the ssh_host_rsa_key file is present and non-empty:
-    echo
-    echo "Checking host SSH key..."
-    if [ ! -s "${SYSDATADIR}/ssh_host_rsa_key" ] ; then
-	echo "! The host key as prepared for SSH (${SYSDATADIR}/ssh_host_rsa_key) is missing or empty."
-	problemsfound=$(($problemsfound+1))
-    else
-	if [ $(ls -l "${SYSDATADIR}/ssh_host_rsa_key" | cut -f1 -d\ ) != '-rw-------' ] ; then
-	    echo "! Permissions seem wrong for ${SYSDATADIR}/ssh_host_rsa_key -- should be 0600."
-	    problemsfound=$(($problemsfound+1))
-	fi
+# FIXME: test (with ssh-keyscan?) that the running ssh
+# daemon is actually offering the monkeysphere host key.
 
-	# propose changes needed for sshd_config (if any)
-	if ! grep -q "^HostKey[[:space:]]\+${SYSDATADIR}/ssh_host_rsa_key$" "$sshd_config"; then
-	    echo "! $sshd_config does not point to the monkeysphere host key (${SYSDATADIR}/ssh_host_rsa_key)."
-	    echo " - Recommendation: add a line to $sshd_config: 'HostKey ${SYSDATADIR}/ssh_host_rsa_key'"
-	    problemsfound=$(($problemsfound+1))
-	fi
-	if badhostkeys=$(grep -i '^HostKey' "$sshd_config" | grep -v "^HostKey[[:space:]]\+${SYSDATADIR}/ssh_host_rsa_key$") ; then
-	    echo "! $sshd_config refers to some non-monkeysphere host keys:"
-	    echo "$badhostkeys"
-	    echo " - Recommendation: remove the above HostKey lines from $sshd_config"
-	    problemsfound=$(($problemsfound+1))
-	fi
-
-        # FIXME: test (with ssh-keyscan?) that the running ssh
-        # daemon is actually offering the monkeysphere host key.
-
-    fi
 fi
 
 # FIXME: look at the ownership/privileges of the various keyrings,

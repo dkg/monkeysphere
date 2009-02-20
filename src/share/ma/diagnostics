@@ -47,7 +47,10 @@ if ! [ -d "$MADATADIR" ] ; then
     exit
 fi    
 
-# FIXME: what's the correct, cross-platform answer?
+# FIXME: what's the correct, cross-platform way to determine where
+# sshd_config lives?
+sshd_config=/etc/ssh/sshd_config
+
 seckey=$(gpg_core --list-secret-keys --fingerprint --with-colons --fixed-list-mode)
 keysfound=$(echo "$seckey" | grep -c ^sec:)
 curdate=$(date +%s)
@@ -97,7 +100,16 @@ fi
 # FIXME: look to see that the ownertrust rules are set properly on the
 #    sphere keyring
 
-# FIXME: make sure that at least one identity certifier exists
+# make sure that at least one identity certifier exists
+echo
+echo "Checking for Identity Certifiers..."
+if ! monkeysphere-authentication list-identity-certifiers | egrep -q '^[A-F0-9]{40}:' then
+    echo "! No Identity Certifiers found!"
+    echo " - Recommendation: once you know who should be able to certify identities for 
+     connecting users, you should add their key, with: 
+      monkeysphere-authentication add-identity-certifier"
+    problemsfound=$(($problemsfound+1))
+fi
 
 # FIXME: look at the timestamps on the monkeysphere-generated
 # authorized_keys files -- warn if they seem out-of-date.
