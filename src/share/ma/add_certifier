@@ -126,8 +126,8 @@ else
     gpg_sphere "--fingerprint 0x${fingerprint}!"
 
     if [ "$PROMPT" = "true" ] ; then
-	echo "Are you sure you want to add the above key as a"
-	read -p "certifier of users on this system? (Y/n) " OK; OK=${OK:-Y}
+	echo "Are you sure you want to add the above key as a certifier"
+	read -p "of users on this system? (Y/n) " OK; OK=${OK:-Y}
 	if [ "${OK/y/Y}" != 'Y' ] ; then
 	    failure "Identity certifier not added."
 	fi

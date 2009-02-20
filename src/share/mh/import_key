@@ -44,6 +44,21 @@ fi
 
 userID="ssh://${hostName}"
 
+if [ "$PROMPT" = "true" ] ; then
+    cat <<EOF
+The ssh key will be imported and an OpenPGP certificate for this host
+will be generated with the following user ID:
+  $userID
+EOF
+    read -p "Are you sure you would like to create certificate? [Y/n] " OK; OK=${OK:-Y}
+    if [ "${OK/y/Y}" != 'Y' ] ; then
+	failure "revoker not added."
+    fi
+else
+    log debug "importing key without prompting."
+fi
+
+
 # create host home
 mkdir -p "${MHDATADIR}"
 mkdir -p "${GNUPGHOME_HOST}"
