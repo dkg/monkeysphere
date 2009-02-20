@@ -28,6 +28,8 @@ local badhostkeys
 local sshd_config
 local problemsfound=0
 
+report_cruft
+
 if ! id monkeysphere >/dev/null ; then
     echo "! No monkeysphere user found!  Please create a monkeysphere system user with bash as its shell."
     problemsfound=$(($problemsfound+1))

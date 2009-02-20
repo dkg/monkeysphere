@@ -28,6 +28,8 @@ local badhostkeys
 local sshd_config
 local problemsfound=0
 
+report_cruft
+
 # FIXME: what's the correct, cross-platform answer?
 sshd_config=/etc/ssh/sshd_config
 seckey=$(gpg_host --list-secret-keys --fingerprint --with-colons --fixed-list-mode)

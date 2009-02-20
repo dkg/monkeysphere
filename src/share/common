@@ -1160,3 +1160,35 @@ list_primary_fingerprints() {
 	awk -F: '/^fpr:/{ print $10 }'
     rm -rf "$fake"
 }
+
+
+check_cruft_file() {
+    local loc="$1"
+    local version="$2"
+    
+    if [ -e "$loc" ] ; then
+	printf "The file '%s' is no longer used by\nmonkeysphere (as of version %s), and can be removed.\n" "$loc" "$version" | log info
+    fi
+}
+
+check_upgrade_dir() {
+    local loc="$1"
+    local version="$2"
+
+    if [ -d "$loc" ] ; then
+	printf "The presence of directory '%s' indicates that you have\nnot yet completed a monkeysphere upgrade.\nYou should probably run the following script:\n  %s/transitions/%s\n" "$loc" "$SYSSHAREDIR" "$version" | log info
+}
+
+## look for cruft from old versions of the monkeysphere, and notice if
+## upgrades have not been run:
+report_cruft() {
+    check_upgrade_dir "${SYSCONFIGDIR}/gnupg-host" 0.23
+    check_upgrade_dir "${SYSCONFIGDIR}/gnupg-authentication" 0.23
+
+    check_cruft_file "${SYSCONFIGDIR}/gnupg-authentication.conf" 0.23
+    check_cruft_file "${SYSCONFIGDIR}/gnupg-host.conf" 0.23
+
+    if ls "${SYSDATADIR}/backup-from-"*"-transition" 2>/dev/null ; then
+	printf "The directories above are backups left over from a monkeysphere transition.\nThey may contain copies of sensitive data (host keys, certifier lists), but\nthey are no longer needed by monkeysphere.\nYou may remove them at any time.\n" | log info
+    fi
+}
