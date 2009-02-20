@@ -15,7 +15,31 @@
 
 revoke_key() {
 
-# FIXME: implement!
-failure "not implemented yet!"
+# Coming in here, we expect $HOST_FINGERPRINT to be set, and we
+# believe that there is in fact a key.
 
+    # our current implementation is very simple: we just want to
+    # generate the revocation certificate on stdout.  This provides
+    # for the two most likely (but hopefully not common) scenarios:
+
+    # an admin wants a revocation certificate for the host which they
+    # can store securely offline.  In this case, the admin can
+    # redirect stdout to a file, or can simply copy/paste or
+    # transcribe from the terminal.
+
+    # Alternately, an admin might want to publish the revocation
+    # certificate immediately.  here's a quick way to do this:
+
+
+    # tmp=$(mktemp -d)
+    # export GNUPGHOME="$tmp"
+    # gpg --import < /var/lib/monkeysphere/ssh_host_rsa_key.pub.gpg
+    # monkeysphere-host revoke-key | gpg --import
+    # gpg --keyserver pool.sks-keyservers.net --send $(hostname -f)
+
+
+    # note: we're not using the gpg_host function because we actually
+    # want to use gpg's UI in this case, so we want to omit --no-tty
+
+    GNUPGHOME="$GNUPGHOME_HOST" gpg --no-greeting --quiet --armor --gen-revoke "0x${HOST_FINGERPRINT}!"
 }

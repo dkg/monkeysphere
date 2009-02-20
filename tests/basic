@@ -26,6 +26,7 @@ source "$TESTDIR"/common
 ## test has *more* requirements than plain ol' monkeysphere:
 which socat >/dev/null || { echo "You must have socat installed to run this test." ; exit 1; }
 
+
 ## FIXME: other checks?
 
 ######################################################################
@@ -123,6 +124,21 @@ export SOCKET="$TEMPDIR"/ssh-socket
 # *anything* with any running X11 session.
 export DISPLAY=monkeys
 
+## make sure that the version number matches the debian changelog
+## (don't bother if this is being run from the tests).
+
+if [ -f "$TESTDIR"/../packaging/debian/changelog ]; then
+    echo "##################################################"
+    echo "### checking version string match..."
+    repver=$(monkeysphere version)
+    debver=$(head -n1 "$TESTDIR"/../packaging/debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/')
+    if [ "$repver" = "$debver" ] ; then
+	echo "Versions match!"
+    else
+	printf "reported version string (%s) does not match debian changelog (%s)\n" "$repver" "$debver"
+	exit 1
+    fi
+fi
 
 ######################################################################
 ### CONFIGURE ENVIRONMENTS
@@ -158,7 +174,7 @@ cp "$TESTDIR"/etc/ssh/sshd_config "$SSHD_CONFIG"
 # write the sshd_config
 cat <<EOF >> "$SSHD_CONFIG"
 HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
-AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authentication/authorized_keys/%u
+AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authorized_keys/%u
 EOF
 
 
@@ -169,7 +185,7 @@ EOF
 echo "##################################################"
 echo "### import host key..."
 ssh-keygen -b 1024 -t rsa -N '' -f "$TEMPDIR"/ssh_host_rsa_key
-monkeysphere-host import-key testhost < "$TEMPDIR"/ssh_host_rsa_key
+monkeysphere-host import-key "$TEMPDIR"/ssh_host_rsa_key testhost
 
 echo "##################################################"
 echo "### getting host key fingerprint..."
@@ -227,7 +243,7 @@ monkeysphere-authentication list-certifiers
 # generate an auth subkey for the test user that expires in 2 days
 echo "##################################################"
 echo "### generating key for testuser..."
-monkeysphere gen-subkey --expire 2
+monkeysphere gen-subkey
 
 # add server key to testuser keychain
 echo "##################################################"

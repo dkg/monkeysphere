@@ -46,7 +46,8 @@ For more details, see:
     
     # get list of secret keys (to work around bug
     # https://bugs.g10code.com/gnupg/issue945):
-    secretkeys=$(gpg --list-secret-keys --with-colons --fixed-list-mode --fingerprint | \
+    secretkeys=$(gpg_user --list-secret-keys --with-colons --fixed-list-mode \
+	--fingerprint | \
 	grep '^fpr:' | cut -f10 -d: | awk '{ print "0x" $1 "!" }')
 
     if [ -z "$secretkeys" ]; then
@@ -54,7 +55,7 @@ For more details, see:
 You might want to run 'gpg --gen-key'."
     fi
     
-    authsubkeys=$(gpg --list-secret-keys --with-colons --fixed-list-mode \
+    authsubkeys=$(gpg_user --list-secret-keys --with-colons --fixed-list-mode \
 	--fingerprint --fingerprint $secretkeys | \
 	cut -f1,5,10,12 -d: | grep -A1 '^ssb:[^:]*::[^:]*a[^:]*$' | \
 	grep '^fpr::' | cut -f3 -d: | sort -u)
@@ -64,7 +65,8 @@ You might want to run 'gpg --gen-key'."
 You might want to 'monkeysphere gen-subkey'"
     fi
 
-    workingdir=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+    workingdir=$(msmktempdir)
+    trap "rm -rf $workingdir" EXIT
     umask 077
     mkfifo "$workingdir/passphrase"
     keysuccess=1
@@ -79,19 +81,19 @@ You might want to 'monkeysphere gen-subkey'"
 	# fingerprint, but filtering out all / characters to make sure
 	# the filename is legit.
 
-	primaryuid=$(gpg --with-colons --list-key "0x${subkey}!" | grep '^pub:' | cut -f10 -d: | tr -d /)
+	primaryuid=$(gpg_user --with-colons --list-key "0x${subkey}!" | grep '^pub:' | cut -f10 -d: | tr -d /)
 
 	#kname="[monkeysphere] $primaryuid"
 	kname="$primaryuid"
 
 	if [ "$1" = '-d' ]; then
 	    # we're removing the subkey:
-	    gpg --export "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname"
+	    gpg_user --export "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname"
 	    (cd "$workingdir" && ssh-add -d "$kname")
 	else
 	    # we're adding the subkey:
 	    mkfifo "$workingdir/$kname"
-	    gpg --quiet --passphrase-fd 3 3<"$workingdir/passphrase" \
+	    gpg_user --passphrase-fd 3 3<"$workingdir/passphrase" \
 		--export-options export-reset-subkey-passwd,export-minimal,no-export-attributes \
 		--export-secret-subkeys "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname" &
 	    (cd "$workingdir" && DISPLAY=nosuchdisplay SSH_ASKPASS=/bin/false ssh-add "$@" "$kname" </dev/null )&
@@ -104,6 +106,7 @@ You might want to 'monkeysphere gen-subkey'"
 	rm -f "$workingdir/$kname"
     done
 
+    trap - EXIT
     rm -rf "$workingdir"
 
     # FIXME: sort out the return values: we're just returning the

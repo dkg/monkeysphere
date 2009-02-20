@@ -31,7 +31,6 @@ local domain=
 local trust=full
 local depth=1
 local keyID
-local importinfo
 local fingerprint
 local ltsignCommand
 local trustval
@@ -51,6 +50,9 @@ while true ; do
 	    depth="$2"
 	    shift 2
 	    ;;
+	-)
+	    break
+	    ;;
 	*)
 	    if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
 		failure "Unknown option '$1'.
@@ -62,67 +64,13 @@ Type '$PGRM help' for usage."
 done
 
 keyID="$1"
+
+# check that key ID or file is specified
 if [ -z "$keyID" ] ; then
     failure "You must specify the key ID of a key to add, or specify a file to read the key from."
 fi
-if [ -f "$keyID" ] ; then
-    log info "Reading key from file '$keyID':"
-    importinfo=$(gpg_sphere "--import" < "$keyID" 2>&1) || failure "could not read key from '$keyID'"
-    # FIXME: if this is tried when the key database is not
-    # up-to-date, i got these errors (using set -x):
 
-    # ++ su -m monkeysphere -c '\''gpg --import'\''
-    # Warning: using insecure memory!
-    # gpg: key D21739E9: public key "Daniel Kahn Gillmor <dkg@fifthhorseman.net>" imported
-    # gpg: Total number processed: 1
-    # gpg:               imported: 1  (RSA: 1)
-    # gpg: can'\''t create `/var/monkeysphere/gnupg-host/pubring.gpg.tmp'\'': Permission denied
-    # gpg: failed to rebuild keyring cache: Permission denied
-    # gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
-    # gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
-    # gpg: next trustdb check due at 2009-01-10'
-    # + failure 'could not read key from '\''/root/dkg.gpg'\'''
-    # + echo 'could not read key from '\''/root/dkg.gpg'\'''
-
-    keyID=$(echo "$importinfo" | grep '^gpg: key ' | cut -f2 -d: | cut -f3 -d\ )
-    if [ -z "$keyID" ] || [ $(echo "$keyID" | wc -l) -ne 1 ] ; then
-	failure "There was not exactly one gpg key in the file."
-    fi
-else
-    # get the key from the key server
-    log debug "retrieving key from keyserver..."
-    gpg_sphere "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" || failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
-fi
-
-export keyID
-
-# get the full fingerprint of new certifier key
-log debug "getting fingerprint of certifier key..."
-fingerprint=$(gpg_sphere "--list-key --with-colons --with-fingerprint 0x${keyID}!" \
-    | grep '^fpr:' | grep "$keyID" | cut -d: -f10)
-
-if [ -z "$fingerprint" ] ; then
-    failure "Key '$keyID' not found."
-fi
-
-log info "key found:"
-gpg_sphere "--fingerprint 0x${fingerprint}!"
-
-if [ "$PROMPT" = "true" ] ; then
-    echo "Are you sure you want to add the above key as a"
-    read -p "certifier of users on this system? (y/N) " OK; OK=${OK:-N}
-    if [ "${OK/y/Y}" != 'Y' ] ; then
-	failure "Identity certifier not added."
-    fi
-else
-    log debug "adding key without prompting."
-fi
-
-# export the key to the core keyring so that the core can sign the
-# new certifier key
-log debug "exporting retrieved certifier key to core keyring..."
-gpg_sphere "--export 0x${fingerprint}!" | gpg_core --import
-
+# check the trust value
 case "$trust" in
     'marginal')
 	trustval=1
@@ -134,6 +82,64 @@ case "$trust" in
 	failure "Trust value requested ('$trust') was unclear (only 'marginal' or 'full' are supported)."
 	;;
 esac
+
+# if file is specified
+if [ -f "$keyID" -o "$keyID" = '-' ] ; then
+    # load the key from stdin
+    if [ "$keyID" = '-' ] ; then
+	# make a temporary file to hold the key from stdin
+	keyID=$(msmktempfile)
+	trap "rm -f $keyID" EXIT
+	log verbose "reading key from stdin..."
+	cat > "$keyID"
+
+    # load the key from the file
+    elif [ -f "$keyID" ] ; then
+	log verbose "reading key from file '$keyID'..."
+    fi
+
+    # check the key is ok as monkeysphere user before loading
+    log debug "checking keys in file..."
+    fingerprint=$(su_monkeysphere_user \
+	". ${SYSSHAREDIR}/common; list_primary_fingerprints" < "$keyID")
+
+    if [ $(printf "%s" "$fingerprint" | egrep -c '^[A-F0-9]{40}$') -ne 1 ] ; then
+	failure "There was not exactly one gpg key in the file."
+    fi
+
+    # load the key
+    gpg_sphere "--import" <"$keyID" \
+	|| failure "could not read key from '$keyID'"
+
+# else, get the key from the keyserver
+else
+    log verbose "searching keyserver $KEYSERVER for keyID $keyID..."
+    gpg_sphere "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" \
+	|| failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
+
+    # get the full fingerprint of new certifier key
+    log debug "getting fingerprint of certifier key..."
+    fingerprint=$(gpg_sphere "--list-key --with-colons --with-fingerprint 0x${keyID}!" \
+	| grep '^fpr:' | grep "$keyID" | cut -d: -f10)
+
+    log info "key found:"
+    gpg_sphere "--fingerprint 0x${fingerprint}!"
+
+    if [ "$PROMPT" = "true" ] ; then
+	echo "Are you sure you want to add the above key as a"
+	read -p "certifier of users on this system? (Y/n) " OK; OK=${OK:-Y}
+	if [ "${OK/y/Y}" != 'Y' ] ; then
+	    failure "Identity certifier not added."
+	fi
+    else
+	log debug "adding key without prompting."
+    fi
+fi
+
+# export the key to the core keyring so that the core can sign the
+# new certifier key
+log debug "loading key into core keyring..."
+gpg_sphere "--export 0x${fingerprint}!" | gpg_core --import
 
 # edit-key script to ltsign key
 # NOTE: *all* user IDs will be ltsigned
@@ -151,8 +157,7 @@ EOF
 # core ltsigns the newly imported certifier key
 log debug "executing core ltsign script..."
 if echo "$ltsignCommand" | \
-    gpg_core --quiet --command-fd 0 --no-tty --edit-key "0x${fingerprint}!" \
-     2>&1 | log debug ; then
+    gpg_core --command-fd 0 --edit-key "0x${fingerprint}!" ; then
 
     # transfer the new sigs back to the sphere keyring
     gpg_core_sphere_sig_transfer

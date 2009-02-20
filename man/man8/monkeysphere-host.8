@@ -23,9 +23,10 @@ connection authentication.
 
 \fBmonkeysphere-host\fP takes various subcommands:
 .TP
-.B import-key [NAME[:PORT]]
-Import a pem-encoded ssh secret host key, from stdin.  NAME[:PORT] is
-used to specify the hostname (and port) used in the user ID of the new
+.B import-key FILE [NAME[:PORT]]
+Import a pem-encoded ssh secret host key from file FILE.  If FILE
+is '-', then the key will be imported from stdin.  NAME[:PORT] is used
+to specify the hostname (and port) used in the user ID of the new
 OpenPGP key.  If NAME is not specified, then the system
 fully-qualified domain name will be used (ie. `hostname -f').  If PORT
 is not specified, the no port is added to the user ID, which means
@@ -35,11 +36,11 @@ port 22 is assumed.  `i' may be used in place of `import-key'.
 Output information about host's OpenPGP and SSH keys.  `s' may be used
 in place of `show-key'.
 .TP
-.B extend-key EXPIRE
+.B extend-key [EXPIRE]
 Extend the validity of the OpenPGP key for the host until EXPIRE from
 the present.  If EXPIRE is not specified, then the user will be
-prompted for the extension term.  Expiration is specified like GnuPG
-does:
+prompted for the extension term.  Expiration is specified as with
+GnuPG:
 .nf
          0 = key does not expire
       <n>  = key expires in n days
@@ -57,13 +58,19 @@ place of `add-hostname'.
 Revoke a hostname user ID from the server host key.  `n-' may be used
 in place of `revoke-hostname'.
 .TP
-.B add-revoker FINGERPRINT
-Add a revoker to the host's OpenPGP key.  `o' may be be used in place
+.B add-revoker KEYID|FILE
+Add a revoker to the host's OpenPGP key.  The key ID will be loaded
+from the keyserver.  A file may be loaded instead of pulling the key
+from the keyserver by specifying the path to the file as the argument,
+or by specifying `-` to load from stdin.  `o' may be be used in place
 of `add-revoker'.
 .TP
 .B revoke-key
-Revoke the host's OpenPGP key.  `r' may be used in place of
-`revoke-key'.
+Revoke the host's OpenPGP key.  This will ask you a series of
+questions, and then generate a key revocation certificate on standard
+out.  If you publish this revocation certificate to the public
+keyservers, your host key will be permanently revoked.  `r' may be
+used in place of `revoke-key'.
 .TP
 .B publish-key
 Publish the host's OpenPGP key to the keyserver.  `p' may be used in
@@ -113,6 +120,10 @@ increasing order of verbosity.
 .TP
 MONKEYSPHERE_KEYSERVER
 OpenPGP keyserver to use (pool.sks-keyservers.net).
+.TP
+MONKEYSPHERE_PROMPT
+If set to `false', never prompt the user for confirmation. (true)
+
 
 .SH FILES
 

@@ -56,7 +56,8 @@ Monkeysphere authentication admin tool.
 
 subcommands:
  update-users (u) [USER]...          update user authorized_keys files
- add-id-certifier (c+) KEYID         import and tsign a certification key
+
+ add-id-certifier (c+) [KEYID|FILE]  import and tsign a certification key
    --domain (-n) DOMAIN                limit ID certifications to DOMAIN
    --trust (-t) TRUST                  trust level of certifier (full)
    --depth (-d) DEPTH                  trust depth for certifier (1)
@@ -75,7 +76,7 @@ gpg_core() {
     GNUPGHOME="$GNUPGHOME_CORE"
     export GNUPGHOME
 
-    gpg "$@"
+    gpg --no-greeting --quiet --no-tty "$@"
 }
 
 # function to interact with the gpg sphere keyring
@@ -84,16 +85,16 @@ gpg_core() {
 gpg_sphere() {
     GNUPGHOME="$GNUPGHOME_SPHERE"
     export GNUPGHOME
-
-    su_monkeysphere_user "gpg $@"
+ 
+    su_monkeysphere_user "gpg --no-greeting --quiet --no-tty $@"
 }
 
 # output to stdout the core fingerprint from the gpg core secret
 # keyring
 core_fingerprint() {
     log debug "determining core key fingerprint..."
-    gpg_core --quiet --list-secret-key \
-	--with-colons --fixed-list-mode --with-fingerprint \
+    gpg_core --list-secret-key --with-colons \
+	--fixed-list-mode --with-fingerprint \
 	| grep ^fpr: | cut -d: -f10
 }
 
@@ -101,37 +102,31 @@ core_fingerprint() {
 gpg_core_sphere_sig_transfer() {
     log debug "exporting core local sigs to sphere..."
     gpg_core --export-options export-local-sigs --export | \
-	gpg_sphere "--import-options import-local-sigs --import" \
-	2>&1 | log debug
+	gpg_sphere "--import-options import-local-sigs --import"
 }
 
 ########################################################################
 # MAIN
 ########################################################################
 
-# unset variables that should be defined only in config file of in
-# MONKEYSPHERE_ variables
-unset LOG_LEVEL
-unset KEYSERVER
-unset AUTHORIZED_USER_IDS
-unset RAW_AUTHORIZED_KEYS
-unset MONKEYSPHERE_USER
-unset PROMPT
+# set unset default variables
+AUTHORIZED_USER_IDS="%h/.monkeysphere/authorized_user_ids"
+RAW_AUTHORIZED_KEYS="%h/.ssh/authorized_keys"
 
 # load configuration file
-[ -e ${MONKEYSPHERE_AUTHENTICATION_CONFIG:="${SYSCONFIGDIR}/monkeysphere-authentication.conf"} ] && . "$MONKEYSPHERE_AUTHENTICATION_CONFIG"
+[ -e ${MONKEYSPHERE_AUTHENTICATION_CONFIG:="${SYSCONFIGDIR}/monkeysphere-authentication.conf"} ] \
+    && . "$MONKEYSPHERE_AUTHENTICATION_CONFIG"
 
-# set empty config variable with ones from the environment, or with
-# defaults
-LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=${LOG_LEVEL:="INFO"}}
-KEYSERVER=${MONKEYSPHERE_KEYSERVER:=${KEYSERVER:="pool.sks-keyservers.net"}}
-AUTHORIZED_USER_IDS=${MONKEYSPHERE_AUTHORIZED_USER_IDS:=${AUTHORIZED_USER_IDS:="%h/.monkeysphere/authorized_user_ids"}}
-RAW_AUTHORIZED_KEYS=${MONKEYSPHERE_RAW_AUTHORIZED_KEYS:=${RAW_AUTHORIZED_KEYS:="%h/.ssh/authorized_keys"}}
-MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=${MONKEYSPHERE_USER:="monkeysphere"}}
-PROMPT=${MONKEYSPHERE_PROMPT:=${PROMPT:="true"}}
+# set empty config variable with ones from the environment
+LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=$LOG_LEVEL}
+KEYSERVER=${MONKEYSPHERE_KEYSERVER:=$KEYSERVER}
+CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
+MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=$MONKEYSPHERE_USER}
+PROMPT=${MONKEYSPHERE_PROMPT:=$PROMPT}
+AUTHORIZED_USER_IDS=${MONKEYSPHERE_AUTHORIZED_USER_IDS:=$AUTHORIZED_USER_IDS}
+RAW_AUTHORIZED_KEYS=${MONKEYSPHERE_RAW_AUTHORIZED_KEYS:=$RAW_AUTHORIZED_KEYS}
 
 # other variables
-CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:="true"}
 REQUIRED_USER_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_USER_KEY_CAPABILITY:="a"}
 GNUPGHOME_CORE=${MONKEYSPHERE_GNUPGHOME_CORE:="${MADATADIR}/core"}
 GNUPGHOME_SPHERE=${MONKEYSPHERE_GNUPGHOME_SPHERE:="${MADATADIR}/sphere"}

@@ -16,10 +16,12 @@ monkeysphere (0.23~pre-1) UNRELEASED; urgency=low
     functions that require it to be there.
   * get rid of getopts dependency
   * added version output option
-  * check that existing authentication keys are valid in gen_key
-     function.
+  * better checks on validity of existing authentication subkeys when
+    doing monkeysphere {import,gen}_subkey.
+  * add transition infrastructure for major changes between releases (see
+    transitions/README.txt)
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Thu, 12 Feb 2009 21:50:54 -0500
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Thu, 19 Feb 2009 15:11:04 -0500
 
 monkeysphere (0.22-1) unstable; urgency=low
 

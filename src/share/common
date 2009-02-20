@@ -8,7 +8,7 @@
 # Jamie McClelland <jm@mayfirst.org>
 # Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #
-# Copyright 2008, released under the GPL, version 3 or later
+# Copyright 2008-2009, released under the GPL, version 3 or later
 
 # all-caps variables are meant to be user supplied (ie. from config
 # file) and are considered global
@@ -21,7 +21,22 @@ SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"/etc/monkeysphere"}
 export SYSCONFIGDIR
 
 # monkeysphere version
-VERSION=__VERSION__
+VERSION=0.23~pre
+
+# default log level
+LOG_LEVEL="INFO"
+
+# default keyserver
+KEYSERVER="pool.sks-keyservers.net"
+
+# whether or not to check keyservers by defaul
+CHECK_KEYSERVER="true"
+
+# default monkeysphere user
+MONKEYSPHERE_USER="monkeysphere"
+
+# default about whether or not to prompt
+PROMPT="true"
 
 ########################################################################
 ### UTILITY FUNCTIONS
@@ -132,6 +147,16 @@ meat() {
 # cut a specified line from standard input
 cutline() {
     head --line="$1" "$2" | tail -1
+}
+
+# make a temporary directory
+msmktempdir() {
+    mktemp -d ${TMPDIR:-/tmp}/monkeysphere.XXXXXXXXXX
+}
+
+# make a temporary file
+msmktempfile() {
+    mktemp ${TMPDIR:-/tmp}/monkeysphere.XXXXXXXXXX
 }
 
 # this is a wrapper for doing lock functions.
@@ -271,7 +296,7 @@ get_gpg_expiration() {
 
     keyExpire="$1"
 
-    if [ -z "$keyExpire" ]; then
+    if [ -z "$keyExpire" -a "$PROMPT" = 'true' ]; then
 	cat >&2 <<EOF
 Please specify how long the key should be valid.
          0 = key does not expire
@@ -795,6 +820,9 @@ process_host_known_hosts() {
     local sshKey
     local tmpfile
 
+    # set the key processing mode
+    export MODE='known_hosts'
+
     host="$1"
     userID="ssh://${host}"
 
@@ -874,6 +902,13 @@ update_known_hosts() {
     nHostsOK=0
     nHostsBAD=0
 
+    # touch the known_hosts file so that the file permission check
+    # below won't fail upon not finding the file
+    (umask 0022 && touch "$KNOWN_HOSTS")
+
+    # check permissions on the known_hosts file path
+    check_key_file_permissions "$USER" "$KNOWN_HOSTS" || failure
+
     # create a lockfile on known_hosts:
     lock create "$KNOWN_HOSTS"
     # FIXME: we're discarding any pre-existing EXIT trap; is this bad?
@@ -928,6 +963,11 @@ update_known_hosts() {
 process_known_hosts() {
     local hosts
 
+    # exit if the known_hosts file does not exist
+    if [ ! -e "$KNOWN_HOSTS" ] ; then
+	failure "known_hosts file '$KNOWN_HOSTS' does not exist."
+    fi
+
     log debug "processing known_hosts file..."
 
     hosts=$(meat "$KNOWN_HOSTS" | cut -d ' ' -f 1 | grep -v '^|.*$' | tr , ' ' | tr '\n' ' ')
@@ -950,6 +990,9 @@ process_uid_authorized_keys() {
     local nKeysOK
     local ok
     local sshKey
+
+    # set the key processing mode
+    export MODE='authorized_keys'
 
     userID="$1"
 
@@ -1011,6 +1054,9 @@ update_authorized_keys() {
 
     nIDsOK=0
     nIDsBAD=0
+
+    # check permissions on the authorized_keys file path
+    check_key_file_permissions "$USER" "$AUTHORIZED_KEYS" || failure
 
     # create a lockfile on authorized_keys
     lock create "$AUTHORIZED_KEYS"
@@ -1077,6 +1123,14 @@ process_authorized_user_ids() {
 
     authorizedUserIDs="$1"
 
+    # exit if the authorized_user_ids file is empty
+    if [ ! -e "$authorizedUserIDs" ] ; then
+	failure "authorized_user_ids file '$authorizedUserIDs' does not exist."
+    fi
+
+    # check permissions on the authorized_user_ids file path
+    check_key_file_permissions "$USER" "$authorizedUserIDs" || failure
+
     log debug "processing authorized_user_ids file..."
 
     if ! meat "$authorizedUserIDs" > /dev/null ; then
@@ -1094,4 +1148,54 @@ process_authorized_user_ids() {
     done
 
     update_authorized_keys "${userIDs[@]}"
+}
+
+# takes a gpg key or keys on stdin, and outputs a list of
+# fingerprints, one per line:
+list_primary_fingerprints() {
+    local fake=$(msmktempdir)
+    GNUPGHOME="$fake" gpg --no-tty --quiet --import
+    GNUPGHOME="$fake" gpg --with-colons --fingerprint --list-keys | \
+	awk -F: '/^fpr:/{ print $10 }'
+    rm -rf "$fake"
+}
+
+
+check_cruft_file() {
+    local loc="$1"
+    local version="$2"
+    
+    if [ -e "$loc" ] ; then
+	printf "! The file '%s' is no longer used by\n  monkeysphere (as of version %s), and can be removed.\n\n" "$loc" "$version" | log info
+    fi
+}
+
+check_upgrade_dir() {
+    local loc="$1"
+    local version="$2"
+
+    if [ -d "$loc" ] ; then
+	printf "The presence of directory '%s' indicates that you have\nnot yet completed a monkeysphere upgrade.\nYou should probably run the following script:\n  %s/transitions/%s\n\n" "$loc" "$SYSSHAREDIR" "$version" | log info
+    fi
+}
+
+## look for cruft from old versions of the monkeysphere, and notice if
+## upgrades have not been run:
+report_cruft() {
+    check_upgrade_dir "${SYSCONFIGDIR}/gnupg-host" 0.23
+    check_upgrade_dir "${SYSCONFIGDIR}/gnupg-authentication" 0.23
+
+    check_cruft_file "${SYSCONFIGDIR}/gnupg-authentication.conf" 0.23
+    check_cruft_file "${SYSCONFIGDIR}/gnupg-host.conf" 0.23
+
+    local found=
+    for foo in "${SYSDATADIR}/backup-from-"*"-transition"  ; do
+	if [ -d "$foo" ] ; then
+	    printf "! %s\n" "$foo" | log info
+	    found=true
+	fi
+    done
+    if [ "$found" ] ; then
+	printf "The directories above are backups left over from a monkeysphere transition.\nThey may contain copies of sensitive data (host keys, certifier lists), but\nthey are no longer needed by monkeysphere.\nYou may remove them at any time.\n\n" | log info
+    fi
 }
