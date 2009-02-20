@@ -91,11 +91,7 @@ the `gen-subkey` command:
 	$ monkeysphere gen-subkey
 
 If you have more than one secret key, you'll need to specify the key
-you want to add the subkey to on the command line.  It have already
-have an ssh pub key that you use regularly, you can import this key
-into GPG with the `import-subkey` command:
-
-	$ monkeysphere import-subkey ~/.ssh/id_rsa
+you want to add the subkey to on the command line.
 
 
 Using your OpenPGP authentication key for SSH

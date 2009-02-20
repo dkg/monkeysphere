@@ -31,7 +31,6 @@ local domain=
 local trust=full
 local depth=1
 local keyID
-local importinfo
 local fingerprint
 local ltsignCommand
 local trustval
@@ -71,11 +70,25 @@ if [ -z "$keyID" ] ; then
     failure "You must specify the key ID of a key to add, or specify a file to read the key from."
 fi
 
+# check the trust value
+case "$trust" in
+    'marginal')
+	trustval=1
+	;;
+    'full')
+	trustval=2
+	;;
+    *)
+	failure "Trust value requested ('$trust') was unclear (only 'marginal' or 'full' are supported)."
+	;;
+esac
+
 # if file is specified
 if [ -f "$keyID" -o "$keyID" = '-' ] ; then
     # load the key from stdin
     if [ "$keyID" = '-' ] ; then
-	local keyID=$(msmktempfile)
+	# make a temporary file to hold the key from stdin
+	keyID=$(msmktempfile)
 	trap "rm -f $keyID" EXIT
 	log verbose "reading key from stdin..."
 	cat > "$keyID"
@@ -98,53 +111,35 @@ if [ -f "$keyID" -o "$keyID" = '-' ] ; then
     gpg_sphere "--import" <"$keyID" \
 	|| failure "could not read key from '$keyID'"
 
-    keyID="$fingerprint"
-
 # else, get the key from the keyserver
 else
     log verbose "searching keyserver $KEYSERVER for keyID $keyID..."
     gpg_sphere "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" \
 	|| failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
-fi
 
-# get the full fingerprint of new certifier key
-log debug "getting fingerprint of certifier key..."
-fingerprint=$(gpg_sphere "--list-key --with-colons --with-fingerprint 0x${keyID}!" \
-    | grep '^fpr:' | grep "$keyID" | cut -d: -f10)
+    # get the full fingerprint of new certifier key
+    log debug "getting fingerprint of certifier key..."
+    fingerprint=$(gpg_sphere "--list-key --with-colons --with-fingerprint 0x${keyID}!" \
+	| grep '^fpr:' | grep "$keyID" | cut -d: -f10)
 
-if [ -z "$fingerprint" ] ; then
-    failure "Key '$keyID' not found."
-fi
+    log info "key found:"
+    gpg_sphere "--fingerprint 0x${fingerprint}!"
 
-log info "key found:"
-gpg_sphere "--fingerprint 0x${fingerprint}!"
-
-if [ "$PROMPT" = "true" ] ; then
-    echo "Are you sure you want to add the above key as a"
-    read -p "certifier of users on this system? (Y/n) " OK; OK=${OK:-Y}
-    if [ "${OK/y/Y}" != 'Y' ] ; then
-	failure "Identity certifier not added."
+    if [ "$PROMPT" = "true" ] ; then
+	echo "Are you sure you want to add the above key as a"
+	read -p "certifier of users on this system? (Y/n) " OK; OK=${OK:-Y}
+	if [ "${OK/y/Y}" != 'Y' ] ; then
+	    failure "Identity certifier not added."
+	fi
+    else
+	log debug "adding key without prompting."
     fi
-else
-    log debug "adding key without prompting."
 fi
 
 # export the key to the core keyring so that the core can sign the
 # new certifier key
-log debug "exporting retrieved certifier key to core keyring..."
+log debug "loading key into core keyring..."
 gpg_sphere "--export 0x${fingerprint}!" | gpg_core --import
-
-case "$trust" in
-    'marginal')
-	trustval=1
-	;;
-    'full')
-	trustval=2
-	;;
-    *)
-	failure "Trust value requested ('$trust') was unclear (only 'marginal' or 'full' are supported)."
-	;;
-esac
 
 # edit-key script to ltsign key
 # NOTE: *all* user IDs will be ltsigned
