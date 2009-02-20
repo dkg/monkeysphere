@@ -1167,7 +1167,7 @@ check_cruft_file() {
     local version="$2"
     
     if [ -e "$loc" ] ; then
-	printf "The file '%s' is no longer used by\nmonkeysphere (as of version %s), and can be removed.\n" "$loc" "$version" | log info
+	printf "! The file '%s' is no longer used by\n  monkeysphere (as of version %s), and can be removed.\n\n" "$loc" "$version" | log info
     fi
 }
 
@@ -1176,7 +1176,8 @@ check_upgrade_dir() {
     local version="$2"
 
     if [ -d "$loc" ] ; then
-	printf "The presence of directory '%s' indicates that you have\nnot yet completed a monkeysphere upgrade.\nYou should probably run the following script:\n  %s/transitions/%s\n" "$loc" "$SYSSHAREDIR" "$version" | log info
+	printf "The presence of directory '%s' indicates that you have\nnot yet completed a monkeysphere upgrade.\nYou should probably run the following script:\n  %s/transitions/%s\n\n" "$loc" "$SYSSHAREDIR" "$version" | log info
+    fi
 }
 
 ## look for cruft from old versions of the monkeysphere, and notice if
@@ -1188,7 +1189,14 @@ report_cruft() {
     check_cruft_file "${SYSCONFIGDIR}/gnupg-authentication.conf" 0.23
     check_cruft_file "${SYSCONFIGDIR}/gnupg-host.conf" 0.23
 
-    if ls "${SYSDATADIR}/backup-from-"*"-transition" 2>/dev/null ; then
-	printf "The directories above are backups left over from a monkeysphere transition.\nThey may contain copies of sensitive data (host keys, certifier lists), but\nthey are no longer needed by monkeysphere.\nYou may remove them at any time.\n" | log info
+    local found=
+    for foo in "${SYSDATADIR}/backup-from-"*"-transition"  ; do
+	if [ -d "$foo" ] ; then
+	    printf "! %s\n" "$foo" | log info
+	    found=true
+	fi
+    done
+    if [ "$found" ] ; then
+	printf "The directories above are backups left over from a monkeysphere transition.\nThey may contain copies of sensitive data (host keys, certifier lists), but\nthey are no longer needed by monkeysphere.\nYou may remove them at any time.\n\n" | log info
     fi
 }
