@@ -53,9 +53,13 @@ EOF
     # certificate immediately, which we can help them do as well.
 
     if [ "$PROMPT" = 'false' ] ; then
+	# FIXME: allow the end user to choose something other than
+	# "key was compromised" (1) and to supply their own revocation
+	# string.
+
 	local revoke_commands="y
 1
-Monkeysphere host key revocation (no prompting) $(date '+%F_%T')
+Monkeysphere host key revocation (automated) $(date '+%F_%T%z')
 
 y
 
