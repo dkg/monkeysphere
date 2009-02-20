@@ -45,7 +45,6 @@ Monkeysphere client tool.
 subcommands:
  update-known_hosts (k) [HOST]...    update known_hosts file
  update-authorized_keys (a)          update authorized_keys file
- import-subkey (i) FILE [KEYID]      import existing ssh key as gpg subkey
  gen-subkey (g) [KEYID]              generate an authentication subkey
    --length (-l) BITS                  key length in bits (2048)
  ssh-proxycommand                    monkeysphere ssh ProxyCommand

@@ -19,6 +19,9 @@ import_subkey() {
     local gpgSecOut
     local fifoDir
 
+    # FIXME: implement!
+    failure "implement me!"
+
     sshKeyFile="$1"
     shift
 
@@ -32,9 +35,6 @@ import_subkey() {
 
     # check that an authentication subkey does not already exist
     check_gpg_authentication_subkey "$keyID"
-
-    # FIXME: implement!
-    failure "implement me!"
 
     # setup the temp fifo dir for retrieving the key password
     log debug "creating password fifo..."

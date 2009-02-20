@@ -56,14 +56,6 @@ ID, 1 if no matching keys were found at all, and 2 if matching keys
 were found but none were acceptable.  `a' may be used in place of
 `update-authorized_keys'.
 .TP
-.B import-subkey FILE [KEYID]
-Import an existing ssh RSA key as an authentication subkey for a
-private key in your GnuPG keyring.  KEYID is the key ID for the
-primary key for which the subkey with "authentication" capability will
-be imported.  If no key ID is specified, but only one key exists in
-the secret keyring, that key will be used.  `i' may be used in place
-of `import-subkey'.
-.TP
 .B gen-subkey [KEYID]
 Generate an authentication subkey for a private key in your GnuPG
 keyring.  KEYID is the key ID for the primary key for which the subkey
