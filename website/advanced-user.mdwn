@@ -10,9 +10,9 @@ Keeping your `known_hosts` file in sync with your keyring
 If you want to keep your keyring updated without attempting
 connections to a remote host, you want to make sure that OpenSSH can
 still see the most recent trusted information about who the various
-hosts are.  You might also want the Monkeysphere to check on hosts
-that were not originally in the monkeysphere, to see if their host key
-is now published.
+hosts are.  You might also want to check on hosts that were not
+originally in the Monkeysphere, to see if their host key is now
+published.
 
 You can do this kind of independent update with the
 `update-known_hosts` command:
