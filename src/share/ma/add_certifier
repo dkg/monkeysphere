@@ -51,6 +51,9 @@ while true ; do
 	    depth="$2"
 	    shift 2
 	    ;;
+	-)
+	    break
+	    ;;
 	*)
 	    if [ "$(echo "$1" | cut -c 1)" = '-' ] ; then
 		failure "Unknown option '$1'.
@@ -83,6 +86,7 @@ if [ -f "$keyID" -o "$keyID" = '-' ] ; then
     fi
 
     # check the key is ok as monkeysphere user before loading
+    log debug "checking keys in file..."
     fingerprint=$(su_monkeysphere_user \
 	". ${SYSSHAREDIR}/common; list_primary_fingerprints" < "$keyID")
 
