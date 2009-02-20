@@ -110,7 +110,13 @@ export MONKEYSPHERE_SYSDATADIR="$TEMPDIR"
 export MONKEYSPHERE_SYSCONFIGDIR="$TEMPDIR"
 export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src/share
 export MONKEYSPHERE_MONKEYSPHERE_USER=$(whoami)
+
 export MONKEYSPHERE_CHECK_KEYSERVER=false
+# example.org does not respond to the HKP port, so this should cause
+# any keyserver connection attempts that do happen (they shouldn't!)
+# to hang, so we'll notice them:
+export MONKEYSPHERE_KEYSERVER=example.org
+
 export MONKEYSPHERE_LOG_LEVEL=DEBUG
 export MONKEYSPHERE_CORE_KEYLENGTH=1024
 export MONKEYSPHERE_PROMPT=false
@@ -202,7 +208,7 @@ monkeysphere-host set-expire 1
 # (this would normally be done via keyservers)
 echo "##################################################"
 echo "### certifying server host key..."
-GNUPGHOME="$MONKEYSPHERE_SYSCONFIGDIR"/host gpg --armor --export "$HOSTKEYID" | gpgadmin --import
+< "$MONKEYSPHERE_SYSCONFIGDIR"/ssh_host_rsa_key.pub.gpg gpgadmin --import
 echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 
 # FIXME: add revoker?
@@ -301,13 +307,22 @@ echo "##################################################"
 echo "### ssh connection test for server authentication denial..."
 ssh_test 255
 chmod o-w "$TESTHOME"/.monkeysphere/authorized_user_ids
+monkeysphere-authentication update-users $(whoami)
 
 # FIXME: addtest: remove admin as id-certifier and check ssh failure
 
 # FIXME: addtest: add hostname on host key
 # FIXME: addtest: revoke hostname on host key and check ssh failure
 
-# FIXME: addtest: revoke the host key and check ssh failure
+# addtest: revoke the host key and check ssh failure
+# test to make sure things are OK after the previous tests:
+ssh_test
+echo "##################################################"
+echo "### ssh connection test for server with revoked key..."
+# generate the revocation certificate and feed it directly to the test
+# user's keyring (we're not publishing to the keyservers)
+monkeysphere-host revoke-key | gpg --import
+ssh_test 255
 
 
 ######################################################################

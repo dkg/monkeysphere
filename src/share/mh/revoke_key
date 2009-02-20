@@ -18,6 +18,28 @@ revoke_key() {
 # Coming in here, we expect $HOST_FINGERPRINT to be set, and we
 # believe that there is in fact a key.
 
+    if [ "$PROMPT" = "false" ] ; then
+	publish=N
+    else
+	cat <<EOF >&2
+This will generate a revocation certificate for your host key
+(fingerprint: $HOST_FINGERPRINT) and
+dump the certificate to standard output.
+
+It can also directly publish the new revocation certificate
+to the public keyservers via $KEYSERVER if you want it to.
+
+Publishing this certificate will IMMEDIATELY and PERMANENTLY revoke
+your host key!
+
+EOF
+	read -p "Publish the certificate after generation? (y/n/Q) " publish
+	
+	if ! [ "${publish/y/Y}" = 'Y' -o "${publish/n/N}" = 'N' ] ; then
+	    failure "aborting at user request"
+	fi
+    fi
+    
     # our current implementation is very simple: we just want to
     # generate the revocation certificate on stdout.  This provides
     # for the two most likely (but hopefully not common) scenarios:
@@ -28,18 +50,48 @@ revoke_key() {
     # transcribe from the terminal.
 
     # Alternately, an admin might want to publish the revocation
-    # certificate immediately.  here's a quick way to do this:
+    # certificate immediately, which we can help them do as well.
+
+    if [ "$PROMPT" = 'false' ] ; then
+	local revoke_commands="y
+1
+Monkeysphere host key revocation (no prompting) $(date '+%F_%T')
+
+y
+
+"
+	revcert=$(GNUPGHOME="$GNUPGHOME_HOST" gpg_host --command-fd 0 --armor --gen-revoke "0x${HOST_FINGERPRINT}!" <<<"$revoke_commands" ) \
+	    || failure "Failed to generate revocation certificate!"
 
 
-    # tmp=$(mktemp -d)
-    # export GNUPGHOME="$tmp"
-    # gpg --import < /var/lib/monkeysphere/ssh_host_rsa_key.pub.gpg
-    # monkeysphere-host revoke-key | gpg --import
-    # gpg --keyserver pool.sks-keyservers.net --send $(hostname -f)
-
-
+    else
     # note: we're not using the gpg_host function because we actually
     # want to use gpg's UI in this case, so we want to omit --no-tty
+	revcert=$(GNUPGHOME="$GNUPGHOME_HOST" gpg --no-greeting --quiet --armor --gen-revoke "0x${HOST_FINGERPRINT}!") \
+	    || failure "Failed to generate revocation certificate!"
+    fi
 
-    GNUPGHOME="$GNUPGHOME_HOST" gpg --no-greeting --quiet --armor --gen-revoke "0x${HOST_FINGERPRINT}!"
+    # if you run gpg --gen-revoke but cancel it or quit in the middle,
+    # it returns success, but emits no revocation certificate:
+    if ! [ "$revcert" ] ; then
+	failure "Revocation canceled."
+    fi
+
+    ## ok, now we have the revocation certificate.  Print it, and
+    ## offer to publish if originally requested:
+    printf "%s\n" "$revcert"
+
+    if [ "${publish/y/Y}" = 'Y' ] ; then
+	printf "\n" >&2
+	read -p "Really publish this cert to $KEYSERVER ? (Y/n) " really
+	if [ "${really/n/N}" = 'N' ] ; then
+	    printf "Not publishing.\n" >&2
+	else
+	    local newhome=$(mkmstempdir)
+	    GNUPGHOME="$newhome" gpg --no-tty --quiet --import < "$HOST_KEY_FILE"
+	    GNUPGHOME="$newhome" gpg --no-tty --quiet --import <<< "$revcert"
+	    GNUPGHOME="$newhome" gpg --keyserver "$KEYSERVER" --send "0x${HOST_FINGERPRINT}!"
+	    rm -rf "$newhome"
+	fi
+    fi
 }

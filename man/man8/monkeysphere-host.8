@@ -62,15 +62,17 @@ in place of `revoke-hostname'.
 Add a revoker to the host's OpenPGP key.  The key ID will be loaded
 from the keyserver.  A file may be loaded instead of pulling the key
 from the keyserver by specifying the path to the file as the argument,
-or by specifying `-` to load from stdin.  `o' may be be used in place
+or by specifying `-` to load from stdin.  `r+' may be be used in place
 of `add-revoker'.
 .TP
 .B revoke-key
-Revoke the host's OpenPGP key.  This will ask you a series of
-questions, and then generate a key revocation certificate on standard
-out.  If you publish this revocation certificate to the public
-keyservers, your host key will be permanently revoked.  `r' may be
-used in place of `revoke-key'.
+Generate (with the option to publish) a revocation certificate for the
+host's OpenPGP key.  If such a certificate is published, your host key
+will be permanently revoked.  This subcommand will ask you a series of
+questions, and then generate a key revocation certificate, sending it
+to stdout.  If you explicitly tell it to publish the revocation
+certificate immediately, it will send it to the public keyservers.
+USE WITH CAUTION!
 .TP
 .B publish-key
 Publish the host's OpenPGP key to the keyserver.  `p' may be used in
