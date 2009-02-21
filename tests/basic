@@ -28,6 +28,14 @@ source "$TESTDIR"/common
 ## test has *more* requirements than plain ol' monkeysphere:
 which socat >/dev/null || { echo "You must have socat installed to run this test." ; exit 1; }
 
+perl -MCrypt::OpenSSL::RSA -e 1 2>/dev/null || { echo "You must have the perl module Crypt::OpenSSL::RSA installed to run this test.  
+On debian-derived systems, you can set this up with:
+  apt-get install libcrypt-openssl-rsa-perl" ; exit 1; }
+
+
+perl -MDigest::SHA1 -e 1 2>/dev/null || { echo "You must have the perl module Digest::SHA1 installed to run this test.  
+On debian-derived systems, you can set this up with:
+  apt-get install libdigest-sha1-perl" ; exit 1; }
 
 ## FIXME: other checks?
 
