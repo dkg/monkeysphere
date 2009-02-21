@@ -90,8 +90,8 @@ EOF
     su_monkeysphere_user "GNUPGHOME=$tmpDir gpg --fingerprint 0x${fingerprint}!"
 
     if [ "$PROMPT" = "true" ] ; then
-	echo "Are you sure you want to add the above key as a revoker"
-	read -p "of the host key? (Y/n) " OK; OK=${OK:-Y}
+	read -p "Are you sure you want to add the above key as a revoker
+of the host key? (Y/n) " OK; OK=${OK:-Y}
 	if [ "${OK/y/Y}" != 'Y' ] ; then
 	    failure "revoker not added."
 	fi

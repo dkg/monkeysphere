@@ -43,11 +43,9 @@ uidIndex=$(find_host_userid) || \
     failure "No non-revoked user ID found matching '$userID'."
 
 if [ "$PROMPT" = "true" ] ; then
-    cat <<EOF
-The following host key user ID will be revoked:
+    read -p "The following host key user ID will be revoked:
   $userID
-EOF
-    read -p "Are you sure you would like to revoke this user ID? (Y/n) " OK; OK=${OK:=Y}
+Are you sure you would like to revoke this user ID? (Y/n) " OK; OK=${OK:=Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then
 	failure "User ID not revoked."
     fi
