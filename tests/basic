@@ -51,6 +51,8 @@ gpgadmin() {
 # test ssh connection
 # first argument is expected return code from ssh connection
 ssh_test() {
+    local RETURN=0
+
     umask 0077
 
     CODE=${1:-0}

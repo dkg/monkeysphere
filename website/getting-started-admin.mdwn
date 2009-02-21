@@ -1,6 +1,9 @@
 Monkeysphere Server Administrator README
 ========================================
 
+	Note: This documentation is for Monkeysphere version 0.23 or later.
+	If you are running a version prior to 0.23, we recommend that you upgrade.
+
 As the administrator of an SSH server, you can take advantage of the
 Monkeysphere in two ways:
 

@@ -1,6 +1,9 @@
 Monkeysphere User README
 ========================
 
+	Note: This documentation is for Monkeysphere version 0.23 or later.
+	If you are running a version prior to 0.23, we recommend that you upgrade.
+
 You don't have to be an OpenSSH or OpenPGP expert to use the
 Monkeysphere.  However, you should be comfortable using secure shell
 (ssh), and you should already have an OpenPGP key before you begin.

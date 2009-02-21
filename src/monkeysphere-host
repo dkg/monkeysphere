@@ -163,6 +163,8 @@ find_host_userid() {
 # show info about the host key
 show_key() {
     local GNUPGHOME
+    local TMPSSH
+    local revokers
 
     # tmp gpghome dir
     export GNUPGHOME=$(msmktempdir)
@@ -188,6 +190,17 @@ show_key() {
 	--list-options show-unusable-uids 2>/dev/null \
 	| grep -v "^${GNUPGHOME}/pubring.gpg$" \
 	| egrep -v '^-+$'
+
+    # list revokers, if there are any
+    revokers=$(gpg --list-keys --with-colons --fixed-list-mode \
+	| awk -F: '/^rvk:/{ print $10 }' )
+    if [ "$revokers" ] ; then
+	echo "The following keys are allowed to revoke this host key:"
+	for key in $revokers ; do
+	    echo "revoker: $key"
+	done
+	echo
+    fi
 
     # list the pgp fingerprint
     echo "OpenPGP fingerprint: $HOST_FINGERPRINT"
