@@ -193,7 +193,7 @@ show_key() {
 
     # list revokers, if there are any
     revokers=$(gpg --list-keys --with-colons --fixed-list-mode \
-	| grep '^rvk:' | cut -d: -f10)
+	| grep '^rvk:' | cut -d: -f10) || true
     if [ "$revokers" ] ; then
 	echo "The following keys are allowed to revoke this host key:"
 	for key in $revokers ; do
