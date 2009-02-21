@@ -586,8 +586,8 @@ gpg2authorized_keys() {
 # FIXME: need to figure out how to retrieve all matching keys
 # (not just first N (5 in this case))
 gpg_fetch_userid() {
+    local returnCode=0
     local userID
-    local returnCode
 
     if [ "$CHECK_KEYSERVER" != 'true' ] ; then
 	return 0
@@ -626,6 +626,7 @@ gpg_fetch_userid() {
 #
 # expects global variable: "MODE"
 process_user_id() {
+    local returnCode=0
     local userID
     local requiredCapability
     local requiredPubCapability
@@ -657,10 +658,10 @@ process_user_id() {
     # output gpg info for (exact) userid and store
     gpgOut=$(gpg --list-key --fixed-list-mode --with-colon \
 	--with-fingerprint --with-fingerprint \
-	="$userID" 2>/dev/null)
+	="$userID" 2>/dev/null) || returnCode="$?"
 
     # if the gpg query return code is not 0, return 1
-    if [ "$?" -ne 0 ] ; then
+    if [ "$returnCode" -ne 0 ] ; then
         log verbose " no primary keys found."
         return 1
     fi
@@ -890,6 +891,7 @@ process_host_known_hosts() {
 # update the known_hosts file for a set of hosts listed on command
 # line
 update_known_hosts() {
+    local returnCode=0
     local nHosts
     local nHostsOK
     local nHostsBAD
@@ -919,9 +921,9 @@ update_known_hosts() {
 
     for host ; do
 	# process the host
-	process_host_known_hosts "$host"
+	process_host_known_hosts "$host" || returnCode="$?"
 	# note the result
-	case "$?" in
+	case "$returnCode" in
 	    0)
 		nHostsOK=$((nHostsOK+1))
 		;;
@@ -1043,6 +1045,7 @@ process_uid_authorized_keys() {
 # update the authorized_keys files from a list of user IDs on command
 # line
 update_authorized_keys() {
+    local returnCode=0
     local userID
     local nIDs
     local nIDsOK
@@ -1072,10 +1075,10 @@ update_authorized_keys() {
     for userID ; do
 	# process the user ID, change return code if key not found for
 	# user ID
-	process_uid_authorized_keys "$userID"
+	process_uid_authorized_keys "$userID" || returnCode="$?"
 
 	# note the result
-	case "$?" in
+	case "$returnCode" in
 	    0)
 		nIDsOK=$((nIDsOK+1))
 		;;

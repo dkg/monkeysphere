@@ -5,6 +5,8 @@ failed_cleanup() {
     echo 'FAILED!'
     read -p "press enter to cleanup and remove tmp (or type bash for a subshell to examine): " XX
     if [ "$XX" = bash ] ; then
+	echo "Entering subshell..."
+	cd "$TEMPDIR"
 	bash
     fi
 

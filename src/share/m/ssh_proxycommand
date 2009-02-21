@@ -18,6 +18,7 @@
 # "marginal case" ouput in the case that there is not a full
 # validation path to the host
 output_no_valid_key() {
+    local returnCode=0
     local sshKeyOffered
     local userID
     local type
@@ -112,11 +113,11 @@ EOF
 		fi
 		;;
 	esac
-    done
+    done || returnCode="$?"
 
     # if no key match was made (and the "while read" subshell returned
     # 1) output how many keys were found
-    if (($? != 1)) ; then
+    if (( returnCode != 1 )) ; then
 	cat <<EOF | log info
 None of the found keys matched the key offered by the host.
 Run the following command for more info about the found keys:
@@ -200,12 +201,13 @@ fi
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
 
 # update the known_hosts file for the host
-update_known_hosts "$HOSTP"
+local returnCode=0
+update_known_hosts "$HOSTP" || returnCode="$?"
 
 # output on depending on the return of the update-known_hosts
 # subcommand, which is (ultimately) the return code of the
 # update_known_hosts function in common
-case $? in
+case "$returnCode" in
     0)
 	# acceptable host key found so continue to ssh
 	true

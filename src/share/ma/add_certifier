@@ -120,14 +120,24 @@ else
     # get the full fingerprint of new certifier key
     log debug "getting fingerprint of certifier key..."
     fingerprint=$(gpg_sphere "--list-key --with-colons --with-fingerprint 0x${keyID}!" \
-	| grep '^fpr:' | grep "$keyID" | cut -d: -f10)
+	| grep '^fpr:' | cut -d: -f10)
+
+    # test that there is only a single fingerprint
+    if (( $(echo "$fingerprint" | wc -l) != 1 )) ; then
+	cat <<EOF
+More than one fingerprint found:
+$fingerprint
+Please use a more specific key ID.
+EOF
+	failure
+    fi
 
     log info "key found:"
     gpg_sphere "--fingerprint 0x${fingerprint}!"
 
     if [ "$PROMPT" = "true" ] ; then
-	echo "Are you sure you want to add the above key as a"
-	read -p "certifier of users on this system? (Y/n) " OK; OK=${OK:-Y}
+	echo "Are you sure you want to add the above key as a certifier"
+	read -p "of users on this system? (Y/n) " OK; OK=${OK:-Y}
 	if [ "${OK/y/Y}" != 'Y' ] ; then
 	    failure "Identity certifier not added."
 	fi

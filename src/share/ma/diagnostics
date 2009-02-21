@@ -105,7 +105,7 @@ echo
 echo "Checking for Identity Certifiers..."
 if ! monkeysphere-authentication list-identity-certifiers | egrep -q '^[A-F0-9]{40}:' then
     echo "! No Identity Certifiers found!"
-    echo " - Recommendation: once you know who should be able to certify identities for 
+    echo " - Recommendation: once you know who should be able to certify the identities of 
      connecting users, you should add their key, with: 
       monkeysphere-authentication add-identity-certifier"
     problemsfound=$(($problemsfound+1))

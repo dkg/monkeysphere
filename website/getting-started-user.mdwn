@@ -3,11 +3,139 @@ Monkeysphere User README
 
 You don't have to be an OpenSSH or OpenPGP expert to use the
 Monkeysphere.  However, you should be comfortable using secure shell
-(ssh), and you should already have GnuPG installed and an OpenPGP key
-pair before you begin.
+(ssh), and you should already have an OpenPGP key before you begin.
 
-As a regular user on a system where the monkeysphere package is
-installed, you probably want to do a few things:
+As a user, the Monkeysphere lets you do two important things:
+
+1. You can use the OpenPGP Web of Trust (WoT) to automatically verify
+the identity of hosts you connect to.
+
+2. You can manage your own ssh identity on all Monkeysphere-enabled
+servers using the WoT.
+
+These two features are independent: you can do one without the other.
+
+
+Identifying servers through the Web of Trust
+============================================
+
+The simplest way to identify servers through the Web of Trust is to
+tell `ssh` to use `monkeysphere ssh-proxycommand` to connect, instead
+of connecting to the remote host directly. This command will make sure
+the `known_hosts` file is up-to-date for the host you are connecting
+to with ssh.
+
+You can try this out when connecting to a server which has published
+their host key to the monkeysphere with:
+
+	$ ssh -oProxyCommand='monkeysphere ssh-proxycommand %h %p' server.example.net
+
+If you want to have `ssh` always do this, just add the following line
+to the "Host *" section of your `~/.ssh/config` file:
+
+	ProxyCommand monkeysphere ssh-proxycommand %h %p
+
+The "Host *" section specifies what ssh options to use for all
+connections. If you don't already have a "Host \*" line, you can add it
+by entering:
+
+	Host *
+
+On a line by itself. Add the ProxyCommand line just below it.
+
+Note that the Monkeysphere will help you identify servers whose host
+keys are published in the WoT, and which are signed by people who you
+know and trust to identify such things! 
+
+If you aren't connected to your administrator(s) through the Web of
+Trust, you should talk to them and establish that relationship.  If
+you have already established that relationship, but a server's host
+key isn't published, you might suggest to your administrator that they
+publish it.
+
+
+Managing your SSH identity through the Web of Trust
+===================================================
+
+You've already got an OpenPGP identity in the Web of Trust.  But you
+probably don't currently use it to identify yourself to SSH servers.
+
+To do that, you'll need to add an authentication-capable subkey to
+your OpenPGP identity.  You can do that with:
+
+	$ monkeysphere gen-subkey
+
+If you have more than one secret key, you'll need to specify the key
+you want to add the subkey to on the command line.
+
+Since this is a change to your key, you probably want to re-publish
+your key to the public keyservers.  If your key ID is $GPGID:
+
+	$ gpg --keyserver pool.sks-keysevers.net --send-key $GPGID
+
+This way, remote services that use the monkeysphere for user
+authentication will know about your SSH identity.
+
+You may need to wait a few minutes for your new key to propagate
+around the keyserver network, and another little while for any remote
+host running the monkeysphere to pick up the new subkey.  
+
+
+Using your OpenPGP authentication key for SSH via ssh-agent(1)
+--------------------------------------------------------------
+
+Once you have created an OpenPGP authentication subkey, you will need
+to feed it to your `ssh-agent`.  Your agent can then manage the key
+for all of your ssh sessions.
+
+First make sure you have an agent running:
+
+	$ ssh-add -l
+
+Then hand off the authentication subkey to the agent (Note: the GnuTLS
+library supports this operation as of version 2.6, but earlier
+versions do not):
+
+	$ monkeysphere subkey-to-ssh-agent
+
+You can supply normal ssh-add(1) flags to this command if you want to
+give the agent different instructions.  For example, if you want the
+agent to always ask for confirmation before using this key, you should
+do this instead:
+
+	$ monkeysphere subkey-to-ssh-agent -c
+
+You can verify that the key is in the agent just as you normally
+would:
+
+	$ ssh-add -l
+
+Now you can connect to hosts that use the monkeysphere for user
+authentication using that key:
+
+	$ ssh server.example.net
+
+
+Using your OpenPGP authentication key for SSH without the agent
+---------------------------------------------------------------
+
+Currently, the monkeysphere does not support using your SSH subkey
+without the ssh-agent :( It's not impossible, we just haven't gotten
+around to it yet.  Patches are welcome!
+
+If you are not running an agent, and you just want a single session
+with the key, you could cobble something together a one-shot agent
+like this:
+
+	$ ssh-agent sh -c 'monkeysphere subkey-to-ssh-agent && ssh server.example.net'
+
+Maintenance
+===========
+
+As a regular user of the monkeysphere, you probably want to do a few
+things to make sure that you get automatically notified of any
+re-keyings or revocation of monkeysphere-enabled hosts, and that your
+keys are properly managed.
 
 
 Keep your keyring up-to-date
@@ -21,193 +149,32 @@ done with a simple cronjob.  An example of crontab line to do this is:
 This would refresh your keychain every day at noon.
 
 
-Install the monkeysphere software on your system
-------------------------------------------------
+Keep your SSH identity up-to-date
+---------------------------------
 
-If you haven't installed monkeysphere yet, you will need to [download
-and install](/download) before continuing.
+If your SSH identity or your whole OpenPGP keyring is compromised, you
+should be sure to revoke it and publish the revocations to the
+keyserver.  If only your SSH identity was compromised, you should just
+revoke the authentication subkey.  For keys with small sizes, or which
+may have been otherwise compromised, you may wish to simply revoke the
+old authentication subkey, add a new one, and publish those changes to
+the public keyservers together.
 
-Make sure that you have the GnuTLS library version 2.6 or later
-installed on your system. If you can't (or don't want to) upgrade to
-GnuTLS 2.6 or later, there are patches for GnuTLS 2.4 available in
-[the Monkeysphere git repo](/community).
+Many people believe that it is good security practice to only use
+asymmetric keys (such as the RSA keys used by SSH and the
+Monkeysphere) for a limited period of time, and prefer to transition
+from key to key every year or two.
 
-
-Keeping your `known_hosts` file in sync with your keyring
----------------------------------------------------------
-
-With your keyring updated, you want to make sure that OpenSSH can
-still see the most recent trusted information about who the various
-hosts are.  This can be done with the monkeysphere-ssh-proxycommand
-(see next section) or with the `update-known_hosts` command:
-
-	$ monkeysphere update-known_hosts
-
-This command will check to see if there is an OpenPGP key for each
-(non-hashed) host listed in the `known_hosts` file, and then add the
-key for that host to the `known_hosts` file if one is found.  This
-command could be added to a crontab as well, if desired.
+Without the monkeysphere, you would have needed to update your
+`authorized_keys` file on every host you connect to in order to effect
+such a transition.  But all hosts that use the Monkeysphere to
+generate their authorized keys files will transition automatically to
+your new key, if you publish/revoke as described above.
 
 
-Using `monkeysphere-ssh-proxycommand`(1)
-----------------------------------------
+For those who want more
+=======================
 
-The best way to handle host keys is to use the monkeysphere ssh proxy
-command.  This command will make sure the `known_hosts` file is
-up-to-date for the host you are connecting to with ssh.  The best way
-to integrate this is to add the following line to the "Host *" section
-of your `~/.ssh/config` file:
+More documentation and details are available on the web at:
 
-	ProxyCommand monkeysphere ssh-proxycommand %h %p
-
-The "Host *" section specifies what ssh options to use for all
-connections. If you don't already have a "Host *" line, you can add it
-by entering:
-
-	Host *
-
-On a line by itself. Add the ProxyCommand line just below it.
-
-Once you've completed this step - you are half-way there. You will now
-be able to verify servers participating in the monkeysphere provided
-their keys have been signed by someone that you trust.
-
-FIXME: We should setup a way for someone to download a test gpg key and
-then connect to a test server that is signed by this gpg key so users
-can establish that they are setup correctly.
-
-The remaining steps will complete the second half: allowing servers to
-verify you based on your OpenPGP key.
-
-
-Setting up an OpenPGP authentication key
-----------------------------------------
-
-First things first: you'll need to have a OpenPGP "authentication"
-subkey for your current key, if you don't already have one.  If you
-already have a GPG key, you can generate an authentication subkey with
-the `gen-subkey` command:
-
-	$ monkeysphere gen-subkey
-
-If you have more than one secret key, you'll need to specify the key
-you want to add the subkey to on the command line.
-
-
-Using your OpenPGP authentication key for SSH
----------------------------------------------
-
-Once you have created an OpenPGP authentication subkey, you will need
-to feed it to your ssh agent.
-
-The GnuTLS library supports this operation as of version 2.6, but
-earlier versions do not.  With a recent version of GnuTLS installed,
-you can feed your authentication subkey to your ssh agent by running:
-
-	$ monkeysphere subkey-to-ssh-agent
-
-FIXME: using the key with a single ssh connection?
-
-
-Establish trust
----------------
-
-Now that you have the above setup, you will need to establish an
-acceptable trust path to the admin(s) of a monkeysphere-enabled server
-that you will be connecting to. You need to do this because the admin
-is certifying the host, and you need a mechanism to validate that
-certification. The only way to do that is by indicating who you trust
-to certify hosts. This is a two step process: first you must sign the
-key, and then you have to indicate a trust level.
-
-The process of signing another key is outside the scope of this
-document, however the [gnupg
-README](http://cvs.gnupg.org/cgi-bin/viewcvs.cgi/branches/STABLE-BRANCH-1-4/README?root=GnuPG&view=markup)
-details the signing process and you can find good [documentation
-](http://www.debian.org/events/keysigning) online detailing this
-process.
-
-If you have signed your admins' key, you need to denote some kind of
-trust to that key. To do this you should edit the key and use the
-'trust' command. For the Monkeysphere to trust the assertions that are
-made about a host, you need full calculated validity to the host
-certifiers. This can be done either by giving full trust to one
-host-certifying key, or by giving marginal trust to three different
-host-certifiers. In the following we demonstrate how to add full trust
-validity to a host-certifying key:
-        
-	
-	$ gpg --edit-key 'Jane Admin'
-	gpg (GnuPG) 1.4.9; Copyright (C) 2008 Free Software Foundation, Inc.
-	This is free software: you are free to change and redistribute it.
-	There is NO WARRANTY, to the extent permitted by law.
-	
-	
-	pub  4096R/ABCD123A  created: 2007-06-02  expires: 2012-05-31  usage: SC  
-	                     trust: unknown       validity: full
-	sub  2048R/01DECAF7  created: 2007-06-02  expires: 2012-05-31  usage: E   
-	[  full  ] (1). Jane Admin <jane_admin@example.net>
-	
-	Command> trust
-	pub  4096R/ABCD123A  created: 2007-06-02  expires: 2012-05-31  usage: SC  
-	                     trust: unknown       validity: full
-	sub  2048R/01DECAF7  created: 2007-06-02  expires: 2012-05-31  usage: E   
-	[  full  ] (1). Jane Admin <jane_admin@example.net>
-	
-	Please decide how far you trust this user to correctly verify other users' keys
-	(by looking at passports, checking fingerprints from different sources, etc.)
-	
-	  1 = I don't know or won't say
-	  2 = I do NOT trust
-	  3 = I trust marginally
-	  4 = I trust fully
-	  5 = I trust ultimately
-	  m = back to the main menu
-	
-	Your decision? 4
-	
-	pub  4096R/ABCD123A  created: 2007-06-02  expires: 2012-05-31  usage: SC  
-	                     trust: full          validity: full
-	sub  2048R/01DECAF7  created: 2007-06-02  expires: 2012-05-31  usage: E   
-	[  full  ] (1). Jane Admin <jane_admin@example.net>
-	Please note that the shown key validity is not necessarily correct
-	unless you restart the program.
-	
-	Command> save
-	Key not changed so no update needed.
-	$ 
-
-Note: Due to a limitation with gnupg, it is not currently possible to
-limit the domain scope properly, which means that if you fully trust
-an admin, you'll trust all their certifications.
-
-Because the Monkeysphre relies on GPG's definition of the OpenPGP web
-of trust, it is important to understand [how GPG calculates User ID
-validity for a key](/trust-models).
-
-
-Miscellaneous
--------------
-
-Users can also maintain their own `~/.ssh/authorized_keys` files with
-the Monkeysphere.  This is primarily useful for accounts on hosts that
-are not already systematically using the Monkeysphere for user
-authentication.  If you're not sure whether this is the case for your
-host, ask your system administrator.
-
-If you want to do this as a regular user, use the
-`update-authorized_keys` command:
-
-	$ monkeysphere update-authorized_keys
-
-This command will take all the user IDs listed in the
-`~/.monkeysphere/authorized_user_ids` file and check to see if
-there are acceptable keys for those user IDs available.  If so, they
-will be added to the `~/.ssh/authorized_keys` file.
-
-You must have indicated reasonable ownertrust in some key for this
-account, or no keys will be found with trusted certification paths.
-
-If you find this useful, you might want to place this command in your
-crontab so that revocations and rekeyings can take place
-automatically.
+ http://web.monkeysphere.info/

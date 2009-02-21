@@ -1,0 +1,137 @@
+[[meta title="Advanced usage of the Monkeysphere"]]
+
+Advanced usage of the monkeysphere
+==================================
+
+
+Keeping your `known_hosts` file in sync with your keyring
+---------------------------------------------------------
+
+If you want to keep your keyring updated without attempting
+connections to a remote host, you want to make sure that OpenSSH can
+still see the most recent trusted information about who the various
+hosts are.  You might also want to check on hosts that were not
+originally in the Monkeysphere, to see if their host key is now
+published.
+
+You can do this kind of independent update with the
+`update-known_hosts` command:
+
+	$ monkeysphere update-known_hosts
+
+This command will check to see if there is an OpenPGP key for each
+(non-hashed) host listed in the `known_hosts` file, and then add the
+key for that host to the `known_hosts` file if one is found.  This
+command could be added to a crontab, if desired.
+
+
+
+Establishing trust
+------------------
+
+The Monkeysphere is predicated on the idea that users and
+administrators know each other (or know people who know each other,
+etc).  It uses the Web of Trust to explicitly represent those links.
+If you haven't used the Web of Trust explicitly, you will need to
+establish an acceptable trust path to the admin(s) of the
+monkeysphere-enabled servers that you will be connecting to. You need
+to do this because the admin is certifying the host, and you need a
+mechanism to validate that certification. The only way to do that is
+by indicating who you trust to certify hosts. This is a two step
+process: first you must sign the key, and then you have to indicate a
+trust level.  If you do not indicate that you trust the administrator
+to certify host keys, then the monkeysphere will show you her
+certification on every connection, but will not treat it as an
+automatic verification.
+
+The process of signing another key is outside the scope of this
+document, however the [gnupg
+README](http://cvs.gnupg.org/cgi-bin/viewcvs.cgi/branches/STABLE-BRANCH-1-4/README?root=GnuPG&view=markup)
+details the signing process and you can find good [documentation
+](http://www.debian.org/events/keysigning) online detailing this
+process.
+
+If you have signed your admins' key, you need to denote some kind of
+trust to that key. To do this you should edit the key and use the
+'trust' command. For the Monkeysphere to trust the assertions that are
+made about a host, you need full calculated validity to the host
+certifiers. This can be done either by giving full trust to one
+host-certifying key, or by giving marginal trust to three different
+host-certifiers. In the following we demonstrate how to add full trust
+validity to a host-certifying key:
+        
+	
+	$ gpg --edit-key 'Jane Admin'
+	gpg (GnuPG) 1.4.9; Copyright (C) 2008 Free Software Foundation, Inc.
+	This is free software: you are free to change and redistribute it.
+	There is NO WARRANTY, to the extent permitted by law.
+	
+	
+	pub  4096R/ABCD123A  created: 2007-06-02  expires: 2012-05-31  usage: SC  
+	                     trust: unknown       validity: full
+	sub  2048R/01DECAF7  created: 2007-06-02  expires: 2012-05-31  usage: E   
+	[  full  ] (1). Jane Admin <jane_admin@example.net>
+	
+	Command> trust
+	pub  4096R/ABCD123A  created: 2007-06-02  expires: 2012-05-31  usage: SC  
+	                     trust: unknown       validity: full
+	sub  2048R/01DECAF7  created: 2007-06-02  expires: 2012-05-31  usage: E   
+	[  full  ] (1). Jane Admin <jane_admin@example.net>
+	
+	Please decide how far you trust this user to correctly verify other users' keys
+	(by looking at passports, checking fingerprints from different sources, etc.)
+	
+	  1 = I don't know or won't say
+	  2 = I do NOT trust
+	  3 = I trust marginally
+	  4 = I trust fully
+	  5 = I trust ultimately
+	  m = back to the main menu
+	
+	Your decision? 4
+	
+	pub  4096R/ABCD123A  created: 2007-06-02  expires: 2012-05-31  usage: SC  
+	                     trust: full          validity: full
+	sub  2048R/01DECAF7  created: 2007-06-02  expires: 2012-05-31  usage: E   
+	[  full  ] (1). Jane Admin <jane_admin@example.net>
+	Please note that the shown key validity is not necessarily correct
+	unless you restart the program.
+	
+	Command> save
+	Key not changed so no update needed.
+	$ 
+
+Note: Due to a limitation with gnupg, it is not currently possible to
+limit the domain scope properly, which means that if you fully trust
+an admin, you'll trust all their certifications.
+
+Because the Monkeysphere currently relies on GPG's definition of the
+OpenPGP web of trust, it is important to understand [how GPG
+calculates User ID validity for a key](/trust-models).
+
+
+Miscellaneous
+-------------
+
+Users can also maintain their own `~/.ssh/authorized_keys` files with
+the Monkeysphere directly.  This is primarily useful for accounts on
+hosts that are not already systematically using the Monkeysphere for
+user authentication.  If you're not sure whether this is the case for
+your host, ask your system administrator.
+
+If you want to do this as a regular user, use the
+`update-authorized_keys` command:
+
+	$ monkeysphere update-authorized_keys
+
+This command will take all the user IDs listed in the
+`~/.monkeysphere/authorized_user_ids` file and check to see if
+there are acceptable keys for those user IDs available.  If so, they
+will be added to the `~/.ssh/authorized_keys` file.
+
+You must have indicated reasonable ownertrust in some key for this
+account, or no keys will be found with trusted certification paths.
+
+If you find this useful, you might want to place this command in your
+crontab so that revocations and rekeyings can take place
+automatically.

@@ -2,21 +2,15 @@ Monkeysphere Server Administrator README
 ========================================
 
 As the administrator of an SSH server, you can take advantage of the
-monkeysphere in two ways:
+Monkeysphere in two ways:
 
 1. you can publish the host key of your machine to the Web of Trust
-(WoT) so that your users can have it automatically verified, and
+(WoT) so that your users can automatically verify it, and
 
 2. you can set up your machine to automatically identify connecting
 users by their presence in the OpenPGP Web of Trust.
 
-These things are not mutually required, and it is in fact possible to
-do one without the other.  However, it is highly recommend that you at
-least do the first.  Even if you decide that you do not want to use
-the monkeysphere to authenticate users to your system, you should at
-least the host key into the Web of Trust so that your users can be
-sure they're connecting to the correct machine.
-
+These two pieces are independent: you can do one without the other.
 
 Monkeysphere for host verification (monkeysphere-host)
 ======================================================
@@ -28,33 +22,44 @@ To begin, you must first import an ssh host key.  This assumes that
 you have the ssh server installed, and that you have generated a host
 RSA key.  Once that has been done, import the key:
 
-	# monkeysphere-host /etc/ssh/ssh\_host\_rsa\_key
+	# monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key server.example.net
 
-This will generate the key for server with the service URI
-(`ssh://server.example.net`).  You can output the new key information
-with the 'show-key' command:
+This will generate an OpenPGP certificate for the server.  The primary
+user ID for this certificate will be the ssh service URI for the host,
+(eg. `ssh://server.example.net`).  Remember that the name you provide
+here should probably be a fully qualified domain name for the host in
+order for your users to find it.
+
+Now you can display information about the host key's certificate with
+the 'show-key' command:
 
 	# monkeysphere-host show-key
 
-Once the key has been imported, it needs to be publish to the Web of
-Trust:
+Once the host key's certificate has been generated, you'll probably
+want to publish it to the public keyservers which distribute the Web
+of Trust:
 
 	# monkeysphere-host publish-key
 
-The server admin should now sign the server key so that people in the
-admin's web of trust can identify the server without manual host key
-checking.  On your (the admin's) local machine retrieve the host key:
+But anyone could publish a simple self-signed certificate to the WoT
+with any name attached.  Your users should be able to tell that
+someone they know and trust with the machine (e.g. *you*, the
+administrator) has verified that this particular key is indeed the
+correct key.  So your next step is to sign the host's key with your
+own OpenPGP key.
+
+On your (the admin's) local machine retrieve the host key (it may take
+several minutes for the key to propagate across the keyserver
+network), and sign it:
 
 	$ gpg --search '=ssh://server.example.net'
-
-Now sign the server key:
-
 	$ gpg --sign-key '=ssh://server.example.net'
 
-Make sure you compare the fingerprint of the retrieved with the one
-output with the 'show-key' command above, to verify you are signing
-the correct key.  Finally, publish your signatures back to the
-keyservers:
+Make sure you compare the fingerprint of the retrieved certificate
+with the output from the 'show-key' command above!
+
+Finally, publish your signatures back to the keyservers, so that your
+users can automatically verify your machine when they connect:
 
 	$ gpg --send-key '=ssh://server.example.net'
 
@@ -64,10 +69,18 @@ signing host keys.
 Monkeysphere for user authentication (monkeysphere-authentication)
 ==================================================================
 
-A host can maintain ssh `authorized_keys` files automatically for its
-users with the Monkeysphere.  These `authorized_keys` files can then
-be used to enable users to use the monkeysphere to authenticate to
-your machine using the OpenPGP web of trust.
+A host can maintain ssh-style `authorized_keys` files automatically
+for its users with the Monkeysphere.  This frees you (the
+administrator) from the task of manually checking/placing SSH keys,
+and enables users to do relatively painless key transitions, and to
+quickly and universally revoke access if they find that their ssh key
+has become compromised.
+
+You simply tell the system what *person* (identified by her OpenPGP
+User ID) should have access to an account, the Monkeysphere takes care
+of generating the proper `authorized_keys` file and keeping it
+up-to-date, and `sshd` reads the generated `authorized_keys` files
+directly.
 
 Monkeysphere authorized_keys maintenance
 ----------------------------------------
@@ -77,20 +90,29 @@ to log into that account would be placed in:
 
 	~/.monkeysphere/authorized_user_ids
 
-However, in order for users to become authenticated, the server must
-determine that the user IDs on their keys have "full" validity.  This
-means that the server must fully trust at least one person whose
-signature on the connecting user's key would validate the relevant
-user ID.  The individuals trusted to identify users like this are
-known in the Monkeysphere as "Identity Certifiers".  In a simple
-scenario, the host's administrator would be a trusted identity
-certifer.  If the admin's OpenPGP keyid is `$GPGID`, then on the
-server run:
+The server will use the Monkeysphere to look up matching OpenPGP
+certificates, validate them, and generate an `authorized_keys` file.
+
+To validate the OpenPGP certificates, the server needs to know who it
+can trust to correctly identify users.  The individuals trusted to
+identify users like this are known in the Monkeysphere as "Identity
+Certifiers".  One obvious choice is to trust *you*, the administrator,
+to be an Identity Certifier.  If your OpenPGP keyid is `$GPGID`, then
+run the following command on the server:
 
 	# monkeysphere-authentication add-identity-certifier $GPGID
 
-To update the monkeysphere `authorized_keys` file for user "bob" using
-the current set of identity certifiers, run:
+You'll probably only set up Identity Certifiers when you set up the
+machine.  After that, you'll only need to add or remove Identity
+Certifiers when the roster of admins on the machine changes, or when
+one of the admins switches OpenPGP keys.
+
+Now that the server knows who to trust to identify users, the
+Monkeysphere can generate ssh-style `authorized_keys` quickly and
+easily:
+
+To update the Monkeysphere-generated `authorized_keys` file for user
+"bob", run:
 
 	# monkeysphere-authentication update-users bob
 
@@ -100,19 +122,21 @@ the system, run the same command with no arguments:
 	# monkeysphere-authentication update-users
 
 You probably want to set up a regularly scheduled job (e.g. with cron)
-to take care of this automatically.
+to do this automatically.
 
 Update OpenSSH server AuthorizedKeysFile configuration
 ------------------------------------------------------
 
-SSH must be configured to point to the monkeysphere generated
-`authorized_keys` file.  Add this line to `/etc/ssh/sshd_config`
-(again, making sure that no other AuthorizedKeysFile directive is left
-uncommented):
+Generating the `authorized_keys` files is not quite enough, because
+`sshd` needs to know where to find the generated keys.
+
+You can do this by adding the following line to
+`/etc/ssh/sshd_config`, commenting out any other `AuthorizedKeysFile`
+directives:
 
 	AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
 
 You'll need to restart `sshd` to have your changes take effect.  As
-with any change to `sshd_config`, be sure to retain an existing
-session to the machine while you test your changes so you don't get
-locked out.
+with any change to `sshd_config`, if you're doing this remotely, be
+sure to retain an existing session to the machine while you test your
+changes so you don't get locked out if something went wrong.
