@@ -1,0 +1,31 @@
+[[meta title="Monkeysphere 0.23-1 released!"]]
+
+Monkeysphere 0.23-1 has been released.  
+
+Notes from the changelog:
+
+<pre>
+  "The Golden Bezoar Release"
+
+  * New upstream release.
+  * rearchitect UI:
+    - replace monkeysphere-server with monkeysphere-{authentication,host}
+    - fold monkeysphere-ssh-proxycommand into /usr/bin/monkeysphere
+
+  * new ability to import existing ssh host key into monkeysphere.  So now
+    m-a import-key replaces m-s gen-key.
+  * provide pem2openpgp for translating unencrypted PEM-encoded raw key
+    material into OpenPGP keys (introduces new perl dependencies)
+  * get rid of getopts dependency
+  * added version output option
+  * better checks for the existence of a host private key for
+    monkeysphere-host subcommands that need it.
+  * better checks on validity of existing authentication subkeys when
+    doing monkeysphere gen_subkey.
+  * add transition infrastructure for major changes between releases (see
+    transitions/README.txt)
+  * implement and document two new monkeysphere-host subcommands:
+    revoke-key and add-revoker
+</pre>
+
+[[Download]] it now!
