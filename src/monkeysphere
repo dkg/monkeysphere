@@ -87,9 +87,7 @@ check_gpg_sec_key_id() {
 	    ;;
 	*)
 	    echo "Multiple primary secret keys found:"
-	    for key in $(echo "$gpgSecOut" | cut -d: -f5) ; do
-		echo "  $key"
-	    done
+	    echo "$gpgSecOut" | cut -d: -f5
 	    echo "Please specify which primary key to use."
 	    failure
 	    ;;
