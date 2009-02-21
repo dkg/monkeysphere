@@ -57,19 +57,15 @@ ssh_test() {
 	sleep 1
     done
 
-    set +e
-
     # make a client connection to the socket
     echo "##### starting ssh client..."
     ssh-agent bash -c \
-	"monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config testhost true"
-    RETURN="$?"
+	"monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config testhost true" \
+	|| RETURN="$?"
 
     # kill the sshd process if it's still running
     kill "$SSHD_PID"
     SSHD_PID=
-
-    set -e
 
     echo "##### return $RETURN"
     if [ "$RETURN" = "$CODE" ] ; then
