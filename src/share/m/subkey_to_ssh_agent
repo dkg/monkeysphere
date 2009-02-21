@@ -110,5 +110,5 @@ You might want to 'monkeysphere gen-subkey'"
     # FIXME: sort out the return values: we're just returning the
     # success or failure of the final authentication subkey in this
     # case.  What if earlier ones failed?
-    exit "$keysuccess"
+    return "$keysuccess"
 }
