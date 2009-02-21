@@ -14,11 +14,11 @@
 # try to add all authentication subkeys to the agent
 
 subkey_to_ssh_agent() {
-    local sshaddresponse
+    local sshaddresponse=0
     local secretkeys
     local authsubkeys
     local workingdir
-    local keysuccess
+    local keysuccess=0
     local subkey
     local publine
     local kname
@@ -38,8 +38,7 @@ For more details, see:
 
     # and if it looks like it's running, but we can't actually talk to
     # it, bail out:
-    ssh-add -l >/dev/null
-    sshaddresponse="$?"
+    ssh-add -l >/dev/null || sshaddresponse="$?"
     if [ "$sshaddresponse" = "2" ]; then
 	failure "Could not connect to ssh-agent"
     fi
@@ -100,8 +99,7 @@ You might want to 'monkeysphere gen-subkey'"
 
 	    passphrase_prompt "Enter passphrase for key $kname: " "$workingdir/passphrase"
 	    wait %2
-	fi
-	keysuccess="$?"
+	fi || keysuccess="$?"
 
 	rm -f "$workingdir/$kname"
     done

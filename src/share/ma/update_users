@@ -93,8 +93,8 @@ for uname in $unames ; do
 
 	    # process authorized_user_ids file, as monkeysphere user
 	    su_monkeysphere_user \
-		". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS"
-	    RETURN="$?"
+		". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS" \
+		|| RETURN="$?"
 	else
 	    log debug "not processing authorized_user_ids."
 	fi
@@ -154,4 +154,5 @@ for uname in $unames ; do
     rm -rf "$TMPLOC"
 done
 
+return $RETURN
 }
