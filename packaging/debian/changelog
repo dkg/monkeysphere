@@ -1,4 +1,4 @@
-monkeysphere (0.23~pre-1) UNRELEASED; urgency=low
+monkeysphere (0.23-1) unstable; urgency=low
   
   "The Golden Bezoar Release"
 
@@ -22,7 +22,7 @@ monkeysphere (0.23~pre-1) UNRELEASED; urgency=low
   * implement and document two new monkeysphere-host subcommands:
     revoke-key and add-revoker
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Fri, 20 Feb 2009 12:37:34 -0500
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sat, 21 Feb 2009 17:51:06 -0500
 
 monkeysphere (0.22-1) unstable; urgency=low
 
