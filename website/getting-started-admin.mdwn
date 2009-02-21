@@ -22,19 +22,13 @@ To begin, you must first import an ssh host key.  This assumes that
 you have the ssh server installed, and that you have generated a host
 RSA key.  Once that has been done, import the key:
 
-	# monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key
+	# monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key server.example.net
 
 This will generate an OpenPGP certificate for server.  The primary
 user ID for this certificate will be the ssh service URI for the host,
-which by default is based on the output of `hostname -f`
-(eg. `ssh://server.example.net`).  If the name determined from
-`hostname -f` is not the name you want to have in the service URI,
-then you can enter one manually:
-
-	# monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key host.example.net
-
-Remember that the name you provide here must be a fully qualified
-domain name for the host in order for the monkeysphere to work.
+(eg. `ssh://server.example.net`).  Remember that the name you provide
+here must be a fully qualified domain name for the host in order for
+the monkeysphere to work.
 
 Now you can display information about the host key's certificate with
 the 'show-key' command:

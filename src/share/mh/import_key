@@ -26,38 +26,12 @@ if [ -z "$sshKeyFile" ] ; then
     failure "Must specify ssh key file to import, or specify '-' for stdin."
 fi
 
-# use the default hostname if not specified
+# fail if hostname not specified
 if [ -z "$hostName" ] ; then
-    hostName=$(hostname -f) || failure "Could not determine hostname."
-    # test that the domain is not obviously illegitimate
-    domain=${foo##*.}
-    case $domain in
-	'local'|'localdomain')
-	    failure "Host domain '$domain' is not legitimate.  Aborting key import."
-	    ;;
-    esac
-    # test that there are at least two parts
-    if (( $(echo "$hostName" | tr . ' ' | wc -w) < 2 )) ; then
-	failure "Host name '$hostName' is not legitimate.  Aborting key import."
-    fi
+    failure "You must specify a fully-qualified domain name for use in the host certificate user ID."
 fi
 
 userID="ssh://${hostName}"
-
-if [ "$PROMPT" = "true" ] ; then
-    cat <<EOF
-The ssh key will be imported and an OpenPGP certificate for this host
-will be generated with the following user ID:
-  $userID
-EOF
-    read -p "Are you sure you would like to create certificate? [Y/n] " OK; OK=${OK:-Y}
-    if [ "${OK/y/Y}" != 'Y' ] ; then
-	failure "ssh key not imported."
-    fi
-else
-    log debug "importing key without prompting."
-fi
-
 
 # create host home
 mkdir -p "${MHDATADIR}"
