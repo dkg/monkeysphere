@@ -6,7 +6,7 @@ monkeysphere (0.23-1) unstable; urgency=low
     its functionality has been folded into monkeysphere as a subcommand.
     So if you are currently using: 
      ssh -oProxyCommand='monkeysphere-ssh-proxycommand %h %p'
-    plese use instead:
+    please use instead:
      ssh -oProxyCommand='monkeysphere ssh-proxycommand %h %p'
   * For sysadmins: monkeysphere-server has been split into
     monkeysphere-host (for publishing the ssh host key of your machine)
