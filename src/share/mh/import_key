@@ -52,7 +52,7 @@ will be generated with the following user ID:
 EOF
     read -p "Are you sure you would like to create certificate? [Y/n] " OK; OK=${OK:-Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then
-	failure "revoker not added."
+	failure "ssh key not imported."
     fi
 else
     log debug "importing key without prompting."
