@@ -12,6 +12,8 @@
 # or later.
 
 ########################################################################
+set -e
+
 PGRM=$(basename $0)
 
 SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
@@ -26,9 +28,6 @@ DATE=$(date -u '+%FT%T')
 
 # unset some environment variables that could screw things up
 unset GREP_OPTIONS
-
-# default return code
-RETURN=0
 
 # set the file creation mask to be only owner rw
 umask 077
@@ -87,9 +86,11 @@ check_gpg_sec_key_id() {
 	    echo "$gpgSecOut" | cut -d: -f5
 	    ;;
 	*)
-	    echo "Multiple primary secret keys found:" | log error
-	    echo "$gpgSecOut" | cut -d: -f5 | log error
-	    echo "Please specify which primary key to use." | log error
+	    echo "Multiple primary secret keys found:"
+	    for key in $(echo "$gpgSecOut" | cut -d: -f5) ; do
+		echo "  $key"
+	    done
+	    echo "Please specify which primary key to use."
 	    failure
 	    ;;
     esac
@@ -203,13 +204,11 @@ case $COMMAND in
 	# those hosts
 	if [ "$1" ] ; then
 	    update_known_hosts "$@"
-	    RETURN="$?"
 
 	# otherwise, if no hosts are specified, process every host
 	# in the user's known_hosts file
 	else
 	    process_known_hosts
-	    RETURN="$?"
 	fi
 	;;
 
@@ -219,7 +218,6 @@ case $COMMAND in
 
 	# process authorized_user_ids file
 	process_authorized_user_ids "$AUTHORIZED_USER_IDS"
-	RETURN="$?"
 	;;
 
     'import-subkey'|'i')
@@ -255,5 +253,3 @@ case $COMMAND in
 Type '$PGRM help' for usage."
         ;;
 esac
-
-exit "$RETURN"

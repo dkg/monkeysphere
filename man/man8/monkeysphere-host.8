@@ -23,14 +23,13 @@ connection authentication.
 
 \fBmonkeysphere-host\fP takes various subcommands:
 .TP
-.B import-key FILE [NAME[:PORT]]
+.B import-key FILE NAME[:PORT]
 Import a pem-encoded ssh secret host key from file FILE.  If FILE
 is '-', then the key will be imported from stdin.  NAME[:PORT] is used
-to specify the hostname (and port) used in the user ID of the new
-OpenPGP key.  If NAME is not specified, then the system
-fully-qualified domain name will be used (ie. `hostname -f').  If PORT
-is not specified, the no port is added to the user ID, which means
-port 22 is assumed.  `i' may be used in place of `import-key'.
+to specify the fully-qualified hostname (and port) used in the user ID
+of the new OpenPGP key.  If PORT is not specified, the no port is
+added to the user ID, which means port 22 is assumed.  `i' may be used
+in place of `import-key'.
 .TP
 .B show-key
 Output information about host's OpenPGP and SSH keys.  `s' may be used
