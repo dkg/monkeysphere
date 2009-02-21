@@ -13,6 +13,9 @@
 
 # try to add all authentication subkeys to the agent
 
+# FIXME: what if you only want to add one authentication subkey to the
+# agent?
+
 subkey_to_ssh_agent() {
     local sshaddresponse=0
     local secretkeys
@@ -68,7 +71,6 @@ You might want to 'monkeysphere gen-subkey'"
     trap "rm -rf $workingdir" EXIT
     umask 077
     mkfifo "$workingdir/passphrase"
-    keysuccess=1
 
     # FIXME: we're currently allowing any other options to get passed
     # through to ssh-add.  should we limit it to known ones?  For
@@ -88,7 +90,7 @@ You might want to 'monkeysphere gen-subkey'"
 	if [ "$1" = '-d' ]; then
 	    # we're removing the subkey:
 	    gpg_user --export "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname"
-	    (cd "$workingdir" && ssh-add -d "$kname")
+	    (cd "$workingdir" && ssh-add -d "$kname") || keysuccess="$?"
 	else
 	    # we're adding the subkey:
 	    mkfifo "$workingdir/$kname"
@@ -98,8 +100,8 @@ You might want to 'monkeysphere gen-subkey'"
 	    (cd "$workingdir" && DISPLAY=nosuchdisplay SSH_ASKPASS=/bin/false ssh-add "$@" "$kname" </dev/null )&
 
 	    passphrase_prompt "Enter passphrase for key $kname: " "$workingdir/passphrase"
-	    wait %2
-	fi || keysuccess="$?"
+	    wait %2 || keysuccess="$?"
+	fi
 
 	rm -f "$workingdir/$kname"
     done
@@ -108,7 +110,7 @@ You might want to 'monkeysphere gen-subkey'"
     rm -rf "$workingdir"
 
     # FIXME: sort out the return values: we're just returning the
-    # success or failure of the final authentication subkey in this
-    # case.  What if earlier ones failed?
+    # failure code of the last authentication subkey which fails.
+    # what if more than one authentication subkey fails?
     return "$keysuccess"
 }
