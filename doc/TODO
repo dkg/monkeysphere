@@ -9,17 +9,6 @@ Handle unverified monkeysphere hosts in such a way that they're not
    always removed from known_hosts file.  Ask user to lsign the host
    key?
 
-Work out the details (and describe a full use case) for assigning a
-   REVOKER during monkeysphere-server gen_key -- how is this set?  How
-   do we export it so it's available when a second-party revocation is
-   needed?
-
-Provide a friendly interactive UI for marginal or failing client-side
-   hostkey verifications.  Handle the common cases smoothly, and
-   provide good debugging info for the unusual cases.
-
-Create ssh2openpgp or convert to full-fledged keytrans.
-
 Resolve the bugs listed in openpgp2ssh(1):BUGS.
 
 Understand and document the output of gpg --check-trustdb:
@@ -44,12 +33,6 @@ Make it easier to do domain-relative ssh host trust signatures with
 
 Fix the order of questions when user does a tsign in gpg or gpg2.
 
-File bug against ssh-keygen about how "-R" option removes comments
-   from known_hosts file.
-
-File bug against ssh-keygen to see if we can get it to write to hash a
-   known_hosts file to/from stdout/stdin.
-
 When using ssh-proxycommand, if only host keys found are expired or
    revoked, then output loud warning with prompt, or fail hard.
 
@@ -62,14 +45,6 @@ Test and document what happens when any filesystem that the
 Optimize keyserver access, particularly on monkeysphere-server
    update-users -- is there a way to query the keyserver all in a
    chunk?
-
-Create DSA authentication subkey for server during gen-key
-
-Fix behavior when add-identity-certifier fails to fetch a key from the
-   keyserver.
-
-Allow server administrators to add-identity-certifier from a key in
-   the filesystem (or on stdin, etc)
 
 Think about packaging monkeysphere for other (non-apt-based) operating
    systems.  RPM-based linux systems, FreeBSD ports, and Mac OS X seem
