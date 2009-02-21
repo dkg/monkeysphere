@@ -12,6 +12,8 @@
 
 # these tests should all be able to run as a non-privileged user.
 
+# put all the test output to stdout
+exec 2>&1
 # all subcommands in this script should complete without failure:
 set -e
 # piped commands should return the code of the first non-zero return
@@ -35,7 +37,7 @@ which socat >/dev/null || { echo "You must have socat installed to run this test
 # gpg command for test admin user
 gpgadmin() {
     chmod 0700 "$TEMPDIR"/admin
-    GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg "$@"
+    GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg --no-tty "$@"
 }
 
 # test ssh connection
@@ -134,6 +136,7 @@ export DISPLAY=monkeys
 ## (don't bother if this is being run from the tests).
 
 if [ -f "$TESTDIR"/../packaging/debian/changelog ]; then
+    echo
     echo "##################################################"
     echo "### checking version string match..."
     repver=$(monkeysphere version)
@@ -150,6 +153,7 @@ fi
 ### CONFIGURE ENVIRONMENTS
 
 # copy in admin and testuser home to tmp
+echo
 echo "##################################################"
 echo "### configuring testuser home..."
 cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
@@ -169,11 +173,13 @@ KNOWN_HOSTS=$TESTHOME/.ssh/known_hosts
 EOF
 get_gpg_prng_arg >> "$GNUPGHOME"/gpg.conf
 
+echo
 echo "##################################################"
 echo "### configuring admin home..."
 cp -a "$TESTDIR"/home/admin "$TEMPDIR"/
 
 # set up sshd
+echo
 echo "##################################################"
 echo "### configuring sshd..."
 cp "$TESTDIR"/etc/ssh/sshd_config "$SSHD_CONFIG"
@@ -188,17 +194,20 @@ EOF
 ### SERVER HOST SETUP
 
 # import host key
+echo
 echo "##################################################"
 echo "### import host key..."
 ssh-keygen -b 1024 -t rsa -N '' -f "$TEMPDIR"/ssh_host_rsa_key
 monkeysphere-host import-key "$TEMPDIR"/ssh_host_rsa_key testhost
 
+echo
 echo "##################################################"
 echo "### getting host key fingerprint..."
 HOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
 echo "$HOSTKEYID"
 
 # change host key expiration
+echo
 echo "##################################################"
 echo "### setting host key expiration..."
 monkeysphere-host set-expire 1
@@ -206,6 +215,7 @@ monkeysphere-host set-expire 1
 
 # certify host key with the "Admin's Key".
 # (this would normally be done via keyservers)
+echo
 echo "##################################################"
 echo "### certifying server host key..."
 < "$MONKEYSPHERE_SYSCONFIGDIR"/ssh_host_rsa_key.pub.gpg gpgadmin --import
@@ -223,6 +233,7 @@ echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 ### SERVER AUTHENTICATION SETUP
 
 # set up monkeysphere authentication
+echo
 echo "##################################################"
 echo "### setup monkeysphere authentication..."
 cp "$TESTDIR"/etc/monkeysphere/monkeysphere-authentication.conf "$TEMPDIR"/
@@ -233,10 +244,12 @@ monkeysphere-authentication setup
 get_gpg_prng_arg >> "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
 
 # add admin as identity certifier for testhost
+echo
 echo "##################################################"
 echo "### adding admin as certifier..."
 monkeysphere-authentication add-id-certifier "$TEMPDIR"/admin/.gnupg/pubkey.gpg
 
+echo
 echo "##################################################"
 echo "### list certifiers..."
 monkeysphere-authentication list-certifiers
@@ -247,21 +260,25 @@ monkeysphere-authentication list-certifiers
 ### TESTUSER SETUP
 
 # generate an auth subkey for the test user that expires in 2 days
+echo
 echo "##################################################"
 echo "### generating key for testuser..."
 monkeysphere gen-subkey
 
 # add server key to testuser keychain
+echo
 echo "##################################################"
 echo "### export server key to testuser..."
 gpgadmin --armor --export "$HOSTKEYID" | gpg --import
 
 # teach the "server" about the testuser's key
+echo
 echo "##################################################"
 echo "### export testuser key to server..."
 gpg --export testuser | monkeysphere-authentication gpg-cmd --import
 
 # update authorized_keys for user
+echo
 echo "##################################################"
 echo "### update server authorized_keys file for this testuser..."
 monkeysphere-authentication update-users $(whoami)
@@ -274,16 +291,19 @@ monkeysphere-authentication update-users $(whoami)
 
 # connect to test sshd, using monkeysphere ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
+echo
 echo "##################################################"
 echo "### ssh connection test for success..."
 ssh_test
 
 # remove the testuser's authorized_user_ids file, update, and make
 # sure that the ssh authentication FAILS
+echo
 echo "##################################################"
 echo "### removing testuser authorized_user_ids and updating..."
 mv "$TESTHOME"/.monkeysphere/authorized_user_ids{,.bak}
 monkeysphere-authentication update-users $(whoami)
+echo
 echo "##################################################"
 echo "### ssh connection test for server authentication denial..."
 ssh_test 255
@@ -291,18 +311,22 @@ mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
 
 # put improper permissions on authorized_user_ids file, update, and
 # make sure ssh authentication FAILS
+echo
 echo "##################################################"
 echo "### setting group writability on authorized_user_ids and updating..."
 chmod g+w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
+echo
 echo "##################################################"
 echo "### ssh connection test for server authentication denial..."
 ssh_test 255
 chmod g-w "$TESTHOME"/.monkeysphere/authorized_user_ids
+echo
 echo "##################################################"
 echo "### setting other writability on authorized_user_ids and updating..."
 chmod o+w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
+echo
 echo "##################################################"
 echo "### ssh connection test for server authentication denial..."
 ssh_test 255
@@ -317,6 +341,7 @@ monkeysphere-authentication update-users $(whoami)
 # addtest: revoke the host key and check ssh failure
 # test to make sure things are OK after the previous tests:
 ssh_test
+echo
 echo "##################################################"
 echo "### ssh connection test for server with revoked key..."
 # generate the revocation certificate and feed it directly to the test
@@ -329,6 +354,7 @@ ssh_test 255
 
 trap - EXIT
 
+echo
 echo "##################################################"
 echo " Monkeysphere basic tests completed successfully!"
 echo "##################################################"
