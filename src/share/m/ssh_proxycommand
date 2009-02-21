@@ -117,7 +117,7 @@ EOF
 
     # if no key match was made (and the "while read" subshell returned
     # 1) output how many keys were found
-    if (( "$returnCode" != 1 )) ; then
+    if (( returnCode != 1 )) ; then
 	cat <<EOF | log info
 None of the found keys matched the key offered by the host.
 Run the following command for more info about the found keys:
