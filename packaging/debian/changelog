@@ -1,3 +1,10 @@
+monkeysphere (0.23.1-1) unstable; urgency=low
+
+  * New Upstrem "Brown Paper Bag" Release:
+   - adjusts internal version numbers
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sat, 21 Feb 2009 18:09:47 -0500
+
 monkeysphere (0.23-1) unstable; urgency=low
   
   "The Golden Bezoar Release"
