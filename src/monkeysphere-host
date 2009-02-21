@@ -184,6 +184,7 @@ show_key() {
     # list the host key info
     # FIXME: make no-show-keyring work so we don't have to do the grep'ing
     # FIXME: can we show uid validity somehow?
+    # FIXME: show revokers as well
     gpg --list-keys --fingerprint \
 	--list-options show-unusable-uids 2>/dev/null \
 	| grep -v "^${GNUPGHOME}/pubring.gpg$" \
