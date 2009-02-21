@@ -12,6 +12,8 @@
 # or later.
 
 ########################################################################
+set -e
+
 PGRM=$(basename $0)
 
 SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
@@ -251,5 +253,3 @@ case $COMMAND in
 Type '$PGRM help' for usage."
         ;;
 esac
-
-exit "$RETURN"
