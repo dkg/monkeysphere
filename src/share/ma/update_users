@@ -13,6 +13,7 @@
 
 update_users() {
 
+local returnCode=0
 local unames
 local uname
 local authorizedKeysDir
@@ -25,8 +26,6 @@ else
     # or just look at all users if none specified
     unames=$(getent passwd | cut -d: -f1)
 fi
-
-RETURN=0
 
 # set mode
 MODE="authorized_keys"
@@ -94,7 +93,7 @@ for uname in $unames ; do
 	    # process authorized_user_ids file, as monkeysphere user
 	    su_monkeysphere_user \
 		". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS" \
-		|| RETURN="$?"
+		|| returnCode="$?"
 	else
 	    log debug "not processing authorized_user_ids."
 	fi
@@ -141,7 +140,7 @@ for uname in $unames ; do
 	    log error "Failed to install authorized_keys for '$uname'!"
 	    rm -f "${authorizedKeysDir}/${uname}"
 	    # indicate that there has been a failure:
-	    RETURN=1
+	    returnCode=1
 	}
     else
 	rm -f "${authorizedKeysDir}/${uname}"
@@ -154,5 +153,5 @@ for uname in $unames ; do
     rm -rf "$TMPLOC"
 done
 
-return $RETURN
+return $returnCode
 }

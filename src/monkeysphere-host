@@ -41,9 +41,6 @@ DATE=$(date -u '+%FT%T')
 # unset some environment variables that could screw things up
 unset GREP_OPTIONS
 
-# default return code
-RETURN=0
-
 ########################################################################
 # FUNCTIONS
 ########################################################################
@@ -327,5 +324,3 @@ case $COMMAND in
 Type '$PGRM help' for usage."
         ;;
 esac
-
-exit "$RETURN"
