@@ -1,0 +1,19 @@
+### Notes about preparing a release for the monkeysphere ###
+
+ * make sure that packaging/debian/changelog has a reasonable version
+   number.
+
+ * make sure that src/share/common contains the upstream part of that
+   version number in the VERSION= line
+
+ * make tarball
+
+ * make releasenote
+
+ * create upstream version tag: 
+
+    git tag -s -m 'Tagging Monkeysphere $whatever' monkeysphere_$whatever
+
+ * create debian-specific version tag:
+
+    git tag -s -m 'Tagging Monkeysphere $whatever-1' monkeysphere_$whatever-1
