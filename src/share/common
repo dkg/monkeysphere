@@ -20,9 +20,6 @@
 SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"/etc/monkeysphere"}
 export SYSCONFIGDIR
 
-# monkeysphere version
-VERSION=0.23.1
-
 # default log level
 LOG_LEVEL="INFO"
 
@@ -40,6 +37,11 @@ PROMPT="true"
 
 ########################################################################
 ### UTILITY FUNCTIONS
+
+# output version info
+version() {
+    cat "${SYSSHAREDIR}/VERSION"
+}
 
 # failure function.  exits with code 255, unless specified otherwise.
 failure() {

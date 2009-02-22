@@ -24,6 +24,7 @@ tarball: clean
 	mkdir -p monkeysphere-$(MONKEYSPHERE_VERSION)/doc
 	ln -s ../../website/getting-started-user.mdwn ../../website/getting-started-admin.mdwn ../../doc/TODO ../../doc/MonkeySpec monkeysphere-$(MONKEYSPHERE_VERSION)/doc
 	ln -s ../COPYING ../etc ../Makefile ../man ../src ../tests monkeysphere-$(MONKEYSPHERE_VERSION)
+	echo $(MONKEYSPHERE_VERSION) > monkeysphere-$(MONKEYSPHERE_VERSION)/VERSION
 	tar -ch --exclude='*~' monkeysphere-$(MONKEYSPHERE_VERSION) | gzip -n > monkeysphere_$(MONKEYSPHERE_VERSION).orig.tar.gz
 	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
 
@@ -50,6 +51,7 @@ install: all installman
 	mkdir -p $(DESTDIR)$(PREFIX)/share/monkeysphere/m $(DESTDIR)$(PREFIX)/share/monkeysphere/mh $(DESTDIR)$(PREFIX)/share/monkeysphere/ma $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions
 	mkdir -p $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
 	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
+	install -m 0644 VERSION $(DESTDIR)$(PREFIX)/share/monkeysphere
 	install src/monkeysphere src/keytrans/openpgp2ssh src/keytrans/pem2openpgp $(DESTDIR)$(PREFIX)/bin
 	install src/monkeysphere-host src/monkeysphere-authentication $(DESTDIR)$(PREFIX)/sbin
 	install -m 0644 src/share/common $(DESTDIR)$(PREFIX)/share/monkeysphere

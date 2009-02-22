@@ -3,9 +3,6 @@
  * make sure that packaging/debian/changelog has a reasonable version
    number.
 
- * make sure that src/share/common contains the upstream part of that
-   version number in the VERSION= line
-
  * make tarball
 
  * make releasenote

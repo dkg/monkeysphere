@@ -1,3 +1,10 @@
+monkeysphere (0.24~pre-1) UNRELEASED; urgency=low
+
+  * New upstream release:
+    - Fixed how version information is stored/retrieved.
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Sun, 22 Feb 2009 12:02:06 -0500
+
 monkeysphere (0.23.1-1) unstable; urgency=low
 
   * New Upstrem "Brown Paper Bag" Release:

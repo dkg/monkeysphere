@@ -199,7 +199,7 @@ case $COMMAND in
 	;;
 
     'version'|'v')
-	echo "$VERSION"
+	version
 	;;
 
     '--help'|'help'|'-h'|'h'|'?')

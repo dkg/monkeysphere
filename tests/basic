@@ -138,22 +138,6 @@ export SOCKET="$TEMPDIR"/ssh-socket
 # *anything* with any running X11 session.
 export DISPLAY=monkeys
 
-## make sure that the version number matches the debian changelog
-## (don't bother if this is being run from the tests).
-
-if [ -f "$TESTDIR"/../packaging/debian/changelog ]; then
-    echo
-    echo "##################################################"
-    echo "### checking version string match..."
-    repver=$(monkeysphere version)
-    debver=$(head -n1 "$TESTDIR"/../packaging/debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/')
-    if [ "$repver" = "$debver" ] ; then
-	echo "Versions match!"
-    else
-	printf "reported version string (%s) does not match debian changelog (%s)\n" "$repver" "$debver"
-	exit 1
-    fi
-fi
 
 ######################################################################
 ### CONFIGURE ENVIRONMENTS
