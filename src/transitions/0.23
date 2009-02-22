@@ -143,12 +143,24 @@ if [ -d "$SYSDATADIR"/gnupg-host ] ; then
 	if [ -s "$SYSDATADIR"/ssh_host_rsa_key ] || \
 	    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --with-colons --list-secret-keys | grep -q '^sec:' ; then
 	    
+	    FPR=$(GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --with-colons --fixed-list-mode --list-secret-keys --fingerprint | awk -F: '/^fpr:/{ print $10 }' )
+	    
 	# create host home
 	    mkdir -p "${MHDATADIR}"
 	    chmod 0700 "${MHDATADIR}"
 	    
 	    log "importing host key from old monkeysphere installation\n"
-	    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --export-secret-keys | \
+
+# export from the pubring as well as the that new (non-expired)
+# self-sigs are available, otherwise the secret key import may fail
+
+# FIXME: turns out the secret key import fails anyway, stupidly :(
+
+# FIXME: if all self-sigs are expired, then the secret key import may
+# fail anyway. How should we deal with that?
+	    
+	    (GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --export-secret-keys && \
+	    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --export $FPR) | \
 		GNUPGHOME="$MHDATADIR" gpg --quiet --no-tty --import
 	    
 	    monkeysphere-host update-gpg-pub-file
