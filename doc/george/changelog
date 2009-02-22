@@ -6,6 +6,9 @@
 *  Please add new entries in reverse chronological order whenever you make   *
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
+2009-02-22 - jrollins
+	* fixed /etc/crontab line for update-users (was trying to run
+	monkeysphere-server instead of monkeysphere-authentication).
 
 2009-02-21 - dkg
 	* upgraded to the latest versions of packages for lenny.
