@@ -7,6 +7,16 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2009-02-21 - dkg
+	* upgraded to the latest versions of packages for lenny.
+	* upgraded george to monkeysphere 0.23.1.  the transition upgrade
+	failed due to the way that gpg exports self-signatures secret
+	keys; it only exports the first self-sig for each user id, even if
+	that one is expired.  Then any subsequent import fails, even if
+	the target import keyring knows about some valid self-signatures.
+	* i man-handled the upgrade into place so that george doesn't just
+	fail on us, but this is a pretty major bug in the transition process.
+	
 2009-01-31 - jrollins
 	* applied diff represented in commit
 	f75a5747a8b99e04c02c475791c476f1fbd2b674 to change log level for
