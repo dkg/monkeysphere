@@ -32,12 +32,6 @@ use MIME::Base64;
 ## make sure all length() and substr() calls use bytes only:
 use bytes;
 
-my $uid = shift;
-
-# FIXME: fail if there is no given user ID; or should we default to
-# hostname_long() from Sys::Hostname::Long ?
-
-
 my $old_format_packet_lengths = { one => 0,
 				  two => 1,
 				  four => 2,
@@ -348,172 +342,193 @@ sub fingerprint {
 }
 
 
+# FIXME: handle DSA keys as well!
+sub pem2openpgp {
+  my $rsa = shift;
+  my $uid = shift;
+  my $args = shift;
+
+  $rsa->use_sha1_hash();
+
+  # see page 22 of RFC 4880 for why i think this is the right padding
+  # choice to use:
+  $rsa->use_pkcs1_padding();
+
+  if (! $rsa->check_key()) {
+    die "key does not check";
+  }
+
+  my $version = pack('C', 4);
+  # strong assertion of identity:
+  my $sigtype = pack('C', $sig_types->{positive_certification});
+  # RSA
+  my $pubkey_algo = pack('C', $asym_algos->{rsa});
+  # SHA1
+  my $hash_algo = pack('C', $digests->{sha1});
+
+  # FIXME: i'm worried about generating a bazillion new OpenPGP
+  # certificates from the same key, which could easily happen if you run
+  # this script more than once against the same key (because the
+  # timestamps will differ).  How can we prevent this?
+
+  # this environment variable (if set) overrides the current time, to
+  # be able to create a standard key?  If we read the key from a file
+  # instead of stdin, should we use the creation time on the file?
+  my $timestamp = 0;
+  if (defined $args->{timestamp}) {
+    $timestamp = ($args->{timestamp} + 0);
+  } else {
+    $timestamp = time();
+  }
+
+  my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $timestamp);
+
+
+  my $flags = 0;
+  if (! defined $args->{usage_flags}) {
+    $flags = $usage_flags->{certify};
+  } else {
+    my @ff = split(",", $args->{usage_flags});
+    foreach my $f (@ff) {
+      if (! defined $usage_flags->{$f}) {
+	die "No such flag $f";
+      }
+      $flags |= $usage_flags->{$f};
+    }
+  }
+
+  my $usage_packet = pack('CCC', 2, $subpacket_types->{usage_flags}, $flags);
+
+
+  # how should we determine how far off to set the expiration date?
+  # default is no expiration.  Specify the timestamp in seconds from the
+  # key creation.
+  my $expiration_packet = '';
+  if (defined $args->{expiration}) {
+    my $expires_in = $args->{expiration} + 0;
+    $expiration_packet = pack('CCN', 5, $subpacket_types->{key_expiration_time}, $expires_in);
+  }
+
+
+  # prefer AES-256, AES-192, AES-128, CAST5, 3DES:
+  my $pref_sym_algos = pack('CCCCCCC', 6, $subpacket_types->{preferred_cipher},
+			    $ciphers->{aes256},
+			    $ciphers->{aes192},
+			    $ciphers->{aes128},
+			    $ciphers->{cast5},
+			    $ciphers->{tripledes}
+			   );
+
+  # prefer SHA-1, SHA-256, RIPE-MD/160
+  my $pref_hash_algos = pack('CCCCC', 4, $subpacket_types->{preferred_digest},
+			     $digests->{sha1},
+			     $digests->{sha256},
+			     $digests->{ripemd160}
+			    );
+
+  # prefer ZLIB, BZip2, ZIP
+  my $pref_zip_algos = pack('CCCCC', 4, $subpacket_types->{preferred_compression},
+			    $zips->{zlib},
+			    $zips->{bzip2},
+			    $zips->{zip}
+			   );
+
+  # we support the MDC feature:
+  my $feature_subpacket = pack('CCC', 2, $subpacket_types->{features},
+			       $features->{mdc});
+
+  # keyserver preference: only owner modify (???):
+  my $keyserver_pref = pack('CCC', 2, $subpacket_types->{keyserver_prefs},
+			    $keyserver_prefs->{nomodify});
+
+  my $subpackets_to_be_hashed =
+    $creation_time_packet.
+      $usage_packet.
+	$expiration_packet.
+	  $pref_sym_algos.
+	    $pref_hash_algos.
+	      $pref_zip_algos.
+		$feature_subpacket.
+		  $keyserver_pref;
+
+  my $subpacket_octets = pack('n', length($subpackets_to_be_hashed));
+
+  my $sig_data_to_be_hashed =
+    $version.
+      $sigtype.
+	$pubkey_algo.
+	  $hash_algo.
+	    $subpacket_octets.
+	      $subpackets_to_be_hashed;
+
+  my $pubkey = make_rsa_pub_key_body($rsa, $timestamp);
+  my $seckey = make_rsa_sec_key_body($rsa, $timestamp);
+
+  # this is for signing.  it needs to be an old-style header with a
+  # 2-packet octet count.
+
+  my $key_data = make_packet($packet_types->{pubkey}, $pubkey, {'packet_length'=>2});
+
+  # take the last 8 bytes of the fingerprint as the keyid:
+  my $keyid = substr(fingerprint($rsa, $timestamp), 20 - 8, 8);
+
+  # the v4 signature trailer is:
+
+  # version number, literal 0xff, and then a 4-byte count of the
+  # signature data itself.
+  my $trailer = pack('CCN', 4, 0xff, length($sig_data_to_be_hashed));
+
+  my $uid_data =
+    pack('CN', 0xb4, length($uid)).
+      $uid;
+
+  my $datatosign =
+    $key_data.
+      $uid_data.
+	$sig_data_to_be_hashed.
+	  $trailer;
+
+  my $data_hash = Digest::SHA1::sha1_hex($datatosign);
+
+  my $issuer_packet = pack('CCa8', 9, $subpacket_types->{issuer}, $keyid);
+
+  my $sig = Crypt::OpenSSL::Bignum->new_from_bin($rsa->sign($datatosign));
+
+  my $sig_body =
+    $sig_data_to_be_hashed.
+      pack('n', length($issuer_packet)).
+	$issuer_packet.
+	  pack('n', hex(substr($data_hash, 0, 4))).
+	    mpi_pack($sig);
+
+  return
+    make_packet($packet_types->{seckey}, $seckey).
+      make_packet($packet_types->{uid}, $uid).
+	make_packet($packet_types->{sig}, $sig_body);
+}
+
+
 my $rsa;
 if (defined $ENV{PEM2OPENPGP_NEWKEY}) {
   $rsa = Crypt::OpenSSL::RSA->generate_key($ENV{PEM2OPENPGP_NEWKEY});
 } else {
-  # we're just not dealing with newline business right now.  slurp in
-  # the whole file.
+  # slurp in the entire stdin:
   undef $/;
-  $rsa = Crypt::OpenSSL::RSA->new_private_key(<STDIN>);
+  my $stdin = <STDIN>;
+
+  $rsa = Crypt::OpenSSL::RSA->new_private_key($stdin);
 }
 
-$rsa->use_sha1_hash();
+my $uid = shift;
 
-# see page 22 of RFC 4880 for why i think this is the right padding
-# choice to use:
-$rsa->use_pkcs1_padding();
+# FIXME: fail if there is no given user ID; or should we default to
+# hostname_long() from Sys::Hostname::Long ?
 
-if (! $rsa->check_key()) {
-  die "key does not check";
-}
-
-my $version = pack('C', 4);
-# strong assertion of identity:
-my $sigtype = pack('C', $sig_types->{positive_certification});
-# RSA
-my $pubkey_algo = pack('C', $asym_algos->{rsa});
-# SHA1
-my $hash_algo = pack('C', $digests->{sha1});
-
-# FIXME: i'm worried about generating a bazillion new OpenPGP
-# certificates from the same key, which could easily happen if you run
-# this script more than once against the same key (because the
-# timestamps will differ).  How can we prevent this?
-
-# this environment variable (if set) overrides the current time, to
-# be able to create a standard key?  If we read the key from a file
-# instead of stdin, should we use the creation time on the file?
-my $timestamp = 0;
-if (defined $ENV{PEM2OPENPGP_TIMESTAMP}) {
-  $timestamp = ($ENV{PEM2OPENPGP_TIMESTAMP} + 0);
-} else {
-  $timestamp = time();
-}
-
-my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $timestamp);
-
-
-my $flags = 0;
-if (! defined $ENV{PEM2OPENPGP_USAGE_FLAGS}) {
-  $flags = $usage_flags->{certify};
-} else {
-  my @ff = split(",", $ENV{PEM2OPENPGP_USAGE_FLAGS});
-  foreach my $f (@ff) {
-    if (! defined $usage_flags->{$f}) {
-      die "No such flag $f";
-    }
-    $flags |= $usage_flags->{$f};
-  }
-}
-
-my $usage_packet = pack('CCC', 2, $subpacket_types->{usage_flags}, $flags);
-
-
-# how should we determine how far off to set the expiration date?
-# default is no expiration.  Specify the timestamp in seconds from the
-# key creation.
-my $expiration_packet = '';
-if (defined $ENV{PEM2OPENPGP_EXPIRATION}) {
-  my $expires_in = $ENV{PEM2OPENPGP_EXPIRATION} + 0;
-  $expiration_packet = pack('CCN', 5, $subpacket_types->{key_expiration_time}, $expires_in);
-}
-
-
-# prefer AES-256, AES-192, AES-128, CAST5, 3DES:
-my $pref_sym_algos = pack('CCCCCCC', 6, $subpacket_types->{preferred_cipher},
-			  $ciphers->{aes256},
-			  $ciphers->{aes192},
-			  $ciphers->{aes128},
-			  $ciphers->{cast5},
-			  $ciphers->{tripledes}
-			 );
-
-# prefer SHA-1, SHA-256, RIPE-MD/160
-my $pref_hash_algos = pack('CCCCC', 4, $subpacket_types->{preferred_digest},
-			   $digests->{sha1},
-			   $digests->{sha256},
-			   $digests->{ripemd160}
-			  );
-
-# prefer ZLIB, BZip2, ZIP
-my $pref_zip_algos = pack('CCCCC', 4, $subpacket_types->{preferred_compression},
-			  $zips->{zlib},
-			  $zips->{bzip2},
-			  $zips->{zip}
-			 );
-
-# we support the MDC feature:
-my $feature_subpacket = pack('CCC', 2, $subpacket_types->{features},
-			     $features->{mdc});
-
-# keyserver preference: only owner modify (???):
-my $keyserver_pref = pack('CCC', 2, $subpacket_types->{keyserver_prefs},
-			  $keyserver_prefs->{nomodify});
-
-my $subpackets_to_be_hashed =
-  $creation_time_packet.
-  $usage_packet.
-  $expiration_packet.
-  $pref_sym_algos.
-  $pref_hash_algos.
-  $pref_zip_algos.
-  $feature_subpacket.
-  $keyserver_pref;
-
-my $subpacket_octets = pack('n', length($subpackets_to_be_hashed));
-
-my $sig_data_to_be_hashed =
-  $version.
-  $sigtype.
-  $pubkey_algo.
-  $hash_algo.
-  $subpacket_octets.
-  $subpackets_to_be_hashed;
-
-my $pubkey = make_rsa_pub_key_body($rsa, $timestamp);
-my $seckey = make_rsa_sec_key_body($rsa, $timestamp);
-
-# this is for signing.  it needs to be an old-style header with a
-# 2-packet octet count.
-
-my $key_data = make_packet($packet_types->{pubkey}, $pubkey, {'packet_length'=>2});
-
-# take the last 8 bytes of the fingerprint as the keyid:
-my $keyid = substr(fingerprint($rsa, $timestamp), 20 - 8, 8);
-
-# the v4 signature trailer is:
-
-# version number, literal 0xff, and then a 4-byte count of the
-# signature data itself.
-my $trailer = pack('CCN', 4, 0xff, length($sig_data_to_be_hashed));
-
-my $uid_data =
-  pack('CN', 0xb4, length($uid)).
-  $uid;
-
-my $datatosign =
-  $key_data.
-  $uid_data.
-  $sig_data_to_be_hashed.
-  $trailer;
-
-my $data_hash = Digest::SHA1::sha1_hex($datatosign);
-
-my $issuer_packet = pack('CCa8', 9, $subpacket_types->{issuer}, $keyid);
-
-my $sig = Crypt::OpenSSL::Bignum->new_from_bin($rsa->sign($datatosign));
-
-my $sig_body =
-  $sig_data_to_be_hashed.
-  pack('n', length($issuer_packet)).
-  $issuer_packet.
-  pack('n', hex(substr($data_hash, 0, 4))).
-  mpi_pack($sig);
-
-print
-  make_packet($packet_types->{seckey}, $seckey).
-  make_packet($packet_types->{uid}, $uid).
-  make_packet($packet_types->{sig}, $sig_body);
-
+print pem2openpgp($rsa,
+		  $uid,
+		  { timestamp => $ENV{PEM2OPENPGP_TIMESTAMP},
+		    expiration => $ENV{PEM2OPENPGP_EXPIRATION},
+		    usage_flags => $ENV{PEM2OPENPGP_USAGE_FLAGS},
+		   }
+		 );
 
