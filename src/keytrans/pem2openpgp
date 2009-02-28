@@ -23,6 +23,7 @@
 
 use strict;
 use warnings;
+use File::Basename;
 use Crypt::OpenSSL::RSA;
 use Crypt::OpenSSL::Bignum;
 use Crypt::OpenSSL::Bignum::CTX;
@@ -508,29 +509,41 @@ sub pem2openpgp {
 }
 
 
-my $rsa;
-my $stdin;
-if (defined $ENV{PEM2OPENPGP_NEWKEY}) {
-  $rsa = Crypt::OpenSSL::RSA->generate_key($ENV{PEM2OPENPGP_NEWKEY});
-} else {
-  $stdin = do {
-    local $/; # slurp!
-    <STDIN>;
-  };
+for (basename($0)) {
+  if (/^pem2openpgp$/) {
 
-  $rsa = Crypt::OpenSSL::RSA->new_private_key($stdin);
+    my $rsa;
+    my $stdin;
+    if (defined $ENV{PEM2OPENPGP_NEWKEY}) {
+      $rsa = Crypt::OpenSSL::RSA->generate_key($ENV{PEM2OPENPGP_NEWKEY});
+    } else {
+      $stdin = do {
+	local $/; # slurp!
+	<STDIN>;
+      };
+
+      $rsa = Crypt::OpenSSL::RSA->new_private_key($stdin);
+    }
+
+    my $uid = shift;
+
+    # FIXME: fail if there is no given user ID; or should we default to
+    # hostname_long() from Sys::Hostname::Long ?
+
+    print pem2openpgp($rsa,
+		      $uid,
+		      { timestamp => $ENV{PEM2OPENPGP_TIMESTAMP},
+			expiration => $ENV{PEM2OPENPGP_EXPIRATION},
+			usage_flags => $ENV{PEM2OPENPGP_USAGE_FLAGS},
+		      }
+		     );
+  }
+  elsif (/^openpgp2ssh$/) {
+    print STDERR "woo\n";
+  }
+  else {
+    print STDERR "Unrecognized keytrans call.\n";
+    die 1;
+  }
 }
-
-my $uid = shift;
-
-# FIXME: fail if there is no given user ID; or should we default to
-# hostname_long() from Sys::Hostname::Long ?
-
-print pem2openpgp($rsa,
-		  $uid,
-		  { timestamp => $ENV{PEM2OPENPGP_TIMESTAMP},
-		    expiration => $ENV{PEM2OPENPGP_EXPIRATION},
-		    usage_flags => $ENV{PEM2OPENPGP_USAGE_FLAGS},
-		   }
-		 );
 
