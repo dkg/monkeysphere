@@ -509,6 +509,45 @@ sub pem2openpgp {
 }
 
 
+
+
+sub openpgp2ssh {
+  my $instr = shift;
+  my $fpr = shift;
+
+  my $packettag;
+  read($instr, $packettag, 1);
+  $packettag = ord($packettag);
+
+  my $packetlen;
+  if ( ! (0x80 & $packettag)) {
+    print STDERR "This is not an OpenPGP packet";
+    exit 1;
+  }
+  if (0x40 & $packettag) {
+    print STDERR "This is a new-style packet header";
+    $tag = (0x3f & $packettag);
+  } else {
+    print STDERR "This is an old-style packet header";
+    $lentype = 0x03 & $packettag;
+    $tag = (0x3c & $packettag ) >> 2;
+    if ($lentype == 0) {
+      read($instr, $packetlen, 1);
+      $packetlen = unpack('%C', $packetlen);
+    } elsif ($lentype == 1) {
+      read($instr, $packetlen, 2);
+      $packetlen = unpack('%S', $packetlen);
+    } elsif ($lentype == 2) {
+      read($instr, $packetlen, 4);
+      $packetlen = unpack('%L', $packetlen);
+    }
+  }
+  printf(STDERR, "Packet is %d long\n", $packetlen);
+
+  print $packettag;
+}
+
+
 for (basename($0)) {
   if (/^pem2openpgp$/) {
 
@@ -539,7 +578,11 @@ for (basename($0)) {
 		     );
   }
   elsif (/^openpgp2ssh$/) {
-    print STDERR "woo\n";
+      my $fpr = shift;
+      my $instream;
+      open($instream,'-');
+      binmode($instream, ":bytes");
+      openpgp2ssh($instream, $fpr);
   }
   else {
     print STDERR "Unrecognized keytrans call.\n";
