@@ -21,6 +21,7 @@
 set -e
 
 SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
+SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"/etc/monkeysphere"}
 
 MADATADIR="${SYSDATADIR}/authentication"
 MHDATADIR="${SYSDATADIR}/host"
@@ -42,6 +43,13 @@ gpg_unescape_and_unregex() {
 is_domain_name() {
     printf "%s" "$1" | egrep -q '^[[:alnum:]][[:alnum:]-.]*[[:alnum:]]$'
 }
+
+
+# move the old server conf file to be the authentication conf file
+if [ -f "$SYSCONFIGDIR"/monkeysphere-server.conf -a \
+    ! -f "$SYSCONFIGDIR"/monkeysphere-authentication.conf ] ; then
+    mv "$SYSCONFIGDIR"/monkeysphere-server.conf "$SYSCONFIGDIR"/monkeysphere-authentication.conf
+fi
 
 # run the authentication setup (this is also the first chance to bail
 # if 0.23 is not fully-installed, because m-a did not exist before
