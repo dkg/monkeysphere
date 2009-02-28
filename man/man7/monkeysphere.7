@@ -14,7 +14,33 @@ connection authentication.
 
 .SH IDENTITY CERTIFIERS
 
-FIXME: describe identity certifier concept
+Each host that uses the \fBMonkeysphere\fP to authenticate its remote
+users needs some way to determine that those users are who they claim
+to be.  SSH permits key-based authentication, but we want instead to
+bind authenticators to human-comprehensible user identities.  This
+switch from raw keys to User IDs makes it possible for administrators
+to see intuitively who has access to an account, and it also enables
+end users to transition keys (and revoke compromised ones)
+automatically across all \fBMonkeysphere\fP-enabled hosts.  The User
+IDs and certifications that the \fBMonkeysphere\fP relies on are found
+in the OpenPGP Web of Trust.
+
+However, in order to establish this binding, each host must know whose
+cerifications to trust.  Someone who a host trusts to certify User
+Identities is called an Identity Certifier.  A host must have at least
+one Identity Certifier in order to bind User IDs to keys.  Commonly,
+every ID Certifier would be trusted by the host to fully identify any
+User ID, but more nuanced approaches are possible as well.  For
+example, a given host could specify a dozen ID certifiers, but assign
+them all "marginal" trust.  Then any given User ID would need to be
+certified in the OpenPGP Web of Trust by at least three of those
+certifiers. 
+
+It is also possible to limit the scope of trust for a given ID
+Certifier to a particular domain.  That is, a host can be configured
+to fully (or marginally) trust a particular ID Certifier only when
+they certify identities within, say, example.org (based on the e-mail
+address in the User ID).
 
 .SH KEY ACCEPTABILITY
 
