@@ -288,6 +288,20 @@ sub mpi_pack {
   return pack('n', $mpilen).$val;
 }
 
+# pull an OpenPGP-specified MPI off of a given stream.
+sub read_mpi {
+  my $instr = shift;
+
+  my $bitlen;
+  read($instr, $bitlen, 2) or die "could not read MPI length.\n";
+  $bitlen = unpack('n', $bitlen);
+
+  my $ret;
+  read($instr, $ret, ($bitlen + 7)/8) or die "could not read MPI body.\n";
+  return Crypt::OpenSSL::Bignum->new_from_bin($ret);
+}
+
+
 # FIXME: genericize these to accept either RSA or DSA keys:
 sub make_rsa_pub_key_body {
   my $key = shift;
@@ -509,8 +523,6 @@ sub pem2openpgp {
 }
 
 
-
-
 sub openpgp2ssh {
   my $instr = shift;
   my $fpr = shift;
@@ -528,7 +540,6 @@ sub openpgp2ssh {
       die "This is not an OpenPGP packet\n";
     }
     if (0x40 & $packettag) {
-      print STDERR "This is a new-style packet header\n";
       $tag = (0x3f & $packettag);
       my $nextlen = 0;
       read($instr, $nextlen, 1);
@@ -542,13 +553,12 @@ sub openpgp2ssh {
 	$packetlen = (($nextlen - 192) << 8) + ($newoct) + 192;
       } elsif ($nextlen == 255) {
 	read($instr, $nextlen, 4);
-	$packetlen = unpack('%L', $nextlen);
+	$packetlen = unpack('N', $nextlen);
       } else {
 	# packet length is undefined.
       }
     } else {
       my $lentype;
-      print STDERR "This is an old-style packet header\n";
       $lentype = 0x03 & $packettag;
       $tag = ( 0x3c & $packettag ) >> 2;
       if ($lentype == 0) {
@@ -568,17 +578,50 @@ sub openpgp2ssh {
     if (! defined($packetlen)) {
       die "Undefined packet lengths are not supported.\n";
     }
-    printf(STDERR "Packet is %d long\n", $packetlen);
 
     if ($tag == $packet_types->{pubkey} ||
 	$tag == $packet_types->{pub_subkey} ||
 	$tag == $packet_types->{seckey} ||
 	$tag == $packet_types->{sec_subkey}) {
       printf(STDERR "Packet type %d\n", $tag);
-      read($instr, $dummy, $packetlen) or die "Could not seek!\n";
+
+      my $ver;
+      read($instr, $ver, 1) or die "could not read key version\n";
+      $ver = ord($ver);
+      if ($ver != 4) {
+	printf(STDERR "We only work with version 4 keys.  This key appears to be version $ver.\n");
+	read($instr, $dummy, $packetlen - 1) or die "Could not skip past this packet.\n";
+      } else {
+
+	my $timestamp;
+	read($instr, $timestamp, 4) or die "could not read key timestamp.\n";
+	$timestamp = unpack('N', $timestamp);
+
+	my $algo;
+	read($instr, $algo, 1) or die "could not read key algorithm.\n";
+	$algo = ord($algo);
+	if ($algo != $asym_algos->{rsa}) {
+	  printf(STDERR "We only support RSA keys (this key used algorithm %d).\n", $algo);
+	  read($instr, $dummy, $packetlen - 6) or die "Could not skip past this packet.\n";
+	} else {
+	  ## we have an RSA key.
+	  my $modulus = read_mpi($instr);
+	  my $exponent = read_mpi($instr);
+
+	  my $pubkey = Crypt::OpenSSL::RSA->new_key_from_parameters($modulus, $exponent);
+	  my $foundfpr = fingerprint($pubkey, $timestamp);
+	  
+	  printf(STDERR "key fpr: %s\n", Crypt::OpenSSL::Bignum->new_from_bin($foundfpr)->to_hex());
+
+	  if ($tag == $packet_types->{seckey} ||
+	      $tag == $packet_types->{sec_subkey}) {
+	    die "Cannot deal with secret keys yet!\n";
+	  }
+
+	}
+      }
     } else {
-      printf(STDERR "We do not care about this packet.\n");
-      read($instr, $dummy, $packetlen) or die "Could not seek!\n";
+      read($instr, $dummy, $packetlen) or die "Could not skip past this packet!\n";
     }
   }
 
