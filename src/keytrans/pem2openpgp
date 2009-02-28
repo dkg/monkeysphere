@@ -509,12 +509,14 @@ sub pem2openpgp {
 
 
 my $rsa;
+my $stdin;
 if (defined $ENV{PEM2OPENPGP_NEWKEY}) {
   $rsa = Crypt::OpenSSL::RSA->generate_key($ENV{PEM2OPENPGP_NEWKEY});
 } else {
-  # slurp in the entire stdin:
-  undef $/;
-  my $stdin = <STDIN>;
+  $stdin = do {
+    local $/; # slurp!
+    <STDIN>;
+  };
 
   $rsa = Crypt::OpenSSL::RSA->new_private_key($stdin);
 }
