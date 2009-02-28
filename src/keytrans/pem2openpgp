@@ -288,7 +288,38 @@ sub mpi_pack {
   return pack('n', $mpilen).$val;
 }
 
-# pull an OpenPGP-specified MPI off of a given stream.
+# takes a Crypt::OpenSSL::Bignum, returns an MPI packed in preparation
+# for an OpenSSH-style public key format.  see:
+# http://marc.info/?l=openssh-unix-dev&m=121866301718839&w=2
+sub openssh_mpi_pack {
+  my $num = shift;
+
+  my $val = $num->to_bin();
+  my $mpilen = length($val);
+
+  my $ret = pack('N', $mpilen);
+
+  # if the first bit of the leading byte is high, we should include a
+  # 0 byte:
+  if (ord($val) & 0x80) {
+    $ret = pack('NC', $mpilen+1, 0);
+  }
+
+  return $ret.$val;
+}
+
+sub openssh_pubkey_pack {
+  my $key = shift;
+
+  my ($modulus, $exponent) = $key->get_key_parameters();
+
+  return openssh_mpi_pack(Crypt::OpenSSL::Bignum->new_from_bin("ssh-rsa")).
+      openssh_mpi_pack($exponent).
+	openssh_mpi_pack($modulus);
+  }
+
+# pull an OpenPGP-specified MPI off of a given stream, returning it as
+# a Crypt::OpenSSL::Bignum.
 sub read_mpi {
   my $instr = shift;
 
@@ -527,9 +558,17 @@ sub openpgp2ssh {
   my $instr = shift;
   my $fpr = shift;
 
+  if (defined $fpr) {
+    if (length($fpr) < 8) {
+      die "We need at least 8 hex digits of fingerprint.\n";
+    }
+  }
+
   my $packettag;
   my $dummy;
   my $tag;
+
+  my $key;
 
   while (! eof($instr)) {
     read($instr, $packettag, 1);
@@ -583,8 +622,6 @@ sub openpgp2ssh {
 	$tag == $packet_types->{pub_subkey} ||
 	$tag == $packet_types->{seckey} ||
 	$tag == $packet_types->{sec_subkey}) {
-      printf(STDERR "Packet type %d\n", $tag);
-
       my $ver;
       read($instr, $ver, 1) or die "could not read key version\n";
       $ver = ord($ver);
@@ -610,8 +647,17 @@ sub openpgp2ssh {
 
 	  my $pubkey = Crypt::OpenSSL::RSA->new_key_from_parameters($modulus, $exponent);
 	  my $foundfpr = fingerprint($pubkey, $timestamp);
-	  
-	  printf(STDERR "key fpr: %s\n", Crypt::OpenSSL::Bignum->new_from_bin($foundfpr)->to_hex());
+
+	  my $foundfprstr = Crypt::OpenSSL::Bignum->new_from_bin($foundfpr)->to_hex();
+
+	  # is this a match?
+	  if ((!defined($fpr)) ||
+	      (substr($foundfprstr, -1 * length($fpr)) eq $fpr)) {
+	    if (defined($key)) {
+	      die "Found two matching keys.\n";
+	    }
+	    $key = $pubkey;
+	  }
 
 	  if ($tag == $packet_types->{seckey} ||
 	      $tag == $packet_types->{sec_subkey}) {
@@ -625,7 +671,9 @@ sub openpgp2ssh {
     }
   }
 
-  print $tag;
+  if (defined($key)) {
+    return "ssh-rsa ".encode_base64(openssh_pubkey_pack($key), '');
+  }
 }
 
 
@@ -662,7 +710,7 @@ for (basename($0)) {
       my $instream;
       open($instream,'-');
       binmode($instream, ":bytes");
-      openpgp2ssh($instream, $fpr);
+      print openpgp2ssh($instream, $fpr);
   }
   else {
     die "Unrecognized keytrans call.\n";
