@@ -7,8 +7,13 @@
 
 case $1 in
     purge)
-        echo "removing monkeysphere user..."
-        userdel monkeysphere > /dev/null || true
+	# delete monkeysphere user
+	# http://wiki.debian.org/AccountHandlingInMaintainerScripts
+	if type deluser >/dev/null 2>&1; then
+	    deluser --quiet --system monkeysphere > /dev/null || true
+	else
+	    echo >&2 "not removing monkeysphere system account because deluser command was not found"
+	fi
         ;;
 esac
 
