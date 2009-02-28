@@ -516,41 +516,78 @@ sub openpgp2ssh {
   my $fpr = shift;
 
   my $packettag;
-  read($instr, $packettag, 1);
-  $packettag = ord($packettag);
+  my $dummy;
+  my $tag;
 
-  my $packetlen;
-  if ( ! (0x80 & $packettag)) {
-    print STDERR "This is not an OpenPGP packet";
-    exit 1;
-  }
-  if (0x40 & $packettag) {
-    print STDERR "This is a new-style packet header";
-    $tag = (0x3f & $packettag);
-  } else {
-    print STDERR "This is an old-style packet header";
-    $lentype = 0x03 & $packettag;
-    $tag = (0x3c & $packettag ) >> 2;
-    if ($lentype == 0) {
-      read($instr, $packetlen, 1);
-      $packetlen = unpack('%C', $packetlen);
-    } elsif ($lentype == 1) {
-      read($instr, $packetlen, 2);
-      $packetlen = unpack('%S', $packetlen);
-    } elsif ($lentype == 2) {
-      read($instr, $packetlen, 4);
-      $packetlen = unpack('%L', $packetlen);
+  while (! eof($instr)) {
+    read($instr, $packettag, 1);
+    $packettag = ord($packettag);
+
+    my $packetlen;
+    if ( ! (0x80 & $packettag)) {
+      die "This is not an OpenPGP packet\n";
+    }
+    if (0x40 & $packettag) {
+      print STDERR "This is a new-style packet header\n";
+      $tag = (0x3f & $packettag);
+      my $nextlen = 0;
+      read($instr, $nextlen, 1);
+      $nextlen = ord($nextlen);
+      if ($nextlen < 192) {
+	$packetlen = $nextlen;
+      } elsif ($nextlen < 224) {
+	my $newoct;
+	read($instr, $newoct, 1);
+	$newoct = ord($newoct);
+	$packetlen = (($nextlen - 192) << 8) + ($newoct) + 192;
+      } elsif ($nextlen == 255) {
+	read($instr, $nextlen, 4);
+	$packetlen = unpack('%L', $nextlen);
+      } else {
+	# packet length is undefined.
+      }
+    } else {
+      my $lentype;
+      print STDERR "This is an old-style packet header\n";
+      $lentype = 0x03 & $packettag;
+      $tag = ( 0x3c & $packettag ) >> 2;
+      if ($lentype == 0) {
+	read($instr, $packetlen, 1) or die "could not read packet length\n";
+	$packetlen = unpack('C', $packetlen);
+      } elsif ($lentype == 1) {
+	read($instr, $packetlen, 2) or die "could not read packet length\n";
+	$packetlen = unpack('n', $packetlen);
+      } elsif ($lentype == 2) {
+	read($instr, $packetlen, 4) or die "could not read packet length\n";
+	$packetlen = unpack('N', $packetlen);
+      } else {
+	# packet length is undefined.
+      }
+    }
+
+    if (! defined($packetlen)) {
+      die "Undefined packet lengths are not supported.\n";
+    }
+    printf(STDERR "Packet is %d long\n", $packetlen);
+
+    if ($tag == $packet_types->{pubkey} ||
+	$tag == $packet_types->{pub_subkey} ||
+	$tag == $packet_types->{seckey} ||
+	$tag == $packet_types->{sec_subkey}) {
+      printf(STDERR "Packet type %d\n", $tag);
+      read($instr, $dummy, $packetlen) or die "Could not seek!\n";
+    } else {
+      printf(STDERR "We do not care about this packet.\n");
+      read($instr, $dummy, $packetlen) or die "Could not seek!\n";
     }
   }
-  printf(STDERR, "Packet is %d long\n", $packetlen);
 
-  print $packettag;
+  print $tag;
 }
 
 
 for (basename($0)) {
   if (/^pem2openpgp$/) {
-
     my $rsa;
     my $stdin;
     if (defined $ENV{PEM2OPENPGP_NEWKEY}) {
@@ -585,8 +622,7 @@ for (basename($0)) {
       openpgp2ssh($instream, $fpr);
   }
   else {
-    print STDERR "Unrecognized keytrans call.\n";
-    die 1;
+    die "Unrecognized keytrans call.\n";
   }
 }
 
