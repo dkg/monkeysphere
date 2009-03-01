@@ -1,10 +1,18 @@
 monkeysphere (0.24~pre-1) UNRELEASED; urgency=low
 
-  * update/cleanup mainterscripts
   * New upstream release:
     - Fixed how version information is stored/retrieved.
+    - Now uses perl-based keytrans for both pem2openpgp and openpgp2ssh
+    - no longer needs base64 in PATH
+    - added "test" make target
+    - improved transitions/0.23 script
+  * update/cleanup mainterscripts
+  * remove GnuTLS dependency.
+  * remove versioned coreutils | base64 dependency.
+  * added Build-Deps for dh_autotest.
+  * switch to Architecture: all
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 28 Feb 2009 13:02:57 -0500
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sun, 01 Mar 2009 11:47:41 -0500
 
 monkeysphere (0.23.1-1) unstable; urgency=low
 
