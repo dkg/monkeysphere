@@ -112,7 +112,7 @@ TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/monkeyspheretest.XXXXXXX")
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
-export PATH="$TESTDIR"/../src:"$TESTDIR"/../src/keytrans:"$PATH"
+export PATH="$TESTDIR"/../src:"$PATH"
 
 export MONKEYSPHERE_SYSDATADIR="$TEMPDIR"
 export MONKEYSPHERE_SYSCONFIGDIR="$TEMPDIR"
