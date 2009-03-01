@@ -154,8 +154,9 @@ if [ -d "$SYSDATADIR"/gnupg-host ] ; then
 	    FPR=$(GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --with-colons --fixed-list-mode --list-secret-keys --fingerprint | awk -F: '/^fpr:/{ print $10 }' )
 	    
 	# create host home
-	    mkdir -p "${MHDATADIR}"
-	    chmod 0700 "${MHDATADIR}"
+	    mkdir -p $(dirname "$MHDATADIR")
+	    NEWDATADIR=$(mktemp -d "${MHDATADIR}.XXXXXX")
+	    chmod 0700 "${NEWDATADIR}"
 	    
 	    log "importing host key from old monkeysphere installation\n"
 
@@ -167,10 +168,20 @@ if [ -d "$SYSDATADIR"/gnupg-host ] ; then
 # FIXME: if all self-sigs are expired, then the secret key import may
 # fail anyway. How should we deal with that?
 	    
-	    (GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --export-secret-keys && \
-	    GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --export $FPR) | \
-		GNUPGHOME="$MHDATADIR" gpg --quiet --no-tty --import
-	    
+	    if (GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --export-secret-keys && \
+		GNUPGHOME="$SYSDATADIR"/gnupg-host gpg --no-permission-warning --export "$FPR") | \
+		GNUPGHOME="$NEWDATADIR" gpg --quiet --no-tty --import ; then
+		: we are in good shape!
+	    else
+		if ! GNUPGHOME="$NEWDATADIR" gpg --list-secret-key >/dev/null ; then
+		    log "The old host key (%s) was not imported properly.\n" "$FPR"
+		    exit 1
+		fi
+	    fi
+		
+	    # if we get here cleanly, then we're OK to move forward:
+	    mv "$NEWDATADIR" "$MHDATADIR"
+
 	    monkeysphere-host update-gpg-pub-file
 	else
 	    log "No host key found in old monkeysphere install; not importing any host key.\n"
@@ -192,7 +203,8 @@ fi
 if [ -d "${SYSDATADIR}/gnupg-authentication" ] ; then
 
     GNUPGHOME="${SYSDATADIR}/gnupg-authentication" gpg --no-permission-warning --export | \
-	monkeysphere-authentication gpg-cmd --import
+	monkeysphere-authentication gpg-cmd --import || \
+	log "No OpenPGP certificates imported into monkeysphere-authentication trust sphere.\n"
 
     mkdir -p "$STASHDIR"
     chmod 0700 "$STASHDIR"
