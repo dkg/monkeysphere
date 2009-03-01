@@ -86,10 +86,10 @@ check_gpg_sec_key_id() {
 	    echo "$gpgSecOut" | cut -d: -f5
 	    ;;
 	*)
-	    echo "Multiple primary secret keys found:" >&2
-	    echo "$gpgSecOut" | cut -d: -f5 >&2
-	    echo "Please specify which primary key to use." >&2
-	    failure
+	    local seckeys=$(echo "$gpgSecOut" | cut -d: -f5)
+	    failure "Multiple primary secret keys found:
+$seckeys
+Please specify which primary key to use."
 	    ;;
     esac
 }
