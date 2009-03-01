@@ -29,6 +29,7 @@ use Crypt::OpenSSL::Bignum;
 use Crypt::OpenSSL::Bignum::CTX;
 use Digest::SHA1;
 use MIME::Base64;
+use POSIX;
 
 ## make sure all length() and substr() calls use bytes only:
 use bytes;
@@ -329,7 +330,7 @@ sub read_mpi {
   $bitlen = unpack('n', $bitlen);
   $$readtally += 2;
 
-  my $bytestoread = ($bitlen + 7)/8;
+  my $bytestoread = POSIX::floor(($bitlen + 7)/8);
   my $ret;
   read($instr, $ret, $bytestoread) or die "could not read MPI body.\n";
   $$readtally += $bytestoread;
