@@ -189,8 +189,8 @@ export GNUPGHOME
 mkdir -p -m 0700 "$GNUPGHOME"
 export LOG_LEVEL
 
-# explicitly set the USER variable, for checking file permissions
-export USER=$(whoami)
+# explicitly set the FILE_OWNER variable, for checking file permissions
+export FILE_OWNER=$(whoami)
 
 # get subcommand
 COMMAND="$1"

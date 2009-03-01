@@ -846,7 +846,7 @@ update_known_hosts() {
     (umask 0022 && touch "$KNOWN_HOSTS")
 
     # check permissions on the known_hosts file path
-    check_key_file_permissions "$USER" "$KNOWN_HOSTS" || failure
+    check_key_file_permissions "$FILE_OWNER" "$KNOWN_HOSTS" || failure
 
     # create a lockfile on known_hosts:
     lock create "$KNOWN_HOSTS"
@@ -1000,7 +1000,7 @@ update_authorized_keys() {
     log debug " $AUTHORIZED_KEYS"
 
     # check permissions on the authorized_keys file path
-    check_key_file_permissions "$USER" "$AUTHORIZED_KEYS" || failure
+    check_key_file_permissions "$FILE_OWNER" "$AUTHORIZED_KEYS" || failure
 
     # create a lockfile on authorized_keys
     lock create "$AUTHORIZED_KEYS"
@@ -1076,7 +1076,7 @@ process_authorized_user_ids() {
     log debug " $authorizedUserIDs"
 
     # check permissions on the authorized_user_ids file path
-    check_key_file_permissions "$USER" "$authorizedUserIDs" || failure
+    check_key_file_permissions "$FILE_OWNER" "$authorizedUserIDs" || failure
 
     if ! meat "$authorizedUserIDs" > /dev/null ; then
 	log debug " no user IDs to process."
