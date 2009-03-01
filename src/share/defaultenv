@@ -1,0 +1,29 @@
+# -*-shell-script-*-
+# This should be sourced by bash (though we welcome changes to make it POSIX sh compliant)
+
+# Shared sh variables for the monkeysphere
+#
+# Written by
+# Jameson Rollins <jrollins@finestructure.net>
+#
+# Copyright 2009, released under the GPL, version 3 or later
+
+# managed directories
+SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"/etc/monkeysphere"}
+export SYSCONFIGDIR
+
+# default log level
+LOG_LEVEL="INFO"
+
+# default keyserver
+KEYSERVER="pool.sks-keyservers.net"
+
+# whether or not to check keyservers by defaul
+CHECK_KEYSERVER="true"
+
+# default monkeysphere user
+MONKEYSPHERE_USER="monkeysphere"
+
+# default about whether or not to prompt
+PROMPT="true"
+
