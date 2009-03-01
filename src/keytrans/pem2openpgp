@@ -724,6 +724,14 @@ for (basename($0)) {
   if (/^pem2openpgp$/) {
     my $rsa;
     my $stdin;
+
+    my $uid = shift;
+    defined($uid) or die "You must specify a user ID string.\n";
+
+    # FIXME: fail if there is no given user ID; or should we default to
+    # hostname_long() from Sys::Hostname::Long ?
+
+
     if (defined $ENV{PEM2OPENPGP_NEWKEY}) {
       $rsa = Crypt::OpenSSL::RSA->generate_key($ENV{PEM2OPENPGP_NEWKEY});
     } else {
@@ -734,11 +742,6 @@ for (basename($0)) {
 
       $rsa = Crypt::OpenSSL::RSA->new_private_key($stdin);
     }
-
-    my $uid = shift;
-
-    # FIXME: fail if there is no given user ID; or should we default to
-    # hostname_long() from Sys::Hostname::Long ?
 
     print pem2openpgp($rsa,
 		      $uid,
