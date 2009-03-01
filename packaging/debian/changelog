@@ -6,7 +6,8 @@ monkeysphere (0.24~pre-1) UNRELEASED; urgency=low
     - no longer needs base64 in PATH
     - added "test" make target
     - improved transitions/0.23 script
-  * update/cleanup mainterscripts
+    - RSA only: no longer handles DSA keys
+  * update/cleanup maintainer scripts
   * remove GnuTLS dependency.
   * remove versioned coreutils | base64 dependency.
   * added Build-Deps for dh_autotest.
