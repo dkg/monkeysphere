@@ -69,7 +69,7 @@ check_gpg_sec_key_id() {
 	    gpgSecOut=$(gpg_user --fixed-list-mode --list-secret-keys --with-colons 2>/dev/null | egrep '^sec:')
 	    ;;
 	1)
-	    gpgSecOut=$(gpg_user --fixed-list-mode --list-secret-keys --with-colons "$keyID" | egrep '^sec:') || failure
+	    gpgSecOut=$(gpg_user --fixed-list-mode --list-secret-keys --with-colons "$1" | egrep '^sec:') || failure
 	    ;;
 	*)
 	    failure "You must specify only a single primary key ID."
@@ -86,9 +86,9 @@ check_gpg_sec_key_id() {
 	    echo "$gpgSecOut" | cut -d: -f5
 	    ;;
 	*)
-	    echo "Multiple primary secret keys found:"
-	    echo "$gpgSecOut" | cut -d: -f5
-	    echo "Please specify which primary key to use."
+	    echo "Multiple primary secret keys found:" >&2
+	    echo "$gpgSecOut" | cut -d: -f5 >&2
+	    echo "Please specify which primary key to use." >&2
 	    failure
 	    ;;
     esac
