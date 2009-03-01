@@ -1,5 +1,15 @@
 #!/usr/bin/perl -w -T
 
+# keytrans: this is an RSA key translation utility; it is capable of
+# transforming RSA keys (both public keys and secret keys) between
+# several popular representations, including OpenPGP, PEM-encoded
+# PKCS#1 DER, and OpenSSH-style public key lines.
+
+# How it behaves depends on the name under which it is invoked.  The
+# two implementations currently are: pem2openpgp and openpgp2ssh.
+
+
+
 # pem2openpgp: take a PEM-encoded RSA private-key on standard input, a
 # User ID as the first argument, and generate an OpenPGP secret key
 # and certificate from it.
@@ -11,6 +21,23 @@
 # Usage:
 
 # pem2openpgp 'ssh://'$(hostname -f) < /etc/ssh/ssh_host_rsa_key | gpg --import
+
+
+
+
+# openpgp2ssh: take a stream of OpenPGP packets containing public or
+# secret key material on standard input, and a Key ID (or fingerprint)
+# as the first argument.  Find the matching key in the input stream,
+# and emit it on stdout in an OpenSSH-compatible format.  If the input
+# key is an OpenPGP public key (either primary or subkey), the output
+# will be an OpenSSH single-line public key.  If the input key is an
+# OpenPGP secret key, the output will be a PEM-encoded RSA key.
+
+# Example usage:
+
+# gpg --export-secret-subkeys --export-options export-reset-subkey-passwd $KEYID | \
+#  openpgp2ssh $KEYID | ssh-add /dev/stdin
+
 
 # Authors:
 #  Jameson Rollins <jrollins@finestructure.net>
