@@ -336,52 +336,6 @@ passphrase_prompt() {
     fi
 }
 
-test_gnu_dummy_s2k_extension() {
-
-# this block contains a demonstration private key that has had the
-# primary key stripped out using the GNU S2K extension known as
-# "gnu-dummy" (see /usr/share/doc/gnupg/DETAILS.gz).  The subkey is
-# present in cleartext, however.
-
-# openpgp2ssh will be able to deal with this based on whether the
-# local copy of GnuTLS contains read_s2k support that can handle it.
-
-# read up on that here:
-
-# http://lists.gnu.org/archive/html/gnutls-devel/2008-08/msg00005.html
-
-echo "
------BEGIN PGP PRIVATE KEY BLOCK-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-lQCVBEO3YdABBACRqqEnucag4+vyZny2M67Pai5+5suIRRvY+Ly8Ms5MvgCi3EVV
-xT05O/+0ShiRaf+QicCOFrhbU9PZzzU+seEvkeW2UCu4dQfILkmj+HBEIltGnHr3
-G0yegHj5pnqrcezERURf2e17gGFWX91cXB9Cm721FPXczuKraphKwCA9PwARAQAB
-/gNlAkdOVQG0OURlbW9uc3RyYXRpb24gS2V5IGZvciBTMksgR05VIGV4dGVuc2lv
-biAxMDAxIC0tIGdudS1kdW1teYi8BBMBAgAmBQJDt2HQAhsDBQkB4TOABgsJCAcD
-AgQVAggDBBYCAwECHgECF4AACgkQQZUwSa4UDezTOQP/TMQXUVrWzHYZGopoPZ2+
-ZS3qddiznBHsgb7MGYg1KlTiVJSroDUBCHIUJvdQKZV9zrzrFl47D07x6hGyUPHV
-aZXvuITW8t1o5MMHkCy3pmJ2KgfDvdUxrBvLfgPMICA4c6zA0mWquee43syEW9NY
-g3q61iPlQwD1J1kX1wlimLCdAdgEQ7dh0AEEANAwa63zlQbuy1Meliy8otwiOa+a
-mH6pxxUgUNggjyjO5qx+rl25mMjvGIRX4/L1QwIBXJBVi3SgvJW1COZxZqBYqj9U
-8HVT07mWKFEDf0rZLeUE2jTm16cF9fcW4DQhW+sfYm+hi2sY3HeMuwlUBK9KHfW2
-+bGeDzVZ4pqfUEudABEBAAEAA/0bemib+wxub9IyVFUp7nPobjQC83qxLSNzrGI/
-RHzgu/5CQi4tfLOnwbcQsLELfker2hYnjsLrT9PURqK4F7udrWEoZ1I1LymOtLG/
-4tNZ7Mnul3wRC2tCn7FKx8sGJwGh/3li8vZ6ALVJAyOia5TZ/buX0+QZzt6+hPKk
-7MU1WQIA4bUBjtrsqDwro94DvPj3/jBnMZbXr6WZIItLNeVDUcM8oHL807Am97K1
-ueO/f6v1sGAHG6lVPTmtekqPSTWBfwIA7CGFvEyvSALfB8NUa6jtk27NCiw0csql
-kuhCmwXGMVOiryKEfegkIahf2bAd/gnWHPrpWp7bUE20v8YoW22I4wIAhnm5Wr5Q
-Sy7EHDUxmJm5TzadFp9gq08qNzHBpXSYXXJ3JuWcL1/awUqp3tE1I6zZ0hZ38Ia6
-SdBMN88idnhDPqPoiKUEGAECAA8FAkO3YdACGyAFCQHhM4AACgkQQZUwSa4UDezm
-vQP/ZhK+2ly9oI2z7ZcNC/BJRch0/ybQ3haahII8pXXmOThpZohr/LUgoWgCZdXg
-vP6yiszNk2tIs8KphCAw7Lw/qzDC2hEORjWO4f46qk73RAgSqG/GyzI4ltWiDhqn
-vnQCFl3+QFSe4zinqykHnLwGPMXv428d/ZjkIc2ju8dRsn4=
-=CR5w
------END PGP PRIVATE KEY BLOCK-----
-" | openpgp2ssh 4129E89D17C1D591 >/dev/null 2>/dev/null
-
-}
-
 # remove all lines with specified string from specified file
 remove_line() {
     local file
