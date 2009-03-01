@@ -427,13 +427,15 @@ check_key_file_permissions() {
 
     # return 1 if path has invalid owner
     if [ "$owner" != "$uname" -a "$owner" != 'root' ] ; then
-	log error "improper ownership on path '$path'."
+	log error "improper ownership on path '$path':"
+	log error " $owner != ($uname|root)"
 	return 1
     fi
 
     # return 2 if path has group or other writability
     if is_write "$gAccess" || is_write "$oAccess" ; then
-	log error "improper group or other writability on path '$path'."
+	log error "improper group or other writability on path '$path':"
+	log error " group: $gAccess, other: $oAcess"
 	return 2
     fi
 
@@ -667,14 +669,14 @@ process_user_id() {
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
 		    log verbose "  * acceptable primary key."
 		    if [ -z "$sshKey" ] ; then
-			log error "    ! primary key could not be translated (not RSA or DSA?)."
+			log error "    ! primary key could not be translated (not RSA?)."
 		    else
 			echo "0:${sshKey}"
 		    fi
 		else
 		    log debug "  - unacceptable primary key."
 		    if [ -z "$sshKey" ] ; then
-			log debug "    ! primary key could not be translated (not RSA or DSA?)."
+			log debug "    ! primary key could not be translated (not RSA?)."
 		    else
 			echo "1:${sshKey}"
 		    fi
@@ -725,14 +727,14 @@ process_user_id() {
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
 		    log verbose "  * acceptable sub key."
 		    if [ -z "$sshKey" ] ; then
-			log error "    ! sub key could not be translated (not RSA or DSA?)."
+			log error "    ! sub key could not be translated (not RSA?)."
 		    else
 			echo "0:${sshKey}"
 		    fi
 		else
 		    log debug "  - unacceptable sub key."
 		    if [ -z "$sshKey" ] ; then
-			log debug "    ! sub key could not be translated (not RSA or DSA?)."
+			log debug "    ! sub key could not be translated (not RSA?)."
 		    else
 			echo "1:${sshKey}"
 		    fi

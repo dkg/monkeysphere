@@ -88,6 +88,7 @@ for uname in $unames ; do
 	    cat "$authorizedUserIDs" > "$TMP_AUTHORIZED_USER_IDS"
 
 	    # export needed variables
+	    export USER="$uname"
 	    export AUTHORIZED_KEYS
 	    export TMP_AUTHORIZED_USER_IDS
 
