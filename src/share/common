@@ -14,28 +14,6 @@
 # file) and are considered global
 
 ########################################################################
-### COMMON VARIABLES
-
-# managed directories
-SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"/etc/monkeysphere"}
-export SYSCONFIGDIR
-
-# default log level
-LOG_LEVEL="INFO"
-
-# default keyserver
-KEYSERVER="pool.sks-keyservers.net"
-
-# whether or not to check keyservers by defaul
-CHECK_KEYSERVER="true"
-
-# default monkeysphere user
-MONKEYSPHERE_USER="monkeysphere"
-
-# default about whether or not to prompt
-PROMPT="true"
-
-########################################################################
 ### UTILITY FUNCTIONS
 
 # output version info
@@ -461,6 +439,7 @@ check_key_file_permissions() {
 
     # return zero if all clear, or go to next path
     if [ "$path" = '/' ] ; then
+	log debug "path ok."
 	return 0
     else
 	check_key_file_permissions "$uname" $(dirname "$path")
@@ -926,7 +905,8 @@ process_known_hosts() {
 	failure "known_hosts file '$KNOWN_HOSTS' does not exist."
     fi
 
-    log debug "processing known_hosts file..."
+    log debug "processing known_hosts file:"
+    log debug " $KNOWN_HOSTS"
 
     hosts=$(meat "$KNOWN_HOSTS" | cut -d ' ' -f 1 | grep -v '^|.*$' | tr , ' ' | tr '\n' ' ')
 
@@ -1014,6 +994,9 @@ update_authorized_keys() {
     nIDsOK=0
     nIDsBAD=0
 
+    log debug "updating authorized_keys file:"
+    log debug " $AUTHORIZED_KEYS"
+
     # check permissions on the authorized_keys file path
     check_key_file_permissions "$USER" "$AUTHORIZED_KEYS" || failure
 
@@ -1087,10 +1070,11 @@ process_authorized_user_ids() {
 	failure "authorized_user_ids file '$authorizedUserIDs' does not exist."
     fi
 
+    log debug "processing authorized_user_ids file:"
+    log debug " $authorizedUserIDs"
+
     # check permissions on the authorized_user_ids file path
     check_key_file_permissions "$USER" "$authorizedUserIDs" || failure
-
-    log debug "processing authorized_user_ids file..."
 
     if ! meat "$authorizedUserIDs" > /dev/null ; then
 	log debug " no user IDs to process."

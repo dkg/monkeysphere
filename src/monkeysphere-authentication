@@ -21,7 +21,8 @@ PGRM=$(basename $0)
 
 SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
 export SYSSHAREDIR
-. "${SYSSHAREDIR}/common" || exit 1
+. "${SYSSHAREDIR}/defaultenv"
+. "${SYSSHAREDIR}/common"
 
 SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
 export SYSDATADIR

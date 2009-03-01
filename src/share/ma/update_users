@@ -80,6 +80,7 @@ for uname in $unames ; do
     # translating ssh-style path variables
     authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
     if [ -s "$authorizedUserIDs" ] ; then
+	log debug "authorized_user_ids file found."
 	# check permissions on the authorized_user_ids file path
 	if check_key_file_permissions "$uname" "$authorizedUserIDs" ; then
             # copy user authorized_user_ids file to temporary

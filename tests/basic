@@ -275,7 +275,6 @@ monkeysphere-authentication update-users $(whoami)
 # FIXME: this is maybe not failing properly for:
 # ms: improper group or other writability on path '/tmp'.
 
-
 ######################################################################
 ### TESTS
 
