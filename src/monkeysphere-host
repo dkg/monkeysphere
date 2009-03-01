@@ -174,7 +174,7 @@ show_key() {
 
     # create the ssh key
     TMPSSH="$GNUPGHOME"/ssh_host_key_rsa_pub
-    openpgp2ssh <"$HOST_KEY_FILE" 2>/dev/null >"$TMPSSH"
+    gpg --export | openpgp2ssh 2>/dev/null >"$TMPSSH"
 
     # get the gpg fingerprint
     HOST_FINGERPRINT=$(gpg --quiet --list-keys --with-colons --with-fingerprint \
