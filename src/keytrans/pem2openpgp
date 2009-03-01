@@ -316,19 +316,23 @@ sub openssh_pubkey_pack {
   return openssh_mpi_pack(Crypt::OpenSSL::Bignum->new_from_bin("ssh-rsa")).
       openssh_mpi_pack($exponent).
 	openssh_mpi_pack($modulus);
-  }
+}
 
 # pull an OpenPGP-specified MPI off of a given stream, returning it as
 # a Crypt::OpenSSL::Bignum.
 sub read_mpi {
   my $instr = shift;
+  my $readtally = shift;
 
   my $bitlen;
   read($instr, $bitlen, 2) or die "could not read MPI length.\n";
   $bitlen = unpack('n', $bitlen);
+  $$readtally += 2;
 
+  my $bytestoread = ($bitlen + 7)/8;
   my $ret;
-  read($instr, $ret, ($bitlen + 7)/8) or die "could not read MPI body.\n";
+  read($instr, $ret, $bytestoread) or die "could not read MPI body.\n";
+  $$readtally += $bytestoread;
   return Crypt::OpenSSL::Bignum->new_from_bin($ret);
 }
 
@@ -562,6 +566,7 @@ sub openpgp2ssh {
     if (length($fpr) < 8) {
       die "We need at least 8 hex digits of fingerprint.\n";
     }
+    $fpr = uc($fpr);
   }
 
   my $packettag;
@@ -623,27 +628,32 @@ sub openpgp2ssh {
 	$tag == $packet_types->{seckey} ||
 	$tag == $packet_types->{sec_subkey}) {
       my $ver;
+      my $readbytes = 0;
       read($instr, $ver, 1) or die "could not read key version\n";
+      $readbytes += 1;
       $ver = ord($ver);
+
       if ($ver != 4) {
-	printf(STDERR "We only work with version 4 keys.  This key appears to be version $ver.\n");
-	read($instr, $dummy, $packetlen - 1) or die "Could not skip past this packet.\n";
+	printf(STDERR "We only work with version 4 keys.  This key appears to be version %s.\n", $ver);
+	read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
       } else {
 
 	my $timestamp;
 	read($instr, $timestamp, 4) or die "could not read key timestamp.\n";
+	$readbytes += 4;
 	$timestamp = unpack('N', $timestamp);
 
 	my $algo;
 	read($instr, $algo, 1) or die "could not read key algorithm.\n";
+	$readbytes += 1;
 	$algo = ord($algo);
 	if ($algo != $asym_algos->{rsa}) {
 	  printf(STDERR "We only support RSA keys (this key used algorithm %d).\n", $algo);
-	  read($instr, $dummy, $packetlen - 6) or die "Could not skip past this packet.\n";
+	  read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
 	} else {
 	  ## we have an RSA key.
-	  my $modulus = read_mpi($instr);
-	  my $exponent = read_mpi($instr);
+	  my $modulus = read_mpi($instr, \$readbytes);
+	  my $exponent = read_mpi($instr, \$readbytes);
 
 	  my $pubkey = Crypt::OpenSSL::RSA->new_key_from_parameters($modulus, $exponent);
 	  my $foundfpr = fingerprint($pubkey, $timestamp);
@@ -661,7 +671,42 @@ sub openpgp2ssh {
 
 	  if ($tag == $packet_types->{seckey} ||
 	      $tag == $packet_types->{sec_subkey}) {
-	    die "Cannot deal with secret keys yet!\n";
+	    if (!defined($key)) { # we don't think the public part of
+                                  # this key matches
+	      read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+	    } else {
+	      my $s2k;
+	      read($instr, $s2k, 1) or die "Could not read S2K octet.\n";
+	      $readbytes += 1;
+	      $s2k = ord($s2k);
+	      if ($s2k == 0) {
+		# secret material is unencrypted
+		# see http://tools.ietf.org/html/rfc4880#section-5.5.3
+		my $d = read_mpi($instr, \$readbytes);
+		my $p = read_mpi($instr, \$readbytes);
+		my $q = read_mpi($instr, \$readbytes);
+		my $u = read_mpi($instr, \$readbytes);
+
+		my $checksum;
+		read($instr, $checksum, 2) or die "Could not read checksum of secret key material.\n";
+		$readbytes += 2;
+		$checksum = unpack('n', $checksum);
+
+		# FIXME: compare with the checksum!  how?  the data is
+		# gone into the Crypt::OpenSSL::Bignum
+
+		$key = Crypt::OpenSSL::RSA->new_key_from_parameters($modulus,
+								    $exponent,
+								    $d,
+								    $p,
+								    $q);
+
+		$key->check_key() or die "Secret key is not a valid RSA key.\n";
+	      } else {
+		print(STDERR "We cannot handle encrypted secret keys.  Skipping!\n") ;
+		read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+	      }
+	    }
 	  }
 
 	}
@@ -671,9 +716,7 @@ sub openpgp2ssh {
     }
   }
 
-  if (defined($key)) {
-    return "ssh-rsa ".encode_base64(openssh_pubkey_pack($key), '');
-  }
+  return $key;
 }
 
 
@@ -710,7 +753,16 @@ for (basename($0)) {
       my $instream;
       open($instream,'-');
       binmode($instream, ":bytes");
-      print openpgp2ssh($instream, $fpr);
+      my $key = openpgp2ssh($instream, $fpr);
+      if (defined($key)) {
+	if ($key->is_private()) {
+	  print $key->get_private_key_string();
+	} else {
+	  print "ssh-rsa ".encode_base64(openssh_pubkey_pack($key), '')."\n";
+	}
+      } else {
+	die "No matching key found.\n";
+      }
   }
   else {
     die "Unrecognized keytrans call.\n";
