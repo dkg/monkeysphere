@@ -57,7 +57,7 @@ EOF
     if [ -z "$CORE_FPR" ] ; then
 	log info "setting up Monkeysphere authentication trust core..."
 
-	local CORE_UID=$(printf "Monkeysphere authentication trust core UID (random string: %s)" $(head -c21 </dev/urandom | base64))
+	local CORE_UID=$(printf "Monkeysphere authentication trust core UID (random string: %s)" $(head -c21 </dev/urandom | perl -MMIME::Base64 -ne 'print encode_base64($_)'))
     
 	log debug "generating monkeysphere authentication trust core key ($CORE_KEYLENGTH bits)..."
 	PEM2OPENPGP_USAGE_FLAGS=certify \
