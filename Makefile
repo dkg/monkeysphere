@@ -76,4 +76,7 @@ installman:
 releasenote:
 	./utils/build-releasenote
 
-.PHONY: all tarball debian-package freebsd-distinfo clean install installman releasenote
+test:
+	./tests/basic
+
+.PHONY: all tarball debian-package freebsd-distinfo clean install installman releasenote test
