@@ -56,7 +56,7 @@ subcommands:
  update-users (u) [USER]...          update user authorized_keys files
 
  add-id-certifier (c+) [KEYID|FILE]  import and tsign a certification key
-   --domain (-n) DOMAIN                limit ID certifications to DOMAIN
+   --domain (-n) DOMAIN                limit ID certifications to DOMAIN (*)
    --trust (-t) TRUST                  trust level of certifier (full)
    --depth (-d) DEPTH                  trust depth for certifier (1)
  remove-id-certifier (c-) KEYID      remove a certification key
