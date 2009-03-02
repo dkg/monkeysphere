@@ -15,19 +15,21 @@ for OpenSSH authentication.  OpenPGP keys are tracked via GnuPG, and
 added to the authorized_keys and known_hosts files used by OpenSSH for
 connection authentication.
 
-\fBmonkeysphere\-host\fP is a Monkeysphere server admin utility.
+\fBmonkeysphere\-host\fP is a Monkeysphere server admin utility for
+managing the host's OpenPGP host key.
 
 .SH SUBCOMMANDS
 
 \fBmonkeysphere\-host\fP takes various subcommands:
 .TP
 .B import\-key FILE NAME[:PORT]
-Import a pem-encoded ssh secret host key from file FILE.  If FILE
-is `\-', then the key will be imported from stdin.  NAME[:PORT] is used
-to specify the fully-qualified hostname (and port) used in the user ID
-of the new OpenPGP key.  If PORT is not specified, the no port is
-added to the user ID, which means port 22 is assumed.  `i' may be used
-in place of `import\-key'.
+Import a pem-encoded ssh secret host key from file FILE.  If FILE is
+`\-', then the key will be imported from stdin.  Only RSA keys are
+supported at the moment.  NAME[:PORT] is used to specify the
+fully-qualified hostname (and port) used in the user ID of the new
+OpenPGP key.  If PORT is not specified, the no port is added to the
+user ID, which means port 22 is assumed.  `i' may be used in place of
+`import\-key'.
 .TP
 .B show\-key
 Output information about host's OpenPGP and SSH keys.  `s' may be used
@@ -95,9 +97,23 @@ place of `diagnostics'.
 
 .SH SETUP HOST AUTHENTICATION
 
-To enable host verification via the monkeysphere, the host's key must
-be published to the Web of Trust.  This is not done by default.  To
-publish the host key to the keyservers, run the following command:
+To enable host verification via the monkeysphere, an OpenPGP key must
+be made out of the host's ssh key, and the key must be published to
+the Web of Trust.  This is not done by default.  The first step is to
+import the host's ssh key into a monkeysphere OpenPGP key.  This is
+done with the import\-key command.  When importing a key, you must
+specify the path to the host's ssh RSA key to import, and a hostname
+to use as the key's user ID:
+
+$ monkeysphere\-host import\-key /etc/ssh/ssh_host_rsa_key host.example.org
+
+On most systems, the ssh host RSA key is stored at
+/etc/ssh/ssh_host_rsa_key.
+
+Once the host key has been imported, it must be published to the Web
+of Trust so that users can retrieve the key when sshing to the host.
+The host key is published to the keyserver with the publish\-key
+command:
 
 $ monkeysphere\-host publish\-key
 
@@ -105,9 +121,11 @@ In order for users logging into the system to be able to identify the
 host via the monkeysphere, at least one person (e.g. a server admin)
 will need to sign the host's key.  This is done using standard OpenPGP
 keysigning techniques, usually: pull the key from the keyserver,
-verify and sign the key, and then re-publish the signature.  Once an
-admin's signature is published, users logging into the host can use it
-to validate the host's key.
+verify and sign the key, and then re-publish the signature.  Please
+see http://web.monkeysphere.info/signing-host-keys/ for more
+information.  Once an admin's signature is published, users logging
+into the host can use it to validate the host's key without having to
+manually check the hosts key's fingerprint.
 
 .SH ENVIRONMENT
 
@@ -123,7 +141,6 @@ OpenPGP keyserver to use. (pool.sks\-keyservers.net)
 .TP
 MONKEYSPHERE_PROMPT
 If set to `false', never prompt the user for confirmation. (true)
-
 
 .SH FILES
 
@@ -150,4 +167,3 @@ Matthew Goins <mjgoins@openflows.com>
 .BR gpg (1),
 .BR ssh (1),
 .BR sshd (8),
-

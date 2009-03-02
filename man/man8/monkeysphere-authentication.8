@@ -16,7 +16,8 @@ and added to the authorized_keys and known_hosts files used by OpenSSH
 for connection authentication.
 
 \fBmonkeysphere\-authentication\fP is a Monkeysphere server admin
-utility for configuring SSH user authentication through the WoT.
+utility for configuring and managing SSH user authentication through
+the WoT.
 
 .SH SUBCOMMANDS
 
@@ -102,24 +103,26 @@ single OpenPGP public key.  Certifiers can be removed with the
 \fBremove\-id\-certifier\fP command, and listed with the
 \fBlist\-id\-certifiers\fP command.
 
-Remote users will then be granted access to a local account based on
-the appropriately-signed and valid keys associated with user IDs
-listed in that account's authorized_user_ids file.  By default, the
+Remote users will be granted access to local accounts based on the
+appropriately-signed and valid keys associated with user IDs listed in
+that account's authorized_user_ids file.  By default, the
 authorized_user_ids file for an account is
 ~/.monkeysphere/authorized_user_ids.  This can be changed in the
 monkeysphere\-authentication.conf file.
 
-The \fBupdate\-users\fP command can then be used to generate
-authorized_keys file for local accounts based on the authorized user
-IDs listed in the account's authorized_user_ids file:
+The \fBupdate\-users\fP command is used to generate authorized_keys
+files for local accounts based on the authorized user IDs listed in
+the account's authorized_user_ids file:
 
 $ monkeysphere\-authentication update\-users USER
 
 Not specifying USER will cause all accounts on the system to updated.
-sshd can then use these monkeysphere generated authorized_keys files
-to grant access to user accounts for remote users.  You must also tell
-sshd to look at the monkeysphere-generated authorized_keys file for
-user authentication by setting the following in the sshd_config:
+The ssh server can then use these monkeysphere\-generated
+authorized_keys files to grant access to user accounts for remote
+users.  In order for sshd to look at the monkeysphere\-generated
+authorized_keys file for user authentication, the AuthorizedKeysFile
+parameter must be set in the sshd_config to point to the
+monkeysphere\-generated authorized_keys files:
 
 AuthorizedKeysFile /var/lib/monkeysphere/authentication/authorized_keys/%u
 
@@ -155,7 +158,6 @@ raw authorized_keys file.  %h gets replaced with the user's homedir,
 .TP
 MONKEYSPHERE_PROMPT
 If set to `false', never prompt the user for confirmation. (true)
-
 
 .SH FILES
 
