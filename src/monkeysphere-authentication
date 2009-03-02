@@ -53,17 +53,17 @@ usage: $PGRM <subcommand> [options] [args]
 Monkeysphere authentication admin tool.
 
 subcommands:
- update-users (u) [USER]...          update user authorized_keys files
+ update-users (u) [USER]...        update user authorized_keys files
 
- add-id-certifier (c+) [KEYID|FILE]  import and tsign a certification key
-   --domain (-n) DOMAIN                limit ID certifications to DOMAIN (*)
-   --trust (-t) TRUST                  trust level of certifier (full)
-   --depth (-d) DEPTH                  trust depth for certifier (1)
- remove-id-certifier (c-) KEYID      remove a certification key
- list-id-certifiers (c)              list certification keys
+ add-id-certifier (c+) KEYID|FILE  import and tsign a certification key
+   [--domain (-n) DOMAIN]            limit ID certifications to DOMAIN
+   [--trust (-t) TRUST]              trust level of certifier (default: full)
+   [--depth (-d) DEPTH]              trust depth for certifier (default: 1)
+ remove-id-certifier (c-) KEYID    remove a certification key
+ list-id-certifiers (c)            list certification keys
 
- version (v)                         show version number
- help (h,?)                          this help
+ version (v)                       show version number
+ help (h,?)                        this help
 
 See ${PGRM}(8) for more info.
 EOF
