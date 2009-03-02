@@ -88,12 +88,11 @@ for uname in $unames ; do
 	    cat "$authorizedUserIDs" > "$TMP_AUTHORIZED_USER_IDS"
 
 	    # export needed variables
-	    export FILE_OWNER="$uname"
 	    export AUTHORIZED_KEYS
 	    export TMP_AUTHORIZED_USER_IDS
 
 	    # process authorized_user_ids file, as monkeysphere user
-	    su_monkeysphere_user \
+	    FILE_OWNER="$MONKEYSPHERE_USER" su_monkeysphere_user \
 		". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS" \
 		|| returnCode="$?"
 	else
