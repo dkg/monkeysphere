@@ -8,13 +8,15 @@ monkeysphere (0.24~pre-1) UNRELEASED; urgency=low
     - improved transitions/0.23 script so it no longer fails in common
       circumstances (Closes: #517779)
     - RSA only: no longer handles DSA keys
+    - added ability to specify subkeys to add to ssh agent with
+      new MONKEYSPHERE_SUBKEYS_FOR_AGENT environment variable
   * update/cleanup maintainer scripts
   * remove GnuTLS dependency.
   * remove versioned coreutils | base64 dependency.
   * added Build-Deps for dh_autotest.
   * switch to Architecture: all
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sun, 01 Mar 2009 11:47:41 -0500
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Mon, 02 Mar 2009 15:33:44 -0500
 
 monkeysphere (0.23.1-1) unstable; urgency=low
 
