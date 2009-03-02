@@ -354,12 +354,15 @@ remove_monkeysphere_lines() {
 
     file="$1"
 
-    if [ -z "$file" ] ; then
+    # return error if file does not exist
+    if [ ! -e "$file" ] ; then
 	return 1
     fi
 
-    if [ ! -e "$file" ] ; then
-	return 1
+    # just return ok if the file is empty, since there aren't any
+    # lines to remove
+    if [ ! -s "$file" ] ; then
+	return 0
     fi
 
     tempfile=$(mktemp "${file}.XXXXXXX") || \
