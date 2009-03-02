@@ -21,8 +21,15 @@ case $1 in
 		monkeysphere
 	fi
 
-	# try to transition from to 0.23:
-	/usr/share/monkeysphere/transitions/0.23
+	# try all available transitions:
+	for trans in 0.23 ; do
+	    /usr/share/monkeysphere/transitions/$trans || { \
+		RET=$?
+		echo "Failed running transition script /usr/share/monkeysphere/transitions/$trans" >&2
+		exit $RET
+	    }
+	done
+	    
 
 	# setup monkeysphere authentication
 	monkeysphere-authentication setup
