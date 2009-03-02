@@ -92,7 +92,7 @@ monkeysphere-generated authorized_keys files, the server must be told
 which keys will act as identity certifiers.  This is done with the
 \fBadd\-id\-certifier\fP command:
 
-$ monkeysphere\-authentication add\-id\-certifier KEYID
+# monkeysphere\-authentication add\-id\-certifier KEYID
 
 where KEYID is the key ID of the server admin, or whoever's
 certifications should be acceptable to the system for the purposes of
@@ -103,7 +103,7 @@ single OpenPGP public key.  Certifiers can be removed with the
 \fBremove\-id\-certifier\fP command, and listed with the
 \fBlist\-id\-certifiers\fP command.
 
-Remote users will be granted access to local accounts based on the
+A remote user will be granted access to a local account based on the
 appropriately-signed and valid keys associated with user IDs listed in
 that account's authorized_user_ids file.  By default, the
 authorized_user_ids file for an account is
@@ -111,22 +111,22 @@ authorized_user_ids file for an account is
 monkeysphere\-authentication.conf file.
 
 The \fBupdate\-users\fP command is used to generate authorized_keys
-files for local accounts based on the authorized user IDs listed in
-the account's authorized_user_ids file:
+files for a local account based on the user IDs listed in the
+account's authorized_user_ids file:
 
-$ monkeysphere\-authentication update\-users USER
+# monkeysphere\-authentication update\-users USER
 
 Not specifying USER will cause all accounts on the system to updated.
-The ssh server can then use these monkeysphere\-generated
-authorized_keys files to grant access to user accounts for remote
-users.  In order for sshd to look at the monkeysphere\-generated
-authorized_keys file for user authentication, the AuthorizedKeysFile
-parameter must be set in the sshd_config to point to the
-monkeysphere\-generated authorized_keys files:
+The ssh server can use these monkeysphere-generated authorized_keys
+files to grant access to user accounts for remote users.  In order for
+sshd to look at the monkeysphere-generated authorized_keys file for
+user authentication, the AuthorizedKeysFile parameter must be set in
+the sshd_config to point to the monkeysphere\-generated
+authorized_keys files:
 
 AuthorizedKeysFile /var/lib/monkeysphere/authentication/authorized_keys/%u
 
-It is recommended to add "monkeysphere\-authentication update-users"
+It is recommended to add "monkeysphere\-authentication update\-users"
 to a system crontab, so that user keys are kept up-to-date, and key
 revocations and expirations can be processed in a timely manner.
 
@@ -170,7 +170,7 @@ Monkeysphere-generated user authorized_keys files.
 
 .SH AUTHOR
 
-Written by:
+This man page was written by:
 Jameson Rollins <jrollins@fifthhorseman.net>,
 Daniel Kahn Gillmor <dkg@fifthhorseman.net>,
 Matthew Goins <mjgoins@openflows.com>
@@ -182,4 +182,5 @@ Matthew Goins <mjgoins@openflows.com>
 .BR monkeysphere (7),
 .BR gpg (1),
 .BR ssh (1),
-.BR sshd (8)
+.BR sshd (8),
+.BR sshd_config (5)

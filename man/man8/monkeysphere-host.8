@@ -100,12 +100,12 @@ place of `diagnostics'.
 To enable host verification via the monkeysphere, an OpenPGP key must
 be made out of the host's ssh key, and the key must be published to
 the Web of Trust.  This is not done by default.  The first step is to
-import the host's ssh key into a monkeysphere OpenPGP key.  This is
-done with the import\-key command.  When importing a key, you must
+import the host's ssh key into a monkeysphere-style OpenPGP key.  This
+is done with the import\-key command.  When importing a key, you must
 specify the path to the host's ssh RSA key to import, and a hostname
 to use as the key's user ID:
 
-$ monkeysphere\-host import\-key /etc/ssh/ssh_host_rsa_key host.example.org
+# monkeysphere\-host import\-key /etc/ssh/ssh_host_rsa_key host.example.org
 
 On most systems, the ssh host RSA key is stored at
 /etc/ssh/ssh_host_rsa_key.
@@ -125,7 +125,7 @@ verify and sign the key, and then re-publish the signature.  Please
 see http://web.monkeysphere.info/signing-host-keys/ for more
 information.  Once an admin's signature is published, users logging
 into the host can use it to validate the host's key without having to
-manually check the hosts key's fingerprint.
+manually check the host key's fingerprint.
 
 .SH ENVIRONMENT
 
@@ -146,7 +146,7 @@ If set to `false', never prompt the user for confirmation. (true)
 
 .TP
 /etc/monkeysphere/monkeysphere\-host.conf
-System monkeysphere-host config file.
+System monkeysphere\-host config file.
 .TP
 /var/lib/monkeysphere/host/ssh_host_rsa_key.pub.gpg
 A world-readable copy of the host's public key in OpenPGP format,
@@ -154,7 +154,7 @@ including all relevant self-signatures.
 
 .SH AUTHOR
 
-Written by:
+This man page was written by:
 Jameson Rollins <jrollins@fifthhorseman.net>,
 Daniel Kahn Gillmor <dkg@fifthhorseman.net>,
 Matthew Goins <mjgoins@openflows.com>
@@ -166,4 +166,4 @@ Matthew Goins <mjgoins@openflows.com>
 .BR monkeysphere (7),
 .BR gpg (1),
 .BR ssh (1),
-.BR sshd (8),
+.BR sshd (8)
