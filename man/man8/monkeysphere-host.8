@@ -1,12 +1,12 @@
-.TH MONKEYSPHERE-SERVER "8" "June 2008" "monkeysphere" "User Commands"
+.TH MONKEYSPHERE-SERVER "8" "March 2009" "monkeysphere" "User Commands"
 
 .SH NAME
 
-monkeysphere-host \- Monkeysphere host admin tool.
+monkeysphere\-host - Monkeysphere host admin tool.
 
 .SH SYNOPSIS
 
-.B monkeysphere-host \fIsubcommand\fP [\fIargs\fP]
+.B monkeysphere\-host \fIsubcommand\fP [\fIargs\fP]
 
 .SH DESCRIPTION
 
@@ -15,29 +15,29 @@ for OpenSSH authentication.  OpenPGP keys are tracked via GnuPG, and
 added to the authorized_keys and known_hosts files used by OpenSSH for
 connection authentication.
 
-\fBmonkeysphere-host\fP is a Monkeysphere server admin utility.
+\fBmonkeysphere\-host\fP is a Monkeysphere server admin utility.
 
 .SH SUBCOMMANDS
 
-\fBmonkeysphere-host\fP takes various subcommands:
+\fBmonkeysphere\-host\fP takes various subcommands:
 .TP
-.B import-key FILE NAME[:PORT]
+.B import\-key FILE NAME[:PORT]
 Import a pem-encoded ssh secret host key from file FILE.  If FILE
-is '-', then the key will be imported from stdin.  NAME[:PORT] is used
+is `\-', then the key will be imported from stdin.  NAME[:PORT] is used
 to specify the fully-qualified hostname (and port) used in the user ID
 of the new OpenPGP key.  If PORT is not specified, the no port is
 added to the user ID, which means port 22 is assumed.  `i' may be used
-in place of `import-key'.
+in place of `import\-key'.
 .TP
-.B show-key
+.B show\-key
 Output information about host's OpenPGP and SSH keys.  `s' may be used
-in place of `show-key'.
+in place of `show\-key'.
 .TP
-.B extend-key [EXPIRE]
+.B set\-expire [EXPIRE]
 Extend the validity of the OpenPGP key for the host until EXPIRE from
 the present.  If EXPIRE is not specified, then the user will be
 prompted for the extension term.  Expiration is specified as with
-GnuPG:
+GnuPG (measured from today's date):
 .nf
          0 = key does not expire
       <n>  = key expires in n days
@@ -45,24 +45,24 @@ GnuPG:
       <n>m = key expires in n months
       <n>y = key expires in n years
 .fi
-`e' may be used in place of `extend-key'.
+`e' may be used in place of `set\-expire'.
 .TP
-.B add-hostname HOSTNAME
+.B add\-hostname HOSTNAME
 Add a hostname user ID to the server host key.  `n+' may be used in
-place of `add-hostname'.
+place of `add\-hostname'.
 .TP
-.B revoke-hostname HOSTNAME
-Revoke a hostname user ID from the server host key.  `n-' may be used
-in place of `revoke-hostname'.
+.B revoke\-hostname HOSTNAME
+Revoke a hostname user ID from the server host key.  `n\-' may be used
+in place of `revoke\-hostname'.
 .TP
-.B add-revoker KEYID|FILE
+.B add\-revoker KEYID|FILE
 Add a revoker to the host's OpenPGP key.  The key ID will be loaded
 from the keyserver.  A file may be loaded instead of pulling the key
 from the keyserver by specifying the path to the file as the argument,
-or by specifying `-` to load from stdin.  `r+' may be be used in place
+or by specifying `\-' to load from stdin.  `r+' may be be used in place
 of `add-revoker'.
 .TP
-.B revoke-key
+.B revoke\-key
 Generate (with the option to publish) a revocation certificate for the
 host's OpenPGP key.  If such a certificate is published, your host key
 will be permanently revoked.  This subcommand will ask you a series of
@@ -71,9 +71,10 @@ to stdout.  If you explicitly tell it to publish the revocation
 certificate immediately, it will send it to the public keyservers.
 USE WITH CAUTION!
 .TP
-.B publish-key
-Publish the host's OpenPGP key to the keyserver.  `p' may be used in
-place of `publish-key'.
+.B publish\-key
+Publish the host's OpenPGP key to the public keyservers.  `p' may be
+used in place of `publish-key'.  Note that there is no way to remove a
+key from the public keyservers once it is published!
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
@@ -98,7 +99,7 @@ To enable host verification via the monkeysphere, the host's key must
 be published to the Web of Trust.  This is not done by default.  To
 publish the host key to the keyservers, run the following command:
 
-$ monkeysphere-host publish-key
+$ monkeysphere\-host publish\-key
 
 In order for users logging into the system to be able to identify the
 host via the monkeysphere, at least one person (e.g. a server admin)
@@ -118,7 +119,7 @@ Set the log level (INFO).  Can be SILENT, ERROR, INFO, VERBOSE, DEBUG, in
 increasing order of verbosity.
 .TP
 MONKEYSPHERE_KEYSERVER
-OpenPGP keyserver to use (pool.sks-keyservers.net).
+OpenPGP keyserver to use (pool.sks\-keyservers.net).
 .TP
 MONKEYSPHERE_PROMPT
 If set to `false', never prompt the user for confirmation. (true)
@@ -127,12 +128,12 @@ If set to `false', never prompt the user for confirmation. (true)
 .SH FILES
 
 .TP
-/etc/monkeysphere/monkeysphere-host.conf
+/etc/monkeysphere/monkeysphere\-host.conf
 System monkeysphere-host config file.
 .TP
-/var/lib/monkeysphere/host/ssh_host_rsa_key
-Copy of the host's private key in ssh format, suitable for use by
-sshd.
+/var/lib/monkeysphere/host/ssh_host_rsa_key.pub.gpg
+A world-readable copy of the host's public key in OpenPGP format,
+including all relevant self-signatures.
 
 .SH AUTHOR
 
@@ -144,7 +145,9 @@ Matthew Goins <mjgoins@openflows.com>
 .SH SEE ALSO
 
 .BR monkeysphere (1),
-.BR monkeysphere-authentication (8),
+.BR monkeysphere\-authentication (8),
 .BR monkeysphere (7),
 .BR gpg (1),
-.BR ssh (1)
+.BR ssh (1),
+.BR sshd (8),
+

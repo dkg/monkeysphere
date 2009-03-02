@@ -1,8 +1,8 @@
-.TH MONKEYSPHERE "7" "June 2008" "monkeysphere" "System Frameworks"
+.TH MONKEYSPHERE "7" "March 2009" "monkeysphere" "System Frameworks"
 
 .SH NAME
 
-monkeysphere \- ssh authentication framework using OpenPGP Web of
+monkeysphere - ssh authentication framework using OpenPGP Web of
 Trust
 
 .SH DESCRIPTION
@@ -50,7 +50,7 @@ ssh authentication.  OpenPGP keys are considered acceptable if the
 following criteria are met:
 .TP
 .B capability
-The key must have the "authentication" ("a") usage flag set.
+The key must have the `authentication' (`a') usage flag set.
 .TP
 .B validity
 The key itself must be valid, i.e. it must be well-formed, not
@@ -62,7 +62,7 @@ The relevant user ID must be signed by a trusted identity certifier.
 .SH HOST IDENTIFICATION
 
 The OpenPGP keys for hosts have associated user IDs that use the ssh
-URI specification for the host, i.e. "ssh://host.full.domain[:port]".
+URI specification for the host, i.e. `ssh://host.full.domain[:port]'.
 
 .SH AUTHOR
 
@@ -73,11 +73,11 @@ Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 .SH SEE ALSO
 
 .BR monkeysphere (1),
-.BR monkeysphere-host (8),
-.BR monkeysphere-authentication (8),
+.BR monkeysphere\-host (8),
+.BR monkeysphere\-authentication (8),
 .BR openpgp2ssh (1),
 .BR pem2openpgp (1),
 .BR gpg (1),
 .BR http://tools.ietf.org/html/rfc4880,
 .BR ssh (1),
-.BR http://tools.ietf.org/wg/secsh/draft-ietf-secsh-scp-sftp-ssh-uri/
+.BR http://tools.ietf.org/wg/secsh/draft\-ietf\-secsh\-scp\-sftp\-ssh\-uri/
