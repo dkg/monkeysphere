@@ -5,7 +5,8 @@ monkeysphere (0.24~pre-1) UNRELEASED; urgency=low
     - Now uses perl-based keytrans for both pem2openpgp and openpgp2ssh
     - no longer needs base64 in PATH
     - added "test" make target
-    - improved transitions/0.23 script
+    - improved transitions/0.23 script so it no longer fails in common
+      circumstances (Closes: #517779)
     - RSA only: no longer handles DSA keys
   * update/cleanup maintainer scripts
   * remove GnuTLS dependency.
