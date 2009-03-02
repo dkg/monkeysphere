@@ -92,7 +92,7 @@ for uname in $unames ; do
 	    export TMP_AUTHORIZED_USER_IDS
 
 	    # process authorized_user_ids file, as monkeysphere user
-	    FILE_OWNER="$MONKEYSPHERE_USER" su_monkeysphere_user \
+	    su_monkeysphere_user \
 		". ${SYSSHAREDIR}/common; process_authorized_user_ids $TMP_AUTHORIZED_USER_IDS" \
 		|| returnCode="$?"
 	else
