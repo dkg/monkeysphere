@@ -1,9 +1,11 @@
-#!/bin/sh -e
+#!/bin/sh
 
 # postinst script for monkeysphere
 
 # Author: Jameson Rollins <jrollins@finestructure.net>
 # Copyright 2008-2009
+
+set -e
 
 VARLIB="/var/lib/monkeysphere"
 

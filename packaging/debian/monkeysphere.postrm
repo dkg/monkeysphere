@@ -1,9 +1,11 @@
-#!/bin/sh -e
+#!/bin/sh
 
 # postrm script for monkeysphere
 
 # Author: Jameson Rollins <jrollins@finestructure.net>
 # Copyright 2008-2009
+
+set -e
 
 case $1 in
     purge)
