@@ -13,7 +13,7 @@ Monkeysphere relies on:
 
  * [OpenSSH](http://openssh.com/)
  * [GnuPG](http://gnupg.org/)
- * [Perl](http://www.perl.org/) (including the [libcrypt-openssl-rsa](http://perl-openssl.sourceforge.net/) and libdigest-sha1 libraries)
+ * [Perl](http://www.perl.org/) (including the [Crypt::OpenSSL::RSA](http://search.cpan.org/dist/Crypt-OpenSSL-RSA/) and [Digest::SHA1](http://search.cpan.org/dist/Digest-SHA1/) modules and their dependencies)
 
 ## Debian ##
 
