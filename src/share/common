@@ -76,11 +76,10 @@ log() {
 	fi
 	if [ "$priority" = "$level" -a "$output" = 'true' ] ; then
 	    if [ "$1" ] ; then
-		echo -n "ms: " >&2
-		echo "$@" >&2
+		echo "$@"
 	    else
-		cat >&2
-	    fi
+		cat
+	    fi | sed 's/^/'"${LOG_PREFIX}"'/' >&2
 	fi
     done
 }

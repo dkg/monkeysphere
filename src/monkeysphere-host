@@ -230,6 +230,7 @@ PROMPT=${MONKEYSPHERE_PROMPT:=$PROMPT}
 
 # other variables
 GNUPGHOME_HOST=${MONKEYSPHERE_GNUPGHOME_HOST:="${MHDATADIR}"}
+LOG_PREFIX=${MONKEYSPHERE_LOG_PREFIX:='ms: '}
 
 # export variables needed in su invocation
 export DATE
