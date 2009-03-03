@@ -100,7 +100,7 @@ core_fingerprint() {
 gpg_core_sphere_sig_transfer() {
     log debug "exporting core local sigs to sphere..."
     gpg_core --export-options export-local-sigs --export | \
-	gpg_sphere "--import-options import-local-sigs --import"
+	gpg_sphere "--import-options import-local-sigs --import" 2>&1 | log debug
 }
 
 ########################################################################
