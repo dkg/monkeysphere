@@ -1,5 +1,5 @@
 [[meta title="The Monkeysphere Project"]]
-[[meta license="All content on this web site is licensed under the GPL version 3 or later"]]
+[[meta license="Unless otherwise noted, all content on this web site is licensed under the GPL version 3 or later"]]
 [[meta copyright="All content on this web site is copyright by the author of that content. [Look in the revision control system](community) for details about who authored a particular piece of content."]]
 
 # The Monkeysphere Project #
