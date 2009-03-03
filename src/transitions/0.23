@@ -193,7 +193,7 @@ if [ -d "$SYSDATADIR"/gnupg-host ] ; then
 
     mkdir -p "$STASHDIR"
     chmod 0700 "$STASHDIR"
-    mv "${SYSDATADIR}/gnupg-host" "$STASHDIR"
+    mv "${SYSDATADIR}/gnupg-host" "$STASHDIR"/gnupg-host.$(date '+%F_%T%z')
 fi
 
 
@@ -209,5 +209,5 @@ if [ -d "${SYSDATADIR}/gnupg-authentication" ] ; then
 
     mkdir -p "$STASHDIR"
     chmod 0700 "$STASHDIR"
-    mv "${SYSDATADIR}/gnupg-authentication" "$STASHDIR"
+    mv "${SYSDATADIR}/gnupg-authentication" "$STASHDIR"/gnupg-authentication.$(date '+%F_%T%z')
 fi
