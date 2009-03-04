@@ -12,7 +12,7 @@ Dm-Upload-Allowed: yes
 Package: monkeysphere
 Architecture: all
 Depends: openssh-client, gnupg, libcrypt-openssl-rsa-perl, libdigest-sha1-perl, lockfile-progs | procmail, adduser, ${misc:Depends}
-Recommends: netcat | socat, ssh-askpass
+Recommends: netcat | socat, ssh-askpass, cron
 Enhances: openssh-client, openssh-server
 Description: use the OpenPGP web of trust to verify ssh connections
  SSH key-based authentication is tried-and-true, but it lacks a true
