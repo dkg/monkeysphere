@@ -1,4 +1,4 @@
-monkeysphere (0.24~pre-1) UNRELEASED; urgency=low
+monkeysphere (0.24-1) unstable; urgency=low
 
   * New upstream release:
     - fixed how version information is stored/retrieved
