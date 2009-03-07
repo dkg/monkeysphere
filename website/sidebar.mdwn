@@ -7,7 +7,7 @@
 <td>
 [[WHY?|why]]
 [[DOWNLOAD|download]]
-<a href="http://screenshots.debian.net/package/monkeysphere">SCREENSHOT</a>
+<a href="http://screenshots.debian.net/package/monkeysphere">SCREENSHOTS</a>
 [[DOCUMENTATION|doc]] 
 [[NEWS|news]]
 [[COMMUNITY|community]]
