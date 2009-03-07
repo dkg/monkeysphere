@@ -242,6 +242,7 @@ export PROMPT
 export GNUPGHOME_HOST
 export GNUPGHOME
 export HOST_FINGERPRINT
+export LOG_PREFIX
 
 # get subcommand
 COMMAND="$1"
