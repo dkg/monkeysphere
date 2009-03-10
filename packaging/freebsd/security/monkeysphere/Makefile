@@ -12,6 +12,7 @@ MASTER_SITES=	http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkey
 # hack for debian orig tarballs
 DISTNAME=	${PORTNAME}_${DISTVERSION}
 EXTRACT_SUFX=	.orig.tar.gz
+WRKSRC=	work/${PORTNAME}-${DISTVERSION}
 
 MAINTAINER=	dkg@fifthhorseman.net
 COMMENT=	Use the OpenPGP web of trust to verify ssh connections
