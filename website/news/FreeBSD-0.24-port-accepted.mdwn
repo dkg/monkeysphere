@@ -1,0 +1,11 @@
+[[meta title="FreeBSD 0.24 port accepted"]]
+
+FreeBSD's ports tree now contains [a port of the
+Monkeysphere](http://www.freebsd.org/cgi/ports.cgi?query=monkeysphere),
+version 0.24.  If you run FreeBSD, [update your ports
+tree](http://www.freebsd.org/doc/en/books/handbook/ports-using.html),
+and then:
+
+    cd /usr/ports/security/monkeysphere
+    make package
+
