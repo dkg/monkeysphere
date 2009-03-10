@@ -2,6 +2,8 @@ monkeysphere (0.25-1~pre) UNRELEASED; urgency=low
 
   * New upstream release:
     - fix the marginal ui output so that it's not prefixed by the LOG_PREFIX
+    - use msmktempdir everywhere (avoid unwrapped calls to mktemp for
+      portability)
 
  -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 07 Mar 2009 12:28:13 -0500
 
