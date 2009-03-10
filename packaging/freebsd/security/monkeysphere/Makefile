@@ -28,9 +28,24 @@ MANCOMPRESSED= yes
 
 MAKE_ARGS= ETCPREFIX=${PREFIX} MANPREFIX=${PREFIX}/man ETCSUFFIX=.sample
 
-# get rid of cruft after the patching:
+# use proper system paths for FreeBSD instead of debian's:
 post-patch:
-	find . -iname '*.orig' -delete
+	@${REINPLACE_CMD} -e 's|/etc/monkeysphere|/usr/local/etc/monkeysphere|g' \
+	  ${WRKSRC}/src/share/defaultenv \
+	  ${WRKSRC}/src/transitions/0.23 \
+	  ${WRKSRC}/man/man1/monkeysphere.1 \
+	  ${WRKSRC}/man/man8/monkeysphere-authentication.8 \
+	  ${WRKSRC}/man/man8/monkeysphere-host.8 \
+	  ${WRKSRC}/etc/monkeysphere-authentication.conf
+	@${REINPLACE_CMD} -e 's|/var/lib/monkeysphere|/var/monkeysphere|g' \
+	  ${WRKSRC}/src/transitions/0.23 \
+	  ${WRKSRC}/man/man1/monkeysphere.1 \
+	  ${WRKSRC}/man/man8/monkeysphere-authentication.8 \
+	  ${WRKSRC}/man/man8/monkeysphere-host.8 \
+	  ${WRKSRC}/src/monkeysphere-host \
+	  ${WRKSRC}/src/monkeysphere-authentication \
+	  ${WRKSRC}/doc/getting-started-admin.mdwn
+
 
 post-install:
 	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere.conf ]; then \
