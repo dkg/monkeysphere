@@ -45,7 +45,10 @@ post-patch:
 	  ${WRKSRC}/src/monkeysphere-host \
 	  ${WRKSRC}/src/monkeysphere-authentication \
 	  ${WRKSRC}/doc/getting-started-admin.mdwn
-
+	@${REINPLACE_CMD} -e 's|/usr/share/monkeysphere|/usr/local/share/monkeysphere|g' \
+	  ${WRKSRC}/src/monkeysphere-host \
+	  ${WRKSRC}/src/monkeysphere-authentication \
+	  ${WRKSRC}/src/monkeysphere
 
 post-install:
 	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere.conf ]; then \
