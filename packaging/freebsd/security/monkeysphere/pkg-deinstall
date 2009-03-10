@@ -4,9 +4,9 @@
 # monkeysphere's debian/monkeysphere.postrm)
 
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-# Copyright 2008
+# Copyright 2008,2009
 
-# FIXME: is /var/lib/monkeysphere the right place for this stuff on
+# FIXME: is /var/monkeysphere the right place for this stuff on
 # FreeBSD?
 VARLIB="/var/monkeysphere"
 
