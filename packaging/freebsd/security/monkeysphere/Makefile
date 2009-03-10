@@ -51,6 +51,8 @@ post-patch:
 	  ${WRKSRC}/src/monkeysphere-host \
 	  ${WRKSRC}/src/monkeysphere-authentication \
 	  ${WRKSRC}/src/monkeysphere
+	# and clean up cruft from the sed replacements:
+	find ${WRKSRC} -name '*.bak' -delete
 
 post-install:
 	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere.conf ]; then \
