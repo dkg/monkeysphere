@@ -18,15 +18,15 @@ Monkeysphere relies on:
 ## Debian ##
 
 If you are running a [Debian](http://www.debian.org/) system, the
-[monkeysphere is now available in the Debian unstable ("sid")
+[monkeysphere is available in the Debian unstable ("sid")
 distribution](http://packages.debian.org/sid/monkeysphere).
 
 You can also install the Monkeysphere directly from the Monkeysphere
 Debian archive.  You can add this archive to your system by putting
 the following lines in `/etc/apt/sources.list.d/monkeysphere.list`:
 
-	deb http://archive.monkeysphere.info/debian experimental monkeysphere
-	deb-src http://archive.monkeysphere.info/debian experimental monkeysphere
+    deb http://archive.monkeysphere.info/debian experimental monkeysphere
+    deb-src http://archive.monkeysphere.info/debian experimental monkeysphere
 
 The repository is currently signed by [The Monkeysphere archive
 signing key](/archive-key), key id EB8AF314 (fingerprint: `2E8D D26C
@@ -36,27 +36,16 @@ configuration after verifying its integrity](/archive-key).
 
 ## FreeBSD ##
 
-There is [now a FreeBSD port available](/news/FreeBSD-port-available)
-for the Monkeysphere.
+There is [a FreeBSD port
+available](http://www.freebsd.org/cgi/ports.cgi?query=monkeysphere)
+for the Monkeysphere, built and tested against FreeBSD 7.1.
 
-While the monkeysphere is not officially included in the ports tree
-yet, [a problem
-report](http://www.freebsd.org/cgi/query-pr.cgi?pr=ports/128406) has
-been submitted, and the package itself is functional.
+You should be able to build and install the latest port with:
 
-The latest version of the ports directory can be found in [the git
-repository](/community) under
-`packaging/freebsd/security/monkeysphere`.  Please [let us
-know](/community) if you encounter any problems with it on a FreeBSD
-system.
-
-Until the port is accepted, you should be able to build the latest
-port with:
-
-    git clone git://git.monkeysphere.info/monkeysphere
-    cp -a monkeysphere/packaging/freebsd/security/monkeysphere /usr/ports/security
     cd /usr/ports/security/monkeysphere
-    make && make install
+    make package
+
+Enjoy!
 
 ## Source ##
 

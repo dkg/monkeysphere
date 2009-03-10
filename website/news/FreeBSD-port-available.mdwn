@@ -1,5 +1,8 @@
 [[meta title="FreeBSD port available"]]
 
+Update: [FreeBSD's official ports tree now contains monkeysphere
+0.24](FreeBSD-0.24-port-accepted).
+
 There is now a FreeBSD port available for the Monkeysphere.
 
 It has been built and tested (so far) on a FreeBSD 7.1 AMD64 system,
