@@ -18,9 +18,9 @@
 # "marginal case" ouput in the case that there is not a full
 # validation path to the host
 output_no_valid_key() {
-    local returnCode=0
-    local sshKeyOffered
     local userID
+    local sshKeyOffered
+    local gpgOut
     local type
     local validity
     local keyid
@@ -30,8 +30,11 @@ output_no_valid_key() {
     local tmpkey
     local sshFingerprint
     local gpgSigOut
+    local returnCode=0
 
     userID="ssh://${HOSTP}"
+
+    LOG_PREFIX=
 
     cat <<EOF | log info
 -------------------- Monkeysphere warning -------------------
