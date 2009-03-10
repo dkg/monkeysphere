@@ -15,16 +15,15 @@ DISTFILES=      ${PORTNAME}_${DISTVERSION}.orig.tar.gz
 MAINTAINER=    dkg@fifthhorseman.net
 COMMENT=       use the OpenPGP web of trust to verify ssh connections
 
-LIB_DEPENDS=	gnutls.26:${PORTSDIR}/security/gnutls
-RUN_DEPENDS=    base64:${PORTSDIR}/converters/base64 \
-		gpg:${PORTSDIR}/security/gnupg1 \
+RUN_DEPENDS=    gpg:${PORTSDIR}/security/gnupg1 \
 		lockfile:${PORTSDIR}/mail/procmail \
-		/usr/local/bin/getopt:${PORTSDIR}/misc/getopt \
-		bash:${PORTSDIR}/shells/bash
+		bash:${PORTSDIR}/shells/bash \
+		${SITE_PERL}/${PERL_ARCH}/Crypt/OpenSSL/RSA.pm:${PORTSDIR}/security/p5-Crypt-OpenSSL-RSA \
+		${SITE_PERL}/${PERL_ARCH}/Digest/SHA1.pm:${PORTSDIR}/security/p5-Digest-SHA1
 
-MAN1=		monkeysphere.1 openpgp2ssh.1 monkeysphere-ssh-proxycommand.1
+MAN1=		monkeysphere.1 openpgp2ssh.1 pem2openpgp.1
 MAN7=		monkeysphere.7
-MAN8=		monkeysphere-server.8
+MAN8=		monkeysphere-host.8 monkeysphere-authentication.8
 MANCOMPRESSED= yes
 
 MAKE_ARGS= ETCPREFIX=${PREFIX} MANPREFIX=${PREFIX}/man ETCSUFFIX=.sample
@@ -34,17 +33,14 @@ post-patch:
 	find . -iname '*.orig' -delete
 
 post-install:
-	@if [ ! -f ${PREFIX}/etc/monkeysphere/gnupg-host.conf ]; then \
-		${CP} -p ${PREFIX}/etc/monkeysphere/gnupg-host.conf.sample ${PREFIX}/etc/monkeysphere/gnupg-host.conf ; \
-	fi
-	@if [ ! -f ${PREFIX}/etc/monkeysphere/gnupg-authentication.conf ]; then \
-		${CP} -p ${PREFIX}/etc/monkeysphere/gnupg-authentication.conf.sample ${PREFIX}/etc/monkeysphere/gnupg-authentication.conf ; \
-	fi
 	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere.conf ]; then \
 		${CP} -p ${PREFIX}/etc/monkeysphere/monkeysphere.conf.sample ${PREFIX}/etc/monkeysphere/monkeysphere.conf ; \
 	fi
-	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere-server.conf ]; then \
-		${CP} -p ${PREFIX}/etc/monkeysphere/monkeysphere-server.conf.sample ${PREFIX}/etc/monkeysphere/monkeysphere-server.conf ; \
+	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere-host.conf ]; then \
+		${CP} -p ${PREFIX}/etc/monkeysphere/monkeysphere-host.conf.sample ${PREFIX}/etc/monkeysphere/monkeysphere-host.conf ; \
+	fi
+	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere-authentication.conf ]; then \
+		${CP} -p ${PREFIX}/etc/monkeysphere/monkeysphere-authentication.conf.sample ${PREFIX}/etc/monkeysphere/monkeysphere-authentication.conf ; \
 	fi
 .if !defined(PACKAGE_BUILDING)
 	@${SETENV} ${SH} ${PKGINSTALL} ${PKGNAME} POST-INSTALL
