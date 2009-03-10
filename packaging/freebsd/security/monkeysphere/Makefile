@@ -10,9 +10,7 @@ PORTVERSION=	0.24
 CATEGORIES=	security
 MASTER_SITES=	http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
 # hack for debian orig tarballs
-DISTNAME=	${PORTNAME}_${DISTVERSION}
-EXTRACT_SUFX=	.orig.tar.gz
-WRKSRC=	work/${PORTNAME}-${DISTVERSION}
+DISTFILES=	${PORTNAME}_${DISTVERSION}.orig.tar.gz
 
 MAINTAINER=	dkg@fifthhorseman.net
 COMMENT=	Use the OpenPGP web of trust to verify ssh connections
@@ -52,7 +50,7 @@ post-patch:
 	  ${WRKSRC}/src/monkeysphere-authentication \
 	  ${WRKSRC}/src/monkeysphere
 	# and clean up cruft from the sed replacements:
-	find ${WRKSRC} -name '*.bak' -delete
+	${FIND} ${WRKSRC} -name '*.bak' -delete
 
 post-install:
 	@if [ ! -f ${PREFIX}/etc/monkeysphere/monkeysphere.conf ]; then \
