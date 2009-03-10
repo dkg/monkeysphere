@@ -5,18 +5,18 @@
 # $FreeBSD$
 #
 
-PORTNAME=      monkeysphere
-PORTVERSION=   0.24
-CATEGORIES=    security
-MASTER_SITES=  http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
+PORTNAME=	monkeysphere
+PORTVERSION=	0.24
+CATEGORIES=	security
+MASTER_SITES=	http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
 # hack for debian orig tarballs
-DISTNAME=      ${PORTNAME}_${DISTVERSION}
-EXTRACT_SUFX=  .orig.tar.gz
+DISTNAME=	${PORTNAME}_${DISTVERSION}
+EXTRACT_SUFX=	.orig.tar.gz
 
-MAINTAINER=    dkg@fifthhorseman.net
-COMMENT=       Use the OpenPGP web of trust to verify ssh connections
+MAINTAINER=	dkg@fifthhorseman.net
+COMMENT=	Use the OpenPGP web of trust to verify ssh connections
 
-RUN_DEPENDS=    gpg:${PORTSDIR}/security/gnupg1 \
+RUN_DEPENDS=	gpg:${PORTSDIR}/security/gnupg1 \
 		lockfile:${PORTSDIR}/mail/procmail \
 		bash:${PORTSDIR}/shells/bash \
 		${SITE_PERL}/${PERL_ARCH}/Crypt/OpenSSL/RSA.pm:${PORTSDIR}/security/p5-Crypt-OpenSSL-RSA \
@@ -25,9 +25,9 @@ RUN_DEPENDS=    gpg:${PORTSDIR}/security/gnupg1 \
 MAN1=		monkeysphere.1 openpgp2ssh.1 pem2openpgp.1
 MAN7=		monkeysphere.7
 MAN8=		monkeysphere-host.8 monkeysphere-authentication.8
-MANCOMPRESSED= yes
+MANCOMPRESSED=	yes
 
-MAKE_ARGS= ETCPREFIX=${PREFIX} MANPREFIX=${PREFIX}/man ETCSUFFIX=.sample
+MAKE_ARGS=	ETCPREFIX=${PREFIX} MANPREFIX=${PREFIX}/man ETCSUFFIX=.sample
 
 # use proper system paths for FreeBSD instead of debian's:
 post-patch:
