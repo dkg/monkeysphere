@@ -10,10 +10,11 @@ PORTVERSION=   0.24
 CATEGORIES=    security
 MASTER_SITES=  http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
 # hack for debian orig tarballs
-DISTFILES=      ${PORTNAME}_${DISTVERSION}.orig.tar.gz
+DISTNAME=      ${PORTNAME}_${DISTVERSION}
+EXTRACT_SUFX=  .orig.tar.gz
 
 MAINTAINER=    dkg@fifthhorseman.net
-COMMENT=       use the OpenPGP web of trust to verify ssh connections
+COMMENT=       Use the OpenPGP web of trust to verify ssh connections
 
 RUN_DEPENDS=    gpg:${PORTSDIR}/security/gnupg1 \
 		lockfile:${PORTSDIR}/mail/procmail \
