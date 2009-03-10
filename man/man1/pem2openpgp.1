@@ -1,12 +1,12 @@
 .\"  -*- nroff -*-
-.Dd $Mdocdate: January 25, 2009 $
+.Dd $Mdocdate: March 1, 2009 $
 .Dt PEM2OPENPGP 1
 .Os
 .Sh NAME
 pem2openpgp
 .Nd translate PEM-encoded RSA keys to OpenPGP certificates
 .Sh SYNOPSIS
-.Nm pem2openpgp "$USERID" < mykey.pem | gpg --import
+.Nm pem2openpgp "$USERID" < mykey.pem | gpg \-\-import
 .Pp
 .Nm PEM2OPENPGP_EXPIRATION=$((86400 * $DAYS)) PEM2OPENPGP_USAGE_FLAGS=authentication,certify pem2openpgp "$USERID" <mykey.pem
 .Sh DESCRIPTION
@@ -61,7 +61,7 @@ will read the key from stdin.
 and this man page were written by Daniel Kahn Gillmor
 <dkg@fifthhorseman.net>.
 .Sh BUGS
-Only handles RSA keys at the moment.  It would be nice to handle DSA
+Only handles RSA keys at the moment.  It might be nice to handle DSA
 keys as well.
 .Pp
 Currently only creates certificates with a single User ID.  Should be
@@ -81,5 +81,5 @@ https://labs.riseup.net/code/projects/show/monkeysphere
 .Xr monkeysphere 1 ,
 .Xr monkeysphere 7 ,
 .Xr ssh 1 ,
-.Xr monkeysphere-host 8 ,
-.Xr monkeysphere-authentication 8
+.Xr monkeysphere\-host 8 ,
+.Xr monkeysphere\-authentication 8

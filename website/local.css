@@ -1,3 +1,22 @@
+/* CSS for web.monkeysphere.info
+
+Copyright: 2008,2009
+
+Authors: 
+Dan Scott, 
+Daniel Kahn Gillmor <dkg@fifthhorseman.net>,
+Jameson Graef Rollins <jrollins@finestructure.net>,
+Jamie McClelland <jm@mayfirst.org>
+
+License: This stylesheet is licensed under the GNU GPL, version 3 or
+later (your choice).
+
+The full text of the GPL can be found at:
+
+  http://www.gnu.org/licenses/gpl.html
+
+ */
+
 h1 {
   -moz-border-radius: 4px;
   background-color: #B67B4E;

@@ -2,7 +2,7 @@
 
 .SH NAME
 
-monkeysphere \- Monkeysphere client user interface
+monkeysphere - Monkeysphere client user interface
 
 .SH SYNOPSIS
 
@@ -21,7 +21,7 @@ connection authentication.
 
 \fBmonkeysphere\fP takes various subcommands:
 .TP
-.B update-known_hosts [HOST]...
+.B update\-known_hosts [HOST]...
 Update the known_hosts file.  For each specified host, gpg will be
 queried for a key associated with the host URI (see HOST
 IDENTIFICATION in
@@ -37,9 +37,9 @@ known_hosts file will be processed.  This subcommand will exit with a
 status of 0 if at least one acceptable key was found for a specified
 host, 1 if no matching keys were found at all, and 2 if matching keys
 were found but none were acceptable.  `k' may be used in place of
-`update-known_hosts'.
+`update\-known_hosts'.
 .TP
-.B update-authorized_keys
+.B update\-authorized_keys
 Update the authorized_keys file for the user executing the command
 (see MONKEYSPHERE_AUTHORIZED_KEYS in ENVIRONMENT, below).  First all
 monkeysphere keys are cleared from the authorized_keys file.  Then, or
@@ -54,18 +54,18 @@ is found for the user ID, nothing is done.  This subcommand will exit
 with a status of 0 if at least one acceptable key was found for a user
 ID, 1 if no matching keys were found at all, and 2 if matching keys
 were found but none were acceptable.  `a' may be used in place of
-`update-authorized_keys'.
+`update\-authorized_keys'.
 .TP
-.B gen-subkey [KEYID]
+.B gen\-subkey [KEYID]
 Generate an authentication subkey for a private key in your GnuPG
 keyring.  KEYID is the key ID for the primary key for which the subkey
 with "authentication" capability will be generated.  If no key ID is
 specified, but only one key exists in the secret keyring, that key
 will be used.  The length of the generated key can be specified with
-the `--length` or `-l` option.  `g' may be used in place of
-`gen-subkey'.
+the `\-\-length' or `\-l' option.  `g' may be used in place of
+`gen\-subkey'.
 .TP
-.B ssh-proxycommand
+.B ssh\-proxycommand
 An ssh ProxyCommand that can be used to trigger a monkeysphere update
 of the ssh known_hosts file for a host that is being connected to with
 ssh.  This works by updating the known_hosts file for the host first,
@@ -78,16 +78,16 @@ more info).
 This command is meant to be run as the ssh "ProxyCommand".  This can
 either be done by specifying the proxy command on the command line:
 
-.B ssh -o ProxyCommand="monkeysphere ssh-proxycommand %h %p" ...
+.B ssh \-o ProxyCommand="monkeysphere ssh\-proxycommand %h %p" ...
 
 or by adding the following line to your ~/.ssh/config script:
 
-.B ProxyCommand monkeysphere ssh-proxycommand %h %p
+.B ProxyCommand monkeysphere ssh\-proxycommand %h %p
 
 The script can easily be incorporated into other ProxyCommand scripts
-by calling it with the "--no-connect" option, i.e.:
+by calling it with the "\-\-no\-connect" option, i.e.:
 
-.B monkeysphere ssh-proxycommand --no-connect "$HOST" "$PORT"
+.B monkeysphere ssh\-proxycommand \-\-no\-connect "$HOST" "$PORT"
 
 This will run everything except the final exec of netcat to make the
 TCP connection to the host.  In this way this command can be added to
@@ -114,14 +114,17 @@ MONKEYSPHERE_CHECK_KEYSERVER environment variable to either `true' or
 either always or never check the keyserver for host key updates.
 
 .TP
-.B subkey-to-ssh-agent [ssh-add arguments]
+.B subkey\-to\-ssh\-agent [ssh\-add arguments]
 Push all authentication-capable subkeys in your GnuPG secret keyring
 into your running ssh-agent.  Additional arguments are passed through
 to
-.BR ssh-add (1).
+.BR ssh\-add (1).
 For example, to remove the authentication subkeys, pass an additional
-`-d' argument.  To require confirmation on each use of the key, pass
-`-c'.  `s' may be used in place of `subkey-to-ssh-agent'.
+`\-d' argument.  To require confirmation on each use of the key, pass
+`\-c'.  The MONKEYSPHERE_SUBKEYS_FOR_AGENT environment can be used to
+specify the full fingerprints of specific keys to add to the agent
+(space separated), instead of adding them all.  `s' may be used in
+place of `subkey\-to\-ssh\-agent'.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
@@ -133,29 +136,33 @@ The following environment variables will override those specified in
 the monkeysphere.conf configuration file (defaults in parentheses):
 .TP
 MONKEYSPHERE_LOG_LEVEL
-Set the log level (INFO).  Can be SILENT, ERROR, INFO, VERBOSE, DEBUG,
-in increasing order of verbosity.
+Set the log level.  Can be SILENT, ERROR, INFO, VERBOSE, DEBUG,
+in increasing order of verbosity. (INFO)
 .TP
 MONKEYSPHERE_GNUPGHOME, GNUPGHOME
-GnuPG home directory (~/.gnupg).
+GnuPG home directory. (~/.gnupg)
 .TP
 MONKEYSPHERE_KEYSERVER
-OpenPGP keyserver to use (subkeys.pgp.net).
+OpenPGP keyserver to use. (pool.sks-keyservers.net)
 .TP
 MONKEYSPHERE_CHECK_KEYSERVER
-Whether or not to check keyserver when making gpg queries (`true').
+Whether or not to check keyserver when making gpg queries. (true)
 .TP
 MONKEYSPHERE_KNOWN_HOSTS
-Path to ssh known_hosts file (~/.ssh/known_hosts).
+Path to ssh known_hosts file. (~/.ssh/known_hosts)
 .TP
 MONKEYSPHERE_HASH_KNOWN_HOSTS
-Whether or not to hash to the known_hosts file entries (`true').
+Whether or not to hash to the known_hosts file entries. (true)
 .TP
 MONKEYSPHERE_AUTHORIZED_KEYS
-Path to ssh authorized_keys file (~/.ssh/authorized_keys).
+Path to ssh authorized_keys file. (~/.ssh/authorized_keys)
 .TP
 MONKEYSPHERE_PROMPT
 If set to `false', never prompt the user for confirmation. (true)
+.TP
+MONKEYSPHERE_SUBKEYS_FOR_AGENT
+A space-separated list of authentication-capable subkeys to add to the
+ssh agent with subkey-to-ssh-agent.
 
 .SH FILES
 
@@ -178,9 +185,9 @@ Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 
 .SH SEE ALSO
 
-.BR monkeysphere-host (8),
-.BR monkeysphere-authentication (8),
+.BR monkeysphere\-host (8),
+.BR monkeysphere\-authentication (8),
 .BR monkeysphere (7),
 .BR ssh (1),
-.BR ssh-add (1),
+.BR ssh\-add (1),
 .BR gpg (1)

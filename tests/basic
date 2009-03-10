@@ -112,7 +112,7 @@ TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/monkeyspheretest.XXXXXXX")
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
-export PATH="$TESTDIR"/../src:"$TESTDIR"/../src/keytrans:"$PATH"
+export PATH="$TESTDIR"/../src:"$PATH"
 
 export MONKEYSPHERE_SYSDATADIR="$TEMPDIR"
 export MONKEYSPHERE_SYSCONFIGDIR="$TEMPDIR"
@@ -138,22 +138,6 @@ export SOCKET="$TEMPDIR"/ssh-socket
 # *anything* with any running X11 session.
 export DISPLAY=monkeys
 
-## make sure that the version number matches the debian changelog
-## (don't bother if this is being run from the tests).
-
-if [ -f "$TESTDIR"/../packaging/debian/changelog ]; then
-    echo
-    echo "##################################################"
-    echo "### checking version string match..."
-    repver=$(monkeysphere version)
-    debver=$(head -n1 "$TESTDIR"/../packaging/debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/')
-    if [ "$repver" = "$debver" ] ; then
-	echo "Versions match!"
-    else
-	printf "reported version string (%s) does not match debian changelog (%s)\n" "$repver" "$debver"
-	exit 1
-    fi
-fi
 
 ######################################################################
 ### CONFIGURE ENVIRONMENTS
@@ -290,7 +274,6 @@ echo "### update server authorized_keys file for this testuser..."
 monkeysphere-authentication update-users $(whoami)
 # FIXME: this is maybe not failing properly for:
 # ms: improper group or other writability on path '/tmp'.
-
 
 ######################################################################
 ### TESTS

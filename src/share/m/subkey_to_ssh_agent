@@ -26,14 +26,6 @@ subkey_to_ssh_agent() {
     local publine
     local kname
 
-    if ! test_gnu_dummy_s2k_extension ; then
-	failure "Your version of GnuTLS does not seem capable of using with gpg's exported subkeys.
-You may want to consider patching or upgrading to GnuTLS 2.6 or later.
-
-For more details, see:
- http://lists.gnu.org/archive/html/gnutls-devel/2008-08/msg00005.html"
-    fi
-
     # if there's no agent running, don't bother:
     if [ -z "$SSH_AUTH_SOCK" ] || ! which ssh-add >/dev/null ; then
 	failure "No ssh-agent available."
@@ -45,26 +37,34 @@ For more details, see:
     if [ "$sshaddresponse" = "2" ]; then
 	failure "Could not connect to ssh-agent"
     fi
-    
-    # get list of secret keys (to work around bug
-    # https://bugs.g10code.com/gnupg/issue945):
-    secretkeys=$(gpg_user --list-secret-keys --with-colons --fixed-list-mode \
-	--fingerprint | \
-	grep '^fpr:' | cut -f10 -d: | awk '{ print "0x" $1 "!" }')
 
-    if [ -z "$secretkeys" ]; then
-	failure "You have no secret keys in your keyring!
+    # if the MONKEYSPHERE_SUBKEYS_FOR_AGENT variable is set, use the
+    # keys specified there
+    if [ "$MONKEYSPHERE_SUBKEYS_FOR_AGENT" ] ; then
+	authsubkeys="$MONKEYSPHERE_SUBKEYS_FOR_AGENT"
+
+    # otherwise find all authentication-capable subkeys and use those
+    else
+	# get list of secret keys
+	# (to work around bug https://bugs.g10code.com/gnupg/issue945):
+	secretkeys=$(gpg_user --list-secret-keys --with-colons --fixed-list-mode \
+	    --fingerprint | \
+	    grep '^fpr:' | cut -f10 -d: | awk '{ print "0x" $1 "!" }')
+
+	if [ -z "$secretkeys" ]; then
+	    failure "You have no secret keys in your keyring!
 You might want to run 'gpg --gen-key'."
-    fi
+	fi
     
-    authsubkeys=$(gpg_user --list-secret-keys --with-colons --fixed-list-mode \
-	--fingerprint --fingerprint $secretkeys | \
-	cut -f1,5,10,12 -d: | grep -A1 '^ssb:[^:]*::[^:]*a[^:]*$' | \
-	grep '^fpr::' | cut -f3 -d: | sort -u)
+	authsubkeys=$(gpg_user --list-secret-keys --with-colons --fixed-list-mode \
+	    --fingerprint --fingerprint $secretkeys | \
+	    cut -f1,5,10,12 -d: | grep -A1 '^ssb:[^:]*::[^:]*a[^:]*$' | \
+	    grep '^fpr::' | cut -f3 -d: | sort -u)
 
-    if [ -z "$authsubkeys" ]; then
-	failure "no authentication-capable subkeys available.
-You might want to 'monkeysphere gen-subkey'"
+	if [ -z "$authsubkeys" ]; then
+	    failure "no authentication-capable subkeys available.
+You might want to run 'monkeysphere gen-subkey'."
+	fi
     fi
 
     workingdir=$(msmktempdir)
@@ -76,7 +76,16 @@ You might want to 'monkeysphere gen-subkey'"
     # through to ssh-add.  should we limit it to known ones?  For
     # example: -d or -c and/or -t <lifetime> 
 
-    for subkey in $authsubkeys; do 
+    for subkey in $authsubkeys; do
+	# test that the subkey has proper capability
+	capability=$(gpg_user --list-secret-keys --with-colons --fixed-list-mode \
+	    --fingerprint --fingerprint "0x${subkey}!" \
+	    | egrep -B 1 "^fpr:::::::::${subkey}:$" | grep "^ssb:" | cut -d: -f12)
+	if ! check_capability "$capability" 'a' ; then
+	    log error "Did not find authentication-capable subkey with key ID '$subkey'."
+	    continue
+	fi
+
 	# choose a label by which this key will be known in the agent:
 	# we are labelling the key by User ID instead of by
 	# fingerprint, but filtering out all / characters to make sure

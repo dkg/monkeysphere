@@ -14,16 +14,15 @@ ETCSUFFIX ?=
 PREFIX ?= /usr
 MANPREFIX ?= $(PREFIX)/share/man
 
-all: keytrans
-
-keytrans:
-	$(MAKE) -C src/keytrans
+# nothing actually needs to be built now.
+all: 
 
 tarball: clean
 	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
 	mkdir -p monkeysphere-$(MONKEYSPHERE_VERSION)/doc
 	ln -s ../../website/getting-started-user.mdwn ../../website/getting-started-admin.mdwn ../../doc/TODO ../../doc/MonkeySpec monkeysphere-$(MONKEYSPHERE_VERSION)/doc
 	ln -s ../COPYING ../etc ../Makefile ../man ../src ../tests monkeysphere-$(MONKEYSPHERE_VERSION)
+	echo $(MONKEYSPHERE_VERSION) > monkeysphere-$(MONKEYSPHERE_VERSION)/VERSION
 	tar -ch --exclude='*~' monkeysphere-$(MONKEYSPHERE_VERSION) | gzip -n > monkeysphere_$(MONKEYSPHERE_VERSION).orig.tar.gz
 	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
 
@@ -39,7 +38,6 @@ freebsd-distinfo:
 	./utils/build-freebsd-distinfo
 
 clean:
-	$(MAKE) -C src/keytrans clean
 	# clean up old monkeysphere packages lying around as well.
 	rm -f monkeysphere_*
 
@@ -50,9 +48,14 @@ install: all installman
 	mkdir -p $(DESTDIR)$(PREFIX)/share/monkeysphere/m $(DESTDIR)$(PREFIX)/share/monkeysphere/mh $(DESTDIR)$(PREFIX)/share/monkeysphere/ma $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions
 	mkdir -p $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
 	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
-	install src/monkeysphere src/keytrans/openpgp2ssh src/keytrans/pem2openpgp $(DESTDIR)$(PREFIX)/bin
+	install -m 0644 VERSION $(DESTDIR)$(PREFIX)/share/monkeysphere
+	install src/monkeysphere $(DESTDIR)$(PREFIX)/bin
 	install src/monkeysphere-host src/monkeysphere-authentication $(DESTDIR)$(PREFIX)/sbin
 	install -m 0644 src/share/common $(DESTDIR)$(PREFIX)/share/monkeysphere
+	install -m 0644 src/share/defaultenv $(DESTDIR)$(PREFIX)/share/monkeysphere
+	install -m 0755 src/share/keytrans $(DESTDIR)$(PREFIX)/share/monkeysphere
+	ln -s ../share/monkeysphere/keytrans $(DESTDIR)$(PREFIX)/bin/pem2openpgp
+	ln -s ../share/monkeysphere/keytrans $(DESTDIR)$(PREFIX)/bin/openpgp2ssh
 	install -m 0744 src/transitions/* $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions
 	install -m 0644 src/transitions/README.txt $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions
 	install -m 0644 src/share/m/* $(DESTDIR)$(PREFIX)/share/monkeysphere/m
@@ -74,4 +77,7 @@ installman:
 releasenote:
 	./utils/build-releasenote
 
-.PHONY: all tarball debian-package freebsd-distinfo clean install installman releasenote
+test:
+	./tests/basic
+
+.PHONY: all tarball debian-package freebsd-distinfo clean install installman releasenote test

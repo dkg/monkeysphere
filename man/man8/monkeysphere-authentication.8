@@ -1,29 +1,29 @@
-.TH MONKEYSPHERE-SERVER "8" "June 2008" "monkeysphere" "User Commands"
+.TH MONKEYSPHERE-SERVER "8" "March 2009" "monkeysphere" "User Commands"
 
 .SH NAME
 
-monkeysphere-authentication \- Monkeysphere authentication admin tool.
+monkeysphere\-authentication - Monkeysphere authentication admin tool.
 
 .SH SYNOPSIS
 
-.B monkeysphere-authentication \fIsubcommand\fP [\fIargs\fP]
-.br
-.B monkeysphere-authentication expert \fIexpert-subcommand\fP [\fIargs\fP]
+.B monkeysphere\-authentication \fIsubcommand\fP [\fIargs\fP]
 
 .SH DESCRIPTION
 
-\fBMonkeysphere\fP is a framework to leverage the OpenPGP web of trust for
-OpenSSH authentication.  OpenPGP keys are tracked via GnuPG, and added to the
-authorized_keys and known_hosts files used by OpenSSH for connection
-authentication.
+\fBMonkeysphere\fP is a framework to leverage the OpenPGP Web of Trust
+(WoT) for OpenSSH authentication.  OpenPGP keys are tracked via GnuPG,
+and added to the authorized_keys and known_hosts files used by OpenSSH
+for connection authentication.
 
-\fBmonkeysphere-authentication\fP is a Monkeysphere server admin utility.
+\fBmonkeysphere\-authentication\fP is a Monkeysphere server admin
+utility for configuring and managing SSH user authentication through
+the WoT.
 
 .SH SUBCOMMANDS
 
-\fBmonkeysphere-authentication\fP takes various subcommands:
+\fBmonkeysphere\-authentication\fP takes various subcommands:
 .TP
-.B update-users [ACCOUNT]...
+.B update\-users [ACCOUNT]...
 Rebuild the monkeysphere-controlled authorized_keys files.  For each
 specified account, the user ID's listed in the account's
 authorized_user_ids file are processed.  For each user ID, gpg will be
@@ -35,29 +35,29 @@ RAW_AUTHORIZED_KEYS variable is set, then a separate authorized_keys
 file (usually ~USER/.ssh/authorized_keys) is appended to the
 monkeysphere-controlled authorized_keys file.  If no accounts are
 specified, then all accounts on the system are processed.  `u' may be
-used in place of `update-users'.
+used in place of `update\-users'.
 .TP
-.B add-id-certifier KEYID|FILE
+.B add\-id\-certifier KEYID|FILE
 Instruct system to trust user identity certifications made by KEYID.
 The key ID will be loaded from the keyserver.  A file may be loaded
 instead of pulling the key from the keyserver by specifying the path
-to the file as the argument, or by specifying `-` to load from stdin.
-Using the `-n' or `--domain' option allows you to indicate that you
+to the file as the argument, or by specifying `\-' to load from stdin.
+Using the `\-n' or `\-\-domain' option allows you to indicate that you
 only trust the given KEYID to make identifications within a specific
 domain (e.g. "trust KEYID to certify user identities within the
 @example.org domain").  A certifier trust level can be specified with
-the `-t' or `--trust' option (possible values are `marginal' and
+the `\-t' or `\-\-trust' option (possible values are `marginal' and
 `full' (default is `full')).  A certifier trust depth can be specified
-with the `-d' or `--depth' option (default is 1).  `c+' may be used in
-place of `add-id-certifier'.
+with the `\-d' or `\-\-depth' option (default is 1).  `c+' may be used in
+place of `add\-id\-certifier'.
 .TP
-.B remove-id-certifier KEYID
+.B remove\-id\-certifier KEYID
 Instruct system to ignore user identity certifications made by KEYID.
-`c-' may be used in place of `remove-id-certifier'.
+`c\-' may be used in place of `remove\-id\-certifier'.
 .TP
-.B list-id-certifiers
+.B list\-id\-certifiers
 List key IDs trusted by the system to certify user identities.  `c'
-may be used in place of `list-id-certifiers'.
+may be used in place of `list\-id\-certifiers'.
 .TP
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
@@ -69,30 +69,30 @@ show version number
 Other commands:
 .TP
 .B setup
-Setup the server for Monkeysphere user authentication.  This command
-is idempotent and run automatically by the other commands, and should
-therefore not usually need to be run manually.  `s' may be used in
-place of `setup'.
+Setup the server in preparation for Monkeysphere user authentication.
+This command is idempotent and run automatically by the other
+commands, and should therefore not usually need to be run manually.
+`s' may be used in place of `setup'.
 .TP
 .B diagnostics
 Review the state of the server with respect to authentication.  `d'
 may be used in place of `diagnostics'.
 .TP
-.B gpg-cmd
+.B gpg\-cmd
 Execute a gpg command, as the monkeysphere user, on the monkeysphere
-authentication "sphere" keyring.  This takes a single argument
-(multiple gpg arguments need to be quoted).  Use this command with
-caution, as modifying the authentication sphere keyring can affect ssh
-user authentication.
+authentication `sphere' keyring.  This takes a single argument
+(i.e. multiple gpg arguments need to be quoted all together).  Use
+this command with caution, as modifying the authentication sphere
+keyring can affect ssh user authentication.
 
 .SH SETUP USER AUTHENTICATION
 
 If the server will handle user authentication through
 monkeysphere-generated authorized_keys files, the server must be told
 which keys will act as identity certifiers.  This is done with the
-\fBadd-id-certifier\fP command:
+\fBadd\-id\-certifier\fP command:
 
-$ monkeysphere-authentication add-id-certifier KEYID
+# monkeysphere\-authentication add\-id\-certifier KEYID
 
 where KEYID is the key ID of the server admin, or whoever's
 certifications should be acceptable to the system for the purposes of
@@ -100,32 +100,34 @@ authenticating remote users.  You can run this command multiple times
 to indicate that multiple certifiers are trusted.  You may also
 specify a filename instead of a key ID, as long as the file contains a
 single OpenPGP public key.  Certifiers can be removed with the
-\fBremove-id-certifier\fP command, and listed with the
-\fBlist-id-certifiers\fP command.
+\fBremove\-id\-certifier\fP command, and listed with the
+\fBlist\-id\-certifiers\fP command.
 
-Remote users will then be granted access to a local account based on
-the appropriately-signed and valid keys associated with user IDs
-listed in that account's authorized_user_ids file.  By default, the
+A remote user will be granted access to a local account based on the
+appropriately-signed and valid keys associated with user IDs listed in
+that account's authorized_user_ids file.  By default, the
 authorized_user_ids file for an account is
 ~/.monkeysphere/authorized_user_ids.  This can be changed in the
-monkeysphere-authentication.conf file.
+monkeysphere\-authentication.conf file.
 
-The \fBupdate-users\fP command can then be used to generate
-authorized_keys file for local accounts based on the authorized user
-IDs listed in the account's authorized_user_ids file:
+The \fBupdate\-users\fP command is used to generate authorized_keys
+files for a local account based on the user IDs listed in the
+account's authorized_user_ids file:
 
-$ monkeysphere-authentication update-users USER
+# monkeysphere\-authentication update\-users USER
 
 Not specifying USER will cause all accounts on the system to updated.
-sshd can then use these monkeysphere generated authorized_keys files
-to grant access to user accounts for remote users.  You must also tell
+The ssh server can use these monkeysphere-generated authorized_keys
+files to grant access to user accounts for remote users.  In order for
 sshd to look at the monkeysphere-generated authorized_keys file for
-user authentication by setting the following in the sshd_config:
+user authentication, the AuthorizedKeysFile parameter must be set in
+the sshd_config to point to the monkeysphere\-generated
+authorized_keys files:
 
 AuthorizedKeysFile /var/lib/monkeysphere/authentication/authorized_keys/%u
 
-It is recommended to add "monkeysphere-authentication update-users" to a
-system crontab, so that user keys are kept up-to-date, and key
+It is recommended to add "monkeysphere\-authentication update\-users"
+to a system crontab, so that user keys are kept up-to-date, and key
 revocations and expirations can be processed in a timely manner.
 
 .SH ENVIRONMENT
@@ -141,7 +143,7 @@ Set the log level.  Can be SILENT, ERROR, INFO, VERBOSE, DEBUG, in
 increasing order of verbosity. (INFO)
 .TP
 MONKEYSPHERE_KEYSERVER
-OpenPGP keyserver to use. (pool.sks-keyservers.net)
+OpenPGP keyserver to use. (pool.sks\-keyservers.net)
 .TP
 MONKEYSPHERE_AUTHORIZED_USER_IDS
 Path to user's authorized_user_ids file. %h gets replaced with the
@@ -157,11 +159,10 @@ raw authorized_keys file.  %h gets replaced with the user's homedir,
 MONKEYSPHERE_PROMPT
 If set to `false', never prompt the user for confirmation. (true)
 
-
 .SH FILES
 
 .TP
-/etc/monkeysphere/monkeysphere-authentication.conf
+/etc/monkeysphere/monkeysphere\-authentication.conf
 System monkeysphere-authentication config file.
 .TP
 /var/lib/monkeysphere/authorized_keys/USER
@@ -169,7 +170,7 @@ Monkeysphere-generated user authorized_keys files.
 
 .SH AUTHOR
 
-Written by:
+This man page was written by:
 Jameson Rollins <jrollins@fifthhorseman.net>,
 Daniel Kahn Gillmor <dkg@fifthhorseman.net>,
 Matthew Goins <mjgoins@openflows.com>
@@ -177,7 +178,9 @@ Matthew Goins <mjgoins@openflows.com>
 .SH SEE ALSO
 
 .BR monkeysphere (1),
-.BR monkeysphere-host (8),
+.BR monkeysphere\-host (8),
 .BR monkeysphere (7),
 .BR gpg (1),
-.BR ssh (1)
+.BR ssh (1),
+.BR sshd (8),
+.BR sshd_config (5)

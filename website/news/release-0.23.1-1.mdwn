@@ -1,0 +1,12 @@
+[[meta title="Monkeysphere 0.23.1-1 released!"]]
+
+Monkeysphere 0.23.1-1 has been released.  
+
+Notes from the changelog:
+
+<pre>
+  * New Upstrem "Brown Paper Bag" Release:
+   - adjusts internal version numbers
+</pre>
+
+[[Download]] it now!

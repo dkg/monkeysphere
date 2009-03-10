@@ -1,3 +1,31 @@
+monkeysphere (0.24-1) unstable; urgency=low
+
+  * New upstream release:
+    - fixed how version information is stored/retrieved
+    - now uses perl-based keytrans for both pem2openpgp and openpgp2ssh
+    - no longer needs base64 in PATH
+    - added "test" make target
+    - improved transitions/0.23 script so it no longer fails in common
+      circumstances (Closes: #517779)
+    - RSA only: no longer handles DSA keys
+    - added ability to specify subkeys to add to ssh agent with
+      new MONKEYSPHERE_SUBKEYS_FOR_AGENT environment variable
+  * update/cleanup maintainer scripts
+  * remove GnuTLS dependency
+  * remove versioned coreutils | base64 dependency
+  * added Build-Deps for dh_autotest
+  * switch to Architecture: all
+  * added cron to Recommends
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Tue, 03 Mar 2009 19:38:33 -0500
+
+monkeysphere (0.23.1-1) unstable; urgency=low
+
+  * New Upstrem "Brown Paper Bag" Release:
+   - adjusts internal version numbers
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sat, 21 Feb 2009 18:09:47 -0500
+
 monkeysphere (0.23-1) unstable; urgency=low
   
   "The Golden Bezoar Release"

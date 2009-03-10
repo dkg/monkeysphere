@@ -5,9 +5,9 @@
 # debian/monkeysphere.postinst)
 
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-# Copyright 2008
+# Copyright 2008,2009
 
-# FIXME: is /var/lib/monkeysphere the right place for this stuff on
+# FIXME: is /var/monkeysphere the right place for this stuff on
 # FreeBSD?
 
 # PostgreSQL puts its data in /usr/local/pgsql/data
@@ -57,16 +57,8 @@ POST-INSTALL)
                 fi
         fi
 
-	## set up the cache directories, and link them to the config files:
+	## set up the monkeysphere authentication cache directory:
 
-	install -d -o root -g monkeysphere -m 750 "$VARLIB"/gnupg-host
-	ln -sf "$ETCDIR"/gnupg-host.conf  "$VARLIB"/gnupg-host/gpg.conf
-
-	install -d -o monkeysphere -g monkeysphere -m 700 "$VARLIB"/gnupg-authentication
-	ln -sf "$ETCDIR"/gnupg-authentication.conf  "$VARLIB"/gnupg-authentication/gpg.conf
-
-	install -d "$VARLIB"/tmp "$VARLIB"/authorized_keys
-
-	monkeysphere-server diagnostics
+	monkeysphere-authentication setup
         ;;
 esac

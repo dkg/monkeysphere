@@ -3,11 +3,13 @@
 failed_cleanup() {
     # FIXME: can we be more verbose here?
     echo 'FAILED!'
-    read -p "press enter to cleanup and remove tmp (or type bash for a subshell to examine): " XX
-    if [ "$XX" = bash ] ; then
-	echo "Entering subshell..."
-	cd "$TEMPDIR"
-	bash
+    if [ "$MONKEYSPHERE_TEST_ALLOW_EXAMINATION" = prompt ] ; then
+	read -p "press enter to cleanup and remove tmp (or type bash for a subshell to examine): " XX
+	if [ "$XX" = bash ] ; then
+	    echo "Entering subshell..."
+	    cd "$TEMPDIR"
+	    bash
+	fi
     fi
 
     cleanup

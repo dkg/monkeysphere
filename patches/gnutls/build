@@ -16,6 +16,8 @@
 # Note: please run this from the current directory, so it can find and
 # transfer the patch it needs.
 
+set -e
+
 if ! dpkg -l devscripts fakeroot >/dev/null ; then
     exit 1
 fi

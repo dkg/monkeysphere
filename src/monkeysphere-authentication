@@ -21,7 +21,8 @@ PGRM=$(basename $0)
 
 SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
 export SYSSHAREDIR
-. "${SYSSHAREDIR}/common" || exit 1
+. "${SYSSHAREDIR}/defaultenv"
+. "${SYSSHAREDIR}/common"
 
 SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
 export SYSDATADIR
@@ -42,9 +43,6 @@ DATE=$(date -u '+%FT%T')
 # unset some environment variables that could screw things up
 unset GREP_OPTIONS
 
-# default return code
-RETURN=0
-
 ########################################################################
 # FUNCTIONS
 ########################################################################
@@ -55,17 +53,17 @@ usage: $PGRM <subcommand> [options] [args]
 Monkeysphere authentication admin tool.
 
 subcommands:
- update-users (u) [USER]...          update user authorized_keys files
+ update-users (u) [USER]...        update user authorized_keys files
 
- add-id-certifier (c+) [KEYID|FILE]  import and tsign a certification key
-   --domain (-n) DOMAIN                limit ID certifications to DOMAIN
-   --trust (-t) TRUST                  trust level of certifier (full)
-   --depth (-d) DEPTH                  trust depth for certifier (1)
- remove-id-certifier (c-) KEYID      remove a certification key
- list-id-certifiers (c)              list certification keys
+ add-id-certifier (c+) KEYID|FILE  import and tsign a certification key
+   [--domain (-n) DOMAIN]            limit ID certifications to DOMAIN
+   [--trust (-t) TRUST]              trust level of certifier (default: full)
+   [--depth (-d) DEPTH]              trust depth for certifier (default: 1)
+ remove-id-certifier (c-) KEYID    remove a certification key
+ list-id-certifiers (c)            list certification keys
 
- version (v)                         show version number
- help (h,?)                          this help
+ version (v)                       show version number
+ help (h,?)                        this help
 
 See ${PGRM}(8) for more info.
 EOF
@@ -102,7 +100,7 @@ core_fingerprint() {
 gpg_core_sphere_sig_transfer() {
     log debug "exporting core local sigs to sphere..."
     gpg_core --export-options export-local-sigs --export | \
-	gpg_sphere "--import-options import-local-sigs --import"
+	gpg_sphere "--import-options import-local-sigs --import" 2>&1 | log debug
 }
 
 ########################################################################
@@ -131,6 +129,7 @@ REQUIRED_USER_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_USER_KEY_CAPABILITY:="a"}
 GNUPGHOME_CORE=${MONKEYSPHERE_GNUPGHOME_CORE:="${MADATADIR}/core"}
 GNUPGHOME_SPHERE=${MONKEYSPHERE_GNUPGHOME_SPHERE:="${MADATADIR}/sphere"}
 CORE_KEYLENGTH=${MONKEYSPHERE_CORE_KEYLENGTH:="2048"}
+LOG_PREFIX=${MONKEYSPHERE_LOG_PREFIX:='ms: '}
 
 # export variables needed in su invocation
 export DATE
@@ -199,7 +198,7 @@ case $COMMAND in
 	;;
 
     'version'|'v')
-	echo "$VERSION"
+	version
 	;;
 
     '--help'|'help'|'-h'|'h'|'?')
@@ -211,5 +210,3 @@ case $COMMAND in
 Type '$PGRM help' for usage."
         ;;
 esac
-
-exit "$RETURN"

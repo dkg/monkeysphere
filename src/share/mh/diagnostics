@@ -63,11 +63,11 @@ else
     if [ "$expire" ]; then
 	if (( "$expire"  < "$curdate" )); then
 	    echo "! Host key is expired."
-	    echo " - Recommendation: extend lifetime of key with 'monkeysphere-host extend-key'"
+	    echo " - Recommendation: extend lifetime of key with 'monkeysphere-host set-expire'"
 	    problemsfound=$(($problemsfound+1))
 	elif (( "$expire" < "$warndate" )); then
 	    echo "! Host key expires in less than $warnwindow:" $(advance_date $(( $expire - $curdate )) seconds +%F)
-	    echo " - Recommendation: extend lifetime of key with 'monkeysphere-host extend-key'"
+	    echo " - Recommendation: extend lifetime of key with 'monkeysphere-host set-expire'"
 	    problemsfound=$(($problemsfound+1))
 	fi
     fi

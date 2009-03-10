@@ -108,7 +108,7 @@ if [ -f "$keyID" -o "$keyID" = '-' ] ; then
     fi
 
     # load the key
-    gpg_sphere "--import" <"$keyID" \
+    gpg_sphere "--import" <"$keyID" 2>/dev/null \
 	|| failure "could not read key from '$keyID'"
 
 # else, get the key from the keyserver

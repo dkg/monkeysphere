@@ -57,7 +57,7 @@ EOF
     if [ -z "$CORE_FPR" ] ; then
 	log info "setting up Monkeysphere authentication trust core..."
 
-	local CORE_UID=$(printf "Monkeysphere authentication trust core UID (random string: %s)" $(head -c21 </dev/urandom | base64))
+	local CORE_UID=$(printf "Monkeysphere authentication trust core UID (random string: %s)" $(head -c21 </dev/urandom | perl -MMIME::Base64 -ne 'print encode_base64($_)'))
     
 	log debug "generating monkeysphere authentication trust core key ($CORE_KEYLENGTH bits)..."
 	PEM2OPENPGP_USAGE_FLAGS=certify \
@@ -82,7 +82,7 @@ EOF
 
     # ensure that the authentication sphere checker has absolute ownertrust on the expected key.
     log debug "setting ultimate owner trust on core key in gpg_sphere..."
-    printf "%s:6:\n" "$CORE_FPR" | gpg_sphere "--import-ownertrust"
+    printf "%s:6:\n" "$CORE_FPR" | gpg_sphere "--import-ownertrust" 2>&1 | log verbose
     gpg_sphere "--export-ownertrust" 2>&1 | log debug
 
     # check the owner trust
@@ -101,7 +101,7 @@ EOF
     # our preferences are reasonable (i.e. 3 marginal OR 1 fully
     # trusted certifications are sufficient to grant full validity.
     log debug "checking trust model for authentication ..."
-    local TRUST_MODEL=$(gpg_sphere "--with-colons --fixed-list-mode --list-keys" \
+    local TRUST_MODEL=$(gpg_sphere "--with-colons --fixed-list-mode --list-keys" 2>/dev/null \
 	| head -n1 | grep "^tru:" | cut -d: -f3,6,7)
     log debug "sphere trust model: $TRUST_MODEL"
     if [ "$TRUST_MODEL" != '1:3:1' ] ; then

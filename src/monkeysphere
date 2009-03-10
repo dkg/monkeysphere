@@ -18,7 +18,8 @@ PGRM=$(basename $0)
 
 SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
 export SYSSHAREDIR
-. "${SYSSHAREDIR}/common" || exit 1
+. "${SYSSHAREDIR}/defaultenv"
+. "${SYSSHAREDIR}/common"
 
 # sharedir for host functions
 MSHAREDIR="${SYSSHAREDIR}/m"
@@ -69,7 +70,7 @@ check_gpg_sec_key_id() {
 	    gpgSecOut=$(gpg_user --fixed-list-mode --list-secret-keys --with-colons 2>/dev/null | egrep '^sec:')
 	    ;;
 	1)
-	    gpgSecOut=$(gpg_user --fixed-list-mode --list-secret-keys --with-colons "$keyID" | egrep '^sec:') || failure
+	    gpgSecOut=$(gpg_user --fixed-list-mode --list-secret-keys --with-colons "$1" | egrep '^sec:') || failure
 	    ;;
 	*)
 	    failure "You must specify only a single primary key ID."
@@ -86,10 +87,10 @@ check_gpg_sec_key_id() {
 	    echo "$gpgSecOut" | cut -d: -f5
 	    ;;
 	*)
-	    echo "Multiple primary secret keys found:"
-	    echo "$gpgSecOut" | cut -d: -f5
-	    echo "Please specify which primary key to use."
-	    failure
+	    local seckeys=$(echo "$gpgSecOut" | cut -d: -f5)
+	    failure "Multiple primary secret keys found:
+$seckeys
+Please specify which primary key to use."
 	    ;;
     esac
 }
@@ -181,6 +182,7 @@ AUTHORIZED_KEYS=${MONKEYSPHERE_AUTHORIZED_KEYS:=$AUTHORIZED_KEYS}
 AUTHORIZED_USER_IDS=${MONKEYSPHERE_AUTHORIZED_USER_IDS:="${MONKEYSPHERE_HOME}/authorized_user_ids"}
 REQUIRED_HOST_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_HOST_KEY_CAPABILITY:="a"}
 REQUIRED_USER_KEY_CAPABILITY=${MONKEYSPHERE_REQUIRED_USER_KEY_CAPABILITY:="a"}
+LOG_PREFIX=${MONKEYSPHERE_LOG_PREFIX:='ms: '}
 
 # export GNUPGHOME and make sure gpg home exists with proper
 # permissions
@@ -239,7 +241,7 @@ case $COMMAND in
 	;;
 
     'version'|'v')
-	echo "$VERSION"
+	version
 	;;
 
     '--help'|'help'|'-h'|'h'|'?')
