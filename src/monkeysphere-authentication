@@ -144,6 +144,7 @@ export GNUPGHOME_CORE
 export GNUPGHOME_SPHERE
 export GNUPGHOME
 export CORE_KEYLENGTH
+export LOG_PREFIX
 
 # get subcommand
 COMMAND="$1"
