@@ -1,0 +1,232 @@
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<base href="http://redmine.josefsson.org/wiki/gnutls/GnuTLSExternalValidation"><div style="margin:-1px -1px 0;padding:0;border:1px solid #999;background:#fff"><div style="margin:12px;padding:8px;border:1px solid #999;background:#ddd;font:13px arial,sans-serif;color:#000;font-weight:normal;text-align:left">This is Google&#39;s cache of <a href="http://redmine.josefsson.org/wiki/gnutls/GnuTLSExternalValidation" style="text-decoration:underline;color:#00c">http://redmine.josefsson.org/wiki/gnutls/GnuTLSExternalValidation</a>. It is a snapshot of the page as it appeared on Dec 15, 2008 14:31:48 GMT. The <a href="http://redmine.josefsson.org/wiki/gnutls/GnuTLSExternalValidation" style="text-decoration:underline;color:#00c">current page</a> could have changed in the meantime. <a href="http://www.google.com/intl/en/help/features_list.html#cached" style="text-decoration:underline;color:#00c">Learn more</a><br><br><div style="float:right"><a href="http://74.125.47.132/search?q=cache:TK3CfB0McV4J:redmine.josefsson.org/wiki/gnutls/GnuTLSExternalValidation+http://redmine.josefsson.org/wiki/gnutls/GnuTLSExternalValidation&amp;hl=en&amp;gl=us&strip=1" style="text-decoration:underline;color:#00c">Text-only version</a></div>
+<div>These terms only appear in links pointing to this page: <span style="font-weight:bold">http</span>&nbsp;<span style="font-weight:bold">redmine</span>&nbsp;<span style="font-weight:bold">josefsson</span>&nbsp;<span style="font-weight:bold">org</span>&nbsp;<span style="font-weight:bold">wiki</span>&nbsp;<span style="font-weight:bold">gnutls</span>&nbsp;<span style="font-weight:bold">gnutlsexternalvalidation</span>&nbsp;&nbsp;</div></div></div><div style="position:relative">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>GnuTLS - GnuTLSExternalValidation - Redmine</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="description" content="Redmine" />
+<meta name="keywords" content="issue,bug,tracker" />
+<link href="/stylesheets/application.css?1227251496" media="all" rel="stylesheet" type="text/css" />
+<script src="/javascripts/prototype.js?1224248241" type="text/javascript"></script>
+<script src="/javascripts/effects.js?1224248241" type="text/javascript"></script>
+<script src="/javascripts/dragdrop.js?1224248241" type="text/javascript"></script>
+<script src="/javascripts/controls.js?1224248241" type="text/javascript"></script>
+<script src="/javascripts/application.js?1224248241" type="text/javascript"></script>
+<link href="/stylesheets/jstoolbar.css?1224248241" media="screen" rel="stylesheet" type="text/css" />
+<!--[if IE]>
+    <style type="text/css">
+      * html body{ width: expression( document.documentElement.clientWidth < 900 ? '900px' : '100%' ); }
+      body {behavior: url(/stylesheets/csshover.htc?1224248241);}
+    </style>
+<![endif]-->
+
+<!-- page specific tags -->
+
+  <link href="/stylesheets/scm.css?1224248241" media="screen" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="wrapper">
+<div id="top-menu">
+    <div id="account">
+        <ul><li><a href="/login" class="login">Sign in</a></li>
+<li><a href="/account/register" class="register">Register</a></li></ul>    </div>
+    
+    <ul><li><a href="/" class="home">Home</a></li>
+<li><a href="/projects" class="projects">Projects</a></li>
+<li><a href="http://www.redmine.org/guide" class="help">Help</a></li></ul></div>
+      
+<div id="header">
+    <div id="quick-search">
+        <form action="/search/index/gnutls" method="get">
+        <a href="/search/index/gnutls" accesskey="4">Search</a>:
+        <input accesskey="f" class="small" id="q" name="q" size="20" type="text" />
+        </form>
+        
+    </div>
+    
+    <h1>GnuTLS</h1>
+    
+    <div id="main-menu">
+        <ul><li><a href="/projects/show/gnutls">Overview</a></li>
+<li><a href="/projects/activity/gnutls">Activity</a></li>
+<li><a href="/projects/roadmap/gnutls">Roadmap</a></li>
+<li><a href="/projects/gnutls/issues">Issues</a></li>
+<li><a href="/wiki/gnutls" class="selected">Wiki</a></li>
+<li><a href="/repositories/show/gnutls">Repository</a></li></ul>
+    </div>
+</div>
+
+<div class="" id="main">
+    <div id="sidebar">        
+        
+  <h3>Wiki</h3>
+
+<a href="/wiki/gnutls">Start page</a><br />
+<a href="/wiki/gnutls/Page_index/special">Index by title</a><br />
+<a href="/wiki/gnutls/Date_index/special">Index by date</a><br />
+
+
+    </div>
+    
+    <div id="content">
+            
+            
+        <div class="contextual">
+
+
+
+
+
+
+
+
+<a href="/wiki/gnutls/GnuTLSExternalValidation/history" class="icon icon-history">History</a>
+</div>
+
+
+
+
+
+<div class="wiki">
+  <h1 id="GnuTLSExternalValidation">GnuTLSExternalValidation<a href="#GnuTLSExternalValidation" class="wiki-anchor">&para;</a></h1>
+
+
+	<p>This page is intended to flesh out ideas to externalize the X.509 chain validation, X.509 private key handling, and possibly also OpenPGP validation and private key handling.</p>
+
+
+	<p>It is important to realize that these are different problems, so the solution may be different.  Let's first make the goals clear:</p>
+
+
+	<ul>
+	<li>Make it possible to store private keys in a process different from the process that runs the GnuTLS client/server.</li>
+		<li>Make it possible to perform X.509 chain validation in a different process.</li>
+		<li>Make it possible to perform OpenPGP key validation in a different process.</li>
+	</ul>
+
+
+	<p>One must decide whether the external agent should be responsible for making authentication decisions, authorization decisions, or both.  Possibly it should be able to make both kind of decisions.  The GnuTLS process can always make further authorization decisions as well.</p>
+
+
+	<p>For private keys, there is the PKCS#11 interface.  GnuTLS has a branch that supports it.  However, PKCS#11 doesn't solve the problem with an external process.  It seems better to move the PKCS#11 interface to the external agent, rather than adding PKCS#11 interface to GnuTLS itself.  Btw, GnuTLS already has PKCS#11 support on a special branch, and has been tested against the Scute PKCS#11 provider together with a Swedish eID X.509 smartcard.</p>
+
+
+	<p>The solution should allow simple integration with GNOME components such as <a href="http://live.gnome.org/Seahorse" class="external">SeaHorse</a>.</p>
+
+
+	<h2 id="Private-key-protocol">Private key protocol<a href="#Private-key-protocol" class="wiki-anchor">&para;</a></h2>
+
+
+	<p>Possible we should re-use GnuPG's external protocol here?  What we need is an IPC protocol that does:</p>
+
+
+	<pre><code>SIGN [ALG] [KEY-ID] [TLS-DATA]</code></pre>
+
+
+	<p>Where KEY-ID somehow denotes a key to use, and TLS-DATA is the data that needs to be signed using the TLS algorithm.  Given that TLS supports several algorithms, and even RSA is supported in more than one mode, there needs to be an ALG flag to indicate this.</p>
+
+
+	<h2 id="X509-Chain-Validation">X.509 Chain Validation<a href="#X509-Chain-Validation" class="wiki-anchor">&para;</a></h2>
+
+
+	<p>GnuPG's dirmngr <a href="http://www.gnupg.org/documentation/manuals/dirmngr/Dirmngr-Protocol.html#Dirmngr-Protocol" class="external">has a protocol for doing this</a>, using <a href="http://www.gnupg.org/documentation/manuals/assuan/" class="external">assuan</a>.  Unfortunately, <a href="http://www.gnupg.org/documentation/manuals/assuan/Assuan.html#Assuan" class="external">assuan's design criteria</a> state "no protection against DoS needed".  This might make it unsuitable for a TLS implementation or other online tool.</p>
+
+
+	<p>It is not clear to me whether the trusted CAs should be sent over the IPC, or whether it is something that is assumed to be known by the agent.  The latter seems safer, but the former may be useful in some scenarios.  <em>(what scenarios?)</em> They aren't mutually incompatible, so maybe we can support both.</p>
+
+
+	<p>Thus we need a command to send over a trusted certificate:</p>
+
+
+	<pre><code>TRUSTED [b64pem...]</code></pre>
+
+
+	<p>And also send over untrusted certificates provided by the TLS peer:</p>
+
+
+	<pre><code>UNTRUSTED [b64pem...]</code></pre>
+
+
+	<p>Finally, a request to perform chain validation on a particular certificate is performed using:</p>
+
+
+	<pre><code>VALIDATE [b64pem...]</code></pre>
+
+
+	<h2 id="Generic-Certificate-Validation">Generic Certificate Validation<a href="#Generic-Certificate-Validation" class="wiki-anchor">&para;</a></h2>
+
+
+	<p>It would be nice to be able to hand the agent any kind of certificate (OpenPGP or X.509), or even to be able to hand the agent a raw public key to see if it validates.</p>
+
+
+	<p>The crucial request would be:</p>
+
+
+	<pre><code>VALIDATE {LABEL} {CERTTYPE} {PEERNAME} {CERTIFICATE}</code></pre>
+
+
+	<p>This says "I'm a program called LABEL.  I'm about to send you a certificate of type CERTTYPE.  I want you to tell me whether the specified PEERNAME matches one of the names stored in the certificate, and that the matching name in the certificate is cryptographically valid based on your knowledge of trusted certifiers."</p>
+
+
+	<p>The agent can respond with VALID or INVALID.  We maybe should consider whether INVALID might be implemented as an extensible set of reasons for invalidity (e.g. EXPIRED, NOMATCH, UNTRUSTED, SELFSIGNED, etc): would the potential extensibility from this outweigh the added implementation and semantic complexity?</p>
+
+
+	<p>The possible options for CERTTYPE could be:</p>
+
+
+	<ul>
+	<li>RAWPUBKEY (maybe modelled after <a href="http://tools.ietf.org/html/rfc4253#section-6.6" class="external">ssh-dss and ssh-rsa in RFC 4253</a> ?)</li>
+		<li>OPENPGP (after <a href="http://tools.ietf.org/html/rfc4880#section-11.1" class="external">section 11.1 of RFC 4880</a> either base-64 encoded or raw)</li>
+		<li>X509 (after <a href="http://tools.ietf.org/html/rfc5280" class="external">RFC 5280</a>, either PEM or DER encoded)</li>
+	</ul>
+
+
+	<p>This would allow numerous clients and servers to make use of the validation agent.  For example:</p>
+
+
+	<ul>
+	<li><a href="http://www.lysator.liu.se/~nisse/lsh/" class="external">lsh</a> could feed its fetched host keys to the validation agent instead of having to maintain ~/.lsh/host-acls</li>
+		<li><a href="http://www.openldap.org/doc/admin24/tls.html#Client%20Certificates" class="external">slapd</a> could use the validation agent to identify the DN of the remote client.</li>
+		<li><a href="http://svnbook.red-bean.com/nightly/en/svn.serverconfig.httpd.html#svn.serverconfig.httpd.authn.sslcerts" class="external">subversion</a> could ask the validation agent to ensure that the OpenPGP certificate offered by a remote https server (using <a href="http://www.outoforder.cc/projects/apache/mod_gnutls/" class="external">mod_gnutls</a>) is in fact who it claims to be (and the mod_gnutls could validate the identity of the client in the same way).</li>
+	</ul>
+
+
+	<p>Additionally, it might be nice to have a command to offer intermediate certificates to the certificate store:</p>
+
+
+	<pre><code>UNTRUSTED {LABEL} {CERTTYPE} {CERTIFICATE}</code></pre>
+
+
+	<p>using UNTRUSTED with a RAWPUBKEY certificate wouldn't be a meaningful operation, but it could be used for intermediate X.509 certificates, or for the equivalent OpenPGP certificates (if such things were handy).</p>
+</div>
+
+
+
+
+
+
+<p class="other-formats">
+Also available in:
+<span><a href="/wiki/gnutls/GnuTLSExternalValidation?export=html&amp;version=9" class="html">HTML</a></span>
+<span><a href="/wiki/gnutls/GnuTLSExternalValidation?export=txt&amp;version=9" class="text">TXT</a></span>
+</p>
+
+
+
+
+
+
+
+    </div>
+</div>
+
+<div id="ajax-indicator" style="display:none;"><span>Loading...</span></div>
+	
+<div id="footer">
+    Powered by <a href="http://www.redmine.org/">Redmine</a> &copy; 2006-2008 Jean-Philippe Lang
+</div>
+</div>
+
+</body>
+</html>
