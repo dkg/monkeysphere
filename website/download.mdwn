@@ -18,8 +18,8 @@ Monkeysphere relies on:
 ## Debian ##
 
 If you are running a [Debian](http://www.debian.org/) system, the
-[monkeysphere is available in the Debian unstable ("sid")
-distribution](http://packages.debian.org/sid/monkeysphere).
+[monkeysphere is available in the Debian testing ("squeeze")
+distribution](http://packages.debian.org/testing/monkeysphere).
 
 You can also install the Monkeysphere directly from the Monkeysphere
 Debian archive.  You can add this archive to your system by putting
