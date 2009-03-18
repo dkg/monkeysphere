@@ -19,7 +19,10 @@ Monkeysphere relies on:
 
 If you are running a [Debian](http://www.debian.org/) system, the
 [monkeysphere is available in the Debian testing ("squeeze")
-distribution](http://packages.debian.org/testing/monkeysphere).
+distribution](http://packages.debian.org/testing/monkeysphere).  If
+you are running Debian testing, it is easy to install:
+
+    aptitude install monkeysphere
 
 You can also install the Monkeysphere directly from the Monkeysphere
 Debian archive.  You can add this archive to your system by putting
