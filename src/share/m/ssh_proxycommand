@@ -46,7 +46,7 @@ output_no_valid_key() {
 	="$userID" 2>/dev/null)
 
     # output header
-    cat <<EOF | log info
+    log info <<EOF
 -------------------- Monkeysphere warning -------------------
 Monkeysphere found OpenPGP keys for this hostname, but none had full validity.
 EOF
@@ -66,7 +66,7 @@ EOF
 		    # if one of keys found matches the one offered by the
 		    # host, then output info
 		    if [ "$sshKeyGPG" = "$sshKeyOffered" ] ; then
-			cat <<EOF | log info
+			log info <<EOF
 An OpenPGP key matching the ssh key offered by the host was found:
 
 EOF
@@ -96,7 +96,7 @@ if (ok) { if (match($0,"^sig")) { print; } }
 
 			# output the other user IDs for reference
 			if (echo "$gpgSigOut" | grep "^uid" | grep -v -q "$userID") ; then
-			    cat <<EOF | log info
+			    log info <<EOF
 Other user IDs on this key:
 
 EOF
@@ -105,7 +105,7 @@ EOF
 			fi
 
 			# output ssh fingerprint
-			cat <<EOF | log info
+			log info <<EOF
 RSA key fingerprint is ${sshFingerprint}.
 EOF
 
@@ -124,7 +124,7 @@ EOF
 	# if no key match was made (and the "while read" subshell
 	# returned 1) output how many keys were found
 	if (( returnCode != 1 )) ; then
-	    cat <<EOF | log info
+	    log info <<EOF
 None of the found keys matched the key offered by the host.
 Run the following command for more info about the found keys:
 gpg --check-sigs --list-options show-uid-validity =${userID}
@@ -138,13 +138,13 @@ EOF
 
     # if host key could not be retrieved from the host, output message
     else
-	cat <<EOF | log info
+	log info <<EOF
 Could not retrieve RSA host key from $HOST.
 EOF
     fi
 
     # output footer
-    cat <<EOF | log info
+    log info <<EOF
 -------------------- ssh continues below --------------------
 EOF
 }

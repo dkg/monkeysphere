@@ -44,8 +44,7 @@ Type '$PGRM help' for usage."
     check_gpg_authentication_subkey "$keyID"
 
     # generate the list of commands that will be passed to edit-key
-    editCommands=$(cat <<EOF
-addkey
+    editCommands="addkey
 7
 S
 E
@@ -53,9 +52,7 @@ A
 Q
 $keyLength
 0
-save
-EOF
-)
+save"
 
     # setup the temp fifo dir for retrieving the key password
     log debug "creating password fifo..."
