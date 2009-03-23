@@ -54,17 +54,15 @@ else
 fi
 
 # edit-key script command to revoke user ID
-revuidCommand=$(cat <<EOF
-$uidIndex
+revuidCommand="$uidIndex
 revuid
 y
 4
 Hostname removed by monkeysphere-host: $DATE
 
 y
-save
-EOF
-    )	
+save"
+# end script
 
 # execute edit-key script
 if echo "$revuidCommand" | gpg_host_edit ; then

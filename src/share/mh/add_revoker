@@ -106,14 +106,12 @@ of the host key? (Y/n) " OK; OK=${OK:-Y}
 fi
 
 # edit-key script to add revoker
-addrevokerCommand=$(cat <<EOF
-addrevoker
+addrevokerCommand="addrevoker
 $fingerprint
 y
 save
-
-EOF
-    )
+"
+# end script
 
 # core ltsigns the newly imported revoker key
 log debug "executing add revoker script..."

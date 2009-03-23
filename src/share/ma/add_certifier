@@ -153,16 +153,14 @@ gpg_sphere "--export 0x${fingerprint}!" | gpg_core --import
 
 # edit-key script to ltsign key
 # NOTE: *all* user IDs will be ltsigned
-ltsignCommand=$(cat <<EOF
-ltsign
+ltsignCommand="ltsign
 y
 $trustval
 $depth
 $domain
 y
-save
-EOF
-    )
+save"
+# end script
 
 # core ltsigns the newly imported certifier key
 log debug "executing core ltsign script..."

@@ -20,7 +20,7 @@ long_description    SSH key-based authentication is tried-and-true, \
                     users.
 
 homepage            http://web.monkeysphere.info/
-master_sites        ???
+master_sites        http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
 distname            ${name}_${version}
 worksrcdir          ${name}-${version}
 checksums           md5 8590532f4702fa44027a6a583657c9ef
