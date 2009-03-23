@@ -65,7 +65,7 @@ will be used.  The length of the generated key can be specified with
 the `\-\-length' or `\-l' option.  `g' may be used in place of
 `gen\-subkey'.
 .TP
-.B ssh\-proxycommand
+.B ssh\-proxycommand [--no-connect] HOST [PORT]
 An ssh ProxyCommand that can be used to trigger a monkeysphere update
 of the ssh known_hosts file for a host that is being connected to with
 ssh.  This works by updating the known_hosts file for the host first,
