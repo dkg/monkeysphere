@@ -4,6 +4,9 @@ monkeysphere (0.25-1~pre) UNRELEASED; urgency=low
     - update/fix the marginal ui output
     - use msmktempdir everywhere (avoid unwrapped calls to mktemp for
       portability)
+    - clean out some redundant "cat"s
+    - fix monkeysphere update-known_hosts for sshd running on non-standard
+      ports
 
  -- Jameson Graef Rollins <jrollins@finestructure.net>  Wed, 18 Mar 2009 11:46:44 -0400
 
