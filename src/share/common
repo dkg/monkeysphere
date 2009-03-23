@@ -467,7 +467,11 @@ ssh2known_hosts() {
     local port
     local key
 
-    host=${1%%:*}
+    # FIXME this does not properly deal with IPv6 hosts using the
+    # standard port (because it's unclear whether their final
+    # colon-delimited address section is a port number or an address
+    # string)
+    host=${1%:*}
     port=${1##*:}
     key="$2"
 
