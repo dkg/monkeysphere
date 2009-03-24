@@ -464,14 +464,23 @@ gpg2ssh() {
 # output known_hosts line from ssh key
 ssh2known_hosts() {
     local host
+    local port
     local key
 
-    host="$1"
+    # FIXME this does not properly deal with IPv6 hosts using the
+    # standard port (because it's unclear whether their final
+    # colon-delimited address section is a port number or an address
+    # string)
+    host=${1%:*}
+    port=${1##*:}
     key="$2"
 
-    echo -n "$host "
-    echo -n "$key" | tr -d '\n'
-    echo " MonkeySphere${DATE}"
+    # specify the host and port properly for new ssh known_hosts
+    # format
+    if [ "$port" != "$host" ] ; then
+	host="[${host}]:${port}"
+    fi
+    printf "%s %s MonkeySphere%s\n" "$host" "$key" "$DATE"
 }
 
 # output authorized_keys line from ssh key
@@ -482,41 +491,43 @@ ssh2authorized_keys() {
     userID="$1"
     key="$2"
 
-    echo -n "$key" | tr -d '\n'
-    echo " MonkeySphere${DATE} ${userID}"
+    printf "%s MonkeySphere%s %s\n" "$key" "$DATE" "$userID"
 }
 
 # convert key from gpg to ssh known_hosts format
 gpg2known_hosts() {
     local host
     local keyID
+    local key
 
     host="$1"
     keyID="$2"
+
+    key=$(gpg2ssh "$keyID")
 
     # NOTE: it seems that ssh-keygen -R removes all comment fields from
     # all lines in the known_hosts file.  why?
     # NOTE: just in case, the COMMENT can be matched with the
     # following regexp:
     # '^MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2}$'
-    echo -n "$host "
-    gpg2ssh "$keyID" | tr -d '\n'
-    echo " MonkeySphere${DATE}"
+    printf "%s %s MonkeySphere%s\n" "$host" "$key" "$DATE"
 }
 
 # convert key from gpg to ssh authorized_keys format
 gpg2authorized_keys() {
     local userID
     local keyID
+    local key
 
     userID="$1"
     keyID="$2"
 
+    key=$(gpg2ssh "$keyID")
+
     # NOTE: just in case, the COMMENT can be matched with the
     # following regexp:
     # '^MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2}$'
-    gpg2ssh "$keyID" | tr -d '\n'
-    echo " MonkeySphere${DATE} ${userID}"
+    printf "%s MonkeySphere%s %s\n" "$key" "$DATE" "$userID"
 }
 
 ### GPG UTILITIES

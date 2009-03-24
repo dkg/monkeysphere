@@ -42,8 +42,8 @@ were found but none were acceptable.  `k' may be used in place of
 .B update\-authorized_keys
 Update the authorized_keys file for the user executing the command
 (see MONKEYSPHERE_AUTHORIZED_KEYS in ENVIRONMENT, below).  First all
-monkeysphere keys are cleared from the authorized_keys file.  Then, or
-each user ID in the user's authorized_user_ids file, gpg will be
+monkeysphere keys are cleared from the authorized_keys file.  Then,
+for each user ID in the user's authorized_user_ids file, gpg will be
 queried for keys associated with that user ID, optionally querying a
 keyserver.  If an acceptable key is found (see KEY ACCEPTABILITY in
 .BR monkeysphere (7)),
@@ -65,7 +65,7 @@ will be used.  The length of the generated key can be specified with
 the `\-\-length' or `\-l' option.  `g' may be used in place of
 `gen\-subkey'.
 .TP
-.B ssh\-proxycommand
+.B ssh\-proxycommand [--no-connect] HOST [PORT]
 An ssh ProxyCommand that can be used to trigger a monkeysphere update
 of the ssh known_hosts file for a host that is being connected to with
 ssh.  This works by updating the known_hosts file for the host first,

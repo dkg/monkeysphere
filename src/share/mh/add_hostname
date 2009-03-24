@@ -43,14 +43,12 @@ else
 fi
 
 # edit-key script command to add user ID
-adduidCommand=$(cat <<EOF
-adduid
+adduidCommand="adduid
 $userID
 
 
-save
-EOF
-)
+save"
+# end script
 
 # execute edit-key script
 if echo "$adduidCommand" | gpg_host_edit ; then

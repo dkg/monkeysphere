@@ -47,7 +47,7 @@ subcommands:
  update-authorized_keys (a)          update authorized_keys file
  gen-subkey (g) [KEYID]              generate an authentication subkey
    --length (-l) BITS                  key length in bits (2048)
- ssh-proxycommand                    monkeysphere ssh ProxyCommand
+ ssh-proxycommand HOST [PORT]        monkeysphere ssh ProxyCommand
  subkey-to-ssh-agent (s)             store authentication subkey in ssh-agent
  version (v)                         show version number
  help (h,?)                          this help
