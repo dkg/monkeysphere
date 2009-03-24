@@ -42,8 +42,8 @@ were found but none were acceptable.  `k' may be used in place of
 .B update\-authorized_keys
 Update the authorized_keys file for the user executing the command
 (see MONKEYSPHERE_AUTHORIZED_KEYS in ENVIRONMENT, below).  First all
-monkeysphere keys are cleared from the authorized_keys file.  Then, or
-each user ID in the user's authorized_user_ids file, gpg will be
+monkeysphere keys are cleared from the authorized_keys file.  Then,
+for each user ID in the user's authorized_user_ids file, gpg will be
 queried for keys associated with that user ID, optionally querying a
 keyserver.  If an acceptable key is found (see KEY ACCEPTABILITY in
 .BR monkeysphere (7)),
