@@ -304,6 +304,8 @@ passphrase_prompt() {
     local PASS
 
     if [ "$DISPLAY" ] && which "${SSH_ASKPASS:-ssh-askpass}" >/dev/null; then
+	printf 'Launching "%s"\n' "${SSH_ASKPASS:-ssh-askpass}" | log info
+	printf '(with prompt "%s")\n' "$prompt" | log debug
 	"${SSH_ASKPASS:-ssh-askpass}" "$prompt" > "$fifo"
     else
 	read -s -p "$prompt" PASS
