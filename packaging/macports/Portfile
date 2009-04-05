@@ -30,6 +30,23 @@ distname            ${name}_${version}
 extract.suffix      .orig.tar.gz
 worksrcdir          ${name}-${version}
 checksums           md5 8590532f4702fa44027a6a583657c9ef
+
+patch.dir           ${worksrcpath}
+patch.cmd           make
+patch.args          -f Makefile \
+                    WRKSRC=${worksrcpath} \
+                    SYSETCDIR=${destroot}${prefix}/etc/monkeysphere \
+                    SYSDATADIR=${destroot}${prefix}/var/db/monkeysphere \
+                    SYSSHAREDIR=${destroot}${prefix}/share/monkeysphere \
+                    post-patch
+
 use_configure       no
+
 destroot.destdir    DESTDIR=${destroot}${prefix}
 destroot.args       PREFIX=
+
+# variant to use the port version of bash, which may be much newer
+# than the one provided by the system
+variant port-bash description {use port version of Bash} {
+    depends_run-append port:bash
+}
