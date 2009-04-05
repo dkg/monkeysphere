@@ -2,14 +2,11 @@
 # $Id$
 
 PortSystem          1.0
-
 name                monkeysphere
 version             0.24
-categories          net
+categories          net security
 maintainers         nomaintainer
-platforms           darwin
 description         use the OpenPGP web of trust to verify ssh connections
-
 long_description    SSH key-based authentication is tried-and-true, \
                     but it lacks a true Public Key Infrastructure for \
                     key certification, revocation and expiration. \
@@ -18,12 +15,8 @@ long_description    SSH key-based authentication is tried-and-true, \
                     used in both directions: for users to get \
                     validated host keys, and for hosts to authenticate \
                     users.
-
 homepage            http://web.monkeysphere.info/
-master_sites        http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
-distname            ${name}_${version}
-worksrcdir          ${name}-${version}
-checksums           md5 8590532f4702fa44027a6a583657c9ef
+platforms           darwin
 
 depends_run         bin:ssh:openssh \
                     port:gnupg \
@@ -32,9 +25,11 @@ depends_run         bin:ssh:openssh \
                     port:p5-digest-sha1 \
                     port:procmail
 
-build.target        build
-destroot.args       PREFIX=${destroot}${prefix} \
-                    CONFDIR=${destroot}${prefix}/etc/monkeysphere \
-                    DBDIR=${destroot}${prefix}/var/lib/monkeysphere \
-                    MANDIR=${destroot}${prefix}/share/man \
-                    DOCDIR=${destroot}${prefix}/share/doc/monkeysphere
+master_sites        http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
+distname            ${name}_${version}
+extract.suffix      .orig.tar.gz
+worksrcdir          ${name}-${version}
+checksums           md5 8590532f4702fa44027a6a583657c9ef
+use_configure       no
+destroot.destdir    DESTDIR=${destroot}${prefix}
+destroot.args       PREFIX=
