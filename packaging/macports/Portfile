@@ -31,16 +31,30 @@ extract.suffix      .orig.tar.gz
 worksrcdir          ${name}-${version}
 checksums           md5 8590532f4702fa44027a6a583657c9ef
 
-patch.dir           ${worksrcpath}
-patch.cmd           make
-patch.args          -f Makefile \
-                    WRKSRC=${worksrcpath} \
-                    SYSETCDIR=${destroot}${prefix}/etc/monkeysphere \
-                    SYSDATADIR=${destroot}${prefix}/var/db/monkeysphere \
-                    SYSSHAREDIR=${destroot}${prefix}/share/monkeysphere \
-                    post-patch
-
 use_configure       no
+
+post-build {
+    exec sed -i .tmp -e "s|/etc/monkeysphere|${prefix}/etc/monkeysphere|g" \
+        ${worksrcpath}/src/share/defaultenv \
+        ${worksrcpath}/src/transitions/0.23 \
+        ${worksrcpath}/man/man1/monkeysphere.1 \
+        ${worksrcpath}/man/man8/monkeysphere-authentication.8 \
+        ${worksrcpath}/man/man8/monkeysphere-host.8 \
+        ${worksrcpath}/etc/monkeysphere-authentication.conf
+    exec sed -i .tmp -e "s|/var/lib/monkeysphere|${prefix}/var/db/monkeysphere|g" \
+        ${worksrcpath}/src/transitions/0.23 \
+        ${worksrcpath}/man/man1/monkeysphere.1 \
+        ${worksrcpath}/man/man8/monkeysphere-authentication.8 \
+        ${worksrcpath}/man/man8/monkeysphere-host.8 \
+        ${worksrcpath}/src/monkeysphere-host \
+        ${worksrcpath}/src/monkeysphere-authentication \
+        ${worksrcpath}/doc/getting-started-admin.mdwn
+    exec sed -i .tmp -e "s|/usr/share/monkeysphere|${prefix}/share/monkeysphere|g" \
+        ${worksrcpath}/src/monkeysphere-host \
+        ${worksrcpath}/src/monkeysphere-authentication \
+        ${worksrcpath}/src/monkeysphere
+    exec find ${worksrcpath} -name *.tmp -delete
+}
 
 destroot.destdir    DESTDIR=${destroot}${prefix}
 destroot.args       PREFIX=
