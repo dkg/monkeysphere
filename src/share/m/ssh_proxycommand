@@ -186,7 +186,7 @@ URI="ssh://${HOSTP}"
 # CHECK_KEYSERVER variable in the monkeysphere.conf file.
 
 # if the host is in the gpg keyring...
-if gpg_user --list-key ="${URI}" 2>&1 >/dev/null ; then
+if gpg_user --list-key ="${URI}" &>/dev/null ; then
     # do not check the keyserver
     CHECK_KEYSERVER=${CHECK_KEYSERVER:="false"}
 
@@ -253,9 +253,9 @@ esac
 
 # exec a netcat passthrough to host for the ssh connection
 if [ -z "$NO_CONNECT" ] ; then
-    if (which nc 2>/dev/null >/dev/null); then
+    if (type nc &>/dev/null); then
 	exec nc "$HOST" "$PORT"
-    elif (which socat 2>/dev/null >/dev/null); then
+    elif (type socat &>/dev/null); then
 	exec socat STDIO "TCP:$HOST:$PORT"
     else
 	echo "Neither netcat nor socat found -- could not complete monkeysphere-ssh-proxycommand connection to $HOST:$PORT" >&2

@@ -27,7 +27,7 @@ subkey_to_ssh_agent() {
     local kname
 
     # if there's no agent running, don't bother:
-    if [ -z "$SSH_AUTH_SOCK" ] || ! which ssh-add >/dev/null ; then
+    if [ -z "$SSH_AUTH_SOCK" ] || ! type ssh-add >/dev/null ; then
 	failure "No ssh-agent available."
     fi
 
