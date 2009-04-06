@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w -T
+#!/usr/bin/env perl -w -T
 
 # keytrans: this is an RSA key translation utility; it is capable of
 # transforming RSA keys (both public keys and secret keys) between
