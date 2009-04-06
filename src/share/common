@@ -445,7 +445,7 @@ check_key_file_permissions() {
     # return 2 if path has group or other writability
     if is_write "$gAccess" || is_write "$oAccess" ; then
 	log error "improper group or other writability on path '$path':"
-	log error " group: $gAccess, other: $oAcess"
+	log error " group: $gAccess, other: $oAccess"
 	return 2
     fi
 
