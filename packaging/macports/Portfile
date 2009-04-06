@@ -21,9 +21,11 @@ platforms           darwin
 depends_run         bin:ssh:openssh \
                     port:gnupg \
                     port:perl5.10 \
-                    port:p5-crypt-rsa \
+                    port:p5-crypt-openssl-rsa \
+                    port:p5-crypt-openssl-bignum \
                     port:p5-digest-sha1 \
-                    port:procmail
+                    port:procmail \
+                    port:socat
 
 master_sites        http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
 distname            ${name}_${version}
