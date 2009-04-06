@@ -20,7 +20,7 @@ platforms           darwin
 
 depends_run         bin:ssh:openssh \
                     port:gnupg \
-                    port:perl5.10 \
+                    port:perl5 \
                     port:p5-crypt-openssl-rsa \
                     port:p5-crypt-openssl-bignum \
                     port:p5-digest-sha1 \
