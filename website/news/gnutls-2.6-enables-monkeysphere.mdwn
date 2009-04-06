@@ -1,5 +1,16 @@
 [[meta title="GnuTLS 2.6.x enables Monkeysphere to read authentication subkeys"]]
 
+-----
+
+**2009-04-05 UPDATE:** Since Monkeysphere no longer depends on GnuTLS
+at all ([moved to using Perl for key
+translation](news/release-0.24-1)), and GnuTLS 2.6 is now available in
+Debian testing, we have removed the GnuTLS patches from the repostiory
+(although they will continue to be available in the history, or
+course).
+
+-----
+
 We [announced earlier](/news/modified-gnutls-2.4.x-available) that the
 Monkeysphere project was providing patched versions of GnuTLS to
 support one piece of Monkeysphere functionality.  Fortunately, those
