@@ -3,7 +3,7 @@
 failed_cleanup() {
     # FIXME: can we be more verbose here?
     echo 'FAILED!'
-    if [ "$MONKEYSPHERE_TEST_ALLOW_EXAMINATION" = prompt ] ; then
+    if [ -z "$MONKEYSPHERE_TEST_NO_EXAMINE" ] ; then
 	read -p "press enter to cleanup and remove tmp (or type bash for a subshell to examine): " XX
 	if [ "$XX" = bash ] ; then
 	    echo "Entering subshell..."
