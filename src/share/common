@@ -254,7 +254,7 @@ check_capability() {
 file_hash() {
     if type md5sum &>/dev/null ; then
 	md5sum "$1"
-    elif type lockfile &>/dev/null ; then
+    elif type md5 &>/dev/null ; then
 	md5 "$1"
     else
 	failure "Neither md5sum nor md5 are in the path!"
