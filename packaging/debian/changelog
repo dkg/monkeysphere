@@ -7,8 +7,10 @@ monkeysphere (0.25-1~pre) UNRELEASED; urgency=low
     - clean out some redundant "cat"s
     - fix monkeysphere update-known_hosts for sshd running on non-standard
       ports
+    - some portability improvements
+  * update Standard-Version to 3.8.1
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Wed, 18 Mar 2009 11:46:44 -0400
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Mon, 06 Apr 2009 22:20:55 -0700
 
 monkeysphere (0.24-1) unstable; urgency=low
 
