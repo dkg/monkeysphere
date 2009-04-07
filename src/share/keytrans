@@ -195,11 +195,11 @@ my $keyserver_prefs = { nomodify => 0x80
 ########### Math/Utility Functions ##############
 
 
-# see the bottom of page 43 of RFC 4880
+# see the bottom of page 44 of RFC 4880 (http://tools.ietf.org/html/rfc4880#page-44)
 sub simple_checksum {
   my $bytes = shift;
 
-  return unpack("%32W*",$bytes) % 65536;
+  return unpack("%16C*",$bytes);
 }
 
 # calculate the multiplicative inverse of a mod b this is euclid's
