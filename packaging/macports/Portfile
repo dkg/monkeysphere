@@ -3,7 +3,7 @@
 
 PortSystem          1.0
 name                monkeysphere
-version             0.24
+version             0.25
 categories          net security
 maintainers         nomaintainer
 description         use the OpenPGP web of trust to verify ssh connections
@@ -30,7 +30,7 @@ master_sites        http://archive.monkeysphere.info/debian/pool/monkeysphere/m/
 distname            ${name}_${version}
 extract.suffix      .orig.tar.gz
 worksrcdir          ${name}-${version}
-checksums           md5 8590532f4702fa44027a6a583657c9ef
+checksums           md5 3ac1918eee99725869e65f3f5a24fe17
 
 use_configure       no
 
