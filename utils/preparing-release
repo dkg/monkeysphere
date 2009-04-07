@@ -14,3 +14,16 @@
  * create debian-specific version tag:
 
     git tag -s -m 'Tagging Monkeysphere $whatever-1' monkeysphere_$whatever-1
+
+ * update FreeBSD and Macports info:
+
+    make freebsd-distinfo
+    make macports-portsfile
+
+   (probably should consider tagging these ports as well to make them
+   easy to recover)
+
+ * remember to add the new version (n + 1) to the bugtracker if it's
+   not already:
+
+     https://labs.riseup.net/code/projects/settings/monkeysphere
