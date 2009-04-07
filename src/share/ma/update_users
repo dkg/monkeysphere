@@ -24,7 +24,7 @@ if [ "$1" ] ; then
     unames="$@"
 else	     
     # or just look at all users if none specified
-    unames=$(getent passwd | cut -d: -f1)
+    unames=$(list_users)
 fi
 
 # set mode

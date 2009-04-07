@@ -390,7 +390,7 @@ translate_ssh_variables() {
     path="$2"
 
     # get the user's home directory
-    userHome=$(getent passwd "$uname" | cut -d: -f6)
+    userHome=$(get_homedir "$uname")
 
     # translate '%u' to user name
     path=${path/\%u/"$uname"}
@@ -456,6 +456,23 @@ check_key_file_permissions() {
     else
 	check_key_file_permissions "$uname" $(dirname "$path")
     fi
+}
+
+# return a list of all users on the system
+list_users() {
+    if type getent &>/dev/null ; then
+	# for linux and FreeBSD systems
+	getent passwd | cut -d: -f1
+    elif type dscl &>/dev/null ; then
+	# for Darwin systems
+	dscl localhost -list /Search/Users
+    fi
+}
+
+# return the path to the home directory of a user
+get_homedir() {
+    local uname=${1:-`whoami`}
+    eval "echo ~${uname}"
 }
 
 ### CONVERSION UTILITIES
