@@ -24,8 +24,7 @@ depends_run         bin:ssh:openssh \
                     port:p5-crypt-openssl-rsa \
                     port:p5-crypt-openssl-bignum \
                     port:p5-digest-sha1 \
-                    port:procmail \
-                    port:socat
+                    port:procmail
 
 master_sites        http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
 distname            ${name}_${version}
