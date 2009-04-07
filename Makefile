@@ -37,6 +37,9 @@ debian-package: tarball
 freebsd-distinfo: 
 	./utils/build-freebsd-distinfo
 
+macports-portfile:
+	./utils/build-macports-portfile
+
 clean:
 	# clean up old monkeysphere packages lying around as well.
 	rm -f monkeysphere_*
