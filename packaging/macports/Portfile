@@ -36,6 +36,7 @@ checksums           md5 8590532f4702fa44027a6a583657c9ef
 use_configure       no
 
 post-build {
+    # update paths to SYS*DIRs
     exec sed -i .tmp -e "s|/etc/monkeysphere|${prefix}/etc/monkeysphere|g" \
         ${worksrcpath}/src/share/defaultenv \
         ${worksrcpath}/src/transitions/0.23 \
@@ -55,6 +56,12 @@ post-build {
         ${worksrcpath}/src/monkeysphere-host \
         ${worksrcpath}/src/monkeysphere-authentication \
         ${worksrcpath}/src/monkeysphere
+
+    # fix perl shebang line
+    exec sed -i .tmp -e "s|#!/usr/bin/perl -T|#!/usr/bin/env perl|g" \
+        ${worksrcpath}/src/share/keytrans
+
+    # remove leftover sed cruft
     exec find ${worksrcpath} -name *.tmp -delete
 }
 
