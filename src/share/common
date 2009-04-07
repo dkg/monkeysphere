@@ -466,6 +466,8 @@ list_users() {
     elif type dscl &>/dev/null ; then
 	# for Darwin systems
 	dscl localhost -list /Search/Users
+    else
+	failure "Neither getent or dscl is in the path!  Could not determine list of users."
     fi
 }
 
