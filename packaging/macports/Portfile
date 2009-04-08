@@ -2,14 +2,11 @@
 # $Id$
 
 PortSystem          1.0
-
 name                monkeysphere
 version             0.24
-categories          net
+categories          net security
 maintainers         nomaintainer
-platforms           darwin
 description         use the OpenPGP web of trust to verify ssh connections
-
 long_description    SSH key-based authentication is tried-and-true, \
                     but it lacks a true Public Key Infrastructure for \
                     key certification, revocation and expiration. \
@@ -18,23 +15,60 @@ long_description    SSH key-based authentication is tried-and-true, \
                     used in both directions: for users to get \
                     validated host keys, and for hosts to authenticate \
                     users.
-
 homepage            http://web.monkeysphere.info/
-master_sites        http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
-distname            ${name}_${version}
-worksrcdir          ${name}-${version}
-checksums           md5 8590532f4702fa44027a6a583657c9ef
+platforms           darwin
 
 depends_run         bin:ssh:openssh \
                     port:gnupg \
-                    port:perl5.10 \
-                    port:p5-crypt-rsa \
+                    port:perl5 \
+                    port:p5-crypt-openssl-rsa \
+                    port:p5-crypt-openssl-bignum \
                     port:p5-digest-sha1 \
                     port:procmail
 
-build.target        build
-destroot.args       PREFIX=${destroot}${prefix} \
-                    CONFDIR=${destroot}${prefix}/etc/monkeysphere \
-                    DBDIR=${destroot}${prefix}/var/lib/monkeysphere \
-                    MANDIR=${destroot}${prefix}/share/man \
-                    DOCDIR=${destroot}${prefix}/share/doc/monkeysphere
+master_sites        http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
+distname            ${name}_${version}
+extract.suffix      .orig.tar.gz
+worksrcdir          ${name}-${version}
+checksums           md5 8590532f4702fa44027a6a583657c9ef
+
+use_configure       no
+
+post-build {
+    # update paths to SYS*DIRs
+    exec sed -i .tmp -e "s|/etc/monkeysphere|${prefix}/etc/monkeysphere|g" \
+        ${worksrcpath}/src/share/defaultenv \
+        ${worksrcpath}/src/transitions/0.23 \
+        ${worksrcpath}/man/man1/monkeysphere.1 \
+        ${worksrcpath}/man/man8/monkeysphere-authentication.8 \
+        ${worksrcpath}/man/man8/monkeysphere-host.8 \
+        ${worksrcpath}/etc/monkeysphere-authentication.conf
+    exec sed -i .tmp -e "s|/var/lib/monkeysphere|${prefix}/var/db/monkeysphere|g" \
+        ${worksrcpath}/src/transitions/0.23 \
+        ${worksrcpath}/man/man1/monkeysphere.1 \
+        ${worksrcpath}/man/man8/monkeysphere-authentication.8 \
+        ${worksrcpath}/man/man8/monkeysphere-host.8 \
+        ${worksrcpath}/src/monkeysphere-host \
+        ${worksrcpath}/src/monkeysphere-authentication \
+        ${worksrcpath}/doc/getting-started-admin.mdwn
+    exec sed -i .tmp -e "s|/usr/share/monkeysphere|${prefix}/share/monkeysphere|g" \
+        ${worksrcpath}/src/monkeysphere-host \
+        ${worksrcpath}/src/monkeysphere-authentication \
+        ${worksrcpath}/src/monkeysphere
+
+    # fix perl shebang line to point to macports perl install
+    exec sed -i .tmp -e "s|^#!/usr/bin/perl -T$|#!/opt/local/bin/perl -T|" \
+        ${worksrcpath}/src/share/keytrans
+
+    # remove leftover sed cruft
+    exec find ${worksrcpath} -name *.tmp -delete
+}
+
+destroot.destdir    DESTDIR=${destroot}${prefix}
+destroot.args       PREFIX=
+
+# variant to use the port version of bash, which may be much newer
+# than the one provided by the system
+variant port-bash description {use port version of Bash} {
+    depends_run-append port:bash
+}

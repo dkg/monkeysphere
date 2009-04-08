@@ -37,6 +37,9 @@ debian-package: tarball
 freebsd-distinfo: 
 	./utils/build-freebsd-distinfo
 
+macports-portfile:
+	./utils/build-macports-portfile
+
 clean:
 	# clean up old monkeysphere packages lying around as well.
 	rm -f monkeysphere_*
@@ -78,6 +81,6 @@ releasenote:
 	./utils/build-releasenote
 
 test:
-	./tests/basic
+	MONKEYSPHERE_TEST_NO_EXAMINE=true ./tests/basic
 
 .PHONY: all tarball debian-package freebsd-distinfo clean install installman releasenote test

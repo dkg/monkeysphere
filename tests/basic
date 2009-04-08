@@ -129,6 +129,10 @@ export MONKEYSPHERE_LOG_LEVEL=DEBUG
 export MONKEYSPHERE_CORE_KEYLENGTH=1024
 export MONKEYSPHERE_PROMPT=false
 
+# unset SUBKEYS_FOR_AGENT variable which, if set, would confuse the
+# into trying to use the user's key, instead of the testuser's key
+unset MONKEYSPHERE_SUBKEYS_FOR_AGENT
+
 export SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
 
@@ -146,7 +150,8 @@ export DISPLAY=monkeys
 echo
 echo "##################################################"
 echo "### configuring testuser home..."
-cp -a "$TESTDIR"/home/testuser "$TEMPDIR"/
+(cd "$TESTDIR"/home && find testuser | cpio -pdu "$TEMPDIR")
+
 # set up environment for testuser
 export TESTHOME="$TEMPDIR"/testuser
 export GNUPGHOME="$TESTHOME"/.gnupg
@@ -166,7 +171,7 @@ get_gpg_prng_arg >> "$GNUPGHOME"/gpg.conf
 echo
 echo "##################################################"
 echo "### configuring admin home..."
-cp -a "$TESTDIR"/home/admin "$TEMPDIR"/
+(cd "$TESTDIR"/home && find admin | cpio -pdu "$TEMPDIR")
 
 # set up sshd
 echo

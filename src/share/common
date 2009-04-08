@@ -147,8 +147,8 @@ lock() {
     local action="$1"
     local file="$2"
 
-    if ! ( which lockfile-create >/dev/null 2>/dev/null ) ; then
-	if ! ( which lockfile >/dev/null ); then
+    if ! ( type lockfile-create &>/dev/null ) ; then
+	if ! ( type lockfile &>/dev/null ); then
 	    failure "Neither lockfile-create nor lockfile are in the path!"
 	fi
 	use_lockfileprogs=
@@ -197,7 +197,7 @@ advance_date() {
     local shortunits
 
     # try things the GNU way first 
-    if date -d "$number $longunits" "$format" >/dev/null 2>&1; then
+    if date -d "$number $longunits" "$format" &>/dev/null; then
 	date -d "$number $longunits" "$format"
     else
 	# otherwise, convert to (a limited version of) BSD date syntax:
@@ -252,7 +252,13 @@ check_capability() {
 
 # hash of a file
 file_hash() {
-    md5sum "$1" 2> /dev/null
+    if type md5sum &>/dev/null ; then
+	md5sum "$1"
+    elif type md5 &>/dev/null ; then
+	md5 "$1"
+    else
+	failure "Neither md5sum nor md5 are in the path!"
+    fi
 }
 
 # convert escaped characters in pipeline from gpg output back into
@@ -303,7 +309,9 @@ passphrase_prompt() {
     local fifo="$2"
     local PASS
 
-    if [ "$DISPLAY" ] && which "${SSH_ASKPASS:-ssh-askpass}" >/dev/null; then
+    if [ "$DISPLAY" ] && type "${SSH_ASKPASS:-ssh-askpass}" >/dev/null; then
+	printf 'Launching "%s"\n' "${SSH_ASKPASS:-ssh-askpass}" | log info
+	printf '(with prompt "%s")\n' "$prompt" | log debug
 	"${SSH_ASKPASS:-ssh-askpass}" "$prompt" > "$fifo"
     else
 	read -s -p "$prompt" PASS
@@ -331,7 +339,7 @@ remove_line() {
     fi
 
     # if the string is in the file...
-    if grep -q -F "$string" "$file" 2> /dev/null ; then
+    if grep -q -F "$string" "$file" 2>/dev/null ; then
 	tempfile=$(mktemp "${file}.XXXXXXX") || \
 	    failure "Unable to make temp file '${file}.XXXXXXX'"
 	
@@ -382,7 +390,7 @@ translate_ssh_variables() {
     path="$2"
 
     # get the user's home directory
-    userHome=$(getent passwd "$uname" | cut -d: -f6)
+    userHome=$(get_homedir "$uname")
 
     # translate '%u' to user name
     path=${path/\%u/"$uname"}
@@ -437,7 +445,7 @@ check_key_file_permissions() {
     # return 2 if path has group or other writability
     if is_write "$gAccess" || is_write "$oAccess" ; then
 	log error "improper group or other writability on path '$path':"
-	log error " group: $gAccess, other: $oAcess"
+	log error " group: $gAccess, other: $oAccess"
 	return 2
     fi
 
@@ -450,6 +458,25 @@ check_key_file_permissions() {
     fi
 }
 
+# return a list of all users on the system
+list_users() {
+    if type getent &>/dev/null ; then
+	# for linux and FreeBSD systems
+	getent passwd | cut -d: -f1
+    elif type dscl &>/dev/null ; then
+	# for Darwin systems
+	dscl localhost -list /Search/Users
+    else
+	failure "Neither getent or dscl is in the path!  Could not determine list of users."
+    fi
+}
+
+# return the path to the home directory of a user
+get_homedir() {
+    local uname=${1:-`whoami`}
+    eval "echo ~${uname}"
+}
+
 ### CONVERSION UTILITIES
 
 # output the ssh key for a given key ID
@@ -458,7 +485,7 @@ gpg2ssh() {
     
     keyID="$1"
 
-    gpg --export "$keyID" | openpgp2ssh "$keyID" 2> /dev/null
+    gpg --export "$keyID" | openpgp2ssh "$keyID" 2>/dev/null
 }
 
 # output known_hosts line from ssh key
@@ -549,7 +576,7 @@ gpg_fetch_userid() {
     echo 1,2,3,4,5 | \
 	gpg --quiet --batch --with-colons \
 	--command-fd 0 --keyserver "$KEYSERVER" \
-	--search ="$userID" > /dev/null 2>&1
+	--search ="$userID" &>/dev/null
     returnCode="$?"
 
     return "$returnCode"
@@ -809,7 +836,7 @@ process_host_known_hosts() {
 		# hash from stdin to stdout
 		tmpfile=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
 		ssh2known_hosts "$host" "$sshKey" > "$tmpfile"
-		ssh-keygen -H -f "$tmpfile" 2> /dev/null
+		ssh-keygen -H -f "$tmpfile" 2>/dev/null
 		cat "$tmpfile" >> "$KNOWN_HOSTS"
 		rm -f "$tmpfile" "${tmpfile}.old"
 	    else
@@ -1091,7 +1118,7 @@ process_authorized_user_ids() {
     # check permissions on the authorized_user_ids file path
     check_key_file_permissions $(whoami) "$authorizedUserIDs" || failure
 
-    if ! meat "$authorizedUserIDs" > /dev/null ; then
+    if ! meat "$authorizedUserIDs" >/dev/null ; then
 	log debug " no user IDs to process."
 	return
     fi

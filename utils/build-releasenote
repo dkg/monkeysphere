@@ -39,3 +39,5 @@ set +e
 git add website/download.mdwn
 
 gpg --verify website/download.mdwn
+
+printf "please remember to add the new version to the bugtracker:\n  https://labs.riseup.net/code/projects/settings/monkeysphere\n"
