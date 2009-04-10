@@ -29,3 +29,5 @@ at:
 
 * [Wandering Thoughts blog discussion about Web of Trust flaws](http://utcc.utoronto.ca/~cks/space/blog/tech/WebOfTrustFlaws?showcomments)
 * [Wandering Thoughts blog discussion about certificate authorities](http://utcc.utoronto.ca/~cks/space/blog/web/SSLCANeed?showcomments)
+* [Zooko's Conjecture: Decentralized, Secure, Human-Meaningful: Choose two](https://zooko.com/distnames.html)
+* [Mark Stiegler's Introduction to Petnames](http://www.skyhunter.com/marcs/petnames/IntroPetNames.html)
