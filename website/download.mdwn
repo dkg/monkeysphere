@@ -28,8 +28,10 @@ version as follows:
 If you are running Debian stable, you can get the monkeysphere package
 from [backports.org](http://backports.org/dokuwiki/doku.php?id=instructions)
 
+## Debian derivatives (including Ubuntu) ##
+
 You can also install the Monkeysphere directly from the Monkeysphere
-Debian archive.  You can add this archive to your system by putting
+APT repository.  You can add this archive to your system by putting
 the following lines in `/etc/apt/sources.list.d/monkeysphere.list`:
 
     deb http://archive.monkeysphere.info/debian experimental monkeysphere
@@ -40,6 +42,14 @@ signing key](/archive-key), key id EB8AF314 (fingerprint: `2E8D D26C
 53F1 197D DF40 3E61 18E6 67F1 EB8A F314`).  To cryptographically
 verify the packages, you'll want to [add this key to your apt
 configuration after verifying its integrity](/archive-key).
+
+Note: Ubuntu appears to be planning to ship Monkeysphere 0.22 in their
+"Jaunty Jackalope" release (9.04).  The Monkeysphere developers think
+that [Ubuntu shipping Monkeysphere 0.22-1 is a bad
+idea](https://bugs.launchpad.net/ubuntu/+source/monkeysphere/+bug/345054).
+If you are an Ubuntu user, we would prefer that you install from the
+APT archive above rather than run 0.22, which we no longer consider
+supported.
 
 ## FreeBSD ##
 
