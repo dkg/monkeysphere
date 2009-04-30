@@ -7,10 +7,11 @@ monkeysphere (0.25-1~pre) UNRELEASED; urgency=low
     - clean out some redundant "cat"s
     - fix monkeysphere update-known_hosts for sshd running on non-standard
       ports
+    - add 'sshfpr' subcommand to output the ssh fingerprint of a gpg key
     - some portability improvements
   * update Standard-Version to 3.8.1
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Mon, 06 Apr 2009 22:20:55 -0700
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Thu, 30 Apr 2009 15:34:28 -0700
 
 monkeysphere (0.24-1) unstable; urgency=low
 

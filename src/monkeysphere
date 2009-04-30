@@ -50,6 +50,7 @@ subcommands:
  ssh-proxycommand HOST [PORT]        monkeysphere ssh ProxyCommand
    --no-connect                        do not make TCP connection to host
  subkey-to-ssh-agent (s)             store authentication subkey in ssh-agent
+ sshfpr (f) KEYID                    output ssh fingerprint of gpg key
  version (v)                         show version number
  help (h,?)                          this help
 
@@ -59,6 +60,23 @@ EOF
 # user gpg command to define common options
 gpg_user() {
     gpg --no-greeting --quiet --no-tty "$@"
+}
+
+# output the ssh fingerprint of a gpg key
+gpg_ssh_fingerprint() {
+    keyid="$1"
+    local tmpfile=$(mktemp)
+
+    # trap to remove tmp file if break
+    trap "rm -f $tmpfile" EXIT
+
+    # use temporary file, since ssh-keygen won't accept keys on stdin
+    gpg_user --export "$keyid" | openpgp2ssh "$keyid" >"$tmpfile"
+    ssh-keygen -l -f "$tmpfile" | awk '{ print $1, $2, $4 }'
+
+    # remove the tmp file
+    trap - EXIT
+    rm -rf "$tmpfile"
 }
 
 # take a secret key ID and check that only zero or one ID is provided,
@@ -241,6 +259,10 @@ case $COMMAND in
     'subkey-to-ssh-agent'|'s')
 	source "${MSHAREDIR}/subkey_to_ssh_agent"
 	subkey_to_ssh_agent "$@"
+	;;
+
+    'sshfpr'|'f')
+	gpg_ssh_fingerprint "$@"
 	;;
 
     'version'|'v')
