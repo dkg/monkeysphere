@@ -7,6 +7,9 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2009-04-21 - micah
+	* aptitude update && aptitude full-upgrade (git-core DSA)
+	
 2009-04-12 - dkg
 	* aptitude update && aptitude full-upgrade
 	* (checked and found that monkeysphere version 0.24-1 is already
