@@ -426,7 +426,7 @@ sub pem2openpgp {
   my $uid = shift;
   my $args = shift;
 
-  $rsa->use_sha1_hash();
+  $rsa->use_sha256_hash();
 
   # see page 22 of RFC 4880 for why i think this is the right padding
   # choice to use:
@@ -442,7 +442,7 @@ sub pem2openpgp {
   # RSA
   my $pubkey_algo = pack('C', $asym_algos->{rsa});
   # SHA1
-  my $hash_algo = pack('C', $digests->{sha1});
+  my $hash_algo = pack('C', $digests->{sha256});
 
   # FIXME: i'm worried about generating a bazillion new OpenPGP
   # certificates from the same key, which could easily happen if you run
@@ -497,11 +497,14 @@ sub pem2openpgp {
 			    $ciphers->{tripledes}
 			   );
 
-  # prefer SHA-1, SHA-256, RIPE-MD/160
-  my $pref_hash_algos = pack('CCCCC', 4, $subpacket_types->{preferred_digest},
-			     $digests->{sha1},
+  # prefer SHA-512, SHA-384, SHA-256, SHA-224, RIPE-MD/160, SHA-1
+  my $pref_hash_algos = pack('CCCCCCCC', 7, $subpacket_types->{preferred_digest},
+			     $digests->{sha512},
+			     $digests->{sha384},
 			     $digests->{sha256},
-			     $digests->{ripemd160}
+			     $digests->{sha224},
+			     $digests->{ripemd160},
+			     $digests->{sha1}
 			    );
 
   # prefer ZLIB, BZip2, ZIP
