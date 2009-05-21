@@ -690,6 +690,8 @@ sub openpgp2ssh {
 	  my $foundfpr = fingerprint($pubkey, $timestamp);
 
 	  my $foundfprstr = Crypt::OpenSSL::Bignum->new_from_bin($foundfpr)->to_hex();
+	  # left-pad with 0's to bring up to full 40-char (160-bit) fingerprint:
+	  $foundfprstr = sprintf("%040s", $foundfprstr);
 
 	  # is this a match?
 	  if ((!defined($fpr)) ||
