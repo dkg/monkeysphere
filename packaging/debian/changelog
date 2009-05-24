@@ -8,10 +8,13 @@ monkeysphere (0.25-1~pre) UNRELEASED; urgency=low
     - fix monkeysphere update-known_hosts for sshd running on non-standard
       ports
     - add 'sshfpr' subcommand to output the ssh fingerprint of a gpg key
+    - pem2openpgp now generates self-sigs over SHA-256 instead of SHA-1
     - some portability improvements
+    - properly handle translation of keys with fingerprints with leading
+      all-zero bytes.
   * update Standard-Version to 3.8.1
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Thu, 30 Apr 2009 15:34:28 -0700
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 21 May 2009 13:04:10 -0400
 
 monkeysphere (0.24-1) unstable; urgency=low
 
