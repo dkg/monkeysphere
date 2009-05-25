@@ -29,9 +29,17 @@ The following environment variables influence the behavior of
 .ti 3
 \fBPEM2OPENPGP_TIMESTAMP\fP controls the timestamp (measured in
 seconds since the UNIX epoch) indicated as the creation time (a.k.a
-"not valid before") of the generated certificate.  By default,
+"not valid before") of the generated certificate (self-signature) and
+the key itself.  By default,
 .Nm
 uses the current time.
+.Pp
+.ti 3
+\fBPEM2OPENPGP_KEY_TIMESTAMP\fP controls the timestamp (measured in
+seconds since the UNIX epoch) indicated as the creation time of just
+the key itself (not the self-signature).  By default,
+.Nm
+uses the value from PEM2OPENPGP_TIMESTAMP.
 .Pp
 .ti 3
 \fBPEM2OPENPGP_USAGE_FLAGS\fP should contain a comma-separated list of

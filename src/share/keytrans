@@ -368,12 +368,12 @@ sub read_mpi {
 # FIXME: genericize these to accept either RSA or DSA keys:
 sub make_rsa_pub_key_body {
   my $key = shift;
-  my $timestamp = shift;
+  my $key_timestamp = shift;
 
   my ($n, $e) = $key->get_key_parameters();
 
   return
-    pack('CN', 4, $timestamp).
+    pack('CN', 4, $key_timestamp).
       pack('C', $asym_algos->{rsa}).
 	mpi_pack($n).
 	  mpi_pack($e);
@@ -381,7 +381,7 @@ sub make_rsa_pub_key_body {
 
 sub make_rsa_sec_key_body {
   my $key = shift;
-  my $timestamp = shift;
+  my $key_timestamp = shift;
 
   # we're not using $a and $b, but we need them to get to $c.
   my ($n, $e, $d, $p, $q) = $key->get_key_parameters();
@@ -400,7 +400,7 @@ sub make_rsa_sec_key_body {
   # with modular_multi_inverse.
 
   return
-    pack('CN', 4, $timestamp).
+    pack('CN', 4, $key_timestamp).
       pack('C', $asym_algos->{rsa}).
 	mpi_pack($n).
 	  mpi_pack($e).
@@ -412,9 +412,9 @@ sub make_rsa_sec_key_body {
 # expects an RSA key (public or private) and a timestamp
 sub fingerprint {
   my $key = shift;
-  my $timestamp = shift;
+  my $key_timestamp = shift;
 
-  my $rsabody = make_rsa_pub_key_body($key, $timestamp);
+  my $rsabody = make_rsa_pub_key_body($key, $key_timestamp);
 
   return Digest::SHA1::sha1(pack('Cn', 0x99, length($rsabody)).$rsabody);
 }
@@ -436,9 +436,14 @@ sub pem2openpgp {
     die "key does not check";
   }
 
+  # strong assertion of identity is the default (for a self-sig):
+  my $certtype = $sig_types->{positive_certification};
+  if (defined $args->{certification_type}) {
+    $certtype = $args->{certification_type} + 0;
+  }
+
   my $version = pack('C', 4);
-  # strong assertion of identity:
-  my $sigtype = pack('C', $sig_types->{positive_certification});
+  my $sigtype = pack('C', $certtype);
   # RSA
   my $pubkey_algo = pack('C', $asym_algos->{rsa});
   # SHA1
@@ -449,17 +454,24 @@ sub pem2openpgp {
   # this script more than once against the same key (because the
   # timestamps will differ).  How can we prevent this?
 
-  # this environment variable (if set) overrides the current time, to
-  # be able to create a standard key?  If we read the key from a file
+  # this argument (if set) overrides the current time, to
+  # be able to create a standard key.  If we read the key from a file
   # instead of stdin, should we use the creation time on the file?
-  my $timestamp = 0;
-  if (defined $args->{timestamp}) {
-    $timestamp = ($args->{timestamp} + 0);
+  my $sig_timestamp = 0;
+  if (defined $args->{sig_timestamp}) {
+    $sig_timestamp = ($args->{sig_timestamp} + 0);
   } else {
-    $timestamp = time();
+    $sig_timestamp = time();
+  }
+  my $key_timestamp = $sig_timestamp;
+  if (defined $args->{key_timestamp}) {
+    $key_timestamp = ($args->{key_timestamp} + 0);
+  }
+  if ($key_timestamp > $sig_timestamp) {
+    die "key timestamp must not be later than signature timestamp";
   }
 
-  my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $timestamp);
+  my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $sig_timestamp);
 
 
   my $flags = 0;
@@ -542,8 +554,8 @@ sub pem2openpgp {
 	    $subpacket_octets.
 	      $subpackets_to_be_hashed;
 
-  my $pubkey = make_rsa_pub_key_body($rsa, $timestamp);
-  my $seckey = make_rsa_sec_key_body($rsa, $timestamp);
+  my $pubkey = make_rsa_pub_key_body($rsa, $key_timestamp);
+  my $seckey = make_rsa_sec_key_body($rsa, $key_timestamp);
 
   # this is for signing.  it needs to be an old-style header with a
   # 2-packet octet count.
@@ -551,7 +563,7 @@ sub pem2openpgp {
   my $key_data = make_packet($packet_types->{pubkey}, $pubkey, {'packet_length'=>2});
 
   # take the last 8 bytes of the fingerprint as the keyid:
-  my $keyid = substr(fingerprint($rsa, $timestamp), 20 - 8, 8);
+  my $keyid = substr(fingerprint($rsa, $key_timestamp), 20 - 8, 8);
 
   # the v4 signature trailer is:
 
@@ -669,10 +681,10 @@ sub openpgp2ssh {
 	read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
       } else {
 
-	my $timestamp;
-	read($instr, $timestamp, 4) or die "could not read key timestamp.\n";
+	my $key_timestamp;
+	read($instr, $key_timestamp, 4) or die "could not read key timestamp.\n";
 	$readbytes += 4;
-	$timestamp = unpack('N', $timestamp);
+	$key_timestamp = unpack('N', $key_timestamp);
 
 	my $algo;
 	read($instr, $algo, 1) or die "could not read key algorithm.\n";
@@ -687,7 +699,7 @@ sub openpgp2ssh {
 	  my $exponent = read_mpi($instr, \$readbytes);
 
 	  my $pubkey = Crypt::OpenSSL::RSA->new_key_from_parameters($modulus, $exponent);
-	  my $foundfpr = fingerprint($pubkey, $timestamp);
+	  my $foundfpr = fingerprint($pubkey, $key_timestamp);
 
 	  my $foundfprstr = Crypt::OpenSSL::Bignum->new_from_bin($foundfpr)->to_hex();
 	  # left-pad with 0's to bring up to full 40-char (160-bit) fingerprint:
@@ -778,7 +790,8 @@ for (basename($0)) {
 
     print pem2openpgp($rsa,
 		      $uid,
-		      { timestamp => $ENV{PEM2OPENPGP_TIMESTAMP},
+		      { sig_timestamp => $ENV{PEM2OPENPGP_TIMESTAMP},
+			key_timestamp => $ENV{PEM2OPENPGP_KEY_TIMESTAMP},
 			expiration => $ENV{PEM2OPENPGP_EXPIRATION},
 			usage_flags => $ENV{PEM2OPENPGP_USAGE_FLAGS},
 		      }
