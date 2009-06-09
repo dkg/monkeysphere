@@ -627,6 +627,7 @@ sub openpgp2ssh {
       die "This is not an OpenPGP packet\n";
     }
     if (0x40 & $packettag) {
+      # this is a new-format packet.
       $tag = (0x3f & $packettag);
       my $nextlen = 0;
       read($instr, $nextlen, 1);
@@ -645,6 +646,7 @@ sub openpgp2ssh {
 	# packet length is undefined.
       }
     } else {
+      # this is an old-format packet.
       my $lentype;
       $lentype = 0x03 & $packettag;
       $tag = ( 0x3c & $packettag ) >> 2;
@@ -775,7 +777,6 @@ for (basename($0)) {
 
     # FIXME: fail if there is no given user ID; or should we default to
     # hostname_long() from Sys::Hostname::Long ?
-
 
     if (defined $ENV{PEM2OPENPGP_NEWKEY}) {
       $rsa = Crypt::OpenSSL::RSA->generate_key($ENV{PEM2OPENPGP_NEWKEY});
