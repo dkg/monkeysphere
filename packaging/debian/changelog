@@ -1,4 +1,4 @@
-Monkeysphere (0.25-1~pre) UNRELEASED; urgency=low
+monkeysphere (0.25-1~pre) UNRELEASED; urgency=low
 
   * New upstream release:
     - update/fix the marginal ui output
