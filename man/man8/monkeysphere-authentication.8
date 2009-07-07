@@ -169,6 +169,12 @@ System monkeysphere-authentication config file.
 .TP
 /var/lib/monkeysphere/authorized_keys/USER
 Monkeysphere-generated user authorized_keys files.
+.TP
+~/.monkeysphere/authorized_user_ids
+A list of OpenPGP user IDs, one per line.  OpenPGP keys with an
+exactly-matching User ID (calculated valid by the designated identity
+certifiers), will have any valid authorization-capable keys or subkeys
+added to the given user's authorized_keys file.
 
 .SH AUTHOR
 
