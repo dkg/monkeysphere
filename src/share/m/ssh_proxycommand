@@ -15,6 +15,55 @@
 # established.  Can be added to ~/.ssh/config as follows:
 #  ProxyCommand monkeysphere ssh-proxycommand %h %p
 
+# output the key info, including the RSA fingerprint
+show_key_info() {
+    local keyid="$1"
+    local sshKeyGPGFile
+    local sshFingerprint
+    local gpgSigOut
+    local otherUids
+
+    # get the ssh key of the gpg key
+    sshKeyGPGFile=$(msmktempfile)
+    gpg2ssh "$keyid" >"$sshKeyGPGFile"
+    sshFingerprint=$(ssh-keygen -l -f "$sshKeyGPGFile" | \
+        awk '{ print $2 }')
+    rm -f "$sshKeyGPGFile"
+
+    # get the sigs for the matching key
+    gpgSigOut=$(gpg_user --check-sigs \
+        --list-options show-uid-validity \
+        "$keyid")
+
+    echo | log info
+
+    # output the sigs, but only those on the user ID
+    # we are looking for
+    echo "$gpgSigOut" | awk '
+{
+if (match($0,"^pub")) { print; }
+if (match($0,"^uid")) { ok=0; }
+if (match($0,"^uid.*'$userID'$")) { ok=1; print; }
+if (ok) { if (match($0,"^sig")) { print; } }
+}
+'
+
+    # output ssh fingerprint
+    cat <<EOF
+RSA key fingerprint is ${sshFingerprint}.
+EOF
+
+    # output the other user IDs for reference
+    otherUids=$(echo "$gpgSigOut" | grep "^uid" | grep -v "$userID")
+    if [ "$otherUids" ] ; then
+	log info <<EOF
+Other user IDs on this key:
+EOF
+	echo "$otherUids" | log info
+    fi
+
+}
+
 # "marginal case" ouput in the case that there is not a full
 # validation path to the host
 output_no_valid_key() {
@@ -28,8 +77,6 @@ output_no_valid_key() {
     local usage
     local sshKeyGPG
     local tmpkey
-    local sshFingerprint
-    local gpgSigOut
     local returnCode=0
 
     userID="ssh://${HOSTP}"
@@ -51,63 +98,34 @@ output_no_valid_key() {
 Monkeysphere found OpenPGP keys for this hostname, but none had full validity.
 EOF
 
-    # if the host key is retrieved from the host, check against known
-    # OpenPGP keys
-    if [ "$sshKeyOffered" ] ; then
-	# find all 'pub' and 'sub' lines in the gpg output, which each
-	# represent a retrieved key for the user ID
-	echo "$gpgOut" | cut -d: -f1,2,5,10,12 | \
-	while IFS=: read -r type validity keyid uidfpr usage ; do
-	    case $type in
-		'pub'|'sub')
-		    # get the ssh key of the gpg key
-		    sshKeyGPG=$(gpg2ssh "$keyid")
+    # output message if host key could not be retrieved from the host
+    if [ -z "$sshKeyOffered" ] ; then
+	log info <<EOF
+Could not retrieve RSA host key from $HOST.
+The following keys were found with marginal validity:
+EOF
+    fi
+
+    # find all 'pub' and 'sub' lines in the gpg output, which each
+    # represent a retrieved key for the user ID
+    echo "$gpgOut" | cut -d: -f1,2,5,10,12 | \
+    while IFS=: read -r type validity keyid uidfpr usage ; do
+	case $type in
+	    'pub'|'sub')
+		# get the ssh key of the gpg key
+		sshKeyGPG=$(gpg2ssh "$keyid")
+
+		# if a key was retrieved from the host...
+		if [ "$sshKeyOffered" ] ; then
 
 		    # if one of keys found matches the one offered by the
 		    # host, then output info
 		    if [ "$sshKeyGPG" = "$sshKeyOffered" ] ; then
 			log info <<EOF
 An OpenPGP key matching the ssh key offered by the host was found:
-
 EOF
 
-			sshKeyGPGFile=$(msmktempfile)
-			printf "%s" "$sshKeyGPG" >"$sshKeyGPGFile"
-			sshFingerprint=$(ssh-keygen -l -f "$sshKeyGPGFile" | \
-			    awk '{ print $2 }')
-			rm -f "$sshKeyGPGFile"
-
-			# get the sigs for the matching key
-			gpgSigOut=$(gpg_user --check-sigs \
-			    --list-options show-uid-validity \
-			    "$keyid")
-
-			# output the sigs, but only those on the user ID
-			# we are looking for
-			echo "$gpgSigOut" | awk '
-{
-if (match($0,"^pub")) {	print; }
-if (match($0,"^uid")) { ok=0; }
-if (match($0,"^uid.*'$userID'$")) { ok=1; print; }
-if (ok) { if (match($0,"^sig")) { print; } }
-}
-' | log info
-			echo | log info
-
-			# output the other user IDs for reference
-			if (echo "$gpgSigOut" | grep "^uid" | grep -v -q "$userID") ; then
-			    log info <<EOF
-Other user IDs on this key:
-
-EOF
-			    echo "$gpgSigOut" | grep "^uid" | grep -v "$userID" | log info
-			    echo | log info
-			fi
-
-			# output ssh fingerprint
-			log info <<EOF
-RSA key fingerprint is ${sshFingerprint}.
-EOF
+			show_key_info "$keyid" | log info
 
 			# this whole process is in a "while read"
 			# subshell.  the only way to get information
@@ -117,30 +135,47 @@ EOF
 			# for the ssh key offered by the host
 			return 1
 		    fi
-		    ;;
-	    esac
-	done || returnCode="$?"
 
-	# if no key match was made (and the "while read" subshell
-	# returned 1) output how many keys were found
-	if (( returnCode != 1 )) ; then
+		# else if a key was not retrieved from the host
+		else
+
+		    # if the current key is marginal, show info
+		    if [ "$validity" = 'm' -o "$validity" = 'f' ] ; then
+			show_key_info "$keyid" | log info
+                    fi
+
+		fi
+		;;
+	esac
+    done || returnCode="$?"
+
+    # if no key match was made (and the "while read" subshell
+    # returned 1) output how many keys were found
+    if (( returnCode != 1 )) ; then
+
+	echo | log info
+
+	# output different footer messages depending on if a key had
+	# been retrieved from the host
+	if [ "$sshKeyOffered" ] ; then
 	    log info <<EOF
 None of the found keys matched the key offered by the host.
+EOF
+	else
+	    log info <<EOF
+There may be other keys with less than marginal validity for this hostname.
+EOF
+	fi
+
+	log info <<EOF
 Run the following command for more info about the found keys:
 gpg --check-sigs --list-options show-uid-validity =${userID}
 EOF
 
-	    # FIXME: should we do anything extra here if the retrieved
-	    # host key is actually in the known_hosts file and the ssh
-	    # connection will succeed?  Should the user be warned?
-	    # prompted?
-	fi
-
-    # if host key could not be retrieved from the host, output message
-    else
-	log info <<EOF
-Could not retrieve RSA host key from $HOST.
-EOF
+	# FIXME: should we do anything extra here if the retrieved
+	# host key is actually in the known_hosts file and the ssh
+	# connection will succeed?  Should the user be warned?
+	# prompted?
     fi
 
     # output footer
