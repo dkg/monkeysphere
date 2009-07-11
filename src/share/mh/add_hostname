@@ -32,9 +32,8 @@ find_host_userid > /dev/null && \
     failure "Host userID '$userID' already exists."
 
 if [ "$PROMPT" = "true" ] ; then
-    read -p "The following user ID will be added to the host key:
-  $userID
-Are you sure you would like to add this user ID? (Y/n) " OK; OK=${OK:=Y}
+    printf "The following user ID will be added to the host key:\n  %s\nAre you sure you would like to add this user ID? (Y/n) " "$userID" >&2
+    read OK; OK=${OK:=Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then
 	failure "User ID not added."
     fi
