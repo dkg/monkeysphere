@@ -81,6 +81,7 @@ releasenote:
 	./utils/build-releasenote
 
 test:
+	MONKEYSPHERE_TEST_NO_EXAMINE=true ./tests/keytrans
 	MONKEYSPHERE_TEST_NO_EXAMINE=true ./tests/basic
 
 .PHONY: all tarball debian-package freebsd-distinfo clean install installman releasenote test

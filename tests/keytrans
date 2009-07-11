@@ -17,12 +17,19 @@ set -e
 # piped commands should return the code of the first non-zero return
 set -o pipefail
 
-export TESTDIR=$(dirname "$0")
+# make sure the TESTDIR is an absolute path, not a relative one.
+export TESTDIR=$(cd $(dirname "$0") && pwd)
 
 source "$TESTDIR"/common
 
-## setup trap
-trap failed_cleanup EXIT
+perl -MCrypt::OpenSSL::RSA -e 1 2>/dev/null || { echo "You must have the perl module Crypt::OpenSSL::RSA installed to run this test.  
+On debian-derived systems, you can set this up with:
+  apt-get install libcrypt-openssl-rsa-perl" ; exit 1; }
+
+perl -MDigest::SHA -e 1 2>/dev/null || { echo "You must have the perl module Digest::SHA installed to run this test.  
+On debian-derived systems, you can set this up with:
+  apt-get install libdigest-sha1-perl" ; exit 1; }
+
 
 ######################################################################
 ### SETUP VARIABLES
@@ -30,17 +37,19 @@ trap failed_cleanup EXIT
 ## set up some variables to ensure that we're operating strictly in
 ## the tests, not system-wide:
 
-# make temp dir
-TEMPDIR="$TESTDIR"/tmp
-if [ -e "$TEMPDIR" ] ; then
-    echo "tempdir '$TEMPDIR' already exists."
-    exit 1
-fi
-mkdir -p "$TEMPDIR"
+mkdir -p "$TESTDIR"/tmp
+TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/monkeyspheretest.XXXXXXX")
+
+mkdir "$TEMPDIR"/bin
+ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/openpgp2ssh
+ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/pem2openpgp
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
-export PATH="$TESTDIR"/../src/keytrans:"$PATH"
+export PATH="$TEMPDIR"/bin:"$PATH"
+
+## setup trap
+trap failed_cleanup EXIT
 
 ######################################################################
 ### TEST KEYTRANS
@@ -49,6 +58,14 @@ echo "##################################################"
 echo "### generating openpgp key..."
 export GNUPGHOME="$TEMPDIR"
 chmod 700 "$TEMPDIR"
+
+
+# create the key with the same preferences that monkeysphere uses.
+cat > "$TEMPDIR"/gpg.conf <<EOF
+default-preference-list SHA512 SHA384 SHA256 SHA224 RIPEMD160 SHA1 ZLIB BZIP2 ZIP AES256 AES192 AES CAST5 3DES
+cert-digest-algo SHA256
+EOF
+
 # generate a key
 gpg --batch --$(get_gpg_prng_arg) --gen-key <<EOF
 Key-Type: RSA
@@ -71,13 +88,21 @@ echo "### exporting key to ssh file..."
 gpg --export-secret-key | openpgp2ssh > \
     "$TEMPDIR"/test.pem
 
+gpg --export-secret-key > "$TEMPDIR"/secret.key
+
+PEM2OPENPGP_USAGE_FLAGS=sign,certify \
+PEM2OPENPGP_TIMESTAMP="$timestamp" pem2openpgp testtest \
+ < "$TEMPDIR"/test.pem > "$TEMPDIR"/converted.secret.key
+
 echo "##################################################"
 echo "### reconvert key, and compare to key in gpg keyring..."
 diff -u \
-    <(gpg --export-secret-key | hd) \
-    <(PEM2OPENPGP_USAGE_FLAGS=sign,certify \
-    PEM2OPENPGP_TIMESTAMP="$timestamp" pem2openpgp testtest < \
-    "$TEMPDIR"/test.pem | hd )
+    <(gpg --list-packets < "$TEMPDIR"/secret.key) \
+    <(gpg --list-packets < "$TEMPDIR"/converted.secret.key)
+
+diff -u \
+    <(hd "$TEMPDIR"/secret.key) \
+    <(hd "$TEMPDIR"/converted.secret.key)
 
 trap - EXIT
 
