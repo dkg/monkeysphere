@@ -30,17 +30,16 @@ trap failed_cleanup EXIT
 ## set up some variables to ensure that we're operating strictly in
 ## the tests, not system-wide:
 
-# make temp dir
-TEMPDIR="$TESTDIR"/tmp
-if [ -e "$TEMPDIR" ] ; then
-    echo "tempdir '$TEMPDIR' already exists."
-    exit 1
-fi
-mkdir -p "$TEMPDIR"
+mkdir -p "$TESTDIR"/tmp
+TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/monkeyspheretest.XXXXXXX")
+
+mkdir "$TEMPDIR"/bin
+ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/openpgp2ssh
+ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/pem2openpgp
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
-export PATH="$TESTDIR"/../src/keytrans:"$PATH"
+export PATH="$TEMPDIR"/bin:"$PATH"
 
 ######################################################################
 ### TEST KEYTRANS
