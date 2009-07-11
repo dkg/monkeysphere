@@ -27,7 +27,8 @@ fi
 gpg_core --list-key --fingerprint "0x${keyID}!" || failure
 
 if [ "$PROMPT" = "true" ] ; then
-    read -p "Really remove the above listed identity certifier? (Y/n) " OK; OK=${OK:-Y}
+    printf "Really remove the above listed identity certifier? (Y/n) " >&2 
+    read OK; OK=${OK:-Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then
 	failure "Identity certifier not removed."
     fi

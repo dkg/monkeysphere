@@ -291,7 +291,8 @@ Please specify how long the key should be valid.
       <n>y = key expires in n years
 EOF
 	while [ -z "$keyExpire" ] ; do
-	    read -p "Key is valid for? (0) " keyExpire
+	    printf "Key is valid for? (0) " >&2
+	    read keyExpire
 	    if ! test_gpg_expire ${keyExpire:=0} ; then
 		echo "invalid value" >&2
 		unset keyExpire
@@ -481,6 +482,12 @@ list_users() {
 get_homedir() {
     local uname=${1:-`whoami`}
     eval "echo ~${uname}"
+}
+
+# return the primary group of a user
+get_primary_group() {
+    local uname=${1:-`whoami`}
+    groups "$uname" | sed 's/^..* : //' | awk '{ print $1 }'
 }
 
 ### CONVERSION UTILITIES

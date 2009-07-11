@@ -27,11 +27,12 @@ if [ -z "$1" ] ; then
     failure "You must specify a hostname to revoke."
 fi
 
-echo "WARNING: There is a known bug in this function."
-echo "This function has been known to occasionally revoke the wrong hostname."
-echo "Please see the following bug report for more information:"
-echo "https://labs.riseup.net/code/issues/show/422"
-read -p "Are you sure you would like to proceed? (y/N) " OK; OK=${OK:=N}
+echo "WARNING: There is a known bug in this function.
+This function has been known to occasionally revoke the wrong hostname.
+Please see the following bug report for more information:
+https://labs.riseup.net/code/issues/show/422" >&2
+printf "Are you sure you would like to proceed? (y/N) " >&2
+read OK; OK=${OK:=N}
 if [ ${OK/y/Y} != 'Y' ] ; then
     failure "aborting."
 fi
@@ -43,9 +44,8 @@ uidIndex=$(find_host_userid) || \
     failure "No non-revoked user ID found matching '$userID'."
 
 if [ "$PROMPT" = "true" ] ; then
-    read -p "The following host key user ID will be revoked:
-  $userID
-Are you sure you would like to revoke this user ID? (Y/n) " OK; OK=${OK:=Y}
+    printf "The following host key user ID will be revoked:\n  %s\nAre you sure you would like to revoke this user ID? (Y/n) " "$userID" >&2
+    read OK; OK=${OK:=Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then
 	failure "User ID not revoked."
     fi

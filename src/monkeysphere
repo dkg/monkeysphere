@@ -144,7 +144,8 @@ check_gpg_authentication_subkey() {
 	if [ "$validity" = 'u' ] ; then
 	    echo "A valid authentication key already exists for primary key '$keyID'." 1>&2
 	    if [ "$PROMPT" = "true" ] ; then
-		read -p "Are you sure you would like to generate another one? (y/N) " OK; OK=${OK:N}
+		printf "Are you sure you would like to generate another one? (y/N) " >&2
+		read OK; OK=${OK:N}
 		if [ "${OK/y/Y}" != 'Y' ] ; then
 		    failure "aborting."
 		fi
