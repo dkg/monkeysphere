@@ -22,8 +22,14 @@ export TESTDIR=$(cd $(dirname "$0") && pwd)
 
 source "$TESTDIR"/common
 
-## setup trap
-trap failed_cleanup EXIT
+perl -MCrypt::OpenSSL::RSA -e 1 2>/dev/null || { echo "You must have the perl module Crypt::OpenSSL::RSA installed to run this test.  
+On debian-derived systems, you can set this up with:
+  apt-get install libcrypt-openssl-rsa-perl" ; exit 1; }
+
+perl -MDigest::SHA -e 1 2>/dev/null || { echo "You must have the perl module Digest::SHA installed to run this test.  
+On debian-derived systems, you can set this up with:
+  apt-get install libdigest-sha1-perl" ; exit 1; }
+
 
 ######################################################################
 ### SETUP VARIABLES
@@ -41,6 +47,9 @@ ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/pem2openpgp
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
 export PATH="$TEMPDIR"/bin:"$PATH"
+
+## setup trap
+trap failed_cleanup EXIT
 
 ######################################################################
 ### TEST KEYTRANS

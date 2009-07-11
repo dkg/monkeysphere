@@ -9,6 +9,7 @@ monkeysphere (0.25-1~pre) UNRELEASED; urgency=low
       ports
     - add 'sshfpr' subcommand to output the ssh fingerprint of a gpg key
     - pem2openpgp now generates self-sigs over SHA-256 instead of SHA-1
+       (changes dependency to libdigest-sha-perl)
     - some portability improvements
     - properly handle translation of keys with fingerprints with leading
       all-zero bytes.
@@ -16,7 +17,7 @@ monkeysphere (0.25-1~pre) UNRELEASED; urgency=low
       (closes MS #917)
     - explicitly set and use MONKEYSPHERE_GROUP from system "groups"
       (closes: #534008)
-  * update Standard-Version to 3.8.2
+  * update Standard-Version to 3.8.2 (no changes needed)
 
  -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 11 Jul 2009 18:55:25 -0400
 

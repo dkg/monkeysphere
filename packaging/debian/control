@@ -3,7 +3,7 @@ Section: net
 Priority: extra
 Maintainer: Jameson Graef Rollins <jrollins@finestructure.net>
 Uploaders: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-Build-Depends: debhelper (>= 7.0), socat, openssh-server, gnupg, libcrypt-openssl-rsa-perl, libdigest-sha1-perl, lockfile-progs | procmail
+Build-Depends: debhelper (>= 7.0), socat, openssh-server, gnupg, libcrypt-openssl-rsa-perl, libdigest-sha-perl, lockfile-progs | procmail
 Standards-Version: 3.8.2
 Homepage: http://web.monkeysphere.info/
 Vcs-Git: git://git.monkeysphere.info/monkeysphere
@@ -11,7 +11,7 @@ Dm-Upload-Allowed: yes
 
 Package: monkeysphere
 Architecture: all
-Depends: openssh-client, gnupg, libcrypt-openssl-rsa-perl, libdigest-sha1-perl, lockfile-progs | procmail, adduser, ${misc:Depends}
+Depends: openssh-client, gnupg, libcrypt-openssl-rsa-perl, libdigest-sha-perl, lockfile-progs | procmail, adduser, ${misc:Depends}
 Recommends: netcat | socat, ssh-askpass, cron
 Enhances: openssh-client, openssh-server
 Description: use the OpenPGP web of trust to verify ssh connections

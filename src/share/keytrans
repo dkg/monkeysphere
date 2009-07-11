@@ -54,7 +54,7 @@ use File::Basename;
 use Crypt::OpenSSL::RSA;
 use Crypt::OpenSSL::Bignum;
 use Crypt::OpenSSL::Bignum::CTX;
-use Digest::SHA1;
+use Digest::SHA;
 use MIME::Base64;
 use POSIX;
 
@@ -416,7 +416,7 @@ sub fingerprint {
 
   my $rsabody = make_rsa_pub_key_body($key, $key_timestamp);
 
-  return Digest::SHA1::sha1(pack('Cn', 0x99, length($rsabody)).$rsabody);
+  return Digest::SHA::sha1(pack('Cn', 0x99, length($rsabody)).$rsabody);
 }
 
 
@@ -446,7 +446,7 @@ sub pem2openpgp {
   my $sigtype = pack('C', $certtype);
   # RSA
   my $pubkey_algo = pack('C', $asym_algos->{rsa});
-  # SHA1
+  # SHA256
   my $hash_algo = pack('C', $digests->{sha256});
 
   # FIXME: i'm worried about generating a bazillion new OpenPGP
@@ -581,7 +581,7 @@ sub pem2openpgp {
 	$sig_data_to_be_hashed.
 	  $trailer;
 
-  my $data_hash = Digest::SHA1::sha1_hex($datatosign);
+  my $data_hash = Digest::SHA::sha256_hex($datatosign);
 
   my $issuer_packet = pack('CCa8', 9, $subpacket_types->{issuer}, $keyid);
 
