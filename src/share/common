@@ -425,6 +425,12 @@ check_key_file_permissions() {
 
     log debug "checking path permission '$path'..."
 
+    # rewrite path if it points to a symlink
+    if [ -h "$path" ] ; then
+	path=$(readlink -f "$path")
+	log debug "checking path symlink '$path'..."
+    fi
+
     # return 255 if cannot stat file
     if ! stat=$(ls -ld "$path" 2>/dev/null) ; then
         log error "could not stat path '$path'."
