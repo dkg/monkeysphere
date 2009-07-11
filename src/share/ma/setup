@@ -16,10 +16,10 @@ setup() {
     log debug "checking authentication directory structure..."
     mkdir -p "${MADATADIR}"
     chmod 0750 "${MADATADIR}"
-    chgrp "$MONKEYSPHERE_USER" "${MADATADIR}"
+    chgrp "$MONKEYSPHERE_GROUP" "${MADATADIR}"
     mkdir -p "${MATMPDIR}"
     chmod 0750 "${MATMPDIR}"
-    chgrp "$MONKEYSPHERE_USER" "${MATMPDIR}"
+    chgrp "$MONKEYSPHERE_GROUP" "${MATMPDIR}"
     mkdir -p "${GNUPGHOME_CORE}"
     chmod 0700 "${GNUPGHOME_CORE}"
     mkdir -p "${GNUPGHOME_SPHERE}"
@@ -48,7 +48,7 @@ EOF
     # make sure the monkeysphere user owns everything in the sphere
     # gnupghome
     log debug "fixing sphere gnupg home ownership..."
-    chown "$MONKEYSPHERE_USER:$MONKEYSPHERE_USER" "${GNUPGHOME_SPHERE}" "${GNUPGHOME_SPHERE}"/gpg.conf
+    chown "$MONKEYSPHERE_USER:$MONKEYSPHERE_GROUP" "${GNUPGHOME_SPHERE}" "${GNUPGHOME_SPHERE}"/gpg.conf
 
     # get fingerprint of core key.  this should be empty on unconfigured systems.
     local CORE_FPR=$(core_fingerprint)
