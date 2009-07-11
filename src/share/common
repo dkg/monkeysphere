@@ -483,6 +483,12 @@ get_homedir() {
     eval "echo ~${uname}"
 }
 
+# return the primary group of a user
+get_primary_group() {
+    local uname=${1:-`whoami`}
+    groups "$uname" | sed 's/^..* : //' | awk '{ print $1 }'
+}
+
 ### CONVERSION UTILITIES
 
 # output the ssh key for a given key ID
