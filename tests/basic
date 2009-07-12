@@ -37,7 +37,7 @@ On debian-derived systems, you can set this up with:
 
 perl -MDigest::SHA -e 1 2>/dev/null || { echo "You must have the perl module Digest::SHA installed to run this test.  
 On debian-derived systems, you can set this up with:
-  apt-get install libdigest-sha1-perl" ; exit 1; }
+  apt-get install libdigest-sha-perl" ; exit 1; }
 
 ## FIXME: other checks?
 
@@ -66,7 +66,7 @@ ssh_test() {
 
     # wait until the socket is created before continuing
     while [ ! -S "$SOCKET" ] ; do
-	sleep 1
+	sleep 2
     done
 
     # make a client connection to the socket
@@ -300,7 +300,7 @@ mv "$TESTHOME"/.monkeysphere/authorized_user_ids{,.bak}
 monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
-echo "### ssh connection test for server authentication denial..."
+echo "### ssh connection test for failure..."
 ssh_test 255
 mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
 
@@ -313,7 +313,7 @@ chmod g+w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
-echo "### ssh connection test for server authentication denial..."
+echo "### ssh connection test for failure..."
 ssh_test 255
 chmod g-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 echo
@@ -323,10 +323,111 @@ chmod o+w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
-echo "### ssh connection test for server authentication denial..."
+echo "### ssh connection test for failure..."
 ssh_test 255
 chmod o-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
+
+# test symlinks
+echo
+echo "##################################################"
+echo "### setup for symlink tests..."
+cp -a "$TESTHOME"/.monkeysphere{,.linktest}
+
+echo
+echo "##################################################"
+echo "### make authorized_user_ids an absolute symlink and updating..."
+mv "$TESTHOME"/.monkeysphere/authorized_user_ids{,.bak}
+ln -s "$TESTHOME"/.monkeysphere{.linktest,}/authorized_user_ids
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for success..."
+ssh_test
+echo
+echo "##################################################"
+echo "### create bad permissions on link dir and updating..."
+chmod o+w "$TESTHOME"/.monkeysphere.linktest
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for failure..."
+ssh_test 255
+chmod o-w "$TESTHOME"/.monkeysphere.linktest
+echo
+echo "##################################################"
+echo "### make authorized_user_ids a relative symlink and updating..."
+ln -sf ../.monkeysphere.linktest/authorized_user_ids "$TESTHOME"/.monkeysphere/authorized_user_ids
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for success..."
+ssh_test
+echo
+echo "##################################################"
+echo "### create bad permissions on link dir updating..."
+chmod o+w "$TESTHOME"/.monkeysphere.linktest
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for failure..."
+ssh_test 255
+chmod o-w "$TESTHOME"/.monkeysphere.linktest
+# FIXME: implement check of link path, and uncomment this test
+# echo
+# echo "##################################################"
+# echo "### create bad permissions on link dir and updating..."
+# chmod o+w "$TESTHOME"/.monkeysphere
+# monkeysphere-authentication update-users $(whoami)
+# echo
+# echo "##################################################"
+# echo "### ssh connection test for failure..."
+# ssh_test 255
+# chmod o-w "$TESTHOME"/.monkeysphere
+rm "$TESTHOME"/.monkeysphere/authorized_user_ids
+mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
+
+echo
+echo "##################################################"
+echo "### make .monkeysphere directory an absolute symlink and updating..."
+mv "$TESTHOME"/.monkeysphere{,.bak}
+ln -s "$TESTHOME"/.monkeysphere{.linktest,}
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for success..."
+ssh_test
+echo
+echo "##################################################"
+echo "### create bad permissions on link dir and updating..."
+chmod o+w "$TESTHOME"/.monkeysphere.linktest
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for failure..."
+ssh_test 255
+chmod o-w "$TESTHOME"/.monkeysphere.linktest
+echo
+echo "##################################################"
+echo "### make .monkeysphere directory a relative symlink and updating..."
+ln -sfn .monkeysphere{.linktest,}
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for success..."
+ssh_test
+echo
+echo "##################################################"
+echo "### create bad permissions on link dir updating..."
+chmod o+w "$TESTHOME"/.monkeysphere.linktest
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for failure..."
+ssh_test 255
+chmod o-w "$TESTHOME"/.monkeysphere.linktest
+rm "$TESTHOME"/.monkeysphere
+mv "$TESTHOME"/.monkeysphere{.bak,}
 
 # FIXME: addtest: remove admin as id-certifier and check ssh failure
 
@@ -334,14 +435,26 @@ monkeysphere-authentication update-users $(whoami)
 # FIXME: addtest: revoke hostname on host key and check ssh failure
 
 # addtest: revoke the host key and check ssh failure
+
 # test to make sure things are OK after the previous tests:
-ssh_test
 echo
 echo "##################################################"
-echo "### ssh connection test for server with revoked key..."
+echo "### settings reset, updating..."
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for success..."
+ssh_test
+
+echo
+echo "##################################################"
+echo "### revoking host key..."
 # generate the revocation certificate and feed it directly to the test
 # user's keyring (we're not publishing to the keyservers)
 monkeysphere-host revoke-key | gpg --import
+echo
+echo "##################################################"
+echo "### ssh connection test for failure..."
 ssh_test 255
 
 
