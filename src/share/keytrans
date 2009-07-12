@@ -600,6 +600,119 @@ sub pem2openpgp {
 	make_packet($packet_types->{sig}, $sig_body);
 }
 
+# FIXME: switch to passing the whole packet as the arg, instead of the
+# input stream.
+
+# given an input stream and data, store the found key in data and
+# consume the rest of the stream corresponding to the packet.
+# data contains: (fpr: fingerprint to find, key: current best guess at key)
+sub findkey {
+  my $data = shift;
+  my $instr = shift;
+  my $tag = shift;
+  my $packetlen = shift;
+
+  my $dummy;
+  my $ver;
+  my $readbytes = 0;
+
+  read($instr, $ver, 1) or die "could not read key version\n";
+  $readbytes += 1;
+  $ver = ord($ver);
+
+  if ($ver != 4) {
+    printf(STDERR "We only work with version 4 keys.  This key appears to be version %s.\n", $ver);
+    read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+    return;
+  }
+
+  my $key_timestamp;
+  read($instr, $key_timestamp, 4) or die "could not read key timestamp.\n";
+  $readbytes += 4;
+  $key_timestamp = unpack('N', $key_timestamp);
+
+  my $algo;
+  read($instr, $algo, 1) or die "could not read key algorithm.\n";
+  $readbytes += 1;
+  $algo = ord($algo);
+  if ($algo != $asym_algos->{rsa}) {
+    printf(STDERR "We only support RSA keys (this key used algorithm %d).\n", $algo);
+    read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+    return;
+  }
+
+  ## we have an RSA key.
+  my $modulus = read_mpi($instr, \$readbytes);
+  my $exponent = read_mpi($instr, \$readbytes);
+
+  my $pubkey = Crypt::OpenSSL::RSA->new_key_from_parameters($modulus, $exponent);
+  my $foundfpr = fingerprint($pubkey, $key_timestamp);
+
+  my $foundfprstr = Crypt::OpenSSL::Bignum->new_from_bin($foundfpr)->to_hex();
+  # left-pad with 0's to bring up to full 40-char (160-bit) fingerprint:
+  $foundfprstr = sprintf("%040s", $foundfprstr);
+
+  # is this a match?
+  if ((!defined($data->{fpr})) ||
+      (substr($foundfprstr, -1 * length($data->{fpr})) eq $data->{fpr})) {
+    if (defined($data->{key})) {
+      die "Found two matching keys.\n";
+    }
+    $data->{key} = $pubkey;
+  }
+
+  if ($tag != $packet_types->{seckey} &&
+      $tag != $packet_types->{sec_subkey}) {
+    if ($readbytes < $packetlen) {
+      read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+    }
+    return;
+  }
+  if (!defined($data->{key})) { 
+    # we don't think the public part of this key matches
+    if ($readbytes < $packetlen) {
+      read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+    }
+    return;
+  }
+
+  my $s2k;
+  read($instr, $s2k, 1) or die "Could not read S2K octet.\n";
+  $readbytes += 1;
+  $s2k = ord($s2k);
+  if ($s2k != 0) {
+    printf(STDERR "We cannot handle encrypted secret keys.  Skipping!\n") ;
+    read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+    return;
+  }
+
+  # secret material is unencrypted
+  # see http://tools.ietf.org/html/rfc4880#section-5.5.3
+  my $d = read_mpi($instr, \$readbytes);
+  my $p = read_mpi($instr, \$readbytes);
+  my $q = read_mpi($instr, \$readbytes);
+  my $u = read_mpi($instr, \$readbytes);
+
+  my $checksum;
+  read($instr, $checksum, 2) or die "Could not read checksum of secret key material.\n";
+  $readbytes += 2;
+  $checksum = unpack('n', $checksum);
+
+  # FIXME: compare with the checksum!  how?  the data is
+  # gone into the Crypt::OpenSSL::Bignum
+
+  $data->{key} = Crypt::OpenSSL::RSA->new_key_from_parameters($modulus,
+							      $exponent,
+							      $d,
+							      $p,
+							      $q);
+
+  $data->{key}->check_key() or die "Secret key is not a valid RSA key.\n";
+
+  if ($readbytes < $packetlen) {
+    read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+  }
+}
 
 sub openpgp2ssh {
   my $instr = shift;
@@ -612,11 +725,25 @@ sub openpgp2ssh {
     $fpr = uc($fpr);
   }
 
+  my $data = { 'fpr' => $fpr};
+  my $subs = { $packet_types->{pubkey} => \&findkey,
+	       $packet_types->{pub_subkey} => \&findkey,
+	       $packet_types->{seckey} => \&findkey,
+	       $packet_types->{sec_subkey} => \&findkey };
+
+  packetwalk($instr, $subs, $data);
+
+  return $data->{key};
+}
+
+sub packetwalk {
+  my $instr = shift;
+  my $subs = shift;
+  my $data = shift;
+
   my $packettag;
   my $dummy;
   my $tag;
-
-  my $key;
 
   while (! eof($instr)) {
     read($instr, $packettag, 1);
@@ -668,102 +795,14 @@ sub openpgp2ssh {
       die "Undefined packet lengths are not supported.\n";
     }
 
-    if ($tag == $packet_types->{pubkey} ||
-	$tag == $packet_types->{pub_subkey} ||
-	$tag == $packet_types->{seckey} ||
-	$tag == $packet_types->{sec_subkey}) {
-      my $ver;
-      my $readbytes = 0;
-      read($instr, $ver, 1) or die "could not read key version\n";
-      $readbytes += 1;
-      $ver = ord($ver);
-
-      if ($ver != 4) {
-	printf(STDERR "We only work with version 4 keys.  This key appears to be version %s.\n", $ver);
-	read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
-      } else {
-
-	my $key_timestamp;
-	read($instr, $key_timestamp, 4) or die "could not read key timestamp.\n";
-	$readbytes += 4;
-	$key_timestamp = unpack('N', $key_timestamp);
-
-	my $algo;
-	read($instr, $algo, 1) or die "could not read key algorithm.\n";
-	$readbytes += 1;
-	$algo = ord($algo);
-	if ($algo != $asym_algos->{rsa}) {
-	  printf(STDERR "We only support RSA keys (this key used algorithm %d).\n", $algo);
-	  read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
-	} else {
-	  ## we have an RSA key.
-	  my $modulus = read_mpi($instr, \$readbytes);
-	  my $exponent = read_mpi($instr, \$readbytes);
-
-	  my $pubkey = Crypt::OpenSSL::RSA->new_key_from_parameters($modulus, $exponent);
-	  my $foundfpr = fingerprint($pubkey, $key_timestamp);
-
-	  my $foundfprstr = Crypt::OpenSSL::Bignum->new_from_bin($foundfpr)->to_hex();
-	  # left-pad with 0's to bring up to full 40-char (160-bit) fingerprint:
-	  $foundfprstr = sprintf("%040s", $foundfprstr);
-
-	  # is this a match?
-	  if ((!defined($fpr)) ||
-	      (substr($foundfprstr, -1 * length($fpr)) eq $fpr)) {
-	    if (defined($key)) {
-	      die "Found two matching keys.\n";
-	    }
-	    $key = $pubkey;
-	  }
-
-	  if ($tag == $packet_types->{seckey} ||
-	      $tag == $packet_types->{sec_subkey}) {
-	    if (!defined($key)) { # we don't think the public part of
-                                  # this key matches
-	      read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
-	    } else {
-	      my $s2k;
-	      read($instr, $s2k, 1) or die "Could not read S2K octet.\n";
-	      $readbytes += 1;
-	      $s2k = ord($s2k);
-	      if ($s2k == 0) {
-		# secret material is unencrypted
-		# see http://tools.ietf.org/html/rfc4880#section-5.5.3
-		my $d = read_mpi($instr, \$readbytes);
-		my $p = read_mpi($instr, \$readbytes);
-		my $q = read_mpi($instr, \$readbytes);
-		my $u = read_mpi($instr, \$readbytes);
-
-		my $checksum;
-		read($instr, $checksum, 2) or die "Could not read checksum of secret key material.\n";
-		$readbytes += 2;
-		$checksum = unpack('n', $checksum);
-
-		# FIXME: compare with the checksum!  how?  the data is
-		# gone into the Crypt::OpenSSL::Bignum
-
-		$key = Crypt::OpenSSL::RSA->new_key_from_parameters($modulus,
-								    $exponent,
-								    $d,
-								    $p,
-								    $q);
-
-		$key->check_key() or die "Secret key is not a valid RSA key.\n";
-	      } else {
-		print(STDERR "We cannot handle encrypted secret keys.  Skipping!\n") ;
-		read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
-	      }
-	    }
-	  }
-
-	}
-      }
+    if (defined $subs->{$tag}) {
+      $subs->{$tag}($data, $instr, $tag, $packetlen);
     } else {
       read($instr, $dummy, $packetlen) or die "Could not skip past this packet!\n";
     }
   }
 
-  return $key;
+  return $data->{key};
 }
 
 
