@@ -37,7 +37,7 @@ On debian-derived systems, you can set this up with:
 
 perl -MDigest::SHA -e 1 2>/dev/null || { echo "You must have the perl module Digest::SHA installed to run this test.  
 On debian-derived systems, you can set this up with:
-  apt-get install libdigest-sha1-perl" ; exit 1; }
+  apt-get install libdigest-sha-perl" ; exit 1; }
 
 ## FIXME: other checks?
 
@@ -328,20 +328,68 @@ ssh_test 255
 chmod o-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
 
+# test symlinks
+echo
+echo "##################################################"
+echo "### make authorized_user_ids a symlink and updating..."
+mkdir "$TESTHOME"/.monkeysphere.linktest
+mv "$TESTHOME"/.monkeysphere{,.linktest}/authorized_user_ids
+ln -s "$TESTHOME"/.monkeysphere{.linktest,}/authorized_user_ids
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for server authentication success..."
+ssh_test
+echo
+echo "##################################################"
+echo "### create bad permissions on link dir and updating..."
+chmod o+w "$TESTHOME"/.monkeysphere.linktest
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for server authentication denial..."
+ssh_test 255
+chmod o-w "$TESTHOME"/.monkeysphere.linktest
+# FIXME: implement check of link path, and uncomment this test
+# echo
+# echo "##################################################"
+# echo "### create bad permissions on link dir and updating..."
+# chmod o+w "$TESTHOME"/.monkeysphere
+# monkeysphere-authentication update-users $(whoami)
+# echo
+# echo "##################################################"
+# echo "### ssh connection test for server authentication denial..."
+# ssh_test 255
+# chmod o-w "$TESTHOME"/.monkeysphere
+mv "$TESTHOME"/.monkeysphere{.linktest,}/authorized_user_ids
+rmdir "$TESTHOME"/.monkeysphere.linktest
+
 # FIXME: addtest: remove admin as id-certifier and check ssh failure
 
 # FIXME: addtest: add hostname on host key
 # FIXME: addtest: revoke hostname on host key and check ssh failure
 
 # addtest: revoke the host key and check ssh failure
+
 # test to make sure things are OK after the previous tests:
-ssh_test
 echo
 echo "##################################################"
-echo "### ssh connection test for server with revoked key..."
+echo "### settings reset, updating users..."
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for success..."
+ssh_test
+
+echo
+echo "##################################################"
+echo "### revoking host key..."
 # generate the revocation certificate and feed it directly to the test
 # user's keyring (we're not publishing to the keyservers)
 monkeysphere-host revoke-key | gpg --import
+echo
+echo "##################################################"
+echo "### ssh connection test for server with revoked key..."
 ssh_test 255
 
 
