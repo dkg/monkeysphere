@@ -603,6 +603,85 @@ sub pem2openpgp {
 # FIXME: switch to passing the whole packet as the arg, instead of the
 # input stream.
 
+# FIXME: think about native perl representation of the packets instead.
+
+# Put a user ID into the $data
+sub finduid {
+  my $data = shift;
+  my $instr = shift;
+  my $tag = shift;
+  my $packetlen = shift;
+
+  my $dummy;
+  ($tag == $packet_types->{uid}) or die "This should not be called on anything but a User ID packet";
+
+  read($instr, $dummy, $packetlen);
+  $data->{uid} = $dummy;
+}
+
+
+# find signatures associated with the given fingerprint and user ID.
+sub findsig {
+  my $data = shift;
+  my $instr = shift;
+  my $tag = shift;
+  my $packetlen = shift;
+
+  ($tag == $packet_types->{sig}) or die "No calling revuid on anything other than a signature packet.";
+
+  if ((undef $data->{key}) ||
+      (undef $data->{uid}) ||
+      ($data->{uid} ne $data->{target}->{uid})) {
+    # this is not the user ID we are looking for.
+    read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+  }
+
+  my $data;
+  read($instr, $data, 6) or die "could not read signature header\n";
+  my ($ver, $sigtype, $pubkeyalgo, $digestalgo, $subpacketsize) = unpack('CCCCn', $data);
+  if ($ver != 4) {
+    printf(STDERR "We only work with version 4 signatures.");
+    read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+    return;
+  }
+  if ($pubkeyalgo != $asym_algos->{rsa}) {
+    printf(STDERR "We can only work with RSA at the moment");
+    read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+    return;
+  }
+  if ($sigtype != $sig_types->{positive_certification}) {
+    # FIXME: some weird implementations might have made generic,
+    # persona, or casual certifications instead of positive
+    # certifications for self-sigs.  Probably should handle them too.
+    read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+    return;
+  }
+
+  my $subpackets;
+  read($instr, $subpackets, $subpacketsize) or die "could not read hashed signature subpackets.\n";
+
+  read($instr, $subpacketsize, 2) or die "could not read unhashed signature subpacket size.\n";
+  $subpacketsize = unpack('n', $subpacketsize);
+
+  my $unhashedsubpackets;
+  read($instr, $unhashedsubpackets, $subpacketsize) or die "could not read unhashed signature subpackets.\n";
+
+  my $hashtail;
+  read($instr, $hashtail, 2) or die "could not read left 16 bits of digest.\n";
+
+  # RSA signatures should read in how many MPIs?
+
+
+  # reason for revocation
+
+  # non-revocable
+
+}
+
+# FIXME: to do in order to generate a proper revocation certificate:
+# parse subpackets
+
+
 # given an input stream and data, store the found key in data and
 # consume the rest of the stream corresponding to the packet.
 # data contains: (fpr: fingerprint to find, key: current best guess at key)
@@ -653,8 +732,8 @@ sub findkey {
   $foundfprstr = sprintf("%040s", $foundfprstr);
 
   # is this a match?
-  if ((!defined($data->{fpr})) ||
-      (substr($foundfprstr, -1 * length($data->{fpr})) eq $data->{fpr})) {
+  if ((!defined($data->{target}->{fpr})) ||
+      (substr($foundfprstr, -1 * length($data->{target}->{fpr})) eq $data->{target}->{fpr})) {
     if (defined($data->{key})) {
       die "Found two matching keys.\n";
     }
@@ -735,6 +814,35 @@ sub openpgp2ssh {
 
   return $data->{key};
 }
+
+sub revokeuserid {
+  my $instr = shift;
+  my $fpr = shift;
+  my $uid = shift;
+
+  if (defined $fpr) {
+    if (length($fpr) < 8) {
+      die "We need at least 8 hex digits of fingerprint.\n";
+    }
+    $fpr = uc($fpr);
+  }
+
+  my $data = { target => { fpr => $fpr,
+			   uid => $uid, },
+	     };
+  my $subs = { $packet_types->{pubkey} => \&findkey,
+	       $packet_types->{pub_subkey} => \&findkey,
+	       $packet_types->{seckey} => \&findkey,
+	       $packet_types->{sec_subkey} => \&findkey,
+	       $packet_types->{uid} => \&finduid,
+	       $packet_types->{sig} => \&revuid,
+	     };
+
+
+
+}
+
+
 
 sub packetwalk {
   my $instr = shift;
