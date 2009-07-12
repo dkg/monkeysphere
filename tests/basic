@@ -66,7 +66,7 @@ ssh_test() {
 
     # wait until the socket is created before continuing
     while [ ! -S "$SOCKET" ] ; do
-	sleep 1
+	sleep 2
     done
 
     # make a client connection to the socket
@@ -300,7 +300,7 @@ mv "$TESTHOME"/.monkeysphere/authorized_user_ids{,.bak}
 monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
-echo "### ssh connection test for server authentication denial..."
+echo "### ssh connection test for failure..."
 ssh_test 255
 mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
 
@@ -313,7 +313,7 @@ chmod g+w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
-echo "### ssh connection test for server authentication denial..."
+echo "### ssh connection test for failure..."
 ssh_test 255
 chmod g-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 echo
@@ -323,7 +323,7 @@ chmod o+w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
-echo "### ssh connection test for server authentication denial..."
+echo "### ssh connection test for failure..."
 ssh_test 255
 chmod o-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
@@ -331,14 +331,18 @@ monkeysphere-authentication update-users $(whoami)
 # test symlinks
 echo
 echo "##################################################"
-echo "### make authorized_user_ids a symlink and updating..."
-mkdir "$TESTHOME"/.monkeysphere.linktest
-mv "$TESTHOME"/.monkeysphere{,.linktest}/authorized_user_ids
+echo "### setup for symlink tests..."
+cp -a "$TESTHOME"/.monkeysphere{,.linktest}
+
+echo
+echo "##################################################"
+echo "### make authorized_user_ids an absolute symlink and updating..."
+mv "$TESTHOME"/.monkeysphere/authorized_user_ids{,.bak}
 ln -s "$TESTHOME"/.monkeysphere{.linktest,}/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
-echo "### ssh connection test for server authentication success..."
+echo "### ssh connection test for success..."
 ssh_test
 echo
 echo "##################################################"
@@ -347,7 +351,26 @@ chmod o+w "$TESTHOME"/.monkeysphere.linktest
 monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
-echo "### ssh connection test for server authentication denial..."
+echo "### ssh connection test for failure..."
+ssh_test 255
+chmod o-w "$TESTHOME"/.monkeysphere.linktest
+echo
+echo "##################################################"
+echo "### make authorized_user_ids a relative symlink and updating..."
+ln -sf ../.monkeysphere.linktest/authorized_user_ids "$TESTHOME"/.monkeysphere/authorized_user_ids
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for success..."
+ssh_test
+echo
+echo "##################################################"
+echo "### create bad permissions on link dir updating..."
+chmod o+w "$TESTHOME"/.monkeysphere.linktest
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for failure..."
 ssh_test 255
 chmod o-w "$TESTHOME"/.monkeysphere.linktest
 # FIXME: implement check of link path, and uncomment this test
@@ -358,11 +381,53 @@ chmod o-w "$TESTHOME"/.monkeysphere.linktest
 # monkeysphere-authentication update-users $(whoami)
 # echo
 # echo "##################################################"
-# echo "### ssh connection test for server authentication denial..."
+# echo "### ssh connection test for failure..."
 # ssh_test 255
 # chmod o-w "$TESTHOME"/.monkeysphere
-mv "$TESTHOME"/.monkeysphere{.linktest,}/authorized_user_ids
-rmdir "$TESTHOME"/.monkeysphere.linktest
+rm "$TESTHOME"/.monkeysphere/authorized_user_ids
+mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
+
+echo
+echo "##################################################"
+echo "### make .monkeysphere directory an absolute symlink and updating..."
+mv "$TESTHOME"/.monkeysphere{,.bak}
+ln -s "$TESTHOME"/.monkeysphere{.linktest,}
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for success..."
+ssh_test
+echo
+echo "##################################################"
+echo "### create bad permissions on link dir and updating..."
+chmod o+w "$TESTHOME"/.monkeysphere.linktest
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for failure..."
+ssh_test 255
+chmod o-w "$TESTHOME"/.monkeysphere.linktest
+echo
+echo "##################################################"
+echo "### make .monkeysphere directory a relative symlink and updating..."
+ln -sfn .monkeysphere{.linktest,}
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for success..."
+ssh_test
+echo
+echo "##################################################"
+echo "### create bad permissions on link dir updating..."
+chmod o+w "$TESTHOME"/.monkeysphere.linktest
+monkeysphere-authentication update-users $(whoami)
+echo
+echo "##################################################"
+echo "### ssh connection test for failure..."
+ssh_test 255
+chmod o-w "$TESTHOME"/.monkeysphere.linktest
+rm "$TESTHOME"/.monkeysphere
+mv "$TESTHOME"/.monkeysphere{.bak,}
 
 # FIXME: addtest: remove admin as id-certifier and check ssh failure
 
@@ -374,7 +439,7 @@ rmdir "$TESTHOME"/.monkeysphere.linktest
 # test to make sure things are OK after the previous tests:
 echo
 echo "##################################################"
-echo "### settings reset, updating users..."
+echo "### settings reset, updating..."
 monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
@@ -389,7 +454,7 @@ echo "### revoking host key..."
 monkeysphere-host revoke-key | gpg --import
 echo
 echo "##################################################"
-echo "### ssh connection test for server with revoked key..."
+echo "### ssh connection test for failure..."
 ssh_test 255
 
 
