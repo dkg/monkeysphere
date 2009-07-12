@@ -61,10 +61,19 @@ network), and sign it:
 Make sure you compare the fingerprint of the retrieved certificate
 with the output from the 'show-key' command above!
 
+Next, find out your key's Key ID, which is a hexadecimal string like "ABCDEF19"
+
+	$ gpg --list-keys '=ssh://server.example.net'
+
+which will output something like:
+
+	pub   2048R/ABCDEF19 2009-05-07
+	uid       [  full  ] ssh://server.example.net
+
 Finally, publish your signatures back to the keyservers, so that your
 users can automatically verify your machine when they connect:
 
-	$ gpg --send-key '=ssh://server.example.net'
+	$ gpg --send-key ABCDEF19
 
 See http://web.monkeysphere.info/signing-host-keys/ for more info
 signing host keys.
@@ -89,9 +98,17 @@ Monkeysphere authorized_keys maintenance
 ----------------------------------------
 
 For each user account on the server, the userids of people authorized
-to log into that account would be placed in:
+to log into that account would be placed, one per line, in:
 
 	~/.monkeysphere/authorized_user_ids
+
+For example, this file could contain:
+
+	Joe User <joe@example.net>
+	Joe User at Work <joe@example.org>
+
+Provided that those exact strings are among the uids for which the user's gpg
+key is valid.
 
 The server will use the Monkeysphere to look up matching OpenPGP
 certificates, validate them, and generate an `authorized_keys` file.
@@ -100,10 +117,23 @@ To validate the OpenPGP certificates, the server needs to know who it
 can trust to correctly identify users.  The individuals trusted to
 identify users like this are known in the Monkeysphere as "Identity
 Certifiers".  One obvious choice is to trust *you*, the administrator,
-to be an Identity Certifier.  If your OpenPGP keyid is `$GPGID`, then
+to be an Identity Certifier. 
+
+You will need to know your full 40 hex character gpg fingerprint. This can be learned by doing:
+
+	gpg --with-colons --fingerprint user@example.org
+
+Replacing "user@example.org" with either your gpg key id, or your gpg uid.
+The output of this command is very long and difficult to read. Look for a line like:
+
+	fpr:::::::::D8E6414012D371BFC5AB8E2540D6B49E0E708ADF:
+
+The portion between the ":::::::::" and ":" is your 40 digit fingerprint.
+
+With your OpenPGP 40-digit hex fingerprint replacing `$GPGFPR`, then
 run the following command on the server:
 
-	# monkeysphere-authentication add-identity-certifier $GPGID
+	# monkeysphere-authentication add-identity-certifier $GPGFPR
 
 You'll probably only set up Identity Certifiers when you set up the
 machine.  After that, you'll only need to add or remove Identity
@@ -133,11 +163,18 @@ Update OpenSSH server AuthorizedKeysFile configuration
 Generating the `authorized_keys` files is not quite enough, because
 `sshd` needs to know where to find the generated keys.
 
+
 You can do this by adding the following line to
 `/etc/ssh/sshd_config`, commenting out any other `AuthorizedKeysFile`
-directives:
+directives. 
 
 	AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
+
+Warning: Be aware that with this change in configuration, only those users whose
+authorized keys files appear under the above path will be able to log in via
+ssh. This includes the root user if root has ssh access. Remember to run
+'monkeysphere-authentication update-users' if you are unsure whether any users'
+authorized_keys files have been updated.
 
 You'll need to restart `sshd` to have your changes take effect.  As
 with any change to `sshd_config`, if you're doing this remotely, be
