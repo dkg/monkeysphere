@@ -426,54 +426,22 @@ sub pem2openpgp {
   my $uid = shift;
   my $args = shift;
 
-  $rsa->use_sha256_hash();
-
-  # see page 22 of RFC 4880 for why i think this is the right padding
-  # choice to use:
-  $rsa->use_pkcs1_padding();
-
-  if (! $rsa->check_key()) {
-    die "key does not check";
-  }
-
   # strong assertion of identity is the default (for a self-sig):
-  my $certtype = $sig_types->{positive_certification};
-  if (defined $args->{certification_type}) {
-    $certtype = $args->{certification_type} + 0;
+  if (! defined $args->{certification_type}) {
+    $args->{certification_type} = $sig_types->{positive_certification};
   }
 
-  my $version = pack('C', 4);
-  my $sigtype = pack('C', $certtype);
-  # RSA
-  my $pubkey_algo = pack('C', $asym_algos->{rsa});
-  # SHA256
-  my $hash_algo = pack('C', $digests->{sha256});
-
-  # FIXME: i'm worried about generating a bazillion new OpenPGP
-  # certificates from the same key, which could easily happen if you run
-  # this script more than once against the same key (because the
-  # timestamps will differ).  How can we prevent this?
-
-  # this argument (if set) overrides the current time, to
-  # be able to create a standard key.  If we read the key from a file
-  # instead of stdin, should we use the creation time on the file?
-  my $sig_timestamp = 0;
-  if (defined $args->{sig_timestamp}) {
-    $sig_timestamp = ($args->{sig_timestamp} + 0);
-  } else {
-    $sig_timestamp = time();
+  if (! defined $args->{sig_timestamp}) {
+    $args->{sig_timestamp} = time();
   }
-  my $key_timestamp = $sig_timestamp;
-  if (defined $args->{key_timestamp}) {
-    $key_timestamp = ($args->{key_timestamp} + 0);
+  if (! defined $args->{key_timestamp}) {
+    $args->{key_timestamp} = $args->{sig_timestamp} + 0;
   }
-  if ($key_timestamp > $sig_timestamp) {
-    die "key timestamp must not be later than signature timestamp";
-  }
+  my $key_timestamp = $args->{key_timestamp};
 
-  my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $sig_timestamp);
+  # generate and aggregate subpackets:
 
-
+  # key usage flags:
   my $flags = 0;
   if (! defined $args->{usage_flags}) {
     $flags = $usage_flags->{certify};
@@ -486,17 +454,15 @@ sub pem2openpgp {
       $flags |= $usage_flags->{$f};
     }
   }
-
-  my $usage_packet = pack('CCC', 2, $subpacket_types->{usage_flags}, $flags);
-
+  my $usage_subpacket = pack('CCC', 2, $subpacket_types->{usage_flags}, $flags);
 
   # how should we determine how far off to set the expiration date?
   # default is no expiration.  Specify the timestamp in seconds from the
   # key creation.
-  my $expiration_packet = '';
+  my $expiration_subpacket = '';
   if (defined $args->{expiration}) {
     my $expires_in = $args->{expiration} + 0;
-    $expiration_packet = pack('CCN', 5, $subpacket_types->{key_expiration_time}, $expires_in);
+    $expiration_subpacket = pack('CCN', 5, $subpacket_types->{key_expiration_time}, $expires_in);
   }
 
 
@@ -534,17 +500,71 @@ sub pem2openpgp {
   my $keyserver_pref = pack('CCC', 2, $subpacket_types->{keyserver_prefs},
 			    $keyserver_prefs->{nomodify});
 
-  my $subpackets_to_be_hashed =
-    $creation_time_packet.
-      $usage_packet.
-	$expiration_packet.
+
+  $args->{hashed_subpackets} =
+      $usage_subpacket.
+	$expiration_subpacket.
 	  $pref_sym_algos.
 	    $pref_hash_algos.
 	      $pref_zip_algos.
 		$feature_subpacket.
 		  $keyserver_pref;
 
-  my $subpacket_octets = pack('n', length($subpackets_to_be_hashed));
+  return
+    make_packet($packet_types->{seckey}, make_rsa_sec_key_body($rsa, $key_timestamp)).
+      make_packet($packet_types->{uid}, $uid).
+	gensig($rsa, $uid, $args);
+}
+
+# FIXME: handle non-RSA keys
+
+# FIXME: this currently only makes self-sigs -- we should parameterize
+# it to make certifications over keys other than the issuer.
+sub gensig {
+  my $rsa = shift;
+  my $uid = shift;
+  my $args = shift;
+
+  # FIXME: allow signature creation using digests other than SHA256
+  $rsa->use_sha256_hash();
+
+  # see page 22 of RFC 4880 for why i think this is the right padding
+  # choice to use:
+  $rsa->use_pkcs1_padding();
+
+  if (! $rsa->check_key()) {
+    die "key does not check";
+  }
+
+  my $certtype = $args->{certification_type} + 0;
+
+  my $version = pack('C', 4);
+  my $sigtype = pack('C', $certtype);
+  # RSA
+  my $pubkey_algo = pack('C', $asym_algos->{rsa});
+  # SHA256 FIXME: allow signature creation using digests other than SHA256
+  my $hash_algo = pack('C', $digests->{sha256});
+
+  # FIXME: i'm worried about generating a bazillion new OpenPGP
+  # certificates from the same key, which could easily happen if you run
+  # this script more than once against the same key (because the
+  # timestamps will differ).  How can we prevent this?
+
+  # this argument (if set) overrides the current time, to
+  # be able to create a standard key.  If we read the key from a file
+  # instead of stdin, should we use the creation time on the file?
+  my $sig_timestamp = ($args->{sig_timestamp} + 0);
+  my $key_timestamp = ($args->{key_timestamp} + 0);
+
+  if ($key_timestamp > $sig_timestamp) {
+    die "key timestamp must not be later than signature timestamp";
+  }
+
+  my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $sig_timestamp);
+
+  my $hashed_subs = $creation_time_packet.$args->{hashed_subpackets};
+
+  my $subpacket_octets = pack('n', length($hashed_subs));
 
   my $sig_data_to_be_hashed =
     $version.
@@ -552,10 +572,9 @@ sub pem2openpgp {
 	$pubkey_algo.
 	  $hash_algo.
 	    $subpacket_octets.
-	      $subpackets_to_be_hashed;
+	      $hashed_subs;
 
   my $pubkey = make_rsa_pub_key_body($rsa, $key_timestamp);
-  my $seckey = make_rsa_sec_key_body($rsa, $key_timestamp);
 
   # this is for signing.  it needs to be an old-style header with a
   # 2-packet octet count.
@@ -581,6 +600,8 @@ sub pem2openpgp {
 	$sig_data_to_be_hashed.
 	  $trailer;
 
+
+  # FIXME: handle signatures over digests other than SHA256:
   my $data_hash = Digest::SHA::sha256_hex($datatosign);
 
   my $issuer_packet = pack('CCa8', 9, $subpacket_types->{issuer}, $keyid);
@@ -594,10 +615,7 @@ sub pem2openpgp {
 	  pack('n', hex(substr($data_hash, 0, 4))).
 	    mpi_pack($sig);
 
-  return
-    make_packet($packet_types->{seckey}, $seckey).
-      make_packet($packet_types->{uid}, $uid).
-	make_packet($packet_types->{sig}, $sig_body);
+  return make_packet($packet_types->{sig}, $sig_body);
 }
 
 # FIXME: switch to passing the whole packet as the arg, instead of the
@@ -616,7 +634,8 @@ sub finduid {
   ($tag == $packet_types->{uid}) or die "This should not be called on anything but a User ID packet";
 
   read($instr, $dummy, $packetlen);
-  $data->{uid} = $dummy;
+  $data->{uid} = {} unless defined $data->{uid};
+  $data->{uid}->{$dummy} = {};
 }
 
 
@@ -627,16 +646,18 @@ sub findsig {
   my $tag = shift;
   my $packetlen = shift;
 
-  ($tag == $packet_types->{sig}) or die "No calling revuid on anything other than a signature packet.";
+  ($tag == $packet_types->{sig}) or die "No calling findsig on anything other than a signature packet.";
+
+  my $dummy;
+  my $readbytes = 0;
 
   if ((undef $data->{key}) ||
       (undef $data->{uid}) ||
-      ($data->{uid} ne $data->{target}->{uid})) {
+      (undef $data->{uid}->{$data->{target}->{uid}})) {
     # this is not the user ID we are looking for.
     read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
   }
 
-  my $data;
   read($instr, $data, 6) or die "could not read signature header\n";
   my ($ver, $sigtype, $pubkeyalgo, $digestalgo, $subpacketsize) = unpack('CCCCn', $data);
   if ($ver != 4) {
@@ -669,18 +690,9 @@ sub findsig {
   my $hashtail;
   read($instr, $hashtail, 2) or die "could not read left 16 bits of digest.\n";
 
-  # RSA signatures should read in how many MPIs?
-
-
-  # reason for revocation
-
-  # non-revocable
+  # FIXME: RSA signatures should read in how many MPIs?
 
 }
-
-# FIXME: to do in order to generate a proper revocation certificate:
-# parse subpackets
-
 
 # given an input stream and data, store the found key in data and
 # consume the rest of the stream corresponding to the packet.
@@ -737,7 +749,8 @@ sub findkey {
     if (defined($data->{key})) {
       die "Found two matching keys.\n";
     }
-    $data->{key} = $pubkey;
+    $data->{key} = { 'rsa' => $pubkey,
+		     'timestamp' => $key_timestamp };
   }
 
   if ($tag != $packet_types->{seckey} &&
@@ -747,7 +760,7 @@ sub findkey {
     }
     return;
   }
-  if (!defined($data->{key})) { 
+  if (!defined($data->{key})) {
     # we don't think the public part of this key matches
     if ($readbytes < $packetlen) {
       read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
@@ -780,20 +793,20 @@ sub findkey {
   # FIXME: compare with the checksum!  how?  the data is
   # gone into the Crypt::OpenSSL::Bignum
 
-  $data->{key} = Crypt::OpenSSL::RSA->new_key_from_parameters($modulus,
-							      $exponent,
-							      $d,
-							      $p,
-							      $q);
+  $data->{key}->{rsa} = Crypt::OpenSSL::RSA->new_key_from_parameters($modulus,
+								     $exponent,
+								     $d,
+								     $p,
+								     $q);
 
-  $data->{key}->check_key() or die "Secret key is not a valid RSA key.\n";
+  $data->{key}->{rsa}->check_key() or die "Secret key is not a valid RSA key.\n";
 
   if ($readbytes < $packetlen) {
     read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
   }
 }
 
-sub openpgp2ssh {
+sub openpgp2rsa {
   my $instr = shift;
   my $fpr = shift;
 
@@ -812,7 +825,7 @@ sub openpgp2ssh {
 
   packetwalk($instr, $subs, $data);
 
-  return $data->{key};
+  return $data->{key}->{rsa};
 }
 
 sub revokeuserid {
@@ -820,26 +833,40 @@ sub revokeuserid {
   my $fpr = shift;
   my $uid = shift;
 
-  if (defined $fpr) {
-    if (length($fpr) < 8) {
-      die "We need at least 8 hex digits of fingerprint.\n";
-    }
-    $fpr = uc($fpr);
+  if ((! defined $fpr) ||
+      (length($fpr) < 8)) {
+    die "We need at least 8 hex digits of fingerprint.\n";
+  }
+
+  $fpr = uc($fpr);
+
+  if (! defined $uid) {
+    die "No User ID defined.\n";
   }
 
   my $data = { target => { fpr => $fpr,
-			   uid => $uid, },
+			 },
 	     };
-  my $subs = { $packet_types->{pubkey} => \&findkey,
-	       $packet_types->{pub_subkey} => \&findkey,
-	       $packet_types->{seckey} => \&findkey,
-	       $packet_types->{sec_subkey} => \&findkey,
-	       $packet_types->{uid} => \&finduid,
-	       $packet_types->{sig} => \&revuid,
+  my $subs = { $packet_types->{seckey} => \&findkey,
+	       $packet_types->{uid} => \&finduid
 	     };
 
+  packetwalk($instr, $subs, $data);
 
+  if ((! defined $data->{uid}) ||
+      (! defined $data->{uid}->{$uid})) {
+    die "The User ID \"$uid\" is not associated with this key";
+  }
 
+  if ((! defined $data->{key}) ||
+      (! defined $data->{key}->{rsa}) ||
+      (! defined $data->{key}->{timestamp})) {
+    die "The key requested was not found."
+  }
+
+  # what does a signature like this look like?
+
+  return 'abc';
 }
 
 
@@ -950,7 +977,7 @@ for (basename($0)) {
       my $instream;
       open($instream,'-');
       binmode($instream, ":bytes");
-      my $key = openpgp2ssh($instream, $fpr);
+      my $key = openpgp2rsa($instream, $fpr);
       if (defined($key)) {
 	if ($key->is_private()) {
 	  print $key->get_private_key_string();
@@ -960,6 +987,17 @@ for (basename($0)) {
       } else {
 	die "No matching key found.\n";
       }
+  }
+  elsif (/^revokeuserid$/) {
+    my $fpr = shift;
+    my $uid = shift;
+    my $instream;
+    open($instream,'-');
+    binmode($instream, ":bytes");
+
+    my $revcert = revokeuserid($instream, $fpr, $uid);
+
+    print $revcert;
   }
   else {
     die "Unrecognized keytrans call.\n";
