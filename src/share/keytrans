@@ -152,6 +152,14 @@ my $sig_types = { binary_doc => 0x00,
 		};
 
 
+# see RFC 4880 section 5.2.3.23
+my $revocation_reasons = { no_reason_specified => 0,
+			   key_superseded => 1,
+			   key_compromised => 2,
+			   key_retired => 3,
+			   user_id_no_longer_valid => 32,
+			 };
+
 # see RFC 4880 section 5.2.3.1
 my $subpacket_types = { sig_creation_time => 2,
 			sig_expiration_time => 3,
@@ -533,7 +541,7 @@ sub gensig {
   $rsa->use_pkcs1_padding();
 
   if (! $rsa->check_key()) {
-    die "key does not check";
+    die "key does not check\n";
   }
 
   my $certtype = $args->{certification_type} + 0;
@@ -557,7 +565,7 @@ sub gensig {
   my $key_timestamp = ($args->{key_timestamp} + 0);
 
   if ($key_timestamp > $sig_timestamp) {
-    die "key timestamp must not be later than signature timestamp";
+    die "key timestamp must not be later than signature timestamp\n";
   }
 
   my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $sig_timestamp);
@@ -631,7 +639,7 @@ sub finduid {
   my $packetlen = shift;
 
   my $dummy;
-  ($tag == $packet_types->{uid}) or die "This should not be called on anything but a User ID packet";
+  ($tag == $packet_types->{uid}) or die "This should not be called on anything but a User ID packet\n";
 
   read($instr, $dummy, $packetlen);
   $data->{uid} = {} unless defined $data->{uid};
@@ -646,7 +654,7 @@ sub findsig {
   my $tag = shift;
   my $packetlen = shift;
 
-  ($tag == $packet_types->{sig}) or die "No calling findsig on anything other than a signature packet.";
+  ($tag == $packet_types->{sig}) or die "No calling findsig on anything other than a signature packet.\n";
 
   my $dummy;
   my $readbytes = 0;
@@ -864,9 +872,47 @@ sub revokeuserid {
     die "The key requested was not found."
   }
 
-  # what does a signature like this look like?
+  my $revocation_reason = 'No longer using this hostname';
+  if (defined $data->{revocation_reason}) {
+    $revocation_reason = $data->{revocation_reason};
+  }
 
-  return 'abc';
+  my $rev_reason_subpkt = prefixsubpacket(pack('CC',
+					       $subpacket_types->{revocation_reason},
+					       $revocation_reasons->{user_id_no_longer_valid}).
+					  $revocation_reason);
+
+  # what does a signature like this look like?
+  my $args = { 'key_timestamp' => $data->{key}->{timestamp},
+	       'sig_timestamp' => time(),
+	       'certification_type' => $sig_types->{certification_revocation},
+	       'hashed_subpackets' => $rev_reason_subpkt,
+	     };
+
+
+  return gensig($data->{key}->{rsa}, $data->{uid}, $args);
+}
+
+
+# see 5.2.3.1 for tips on how to calculate the length of a subpacket:
+sub prefixsubpacket {
+  my $subpacket = shift;
+
+  my $len = length($subpacket);
+  my $prefix;
+  use bytes;
+  if ($len < 192) {
+    # one byte:
+    $prefix = pack('C', $len);
+  } elsif ($len < 16576) {
+    my $in = $len - 192;
+    my $second = $in%256;
+    my $first = ($in - $second)>>8;
+    $prefix = pack('CC', $first + 192, $second)
+  } else {
+    $prefix = pack('CN', 255, $len);
+  }
+  return $prefix.$subpacket;
 }
 
 
@@ -988,16 +1034,25 @@ for (basename($0)) {
 	die "No matching key found.\n";
       }
   }
-  elsif (/^revokeuserid$/) {
-    my $fpr = shift;
-    my $uid = shift;
-    my $instream;
-    open($instream,'-');
-    binmode($instream, ":bytes");
+  elsif (/^keytrans$/) {
+    # subcommands when keytrans is invoked directly are UNSUPPORTED,
+    # UNDOCUMENTED, and WILL NOT BE MAINTAINED.
+    my $subcommand = shift;
+    for ($subcommand) {
+      if (/^revokeuserid$/) {
+	my $fpr = shift;
+	my $uid = shift;
+	my $instream;
+	open($instream,'-');
+	binmode($instream, ":bytes");
 
-    my $revcert = revokeuserid($instream, $fpr, $uid);
+	my $revcert = revokeuserid($instream, $fpr, $uid);
 
-    print $revcert;
+	print $revcert;
+      } else {
+	die "Unrecognized subcomand.  keytrans subcommands are not a stable interface!\n";
+      }
+    }
   }
   else {
     die "Unrecognized keytrans call.\n";
