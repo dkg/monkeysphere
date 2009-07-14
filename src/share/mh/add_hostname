@@ -41,16 +41,10 @@ else
     log debug "adding user ID without prompting."
 fi
 
-# edit-key script command to add user ID
-adduidCommand="adduid
-$userID
-
-
-save"
-# end script
-
 # execute edit-key script
-if echo "$adduidCommand" | gpg_host_edit ; then
+if <"$GNUPGHOME_HOST/secring.gpg" "$SYSSHAREDIR/keytrans" adduserid \
+    "$HOST_FINGERPRINT" "$userID" | gpg_host --import ; then
+    gpg_host --check-trustdb
 
     update_gpg_pub_file
 
