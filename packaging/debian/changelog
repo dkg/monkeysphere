@@ -17,9 +17,11 @@ monkeysphere (0.25-1~pre) UNRELEASED; urgency=low
       (closes MS #917)
     - explicitly set and use MONKEYSPHERE_GROUP from system "groups"
       (closes: #534008)
+    - monkeysphere-host now uses keytrans to add and revoke hostname
+      (closes MS #422)
   * update Standard-Version to 3.8.2 (no changes needed)
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 11 Jul 2009 18:55:25 -0400
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 14 Jul 2009 03:00:05 -0400
 
 monkeysphere (0.24-1) unstable; urgency=low
 
