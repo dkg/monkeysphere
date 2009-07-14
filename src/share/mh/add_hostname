@@ -28,7 +28,7 @@ fi
 userID="ssh://${1}"
 
 # test that the desired user ID does not already exist
-find_host_userid > /dev/null && \
+find_host_userid "$userID" > /dev/null && \
     failure "Host userID '$userID' already exists."
 
 if [ "$PROMPT" = "true" ] ; then

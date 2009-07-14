@@ -141,13 +141,13 @@ find_host_userid() {
     local tmpuidMatch
     local line
 
-    # match to only ultimately trusted user IDs
-    tmpuidMatch="u:$(echo $userID | gpg_escape)"
+    # match to only "unknown" user IDs (host has no need for ultimate trust)
+    tmpuidMatch="-:$(echo $userID | gpg_escape)"
 
     # find the index of the requsted user ID
     # NOTE: this is based on circumstantial evidence that the order of
     # this output is the appropriate index
-    line=$(gpg_host_list | egrep '^(uid|uat):' | cut -f2,10 -d: | \
+    line=$(gpg_host_list | egrep '^uid:' | cut -f2,10 -d: | \
 	grep -n -x -F "$tmpuidMatch" 2>/dev/null)
 
     if [ "$line" ] ; then
