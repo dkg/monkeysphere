@@ -797,7 +797,9 @@ sub openpgp2rsa {
     $fpr = uc($fpr);
   }
 
-  my $data = { 'fpr' => $fpr};
+  my $data = { target => { fpr => $fpr,
+			 },
+	       };
   my $subs = { $packet_types->{pubkey} => \&findkey,
 	       $packet_types->{pub_subkey} => \&findkey,
 	       $packet_types->{seckey} => \&findkey,
@@ -1101,7 +1103,7 @@ for (basename($0)) {
 
 	print $newuid;
       } else {
-	die "Unrecognized subcomand.  keytrans subcommands are not a stable interface!\n";
+	die "Unrecognized subcommand.  keytrans subcommands are not a stable interface!\n";
       }
     }
   }
