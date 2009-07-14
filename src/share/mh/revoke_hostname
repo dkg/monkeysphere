@@ -43,7 +43,14 @@ else
 fi
 
 # actually revoke:
-if <"$GNUPGHOME_HOST/secring.gpg" "$SYSSHAREDIR/keytrans" revokeuserid \
+
+# the gpg secring might not contain the host key we are trying to
+# revoke (let alone any selfsig over that host key), but the plain
+# --export won't contain the secret key.  "keytrans revokeuserid"
+# needs access to both pieces, so we feed it both of them.
+
+if (cat "$GNUPGHOME_HOST/secring.gpg" && gpg_host --export "$HOST_FINGERPRINT") | \
+    "$SYSSHAREDIR/keytrans" revokeuserid \
     "$HOST_FINGERPRINT" "$userID" | gpg_host --import ; then
     gpg_host --check-trustdb
 
