@@ -608,7 +608,6 @@ sub gensig {
 	$sig_data_to_be_hashed.
 	  $trailer;
 
-
   # FIXME: handle signatures over digests other than SHA256:
   my $data_hash = Digest::SHA::sha256_hex($datatosign);
 
@@ -642,8 +641,8 @@ sub finduid {
   ($tag == $packet_types->{uid}) or die "This should not be called on anything but a User ID packet\n";
 
   read($instr, $dummy, $packetlen);
-  $data->{uid} = {} unless defined $data->{uid};
   $data->{uid}->{$dummy} = {};
+  $data->{current}->{uid} = $dummy;
 }
 
 
@@ -659,46 +658,25 @@ sub findsig {
   my $dummy;
   my $readbytes = 0;
 
-  if ((undef $data->{key}) ||
-      (undef $data->{uid}) ||
-      (undef $data->{uid}->{$data->{target}->{uid}})) {
-    # this is not the user ID we are looking for.
-    read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
-  }
+  read($instr, $dummy, $packetlen - $readbytes) or die "Could not read in this packet.\n";
 
-  read($instr, $data, 6) or die "could not read signature header\n";
-  my ($ver, $sigtype, $pubkeyalgo, $digestalgo, $subpacketsize) = unpack('CCCCn', $data);
-  if ($ver != 4) {
-    printf(STDERR "We only work with version 4 signatures.");
-    read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
-    return;
-  }
-  if ($pubkeyalgo != $asym_algos->{rsa}) {
-    printf(STDERR "We can only work with RSA at the moment");
-    read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
-    return;
-  }
-  if ($sigtype != $sig_types->{positive_certification}) {
-    # FIXME: some weird implementations might have made generic,
-    # persona, or casual certifications instead of positive
-    # certifications for self-sigs.  Probably should handle them too.
-    read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
+  if ((! defined $data->{key}) ||
+      (! defined $data->{uid}) ||
+      (! defined $data->{uid}->{$data->{target}->{uid}})) {
+    # the user ID we are looking for has not been found yet.
     return;
   }
 
-  my $subpackets;
-  read($instr, $subpackets, $subpacketsize) or die "could not read hashed signature subpackets.\n";
+  # FIXME: if we get two primary keys on stdin, both with the same
+  # targetd user ID, we'll store signatures from both keys, which is
+  # probably wrong.
 
-  read($instr, $subpacketsize, 2) or die "could not read unhashed signature subpacket size.\n";
-  $subpacketsize = unpack('n', $subpacketsize);
+  # the current ID is not what we're looking for:
+  return if ($data->{current}->{uid} ne $data->{target}->{uid});
 
-  my $unhashedsubpackets;
-  read($instr, $unhashedsubpackets, $subpacketsize) or die "could not read unhashed signature subpackets.\n";
-
-  my $hashtail;
-  read($instr, $hashtail, 2) or die "could not read left 16 bits of digest.\n";
-
-  # FIXME: RSA signatures should read in how many MPIs?
+  # just storing the raw signatures for the moment:
+  push @{$data->{sigs}}, make_packet($packet_types->{sig}, $dummy);
+  return;
 
 }
 
@@ -840,6 +818,7 @@ sub revokeuserid {
   my $instr = shift;
   my $fpr = shift;
   my $uid = shift;
+  my $sigtime = shift;
 
   if ((! defined $fpr) ||
       (length($fpr) < 8)) {
@@ -853,10 +832,12 @@ sub revokeuserid {
   }
 
   my $data = { target => { fpr => $fpr,
+			   uid => $uid,
 			 },
 	     };
   my $subs = { $packet_types->{seckey} => \&findkey,
-	       $packet_types->{uid} => \&finduid
+	       $packet_types->{uid} => \&finduid,
+	       $packet_types->{sig} => \&findsig,
 	     };
 
   packetwalk($instr, $subs, $data);
@@ -882,15 +863,21 @@ sub revokeuserid {
 					       $revocation_reasons->{user_id_no_longer_valid}).
 					  $revocation_reason);
 
+  if (! defined $sigtime) {
+    $sigtime = time();
+  }
   # what does a signature like this look like?
-  my $args = { 'key_timestamp' => $data->{key}->{timestamp},
-	       'sig_timestamp' => time(),
-	       'certification_type' => $sig_types->{certification_revocation},
-	       'hashed_subpackets' => $rev_reason_subpkt,
+  my $args = { key_timestamp => $data->{key}->{timestamp},
+	       sig_timestamp => $sigtime,
+	       certification_type => $sig_types->{certification_revocation},
+	       hashed_subpackets => $rev_reason_subpkt,
 	     };
 
-
-  return gensig($data->{key}->{rsa}, $data->{uid}, $args);
+  return
+    make_packet($packet_types->{pubkey}, make_rsa_pub_key_body($data->{key}->{rsa}, $data->{key}->{timestamp})).
+      make_packet($packet_types->{uid}, $uid).
+	join('', @{$data->{sigs}}).
+	  gensig($data->{key}->{rsa}, $uid, $args);
 }
 
 
@@ -1046,7 +1033,7 @@ for (basename($0)) {
 	open($instream,'-');
 	binmode($instream, ":bytes");
 
-	my $revcert = revokeuserid($instream, $fpr, $uid);
+	my $revcert = revokeuserid($instream, $fpr, $uid, $ENV{KEYTRANS_REVSIG_TIMESTAMP});
 
 	print $revcert;
       } else {
