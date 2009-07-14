@@ -42,7 +42,9 @@ else
 fi
 
 # execute edit-key script
-if <"$GNUPGHOME_HOST/secring.gpg" "$SYSSHAREDIR/keytrans" adduserid \
+if PEM2OPENPGP_USAGE_FLAGS=authenticate \
+    <"$GNUPGHOME_HOST/secring.gpg" \
+    "$SYSSHAREDIR/keytrans" adduserid \
     "$HOST_FINGERPRINT" "$userID" | gpg_host --import ; then
     gpg_host --check-trustdb
 
