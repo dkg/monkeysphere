@@ -27,16 +27,6 @@ if [ -z "$1" ] ; then
     failure "You must specify a hostname to revoke."
 fi
 
-echo "WARNING: There is a known bug in this function.
-This function has been known to occasionally revoke the wrong hostname.
-Please see the following bug report for more information:
-https://labs.riseup.net/code/issues/show/422" >&2
-printf "Are you sure you would like to proceed? (y/N) " >&2
-read OK; OK=${OK:=N}
-if [ ${OK/y/Y} != 'Y' ] ; then
-    failure "aborting."
-fi
-
 userID="ssh://${1}"
 
 # make sure the user ID to revoke
@@ -53,19 +43,10 @@ else
     log debug "revoking user ID without prompting."
 fi
 
-# edit-key script command to revoke user ID
-revuidCommand="$uidIndex
-revuid
-y
-4
-Hostname removed by monkeysphere-host: $DATE
-
-y
-save"
-# end script
-
-# execute edit-key script
-if echo "$revuidCommand" | gpg_host_edit ; then
+# actually revoke:
+if <"$GNUPGHOME_HOST/secring.gpg" "$SYSSHAREDIR/keytrans" revokeuserid \
+    "$HOST_FINGERPRINT" "$userID" | gpg_host --import ; then
+    gpg_host --check-trustdb
 
     update_gpg_pub_file
 

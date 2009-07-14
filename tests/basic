@@ -76,7 +76,7 @@ ssh_test() {
 	|| RETURN="$?"
 
     # kill the sshd process if it's still running
-    kill "$SSHD_PID"
+    kill "$SSHD_PID" || true
     SSHD_PID=
 
     if [ "$RETURN" = "$CODE" ] ; then
@@ -429,12 +429,31 @@ chmod o-w "$TESTHOME"/.monkeysphere.linktest
 rm "$TESTHOME"/.monkeysphere
 mv "$TESTHOME"/.monkeysphere{.bak,}
 
+# ensure we're back to normal:
+echo
+echo "##################################################"
+echo "### making sure we are back to normal..."
+monkeysphere-authentication update-users $(whoami)
+ssh_test
+
+echo
+echo "##################################################"
+echo "### ssh connection test with hostname 'testhost2' added..."
+monkeysphere-host add-hostname testhost2
+ssh_test
+
+echo
+echo "##################################################"
+echo "### ssh connection test for failure with 'testhost' revoked..."
+monkeysphere-host revoke-hostname testhost
+ssh_test 255
+
 # FIXME: addtest: remove admin as id-certifier and check ssh failure
 
-# FIXME: addtest: add hostname on host key
-# FIXME: addtest: revoke hostname on host key and check ssh failure
+# FIXME: addtest: how do we test that set-expire makes sense after new
+# hostnames have been added?
 
-# addtest: revoke the host key and check ssh failure
+# FIXME: addtest: revoke the host key and check ssh failure
 
 # test to make sure things are OK after the previous tests:
 echo
