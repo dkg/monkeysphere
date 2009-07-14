@@ -429,7 +429,7 @@ sub fingerprint {
 
 
 # FIXME: handle DSA keys as well!
-sub pem2openpgp {
+sub makeselfsig {
   my $rsa = shift;
   my $uid = shift;
   my $args = shift;
@@ -442,10 +442,7 @@ sub pem2openpgp {
   if (! defined $args->{sig_timestamp}) {
     $args->{sig_timestamp} = time();
   }
-  if (! defined $args->{key_timestamp}) {
-    $args->{key_timestamp} = $args->{sig_timestamp} + 0;
-  }
-  my $key_timestamp = $args->{key_timestamp};
+  my $key_timestamp = $args->{key_timestamp} + 0;
 
   # generate and aggregate subpackets:
 
@@ -518,10 +515,7 @@ sub pem2openpgp {
 		$feature_subpacket.
 		  $keyserver_pref;
 
-  return
-    make_packet($packet_types->{seckey}, make_rsa_sec_key_body($rsa, $key_timestamp)).
-      make_packet($packet_types->{uid}, $uid).
-	gensig($rsa, $uid, $args);
+  return gensig($rsa, $uid, $args);
 }
 
 # FIXME: handle non-RSA keys
@@ -814,6 +808,55 @@ sub openpgp2rsa {
   return $data->{key}->{rsa};
 }
 
+sub adduserid {
+  my $instr = shift;
+  my $fpr = shift;
+  my $uid = shift;
+  my $args = shift;
+
+  if ((! defined $fpr) ||
+      (length($fpr) < 8)) {
+    die "We need at least 8 hex digits of fingerprint.\n";
+  }
+
+  $fpr = uc($fpr);
+
+  if (! defined $uid) {
+    die "No User ID defined.\n";
+  }
+
+  my $data = { target => { fpr => $fpr,
+			   uid => $uid,
+			 },
+	     };
+  my $subs = { $packet_types->{seckey} => \&findkey,
+	       $packet_types->{uid} => \&finduid,
+	       $packet_types->{sig} => \&findsig,
+	     };
+
+  packetwalk($instr, $subs, $data);
+
+  if ((! defined $data->{key}) ||
+      (! defined $data->{key}->{rsa}) ||
+      (! defined $data->{key}->{timestamp})) {
+    die "The key requested was not found.\n"
+  }
+
+  if (defined $data->{uid}->{$uid}) {
+    die "The requested User ID '$uid' is already associated with this key.\n";
+  }
+  $args->{key_timestamp} = $data->{key}->{timestamp};
+
+  return
+    make_packet($packet_types->{pubkey}, make_rsa_pub_key_body($data->{key}->{rsa}, $data->{key}->{timestamp})).
+      make_packet($packet_types->{uid}, $uid).
+	makeselfsig($data->{key}->{rsa},
+		    $uid,
+		    $args);
+
+}
+
+
 sub revokeuserid {
   my $instr = shift;
   my $fpr = shift;
@@ -996,10 +1039,18 @@ for (basename($0)) {
       $rsa = Crypt::OpenSSL::RSA->new_private_key($stdin);
     }
 
-    print pem2openpgp($rsa,
+    my $key_timestamp = $ENV{PEM2OPENPGP_KEY_TIMESTAMP};
+    my $sig_timestamp = $ENV{PEM2OPENPGP_TIMESTAMP};
+    $sig_timestamp = time() if (!defined $sig_timestamp);
+    $key_timestamp = $sig_timestamp if (!defined $key_timestamp);
+
+    print
+      make_packet($packet_types->{seckey}, make_rsa_sec_key_body($rsa, $key_timestamp)).
+	make_packet($packet_types->{uid}, $uid).
+	  makeselfsig($rsa,
 		      $uid,
-		      { sig_timestamp => $ENV{PEM2OPENPGP_TIMESTAMP},
-			key_timestamp => $ENV{PEM2OPENPGP_KEY_TIMESTAMP},
+		      { sig_timestamp => $sig_timestamp,
+			key_timestamp => $key_timestamp,
 			expiration => $ENV{PEM2OPENPGP_EXPIRATION},
 			usage_flags => $ENV{PEM2OPENPGP_USAGE_FLAGS},
 		      }
@@ -1033,9 +1084,22 @@ for (basename($0)) {
 	open($instream,'-');
 	binmode($instream, ":bytes");
 
-	my $revcert = revokeuserid($instream, $fpr, $uid, $ENV{KEYTRANS_REVSIG_TIMESTAMP});
+	my $revcert = revokeuserid($instream, $fpr, $uid, $ENV{KEYTRANS_REVUID_TIMESTAMP});
 
 	print $revcert;
+      } elsif (/^adduserid$/) {
+	my $fpr = shift;
+	my $uid = shift;
+	my $instream;
+	open($instream,'-');
+	binmode($instream, ":bytes");
+	my $newuid = adduserid($instream, $fpr, $uid, 
+			       { sig_timestamp => $ENV{PEM2OPENPGP_TIMESTAMP},
+				 expiration => $ENV{PEM2OPENPGP_EXPIRATION},
+				 usage_flags => $ENV{PEM2OPENPGP_USAGE_FLAGS},
+			       });
+
+	print $newuid;
       } else {
 	die "Unrecognized subcomand.  keytrans subcommands are not a stable interface!\n";
       }
