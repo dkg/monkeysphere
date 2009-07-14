@@ -162,6 +162,9 @@ EOF
 diff -u expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
 
 
+## FIXME: addtest: not testing subkeys at the moment.
+
+
 trap - EXIT
 
 echo "##################################################"
