@@ -72,7 +72,7 @@ ssh_test() {
     # make a client connection to the socket
     echo "##### starting ssh client..."
     ssh-agent bash -c \
-	"monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config testhost true" \
+	"monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config ${target_hostname:-testhost} true" \
 	|| RETURN="$?"
 
     # kill the sshd process if it's still running
@@ -436,17 +436,39 @@ echo "### making sure we are back to normal..."
 monkeysphere-authentication update-users $(whoami)
 ssh_test
 
+
+echo
+echo "##################################################"
+echo "### ssh connection test directly to 'testhost2' without new name..."
+target_hostname=testhost2 ssh_test 255
+echo
+echo "##################################################"
+echo "### add hostname, certify by admin, import by user..."
+monkeysphere-host add-hostname testhost2
+< "$MONKEYSPHERE_SYSCONFIGDIR"/ssh_host_rsa_key.pub.gpg gpgadmin --import
+printf "y\ny\n" | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
+
 echo
 echo "##################################################"
 echo "### ssh connection test with hostname 'testhost2' added..."
-monkeysphere-host add-hostname testhost2
+gpgadmin --export "$HOSTKEYID" | gpg --import
+gpg --check-trustdb
 ssh_test
 
 echo
 echo "##################################################"
-echo "### ssh connection test for failure with 'testhost' revoked..."
-monkeysphere-host revoke-hostname testhost
-ssh_test 255
+echo "### ssh connection test directly to 'testhost2' ..."
+gpg --import <"$MONKEYSPHERE_SYSCONFIGDIR"/ssh_host_rsa_key.pub.gpg 
+gpg --check-trustdb
+target_hostname=testhost2 ssh_test
+
+echo
+echo "##################################################"
+echo "### ssh connection test for failure with 'testhost2' revoked..."
+monkeysphere-host revoke-hostname testhost2
+gpg --import <"$MONKEYSPHERE_SYSCONFIGDIR"/ssh_host_rsa_key.pub.gpg
+gpg --check-trustdb
+target_hostname=testhost2 ssh_test 255
 
 # FIXME: addtest: remove admin as id-certifier and check ssh failure
 
