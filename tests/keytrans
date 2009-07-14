@@ -43,6 +43,7 @@ TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/monkeyspheretest.XXXXXXX")
 mkdir "$TEMPDIR"/bin
 ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/openpgp2ssh
 ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/pem2openpgp
+ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/keytrans
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
@@ -64,6 +65,7 @@ chmod 700 "$TEMPDIR"
 cat > "$TEMPDIR"/gpg.conf <<EOF
 default-preference-list SHA512 SHA384 SHA256 SHA224 RIPEMD160 SHA1 ZLIB BZIP2 ZIP AES256 AES192 AES CAST5 3DES
 cert-digest-algo SHA256
+list-options show-uid-validity,show-unusable-uids
 EOF
 
 # generate a key
@@ -103,6 +105,62 @@ diff -u \
 diff -u \
     <(hd "$TEMPDIR"/secret.key) \
     <(hd "$TEMPDIR"/converted.secret.key)
+
+
+KEYID=$(gpg --fingerprint --with-colons --list-keys | grep ^fpr | cut -f10 -d: | cut -b25-40)
+
+echo "conversions look good!"
+
+echo "Now working with key $KEYID at time $timestamp"
+
+gpg --check-trustdb
+gpg --list-keys
+
+
+echo "##################################################"
+echo "### test User ID addition..."
+< "$TEMPDIR"/secring.gpg \
+PEM2OPENPGP_TIMESTAMP="$timestamp" \
+    PEM2OPENPGP_USAGE_FLAGS=sign,certify \
+    keytrans adduserid "$KEYID" "monkeymonkey" | gpg --import
+
+gpg --check-trustdb
+gpg --list-keys
+
+cat >expectedout <<EOF
+pub:u:1024:1:$KEYID:$timestamp:::u:::scSC:
+uid:u::::$timestamp::E90EC72E68C6C2A0751DADC70F54F60D27B88C3D::monkeymonkey:
+sig:!::1:$KEYID:$timestamp::::monkeymonkey:13x:
+uid:u::::$timestamp::8200BD0425CC70C7D698DF3FE412044EAAB83F94::testtest:
+sig:!::1:$KEYID:$timestamp::::monkeymonkey:13x:
+EOF
+
+diff -u expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
+
+echo "##################################################"
+echo "### test User ID revocation ... "
+
+revtime=$(($timestamp + 1))
+
+< "$TEMPDIR"/secring.gpg \
+PEM2OPENPGP_TIMESTAMP="$revtime" \
+    keytrans revokeuserid "$KEYID" "testtest" | gpg --import
+
+gpg --check-trustdb
+gpg --list-keys
+
+cat >expectedout <<EOF
+pub:u:1024:1:$KEYID:$timestamp:::u:::scSC:
+uid:u::::$timestamp::E90EC72E68C6C2A0751DADC70F54F60D27B88C3D::monkeymonkey:
+sig:!::1:$KEYID:$timestamp::::monkeymonkey:13x:
+uid:r::::::8200BD0425CC70C7D698DF3FE412044EAAB83F94::testtest:
+sig:!::1:$KEYID:$timestamp::::monkeymonkey:13x:
+rev:!::1:$KEYID:$revtime::::monkeymonkey:30x:
+EOF
+
+
+diff -u expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
+
 
 trap - EXIT
 

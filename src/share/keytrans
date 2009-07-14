@@ -1084,7 +1084,7 @@ for (basename($0)) {
 	open($instream,'-');
 	binmode($instream, ":bytes");
 
-	my $revcert = revokeuserid($instream, $fpr, $uid, $ENV{KEYTRANS_REVUID_TIMESTAMP});
+	my $revcert = revokeuserid($instream, $fpr, $uid, $ENV{PEM2OPENPGP_TIMESTAMP});
 
 	print $revcert;
       } elsif (/^adduserid$/) {
