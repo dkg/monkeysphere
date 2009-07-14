@@ -134,28 +134,18 @@ check_host_no_key() {
 Please run 'monkeysphere-host import-key...' first."
 }
 
-# output the index of a user ID on the host key
-# return 1 if user ID not found
+# return 0 if user ID was found.
+# return 1 if user ID not found.
 find_host_userid() {
     local userID="$1"
     local tmpuidMatch
-    local line
 
     # match to only "unknown" user IDs (host has no need for ultimate trust)
-    tmpuidMatch="-:$(echo $userID | gpg_escape)"
+    tmpuidMatch="uid:-:$(echo $userID | gpg_escape)"
 
-    # find the index of the requsted user ID
-    # NOTE: this is based on circumstantial evidence that the order of
-    # this output is the appropriate index
-    line=$(gpg_host_list | egrep '^uid:' | cut -f2,10 -d: | \
-	grep -n -x -F "$tmpuidMatch" 2>/dev/null)
-
-    if [ "$line" ] ; then
-	echo ${line%%:*}
-	return 0
-    else
-	return 1
-    fi
+    # See whether the requsted user ID is present
+    gpg_host_list | cut -f1,2,10 -d: | \
+	grep -q -x -F "$tmpuidMatch" 2>/dev/null
 }
 
 # show info about the host key

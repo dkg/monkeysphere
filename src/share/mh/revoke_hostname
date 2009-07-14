@@ -19,7 +19,6 @@ local userID
 local fingerprint
 local tmpuidMatch
 local line
-local uidIndex
 local message
 local revuidCommand
 
@@ -30,7 +29,7 @@ fi
 userID="ssh://${1}"
 
 # make sure the user ID to revoke
-uidIndex=$(find_host_userid "$userID") || \
+find_host_userid "$userID" || \
     failure "No non-revoked user ID found matching '$userID'."
 
 if [ "$PROMPT" = "true" ] ; then
