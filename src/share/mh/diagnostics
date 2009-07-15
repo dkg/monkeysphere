@@ -27,7 +27,19 @@ local fingerprint
 local badhostkeys
 local problemsfound=0
 
-report_cruft
+if ! [ -d "$SYSDATADIR" ] ; then
+    echo "! no $SYSDATADIR directory found.  Please create it."
+    exit
+fi
+
+if ! [ -f "$HOST_KEY_FILE" ] ; then
+    echo "No host key gpg pub file found!"
+    echo " - Recommendation: run 'monkeysphere-host import-key'"
+    exit
+fi
+
+# load the host key fingerprint
+load_fingerprint
 
 seckey=$(gpg_host --list-secret-keys --fingerprint --with-colons --fixed-list-mode)
 keysfound=$(echo "$seckey" | grep -c ^sec:)
@@ -41,15 +53,10 @@ if ! id monkeysphere >/dev/null ; then
     problemsfound=$(($problemsfound+1))
 fi
 
-if ! [ -d "$SYSDATADIR" ] ; then
-    echo "! no $SYSDATADIR directory found.  Please create it."
-    problemsfound=$(($problemsfound+1))
-fi
-
 echo "Checking host GPG key..."
 if (( "$keysfound" < 1 )); then
-    echo "! No host key found."
-    echo " - Recommendation: run 'monkeysphere-host import-key'"
+    echo "! No host key found.  The monkeysphere-host data directory is corrupt?!?!"
+    echo " - Recommendation: purge the MHDATADIR ($MHDATADIR) and rerun 'monkeysphere-host import-key'"
     problemsfound=$(($problemsfound+1))
 elif (( "$keysfound" > 1 )); then
     echo "! More than one host key found?"
@@ -122,6 +129,8 @@ fi
 #    directories housing them, etc (what should those values be?  can
 #    we make them as minimal as possible?)
 
+# report on any cruft from old monkeysphere version
+report_cruft
 
 if [ "$problemsfound" -gt 0 ]; then
     echo "When the above $problemsfound issue"$(if [ "$problemsfound" -eq 1 ] ; then echo " is" ; else echo "s are" ; fi)" resolved, please re-run:"

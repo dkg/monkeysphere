@@ -296,8 +296,6 @@ case $COMMAND in
 	;;
 
     'diagnostics'|'d')
-	check_host_no_key
-	load_fingerprint
 	source "${MHSHAREDIR}/diagnostics"
 	diagnostics
 	;;
