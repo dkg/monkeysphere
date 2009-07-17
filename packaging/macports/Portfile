@@ -23,14 +23,14 @@ depends_run         bin:ssh:openssh \
                     port:perl5 \
                     port:p5-crypt-openssl-rsa \
                     port:p5-crypt-openssl-bignum \
-                    port:p5-digest-sha1 \
+                    port:p5-digest-sha \
                     port:procmail
 
 master_sites        http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
 distname            ${name}_${version}
 extract.suffix      .orig.tar.gz
 worksrcdir          ${name}-${version}
-checksums           md5 1c6fedfa3cd89150ae75d5a26264c89d
+checksums           md5 211f39f195dd974ff14a188516f06690
 
 use_configure       no
 
