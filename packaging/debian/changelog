@@ -1,4 +1,4 @@
-monkeysphere (0.25-1~pre) UNRELEASED; urgency=low
+monkeysphere (0.25-1) unstable; urgency=low
 
   * New upstream release:
     - update/fix the marginal ui output
@@ -21,7 +21,7 @@ monkeysphere (0.25-1~pre) UNRELEASED; urgency=low
       (closes MS #422)
   * update Standard-Version to 3.8.2 (no changes needed)
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 14 Jul 2009 03:00:05 -0400
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Thu, 16 Jul 2009 22:09:19 -0400
 
 monkeysphere (0.24-1) unstable; urgency=low
 
