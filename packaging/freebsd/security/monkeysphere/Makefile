@@ -6,7 +6,7 @@
 #
 
 PORTNAME=	monkeysphere
-PORTVERSION=	0.24
+PORTVERSION=   0.25
 CATEGORIES=	security
 MASTER_SITES=	http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
 # hack for debian orig tarballs
@@ -19,7 +19,7 @@ RUN_DEPENDS=	gpg:${PORTSDIR}/security/gnupg1 \
 		lockfile:${PORTSDIR}/mail/procmail \
 		bash:${PORTSDIR}/shells/bash \
 		${SITE_PERL}/${PERL_ARCH}/Crypt/OpenSSL/RSA.pm:${PORTSDIR}/security/p5-Crypt-OpenSSL-RSA \
-		${SITE_PERL}/${PERL_ARCH}/Digest/SHA1.pm:${PORTSDIR}/security/p5-Digest-SHA1
+		${SITE_PERL}/${PERL_ARCH}/Digest/SHA.pm:${PORTSDIR}/security/p5-Digest-SHA
 
 MAN1=		monkeysphere.1 openpgp2ssh.1 pem2openpgp.1
 MAN7=		monkeysphere.7
