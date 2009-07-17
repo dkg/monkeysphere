@@ -7,6 +7,8 @@
 
  * make releasenote
 
+ * commit outstanding changes.
+
  * create upstream version tag: 
 
     git tag -s -m 'Tagging Monkeysphere $whatever' monkeysphere_$whatever

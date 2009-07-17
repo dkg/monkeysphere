@@ -1,0 +1,30 @@
+[[meta title="Monkeysphere 0.25-1 released!"]]
+
+Monkeysphere 0.25-1 has been released.  
+
+Notes from the changelog:
+
+<pre>
+  * New upstream release:
+    - update/fix the marginal ui output
+    - use msmktempdir everywhere (avoid unwrapped calls to mktemp for
+      portability)
+    - clean out some redundant "cat"s
+    - fix monkeysphere update-known_hosts for sshd running on non-standard
+      ports
+    - add 'sshfpr' subcommand to output the ssh fingerprint of a gpg key
+    - pem2openpgp now generates self-sigs over SHA-256 instead of SHA-1
+       (changes dependency to libdigest-sha-perl)
+    - some portability improvements
+    - properly handle translation of keys with fingerprints with leading
+      all-zero bytes.
+    - resolve symlinks when checking paths (thanks Silvio Rhatto)
+      (closes MS #917)
+    - explicitly set and use MONKEYSPHERE_GROUP from system "groups"
+      (closes: #534008)
+    - monkeysphere-host now uses keytrans to add and revoke hostname
+      (closes MS #422)
+  * update Standard-Version to 3.8.2 (no changes needed)
+</pre>
+
+[[Download]] it now!
