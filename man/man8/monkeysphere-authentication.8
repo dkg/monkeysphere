@@ -37,6 +37,11 @@ monkeysphere-controlled authorized_keys file.  If no accounts are
 specified, then all accounts on the system are processed.  `u' may be
 used in place of `update\-users'.
 .TP
+.B refresh\-keys
+Refresh all keys in the monkeysphere-authentication keyring.  If no
+accounts are specified, then all accounts on the system are processed.
+`r' may be used in place of `refresh\-keys'.
+.TP
 .B add\-id\-certifier KEYID|FILE
 Instruct system to trust user identity certifications made by KEYID.
 The key ID will be loaded from the keyserver.  A file may be loaded
