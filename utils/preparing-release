@@ -13,6 +13,12 @@
 
     git tag -s -m 'Tagging Monkeysphere $whatever' monkeysphere_$whatever
 
+ * run commands from make debian-package by hand (?) so that it
+   doesn't trigger another tarball rebuild.  Make sure the package
+   passes lintian checks, installs, upgrades, removes reasonably, etc.
+
+ * debsign -k$GPGID ../*.changes
+
  * create debian-specific version tag:
 
     git tag -s -m 'Tagging Monkeysphere $whatever-1' monkeysphere_$whatever-1
