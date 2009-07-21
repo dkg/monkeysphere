@@ -2,7 +2,7 @@
 <colgroup span="1" width="120" />
 <tr>
 <td rowspan="2"><a href="/"><img class="logo" src="/logo.simple.png" alt="monkeysphere" /></a></td>
-B<td><a href="/"><img class="title" src="/logo.title.png" alt="monkeysphere" /></a></td>
+<td><a href="/"><img class="title" src="/logo.title.png" alt="monkeysphere" /></a></td>
 </tr><tr>
 <td>
 [[WHY?|why]]
