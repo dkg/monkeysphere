@@ -74,7 +74,7 @@ you want to add the subkey to on the command line.
 Since this is a change to your key, you probably want to re-publish
 your key to the public keyservers.  If your key ID is $GPGID:
 
-	$ gpg --keyserver pool.sks-keysevers.net --send-key $GPGID
+	$ gpg --keyserver pool.sks-keyservers.net --send-key $GPGID
 
 This way, remote services that use the monkeysphere for user
 authentication will know about your SSH identity.
