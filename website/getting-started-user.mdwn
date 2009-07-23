@@ -95,9 +95,7 @@ First make sure you have an agent running:
 
 	$ ssh-add -l
 
-Then hand off the authentication subkey to the agent (Note: the GnuTLS
-library supports this operation as of version 2.6, but earlier
-versions do not):
+Then hand off the authentication subkey to the agent:
 
 	$ monkeysphere subkey-to-ssh-agent
 
