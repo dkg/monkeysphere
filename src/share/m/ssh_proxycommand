@@ -102,8 +102,13 @@ EOF
     if [ -z "$sshKeyOffered" ] ; then
 	log info <<EOF
 Could not retrieve RSA host key from $HOST.
+EOF
+	# check that there are any marginally valid keys
+	if echo "$gpgOut" | egrep -q '^(pub|sub):(m|f|u):' ; then
+	    log info <<EOF
 The following keys were found with marginal validity:
 EOF
+	fi
     fi
 
     # find all 'pub' and 'sub' lines in the gpg output, which each
@@ -140,10 +145,9 @@ EOF
 		else
 
 		    # if the current key is marginal, show info
-		    if [ "$validity" = 'm' -o "$validity" = 'f' ] ; then
+		    if [ "$validity" = 'm' ] ; then
 			show_key_info "$keyid" | log info
                     fi
-
 		fi
 		;;
 	esac
@@ -163,10 +167,9 @@ None of the found keys matched the key offered by the host.
 EOF
 	else
 	    log info <<EOF
-There may be other keys with less than marginal validity for this hostname.
+There may be keys for this hostname with less than marginal validity.
 EOF
 	fi
-
 	log info <<EOF
 Run the following command for more info about the found keys:
 gpg --check-sigs --list-options show-uid-validity =${userID}
