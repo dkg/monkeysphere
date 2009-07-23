@@ -3,8 +3,16 @@
 # Screenshots #
 
 This is a screenshot of the "marginal UI" output of the monkeysphere
-ssh-proxycommand:
+ssh-proxycommand.  The user knows Jamie, and has assigned Marginal
+ownertrust to him, so his certification is visible but not sufficient
+on blanco's host key:
 
-![Marginal UI screenshot](/screenshot.png "Marginal UI screenshot")
+![Simple Marginal UI screenshot](blanco.png "Simple Marginal UI screenshot")
+
+Here is a more complex situation, involving multiple hostnames (a
+common misspelling, in this instance) with different calculated
+validities, and multiple certifiers:
+
+![Complex Marginal UI screenshot](zimmerman.png "Complex Marginal UI screenshot")
 
 More screenshots may be available at [screenshots.debian.net](http://screenshots.debian.net/package/monkeysphere).
