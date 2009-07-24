@@ -194,18 +194,7 @@ if [ -z "$KEYSERVER" ] ; then
     fi
 fi
 PROMPT=${MONKEYSPHERE_PROMPT:=$PROMPT}
-# check the known_hosts file
-if [ "$MONKEYSPHERE_KNOWN_HOSTS" ] ; then
-    if [ -f "$MONKEYSPHERE_KNOWN_HOSTS" ] ; then
-	KNOWN_HOSTS="$MONKEYSPHERE_KNOWN_HOSTS"
-    else
-	failure "specified monkeysphere known_hosts file '$MONKEYSPHERE_KNOWN_HOSTS' does not exist."
-    fi
-fi
-[ -d $(dirname "$KNOWN_HOSTS") ] \
-    || mkdir -m 0700 $(dirname "$KNOWN_HOSTS")
-[ -f "$KNOWN_HOSTS" ] \
-    || touch "$KNOWN_HOSTS"
+KNOWN_HOSTS=${MONKEYSPHERE_KNOWN_HOSTS:=$KNOWN_HOSTS}
 HASH_KNOWN_HOSTS=${MONKEYSPHERE_HASH_KNOWN_HOSTS:=$HASH_KNOWN_HOSTS}
 AUTHORIZED_KEYS=${MONKEYSPHERE_AUTHORIZED_KEYS:=$AUTHORIZED_KEYS}
 
