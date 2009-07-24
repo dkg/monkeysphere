@@ -2,8 +2,9 @@ monkeysphere (0.26~pre-1) unstable; urgency=low
 
   * New upstream release:
     - add 'refresh-keys' subcommand to monkeysphere-authentication
+    - improve marginal UI (closes MS #1141)
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 18 Jul 2009 14:12:02 -0400
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Fri, 24 Jul 2009 10:12:25 -0400
 
 monkeysphere (0.25-1) unstable; urgency=low
 

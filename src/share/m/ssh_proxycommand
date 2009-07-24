@@ -111,27 +111,24 @@ EOF
 	fi
     fi
 
-    # find all 'pub' and 'sub' lines in the gpg output, which each
-    # represent a retrieved key for the user ID
+    # find all keys in the gpg output ('pub' and 'sub' lines) and
+    # output the ones that match the host key or that have marginal
+    # validity
     echo "$gpgOut" | cut -d: -f1,2,5,10,12 | \
     while IFS=: read -r type validity keyid uidfpr usage ; do
 	case $type in
 	    'pub'|'sub')
 		# get the ssh key of the gpg key
 		sshKeyGPG=$(gpg2ssh "$keyid")
-
 		# if a key was retrieved from the host...
 		if [ "$sshKeyOffered" ] ; then
-
-		    # if one of keys found matches the one offered by the
-		    # host, then output info
+		    # if one of the keys matches the one offered by
+		    # the host, then output info and return
 		    if [ "$sshKeyGPG" = "$sshKeyOffered" ] ; then
 			log info <<EOF
 An OpenPGP key matching the ssh key offered by the host was found:
 EOF
-
 			show_key_info "$keyid" | log info
-
 			# this whole process is in a "while read"
 			# subshell.  the only way to get information
 			# out of the subshell is to change the return
@@ -140,14 +137,14 @@ EOF
 			# for the ssh key offered by the host
 			return 1
 		    fi
-
-		# else if a key was not retrieved from the host
+		# else if a key was not retrieved from the host...
 		else
-
-		    # if the current key is marginal, show info
-		    if [ "$validity" = 'm' ] ; then
+		    # and the current key is marginal, show info
+		    if [ "$validity" = 'm' ] \
+			|| [ "$validity" = 'f' ] \
+			|| [ "$validity" = 'u' ] ; then
 			show_key_info "$keyid" | log info
-                    fi
+		    fi
 		fi
 		;;
 	esac
@@ -155,21 +152,24 @@ EOF
 
     # if no key match was made (and the "while read" subshell
     # returned 1) output how many keys were found
-    if (( returnCode != 1 )) ; then
-
+    if (( returnCode == 1 )) ; then
 	echo | log info
-
-	# output different footer messages depending on if a key had
-	# been retrieved from the host
+    else
+	# if a key was retrieved, but didn't match, note this
 	if [ "$sshKeyOffered" ] ; then
 	    log info <<EOF
 None of the found keys matched the key offered by the host.
 EOF
-	else
+	fi
+
+	# note how many invalid keys were found
+	nInvalidKeys=$(echo "$gpgOut" | egrep '^(pub|sub):[^(m|f|u)]:' | wc -l)
+	if ((nInvalidKeys > 0)) ; then
 	    log info <<EOF
-There may be keys for this hostname with less than marginal validity.
+Keys found with less than marginal validity: $nInvalidKeys
 EOF
 	fi
+
 	log info <<EOF
 Run the following command for more info about the found keys:
 gpg --check-sigs --list-options show-uid-validity =${userID}
