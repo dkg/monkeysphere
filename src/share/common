@@ -897,12 +897,12 @@ update_known_hosts() {
     # touch the known_hosts file so that the file permission check
     # below won't fail upon not finding the file
     if [ ! -f "$KNOWN_HOSTS" ]; then
-	[ -d $(dirname "$KNOWN_HOSTS") ] || mkdir -m 0700 $(dirname "$KNOWN_HOSTS")
-	touch "$KNOWN_HOSTS"
+	[ -d $(dirname "$KNOWN_HOSTS") ] || mkdir -m 0700 $(dirname "$KNOWN_HOSTS") || failure "Could not create path to known_hosts file '$KNOWN_HOSTS'"
+	touch "$KNOWN_HOSTS" || failure "Unable to create known_hosts file '$KNOWN_HOSTS'"
     fi
 
     # check permissions on the known_hosts file path
-    check_key_file_permissions $(whoami) "$KNOWN_HOSTS" || failure
+    check_key_file_permissions $(whoami) "$KNOWN_HOSTS" || failure "Bad permissions governing known_hosts file '$KNOWN_HOSTS'"
 
     # create a lockfile on known_hosts:
     lock create "$KNOWN_HOSTS"
