@@ -896,7 +896,10 @@ update_known_hosts() {
 
     # touch the known_hosts file so that the file permission check
     # below won't fail upon not finding the file
-    (umask 0022 && touch "$KNOWN_HOSTS")
+    if [ ! -f "$KNOWN_HOSTS" ]; then
+	[ -d $(dirname "$KNOWN_HOSTS") ] || mkdir -m 0700 $(dirname "$KNOWN_HOSTS")
+	touch "$KNOWN_HOSTS"
+    fi
 
     # check permissions on the known_hosts file path
     check_key_file_permissions $(whoami) "$KNOWN_HOSTS" || failure
