@@ -231,8 +231,7 @@ if gpg_user --list-key ="${URI}" &>/dev/null ; then
 # if the host is NOT in the keyring...
 else
     # if the host key is found in the known_hosts file...
-    # FIXME: this only works for default known_hosts location
-    hostKey=$(ssh-keygen -F "$HOST" 2>/dev/null)
+    hostKey=$( [ ! -r "$KNOWN_HOSTS" ] || ssh-keygen -F "$HOST" -f "$KNOWN_HOSTS" 2>/dev/null)
 
     if [ "$hostKey" ] ; then
 	# do not check the keyserver
