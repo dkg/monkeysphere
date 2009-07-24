@@ -2,7 +2,8 @@
 
 # Tests to ensure that the monkeysphere is working
 #
-# unset MONKEYSPHERE_TEST_NO_EXAMINE to examine
+# unset MONKEYSPHERE_TEST_NO_EXAMINE to get a prompt to examine the
+# test state after failure.
 
 # Authors: 
 #   Daniel Kahn Gillmor <dkg@fifthhorseman.net>
@@ -145,6 +146,35 @@ export SOCKET="$TEMPDIR"/ssh-socket
 export DISPLAY=monkeys
 
 
+## we cannot do proper directory permissions checking if the current
+## working directory has unsatisfactory permissions:
+if ( . "$MONKEYSPHERE_SYSSHAREDIR"/common && check_key_file_permissions $(whoami) "$TEMPDIR" ) ; then 
+    echo "Permissions on temporary directory '$TEMPDIR' are OK for permissions checks."
+    TEMPDIR_PERMISSIONS_SAFE=yes
+else
+    cat <<EOF
+
+!!!WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING!!!
+ Permissions on testing directory '$TEMPDIR' are
+ too loose to do proper strict permissions checking.  Some tests 
+ will be disabled or ignored.
+
+ To avoid this warning (and to make sure that all tests are run
+ properly), please run these tests within a directory that meets
+ sshd's standards for "StrictModes yes" -- the directory (and every
+ one of its parents) should be owned only be the user running this
+ test or root, and should not be writable by group or other.
+!!!WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING!!!
+
+EOF
+
+    # FIXME: what should we do with this knowledge to make sure that
+    # the appropriate tests are handled properly?
+    TEMPDIR_PERMISSIONS_SAFE=no
+fi
+
+
+
 ######################################################################
 ### CONFIGURE ENVIRONMENTS
 
@@ -185,6 +215,14 @@ cat <<EOF >> "$SSHD_CONFIG"
 HostKey ${MONKEYSPHERE_SYSDATADIR}/ssh_host_rsa_key
 AuthorizedKeysFile ${MONKEYSPHERE_SYSDATADIR}/authorized_keys/%u
 EOF
+
+# disable sshd's strict permissions settings so that some tests can
+# complete when running under a dubious path:
+if [ "$TEMPDIR_PERMISSIONS_SAFE" != yes ] ; then
+    cat <<EOF >> "$SSHD_CONFIG"
+StrictModes no
+EOF
+fi
 
 
 ######################################################################
