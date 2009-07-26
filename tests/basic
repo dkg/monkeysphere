@@ -90,6 +90,17 @@ ssh_test() {
     fi
 }
 
+# invoke this instead of ssh_test() if you want this test to be
+# skipped when the working directory has bad permissions.
+ssh_good_perm_test() {
+    if [ "$TEMPDIR_PERMISSIONS_SAFE" = no ] ; then
+	echo "WARNING!!! Test SKIPPED because we are running in an unsafe working directory."
+    else
+	ssh_test "$@"
+    fi
+}
+
+
 SSHD_PID=
 
 ## setup trap
@@ -168,9 +179,15 @@ else
 
 EOF
 
-    # FIXME: what should we do with this knowledge to make sure that
-    # the appropriate tests are handled properly?
+    # FIXME: what else should we do with this knowledge to make sure
+    # that the appropriate tests are handled properly?
     TEMPDIR_PERMISSIONS_SAFE=no
+
+    # this is a new option (as of 0.26) to disable filesystem
+    # permission checks.
+
+    # it should operate by analogy with StrictModes from sshd_config(5)
+    export MONKEYSPHERE_STRICT_MODES=no
 fi
 
 
@@ -353,7 +370,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_test 255
+ssh_good_perm_test 255
 chmod g-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 echo
 echo "##################################################"
@@ -363,7 +380,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_test 255
+ssh_good_perm_test 255
 chmod o-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
 
@@ -391,7 +408,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_test 255
+ssh_good_perm_test 255
 chmod o-w "$TESTHOME"/.monkeysphere.linktest
 echo
 echo "##################################################"
@@ -410,7 +427,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_test 255
+ssh_good_perm_test 255
 chmod o-w "$TESTHOME"/.monkeysphere.linktest
 # FIXME: implement check of link path, and uncomment this test
 # echo
@@ -421,7 +438,7 @@ chmod o-w "$TESTHOME"/.monkeysphere.linktest
 # echo
 # echo "##################################################"
 # echo "### ssh connection test for failure..."
-# ssh_test 255
+# ssh_good_perm_test 255
 # chmod o-w "$TESTHOME"/.monkeysphere
 rm "$TESTHOME"/.monkeysphere/authorized_user_ids
 mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
@@ -444,7 +461,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_test 255
+ssh_good_perm_test 255
 chmod o-w "$TESTHOME"/.monkeysphere.linktest
 echo
 echo "##################################################"
@@ -463,7 +480,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_test 255
+ssh_good_perm_test 255
 chmod o-w "$TESTHOME"/.monkeysphere.linktest
 rm "$TESTHOME"/.monkeysphere
 mv "$TESTHOME"/.monkeysphere{.bak,}
