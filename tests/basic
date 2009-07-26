@@ -47,7 +47,7 @@ On debian-derived systems, you can set this up with:
 
 # gpg command for test admin user
 gpgadmin() {
-    chmod 0700 "$TEMPDIR"/admin
+    chmod 0700 "$TEMPDIR"/admin "$TEMPDIR"/admin/.gnupg
     GNUPGHOME="$TEMPDIR"/admin/.gnupg gpg --no-tty "$@"
 }
 
