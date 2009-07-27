@@ -127,7 +127,7 @@ PEM2OPENPGP_TIMESTAMP="$timestamp" \
 gpg --check-trustdb
 gpg --list-keys
 
-cat >expectedout <<EOF
+cat >"$TEMPDIR"/expectedout <<EOF
 pub:u:1024:1:$KEYID:$timestamp:::u:::scSC:
 uid:u::::$timestamp::E90EC72E68C6C2A0751DADC70F54F60D27B88C3D::monkeymonkey:
 sig:!::1:$KEYID:$timestamp::::monkeymonkey:13x:
@@ -135,7 +135,7 @@ uid:u::::$timestamp::8200BD0425CC70C7D698DF3FE412044EAAB83F94::testtest:
 sig:!::1:$KEYID:$timestamp::::monkeymonkey:13x:
 EOF
 
-diff -u expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
+diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
 
 echo "##################################################"
 echo "### test User ID revocation ... "
@@ -149,7 +149,7 @@ PEM2OPENPGP_TIMESTAMP="$revtime" \
 gpg --check-trustdb
 gpg --list-keys
 
-cat >expectedout <<EOF
+cat >"$TEMPDIR"/expectedout <<EOF
 pub:u:1024:1:$KEYID:$timestamp:::u:::scSC:
 uid:u::::$timestamp::E90EC72E68C6C2A0751DADC70F54F60D27B88C3D::monkeymonkey:
 sig:!::1:$KEYID:$timestamp::::monkeymonkey:13x:
@@ -159,7 +159,7 @@ rev:!::1:$KEYID:$revtime::::monkeymonkey:30x:
 EOF
 
 
-diff -u expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
+diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
 
 
 ## FIXME: addtest: not testing subkeys at the moment.
