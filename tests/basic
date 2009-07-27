@@ -187,7 +187,7 @@ EOF
     # permission checks.
 
     # it should operate by analogy with StrictModes from sshd_config(5)
-    export MONKEYSPHERE_STRICT_MODES=no
+    export MONKEYSPHERE_STRICT_MODES=false
 fi
 
 
