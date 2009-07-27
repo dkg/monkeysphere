@@ -18,8 +18,12 @@ LOG_LEVEL="INFO"
 # default keyserver
 KEYSERVER="pool.sks-keyservers.net"
 
-# whether or not to check keyservers by defaul
+# whether or not to check keyservers by default
 CHECK_KEYSERVER="true"
+
+# whether or not to care about extra write bits on sensitive files
+# like known_hosts, authorized_keys, and authorized_user_ids
+STRICT_MODES="true"
 
 # default monkeysphere user
 MONKEYSPHERE_USER="monkeysphere"

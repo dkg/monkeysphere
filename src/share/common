@@ -424,6 +424,10 @@ check_key_file_permissions() {
     uname="$1"
     path="$2"
 
+    if [ "$STRICT_MODES" = 'false' ] ; then
+	log debug "skipping path permission check for '$path' because STRICT_MODES is false..."
+	return 0
+    fi
     log debug "checking path permission '$path'..."
 
     # rewrite path if it points to a symlink

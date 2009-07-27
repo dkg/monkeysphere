@@ -168,6 +168,11 @@ Path to ssh authorized_keys file. (~/.ssh/authorized_keys)
 MONKEYSPHERE_PROMPT
 If set to `false', never prompt the user for confirmation. (true)
 .TP
+MONKEYSPHERE_STRICT_MODES
+If set to `false', ignore too-loose permissions on known_hosts,
+authorized_keys, and authorized_user_ids files.  NOTE: setting this to
+false may expose you to abuse by other users on the system. (true)
+.TP
 MONKEYSPHERE_SUBKEYS_FOR_AGENT
 A space-separated list of authentication-capable subkeys to add to the
 ssh agent with subkey-to-ssh-agent.

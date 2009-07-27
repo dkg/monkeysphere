@@ -165,6 +165,11 @@ raw authorized_keys file.  %h gets replaced with the user's homedir,
 .TP
 MONKEYSPHERE_PROMPT
 If set to `false', never prompt the user for confirmation. (true)
+.TP
+MONKEYSPHERE_STRICT_MODES
+If set to `false', ignore too-loose permissions on known_hosts,
+authorized_keys, and authorized_user_ids files.  NOTE: setting this to
+false may expose users to abuse by other users on the system. (true)
 
 .SH FILES
 
