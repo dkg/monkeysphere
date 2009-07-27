@@ -466,7 +466,7 @@ chmod o-w "$TESTHOME"/.monkeysphere.linktest
 echo
 echo "##################################################"
 echo "### make .monkeysphere directory a relative symlink and updating..."
-ln -sfn .monkeysphere{.linktest,}
+ln -sfn .monkeysphere.linktest "$TESTHOME"/.monkeysphere
 monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
