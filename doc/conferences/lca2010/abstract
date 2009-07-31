@@ -7,7 +7,7 @@ automatically fully authenticate people and servers.
 The Secure Shell protocol has offered public-key-based mutual
 authentication since its inception, but popular implementations offer
 no formalized public key infrastructure.  This means there is no
-straightforward, computable method to to signal re-keying events, key
+straightforward, computable method to signal re-keying events, key
 revocations, or even basic key-to-identity binding (e.g. "host
 foo.example.org has key X").  As a result, dealing with host keys is
 usually a manual process with the possibility of tedium, room for
