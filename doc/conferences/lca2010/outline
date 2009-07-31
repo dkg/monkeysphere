@@ -1,0 +1,62 @@
+
+
+
+The presentation is in three parts:
+
+Background
+----------
+
+ * Why authentication using asymmetric crypto (as opposed to shared
+   secrets) is important on today's network.
+
+ * Overview of how ssh uses asymmetric crypto authentication (user ->
+   host, host -> user)
+
+ * Overview of relevant bits of OpenPGP (key -> User ID bindings,
+   certifications, usage flags, key -> subkey bindings)
+
+ * Overview of keyservers (the idea of gossip, One Big Network,
+   propagation, issues around redundancy, logging, private access)
+
+
+How
+---
+
+ * How does the monkeysphere do it?  (very brief under-the-hood)
+
+ * How does a server administrator publish a host's ssh key to the Web
+   of Trust?  How do they maintain it?
+
+ * How does a user incorporate WoT-based host-key checking into their
+   regular ssh usage?
+
+ * How does a user publish their own ssh identity to the WoT for hosts
+   to find it?  How do they maintain it?
+
+ * How does a server administrator tell a server to admit certain
+   people (as identified by the WoT) to certain accounts?  How do they
+   tell the server which certifications are trustworthy?
+
+Possible Futures
+----------------
+
+ * Use the Monkeysphere with ssh implementations other than OpenSSH
+   (dropbear, lsh, putty, etc)
+
+ * Expansion of the Monkeysphere's out-of-band PKI mechanism for
+   authentication in protocols other than SSH (TLS, HTTPS) without
+   protocol modification.
+
+ * Use of OpenPGP certificates directly in SSH.  OpenPGP is referenced
+   in RFC 4253 already: optional, rarely implemented, and deliberately
+   ambiguous about how to calculate key->identity bindings.
+
+ * Use of OpenPGP certificates for authentication directly in
+   protocols.  RFC 5081 provides a mechanism for OpenPGP certificates
+   in TLS, but is similarly ambiguous about certificate verification.
+
+ * Better end-user control over verification: Who or what are you
+   really connecting to?  How do you know?  How can this information
+   be effectively and intuitively displayed to a typical user?
+
+ * What would you like to see?

@@ -1,0 +1,54 @@
+The Monkeysphere uses the OpenPGP web of trust to provide a
+distributed Public Key Infrastructure (PKI) for users and
+administrators of ssh.  This talk is about why the Monkeysphere is
+useful, how it works, and how you can use it to ease your workload and
+automatically fully authenticate people and servers.
+
+The Secure Shell protocol has offered public-key-based mutual
+authentication since its inception, but popular implementations offer
+no formalized public key infrastructure.  This means there is no
+straightforward, computable method to to signal re-keying events, key
+revocations, or even basic key-to-identity binding (e.g. "host
+foo.example.org has key X").  As a result, dealing with host keys is
+usually a manual process with the possibility of tedium, room for
+error, difficulty of maintenance, or users and administrators simply
+ignoring or skipping baseline cryptographic precautions.
+
+The OpenPGP specification offers a robust public key infrastructure
+that has traditionally only been used for e-mail and for encrypted
+storage.  By its nature, the OpenPGP Web of Trust (WoT) is a
+distributed system, with no intrinsic chokepoints or global
+authorities.  And the global key distribution network provides
+commonly-held, public infrastructure for rapid distribution of key
+changes, revocations, and identity binding.
+
+The Monkeysphere mixes the two to provide new functionality for ssh
+(key revocation, key expiry, re-keying, fewer unintelligible prompts,
+semantic authorization, etc) while taking advantage of existing but
+often-unused functionality in OpenPGP.  Additionally, the Monkeysphere
+implementation does not require any patches to OpenSSH on the client
+or server, but takes advantage of existing hooks, which makes it easy
+to adopt.
+
+Specifically, the Monkeysphere allows users to automatically validate
+ssh host keys through the Web of Trust, and it allows servers to
+identify authorized users through the Web of Trust.  Users decide
+which certifications in the Web of Trust they put stock in (so they
+are not spoofed by spurious certifications of host keys).  Server
+administrators decide whose certifications the server should put stock
+in (so that the server is not spoofed by spurious certifications of
+user keys).
+
+This presentation will go over how the Monkeysphere works; how you can
+use it to increase the security of servers you maintain; how you can
+use it to increase the security of accounts you connect to with ssh;
+and we'll discuss future possibilities lurking in the ideas of the
+Monkeysphere.
+
+Monkeysphere is currently available in the main Debian repository and
+as a port in FreeBSD.  A Slackbuild is available for Slackware, and
+Monkeysphere itself should work on any POSIX-ish system with the
+appropriate dependencies available.
+
+The project's main web site is http://web.monkeysphere.info/
+
