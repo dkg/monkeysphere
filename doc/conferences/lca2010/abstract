@@ -50,5 +50,16 @@ as a port in FreeBSD.  A Slackbuild is available for Slackware, and
 Monkeysphere itself should work on any POSIX-ish system with the
 appropriate dependencies available.
 
-The project's main web site is http://web.monkeysphere.info/
+The Monkeysphere project began to coalesce in early 2008, and remains
+an ongoing collaboration of many people, including:
 
+ * Micah Anderson
+ * Mike Castleman
+ * Daniel Kahn Gillmor
+ * Ross Glover
+ * Matthew James Goins
+ * Greg Lyle
+ * Jamie McClelland
+ * Jameson Graef Rollins
+
+The project's main web site is http://web.monkeysphere.info/
