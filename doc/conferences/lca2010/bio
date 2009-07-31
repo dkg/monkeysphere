@@ -1,0 +1,33 @@
+Daniel Kahn Gillmor (dkg) is a freelance Technology Advisor with a
+particular interest in cryptography, user interface design, and
+distributed systems as means to pursue the goals of user autonomy and
+resistance to centralized control.  He contributes discussion and
+patches on several crypto-related lists, and is an active participant
+in what remains of the IETF OpenPGP Working Group.  He co-administers
+one of the OpenPGP keyservers, and was dubiously involved in
+publicizing the ongoing transition to a post-SHA1 Web of Trust.
+
+dkg works with schools, NGOs, activist groups, and some corporations
+to help them understand their tech needs and risks, possible
+solutions, and how to use and understand the tools they choose.  He
+works with several technology-focused organizations, including May
+First/People Link (http://mayfirst.org/) and Riseup
+(http://riseup.net).
+
+He is also a contributor to The Organic Internet
+(http://mayfirst.org/organicinternet), which includes his essay about
+structural flaws in the X.509 certificate model.
+
+dkg began working with free software in 2002, and became a Debian
+Developer in 2009.  The Monkeysphere project began to coalesce in
+early 2008, and remains an ongoing collaboration of many people,
+including:
+
+ * Micah Anderson
+ * Mike Castleman
+ * Daniel Kahn Gillmor
+ * Ross Glover
+ * Matthew James Goins
+ * Greg Lyle
+ * Jamie McClelland
+ * Jameson Graef Rollins
