@@ -40,10 +40,17 @@ defined($path) or die "You must pass a username and an absolute path.\n";
 my $pw = getpwnam($username) or die "no such user $username\n";
 $path =~ m#^/# or die "path was not absolute (did not start with /)\n";
 
-sub debug {
+sub mslog {
+  my $level = shift;
+
+  # FIXME: check and compare the log level
   if ($ENV{LOG_LEVEL} eq 'DEBUG') {
-    # FIXME: prefix with $ENV{LOG_PREFIX}
-    printf STDERR @_;
+    my $format = shift;
+    my $out = sprintf($format, @_);
+
+    $out =~ s/^/$ENV{LOG_PREFIX}/ ;
+
+    printf STDERR "%s", $out;
   }
 }
 
@@ -57,11 +64,11 @@ sub permissions_ok {
 
   while (S_ISLNK($stat->mode)) {
     my $newpath = realpath($path) or return "cannot trace symlink '$path'";
-    debug("tracing link %s to %s\n", $path, $newpath);
+    mslog('DEBUG', "tracing link %s to %s\n", $path, $newpath);
     $path = $newpath;
     $stat = lstat($path) or return "cannot stat '$path'";
   }
-  debug("checking '%s'\n", $path);
+  mslog('DEBUG', "checking '%s'\n", $path);
 
   if (($stat->uid != $user->uid) &&
       ($stat->uid != 0)) {
@@ -81,7 +88,7 @@ sub permissions_ok {
   # OpenSSH sources for an explanation of this bailout (see also
   # monkeysphere #675):
   if ($path eq $user->dir) {
-    debug("stopping at the %s's home directory '%s'\n", $user->name, $path);
+    mslog('DEBUG', "stopping at the %s's home directory '%s'\n", $user->name, $path);
     return undef;
   }
 
