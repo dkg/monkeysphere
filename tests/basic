@@ -159,7 +159,7 @@ export DISPLAY=monkeys
 
 ## we cannot do proper directory permissions checking if the current
 ## working directory has unsatisfactory permissions:
-if ( . "$MONKEYSPHERE_SYSSHAREDIR"/common && check_key_file_permissions $(whoami) "$TEMPDIR" ) ; then 
+if "$MONKEYSPHERE_SYSSHAREDIR"/checkperms $(whoami) "$TEMPDIR"; then 
     echo "Permissions on temporary directory '$TEMPDIR' are OK for permissions checks."
     TEMPDIR_PERMISSIONS_SAFE=yes
 else

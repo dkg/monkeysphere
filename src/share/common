@@ -411,15 +411,6 @@ test_gpg_expire() {
 check_key_file_permissions() {
     local uname
     local path
-    local stat
-    local access
-    local gAccess
-    local oAccess
-
-    # function to check that the given permission corresponds to writability
-    is_write() {
-	[ "$1" = "w" ]
-    }
 
     uname="$1"
     path="$2"
@@ -429,44 +420,7 @@ check_key_file_permissions() {
 	return 0
     fi
     log debug "checking path permission '$path'..."
-
-    # rewrite path if it points to a symlink
-    if [ -h "$path" ] ; then
-	path=$(readlink -f "$path")
-	log debug "checking path symlink '$path'..."
-    fi
-
-    # return 255 if cannot stat file
-    if ! stat=$(ls -ld "$path" 2>/dev/null) ; then
-        log error "could not stat path '$path'."
-	return 255
-    fi
-
-    owner=$(echo "$stat" | awk '{ print $3 }')
-    gAccess=$(echo "$stat" | cut -c6)
-    oAccess=$(echo "$stat" | cut -c9)
-
-    # return 1 if path has invalid owner
-    if [ "$owner" != "$uname" -a "$owner" != 'root' ] ; then
-	log error "improper ownership on path '$path':"
-	log error " $owner != ($uname|root)"
-	return 1
-    fi
-
-    # return 2 if path has group or other writability
-    if is_write "$gAccess" || is_write "$oAccess" ; then
-	log error "improper group or other writability on path '$path':"
-	log error " group: $gAccess, other: $oAccess"
-	return 2
-    fi
-
-    # return zero if all clear, or go to next path
-    if [ "$path" = '/' ] ; then
-	log debug "path ok."
-	return 0
-    else
-	check_key_file_permissions "$uname" $(dirname "$path")
-    fi
+    "${SYSSHAREDIR}/checkperms" "$uname" "$path"
 }
 
 # return a list of all users on the system

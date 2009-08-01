@@ -7,8 +7,10 @@ monkeysphere (0.26~pre-1) unstable; urgency=low
       permission-checking (closes MS #649)
     - test scripts use STRICT_MODES to avoid failure when built under /tmp
       (Closes: #527765)
+    - do permissions checks with a perl script instead of non-portable
+      readlink GNUisms
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sun, 26 Jul 2009 22:18:20 -0400
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sat, 01 Aug 2009 13:21:43 -0400
 
 monkeysphere (0.25-1) unstable; urgency=low
 
