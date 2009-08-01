@@ -73,10 +73,6 @@ sub permissions_ok {
     return sprintf("improper group writability on '%s'", $path);
   }
 
-  if (S_IWGRP & $stat->mode) {
-    return sprintf("improper group writability on '%s'", $path);
-  }
-
   if (S_IWOTH & $stat->mode) {
     return sprintf("improper other writability on '%s'", $path);
   }
