@@ -34,15 +34,15 @@ use File::Basename; # for dirname (in perl-modules)
 my $username = shift;
 my $path = shift;
 
-defined($username) or die "You must pass a username and an absolute path.";
-defined($path) or die "You must pass a username and an absolute path.";
+defined($username) or die "You must pass a username and an absolute path.\n";
+defined($path) or die "You must pass a username and an absolute path.\n";
 
-my $pw = getpwnam($username) or die "no such user $username";
-$path =~ m#^/# or die "path was not absolute (did not start with /)";
+my $pw = getpwnam($username) or die "no such user $username\n";
+$path =~ m#^/# or die "path was not absolute (did not start with /)\n";
 
 sub debug {
-  if ($ENV{MONKEYSPHERE_LOG_LEVEL} eq 'DEBUG') {
-    # FIXME: prefix with ms: 
+  if ($ENV{LOG_LEVEL} eq 'DEBUG') {
+    # FIXME: prefix with $ENV{LOG_PREFIX}
     printf STDERR @_;
   }
 }
@@ -53,32 +53,32 @@ sub permissions_ok {
   my $path = shift;
 
   # if we can't even stat the path, the permissions are not ok:
-  my $stat = lstat($path) or return "cannot stat '$path'\n";
+  my $stat = lstat($path) or return "cannot stat '$path'";
 
   while (S_ISLNK($stat->mode)) {
-    my $newpath = realpath($path) or return "cannot trace symlink '$path'\n";
+    my $newpath = realpath($path) or return "cannot trace symlink '$path'";
     debug("tracing link %s to %s\n", $path, $newpath);
     $path = $newpath;
-    $stat = lstat($path) or return "cannot stat '$path'\n";
+    $stat = lstat($path) or return "cannot stat '$path'";
   }
   debug("checking '%s'\n", $path);
 
   if (($stat->uid != $user->uid) &&
       ($stat->uid != 0)) {
-    return sprintf("improper ownership on '%s':\nowner ID %d is neither %s (ID %d) nor the superuser\n", 
+    return sprintf("improper ownership on '%s': owner ID %d is neither %s (ID %d) nor the superuser",
 		   $path, $stat->uid, $user->name, $user->uid);
   }
 
   if (S_IWGRP & $stat->mode) {
-    return sprintf("improper group writability on '%s'\n", $path);
+    return sprintf("improper group writability on '%s'", $path);
   }
 
   if (S_IWGRP & $stat->mode) {
-    return sprintf("improper group writability on '%s'\n", $path);
+    return sprintf("improper group writability on '%s'", $path);
   }
 
   if (S_IWOTH & $stat->mode) {
-    return sprintf("improper other writability on '%s'\n", $path);
+    return sprintf("improper other writability on '%s'", $path);
   }
 
   my $nextlevel = dirname($path);
@@ -91,8 +91,7 @@ sub permissions_ok {
 my $err = permissions_ok($pw, $path);
 
 if (defined($err)) {
-  $err =~ s/^/ms: /;
-  printf(STDERR $err);
+  printf(STDERR "%s%s\n", $ENV{LOG_PREFIX}, $err);
 
   exit(1);
 } else {
