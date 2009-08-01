@@ -17,7 +17,7 @@
    doesn't trigger another tarball rebuild.  Make sure the package
    passes lintian checks, installs, upgrades, removes reasonably, etc.
 
- * debsign -k$GPGID ../*.changes
+ * debsign -k$GPGID *.changes
 
  * create debian-specific version tag:
 
