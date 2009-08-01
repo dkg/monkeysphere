@@ -212,6 +212,7 @@ LOG_PREFIX=${MONKEYSPHERE_LOG_PREFIX='ms: '}
 export GNUPGHOME
 mkdir -p -m 0700 "$GNUPGHOME"
 export LOG_LEVEL
+export LOG_PREFIX
 
 # get subcommand
 COMMAND="$1"
