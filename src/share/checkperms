@@ -81,6 +81,14 @@ sub permissions_ok {
     return sprintf("improper other writability on '%s'", $path);
   }
 
+  # see the rationalization in secure_filename() in auth.c in the
+  # OpenSSH sources for an explanation of this bailout (see also
+  # monkeysphere #675):
+  if ($path eq $user->dir) {
+    debug("stopping at the %s's home directory '%s'\n", $user->name, $path);
+    return undef;
+  }
+
   my $nextlevel = dirname($path);
   if ($path eq $nextlevel) { # we bottom out at the root (/ in UNIX)
     return undef;

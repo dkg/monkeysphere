@@ -9,6 +9,8 @@ monkeysphere (0.26~pre-1) unstable; urgency=low
       (Closes: #527765)
     - do permissions checks with a perl script instead of non-portable
       readlink GNUisms
+    - bail on permissions check if we hit the home directory (helpful on
+      Mac OS and other systems with loose /home or /Users (closes MS #675)
 
  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sat, 01 Aug 2009 13:21:43 -0400
 
