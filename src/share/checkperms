@@ -1,0 +1,101 @@
+#!/usr/bin/perl -T
+
+# checkperms: ensure as best we can that a given file can only be
+# modified by the given user (or the superuser, naturally).  This
+# means checking file ownership and permissions all the way back to
+# the root directory.  Pass the file by its absolute path.
+
+# example invocation:
+
+# checkperms dkg /home/dkg/.monkeysphere/authorized_user_ids
+
+# return values: zero if we believe the file and path can only be
+# modified by the user.  non-zero otherwise.
+
+# see StrictModes in sshd_config(5) (and its implementation in
+# OpenSSH's secure_filename() in auth.c) for the initial
+# inspiration/rationale for this code.
+
+# Author:
+#  Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+
+# Started on: 2009-07-31 11:10:16-0400
+
+# License: GPL v3 or later
+
+use strict;
+
+use Cwd qw(realpath); # found in debian in perl-base
+use File::stat; # found in debian in perl-modules
+use User::pwent; # found in debian in perl-modules
+use Fcntl qw(:mode); # for S_IS* functions (in perl-base)
+use File::Basename; # for dirname (in perl-modules)
+
+my $username = shift;
+my $path = shift;
+
+defined($username) or die "You must pass a username and an absolute path.";
+defined($path) or die "You must pass a username and an absolute path.";
+
+my $pw = getpwnam($username) or die "no such user $username";
+$path =~ m#^/# or die "path was not absolute (did not start with /)";
+
+sub debug {
+  if ($ENV{MONKEYSPHERE_LOG_LEVEL} eq 'DEBUG') {
+    # FIXME: prefix with ms: 
+    printf STDERR @_;
+  }
+}
+
+## return undef if permissions are OK.  otherwise return an error string
+sub permissions_ok {
+  my $user = shift;
+  my $path = shift;
+
+  # if we can't even stat the path, the permissions are not ok:
+  my $stat = lstat($path) or return "cannot stat '$path'\n";
+
+  while (S_ISLNK($stat->mode)) {
+    my $newpath = realpath($path) or return "cannot trace symlink '$path'\n";
+    debug("tracing link %s to %s\n", $path, $newpath);
+    $path = $newpath;
+    $stat = lstat($path) or return "cannot stat '$path'\n";
+  }
+  debug("checking '%s'\n", $path);
+
+  if (($stat->uid != $user->uid) &&
+      ($stat->uid != 0)) {
+    return sprintf("improper ownership on '%s':\nowner ID %d is neither %s (ID %d) nor the superuser\n", 
+		   $path, $stat->uid, $user->name, $user->uid);
+  }
+
+  if (S_IWGRP & $stat->mode) {
+    return sprintf("improper group writability on '%s'\n", $path);
+  }
+
+  if (S_IWGRP & $stat->mode) {
+    return sprintf("improper group writability on '%s'\n", $path);
+  }
+
+  if (S_IWOTH & $stat->mode) {
+    return sprintf("improper other writability on '%s'\n", $path);
+  }
+
+  my $nextlevel = dirname($path);
+  if ($path eq $nextlevel) { # we bottom out at the root (/ in UNIX)
+    return undef;
+  }
+  return permissions_ok($user, $nextlevel);
+}
+
+my $err = permissions_ok($pw, $path);
+
+if (defined($err)) {
+  $err =~ s/^/ms: /;
+  printf(STDERR $err);
+
+  exit(1);
+} else {
+  exit(0);
+}
+
