@@ -1,4 +1,4 @@
-monkeysphere (0.26~pre-1) unstable; urgency=low
+monkeysphere (0.26-1) unstable; urgency=low
 
   * New upstream release:
     - add 'refresh-keys' subcommand to monkeysphere-authentication
@@ -12,7 +12,7 @@ monkeysphere (0.26~pre-1) unstable; urgency=low
     - bail on permissions check if we hit the home directory (helpful on
       Mac OS and other systems with loose /home or /Users (closes MS #675)
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sat, 01 Aug 2009 13:21:43 -0400
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 01 Aug 2009 17:11:05 -0400
 
 monkeysphere (0.25-1) unstable; urgency=low
 
