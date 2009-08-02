@@ -3,6 +3,8 @@
  * make sure that packaging/debian/changelog has a reasonable version
    number.
 
+ * have the monkeysphere archive signing key handy!
+
  * make tarball
 
  * make releasenote
@@ -22,6 +24,12 @@
  * create debian-specific version tag:
 
     git tag -s -m 'Tagging Monkeysphere $whatever-1' monkeysphere_$whatever-1
+
+ * upload to monkeysphere repo:
+
+    cd repo && reprepro --ignore=wrongdistribution include experimental ../*.changes
+
+ * push git changes (including tags!)
 
  * update FreeBSD and Macports info:
 
