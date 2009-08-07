@@ -43,13 +43,17 @@ signing key](/archive-key), key id EB8AF314 (fingerprint: `2E8D D26C
 verify the packages, you'll want to [add this key to your apt
 configuration after verifying its integrity](/archive-key).
 
-Note: Ubuntu appears to be planning to ship Monkeysphere 0.22 in their
-"Jaunty Jackalope" release (9.04).  The Monkeysphere developers think
-that [Ubuntu shipping Monkeysphere 0.22-1 is a bad
+Note: Ubuntu shipped Monkeysphere 0.22 in their "Jaunty Jackalope"
+release (9.04).  The Monkeysphere developers think that [Ubuntu
+shipping Monkeysphere 0.22-1 is a bad
 idea](https://bugs.launchpad.net/ubuntu/+source/monkeysphere/+bug/345054).
 If you are an Ubuntu user, we would prefer that you install from the
 APT archive above rather than run 0.22, which we no longer consider
 supported.
+
+Ubuntu users running "Karmic Koala" (9.10) or later should see version
+0.26-1 or later in the standard Ubuntu universe repository, so please
+use the regular Ubuntu repositories if you're running Karmic or later.
 
 ## FreeBSD ##
 
