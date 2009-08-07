@@ -16,6 +16,7 @@ share/monkeysphere/mh/add_revoker
 share/monkeysphere/mh/revoke_hostname
 share/monkeysphere/mh/revoke_key
 share/monkeysphere/keytrans
+share/monkeysphere/checkperms
 share/monkeysphere/defaultenv
 share/monkeysphere/VERSION
 share/monkeysphere/transitions/0.23
