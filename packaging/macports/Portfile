@@ -3,7 +3,7 @@
 
 PortSystem          1.0
 name                monkeysphere
-version             0.25
+version             0.26
 categories          net security
 maintainers         nomaintainer
 description         use the OpenPGP web of trust to verify ssh connections
@@ -20,9 +20,7 @@ platforms           darwin
 
 depends_run         bin:ssh:openssh \
                     port:gnupg \
-                    port:perl5 \
                     port:p5-crypt-openssl-rsa \
-                    port:p5-crypt-openssl-bignum \
                     port:p5-digest-sha \
                     port:procmail
 
@@ -30,7 +28,7 @@ master_sites        http://archive.monkeysphere.info/debian/pool/monkeysphere/m/
 distname            ${name}_${version}
 extract.suffix      .orig.tar.gz
 worksrcdir          ${name}-${version}
-checksums           md5 211f39f195dd974ff14a188516f06690
+checksums           md5 f0e5fe66a9affd951e601ea5d6188972
 
 use_configure       no
 
@@ -58,7 +56,8 @@ post-build {
 
     # fix perl shebang line to point to macports perl install
     exec sed -i .tmp -e "s|^#!/usr/bin/perl -T$|#!/opt/local/bin/perl -T|" \
-        ${worksrcpath}/src/share/keytrans
+        ${worksrcpath}/src/share/keytrans \
+        ${worksrcpath}/src/share/checkperms
 
     # remove leftover sed cruft
     exec find ${worksrcpath} -name *.tmp -delete
