@@ -7,6 +7,10 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2009-09-14 - dkg
+	* aptitude update && aptitude full-upgrade (bunch of lenny
+	updates, plus ikiwiki security upgrade)
+	
 2009-04-21 - jrollins
 	* apt-get update && dist-upgrade (a bunch of stuff (monkeysphere,
 	screen, gnupg, dash, onak, git-core...)
