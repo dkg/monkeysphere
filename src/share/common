@@ -310,7 +310,7 @@ passphrase_prompt() {
     local fifo="$2"
     local PASS
 
-    if [ "$DISPLAY" ] && type "${SSH_ASKPASS:-ssh-askpass}" >/dev/null; then
+    if [ "$DISPLAY" ] && type "${SSH_ASKPASS:-ssh-askpass}" >/dev/null 2>/dev/null; then
 	printf 'Launching "%s"\n' "${SSH_ASKPASS:-ssh-askpass}" | log info
 	printf '(with prompt "%s")\n' "$prompt" | log debug
 	"${SSH_ASKPASS:-ssh-askpass}" "$prompt" > "$fifo"
