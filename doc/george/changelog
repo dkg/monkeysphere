@@ -7,6 +7,9 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2009-10-26 - dkg
+	* upgrade nginx in response to DSA-1920-1
+	
 2009-09-14 - dkg
 	* aptitude update && aptitude full-upgrade (bunch of lenny
 	updates, plus ikiwiki security upgrade)
