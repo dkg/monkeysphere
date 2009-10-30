@@ -13,7 +13,8 @@ associated with significant maintenance (and therefore security)
 problems.  
 
 While ultimately contributing a patch to
-[OpenSSH](http://openssh.com/) (or any
+[OpenSSH](http://openssh.com/) (or 
+[any](http://mina.apache.org/sshd/)
 [free](http://www.chiark.greenend.org.uk/~sgtatham/putty/)
 [SSH](http://www.lysator.liu.se/~nisse/lsh/)
 [implementation](http://matt.ucc.asn.au/dropbear/dropbear.html)) is
