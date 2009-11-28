@@ -1,10 +1,10 @@
-Format-Specification: http://wiki.debian.org/Proposals/CopyrightFormat?action=recall&rev=226
-Debianized-By: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-Debianized-Date: Fri Jun 13 10:19:16 EDT 2008
-Original-Source: http://web.monkeysphere.info/download
+Name: Monkeysphere
+Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn
+Source: http://web.monkeysphere.info/download
+Maintainer: Monkeysphere Developers <monkeysphere@lists.riseup.net>
 
 Files: *
-Copyright:  Copyright 2008 Jameson Rollins <jrollins@fifthhorseman.net>,
+Copyright:  Copyright 2008,2009 Jameson Rollins <jrollins@fifthhorseman.net>,
  Daniel Kahn Gillmor <dkg@fifthhorseman.net>,
  Jamie McClelland <jamie@mayfirst.org>,
  Micah Anderson <micah@riseup.net>,
@@ -13,6 +13,7 @@ Copyright:  Copyright 2008 Jameson Rollins <jrollins@fifthhorseman.net>,
  Elliot Winard <enw@caveteen.com>,
  Ross Glover <ross@ross.mayfirst.org>,
  Greg Lyle <greg@stealthisemail.com>
+License: GPL-3+
 
 License: GPL-3+
  This package is free software; you can redistribute it and/or modify
