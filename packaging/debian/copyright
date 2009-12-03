@@ -1,5 +1,5 @@
 Name: Monkeysphere
-Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn
+Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=59
 Source: http://web.monkeysphere.info/download
 Maintainer: Monkeysphere Developers <monkeysphere@lists.riseup.net>
 
