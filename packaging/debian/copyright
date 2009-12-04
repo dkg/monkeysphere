@@ -4,7 +4,7 @@ Source: http://web.monkeysphere.info/download
 Maintainer: Monkeysphere Developers <monkeysphere@lists.riseup.net>
 
 Files: *
-Copyright:  Copyright 2008,2009 Jameson Rollins <jrollins@fifthhorseman.net>,
+Copyright: 2008,2009 Jameson Rollins <jrollins@fifthhorseman.net>,
  Daniel Kahn Gillmor <dkg@fifthhorseman.net>,
  Jamie McClelland <jamie@mayfirst.org>,
  Micah Anderson <micah@riseup.net>,
