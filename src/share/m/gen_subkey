@@ -45,7 +45,7 @@ Type '$PGRM help' for usage."
 
     # generate the list of commands that will be passed to edit-key
     editCommands="addkey
-7
+8
 S
 E
 A
