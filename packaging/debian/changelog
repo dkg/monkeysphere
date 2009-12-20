@@ -1,8 +1,12 @@
 monkeysphere (0.26-2) UNRELEASED; urgency=low
 
+  [ Daniel Kahn Gillmor ]
   * updated debian/copyright to match the latest revision of DEP5.
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sat, 28 Nov 2009 18:21:31 -0500
+  [ Jameson Graef Rollins ]
+  * updated standards version to 3.8.3
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 19 Dec 2009 20:56:40 -0500
 
 monkeysphere (0.26-1) unstable; urgency=low
 
