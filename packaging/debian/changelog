@@ -6,8 +6,9 @@ monkeysphere (0.27-1) UNRELEASED; urgency=low
   * updated debian/copyright to match the latest revision of DEP5.
   * updated standards version to 3.8.3
   * updated Depends to require >=1.4.10 due to gpg UI change.
+  * add cpio to Build-Depends (used in test suite) (Closes: #562444)
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Sun, 20 Dec 2009 11:50:06 -0500
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Thu, 24 Dec 2009 12:28:21 -0500
 
 monkeysphere (0.26-1) unstable; urgency=low
 
