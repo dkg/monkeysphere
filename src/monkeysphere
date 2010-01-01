@@ -216,7 +216,7 @@ export LOG_PREFIX
 
 # get subcommand
 COMMAND="$1"
-[ "$COMMAND" ] || failure "Type '$PGRM help' for usage."
+[ "$COMMAND" ] || $PGRM help
 shift
 
 case $COMMAND in
