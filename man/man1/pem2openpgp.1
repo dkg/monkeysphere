@@ -8,7 +8,7 @@ pem2openpgp
 .Sh SYNOPSIS
 .Nm pem2openpgp "$USERID" < mykey.pem | gpg \-\-import
 .Pp
-.Nm PEM2OPENPGP_EXPIRATION=$((86400 * $DAYS)) PEM2OPENPGP_USAGE_FLAGS=authentication,certify pem2openpgp "$USERID" <mykey.pem
+.Nm PEM2OPENPGP_EXPIRATION=$((86400 * $DAYS)) PEM2OPENPGP_USAGE_FLAGS=authenticate,certify pem2openpgp "$USERID" <mykey.pem
 .Sh DESCRIPTION
 .Nm
 is a low-level utility for transforming raw, PEM-encoded RSA secret
