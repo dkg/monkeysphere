@@ -752,6 +752,59 @@ process_user_id() {
     # being processed in the key files over "bad" keys (key flag '1')
 }
 
+# output all valid keys for specified user ID literal
+keys_from_userid() {
+    local userID
+    local noKey=
+    local nKeys
+    local nKeysOK
+    local ok
+    local sshKey
+    local tmpfile
+
+    userID="$1"
+
+    log verbose "processing: $userID"
+
+    nKeys=0
+    nKeysOK=0
+
+    IFS=$'\n'
+    for line in $(process_user_id "${userID}") ; do
+	# note that key was found
+	nKeys=$((nKeys+1))
+
+	ok=$(echo "$line" | cut -d: -f1)
+	sshKey=$(echo "$line" | cut -d: -f2)
+
+        if [ -z "$sshKey" ] ; then
+            continue
+        fi
+
+	# if key OK, output key to stdout
+	if [ "$ok" -eq '0' ] ; then
+	    # note that key was found ok
+	    nKeysOK=$((nKeysOK+1))
+
+	    printf '%s\n' "$sshKey"
+	fi
+    done
+
+    # if at least one key was found...
+    if [ "$nKeys" -gt 0 ] ; then
+	# if ok keys were found, return 0
+	if [ "$nKeysOK" -gt 0 ] ; then
+	    return 0
+	# else return 2
+	else
+	    return 2
+	fi
+    # if no keys were found, return 1
+    else
+	return 1
+    fi
+}
+
 # process a single host in the known_host file
 process_host_known_hosts() {
     local host

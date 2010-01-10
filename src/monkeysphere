@@ -45,12 +45,15 @@ Monkeysphere client tool.
 subcommands:
  update-known_hosts (k) [HOST]...    update known_hosts file
  update-authorized_keys (a)          update authorized_keys file
- gen-subkey (g) [KEYID]              generate an authentication subkey
-   --length (-l) BITS                  key length in bits (2048)
  ssh-proxycommand HOST [PORT]        monkeysphere ssh ProxyCommand
    --no-connect                        do not make TCP connection to host
  subkey-to-ssh-agent (s)             store authentication subkey in ssh-agent
  sshfpr (f) KEYID                    output ssh fingerprint of gpg key
+
+ keys-from-userid (u) USERID         output valid keys for user id literal
+ gen-subkey (g) [KEYID]              generate an authentication subkey
+   --length (-l) BITS                  key length in bits (2048)
+
  version (v)                         show version number
  help (h,?)                          this help
 
@@ -266,6 +269,10 @@ case $COMMAND in
 
     'sshfpr'|'f')
 	gpg_ssh_fingerprint "$@"
+	;;
+
+    'keys-from-userid'|'u')
+	keys_from_userid "$@"
 	;;
 
     'version'|'v')
