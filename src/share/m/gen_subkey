@@ -19,6 +19,7 @@ gen_subkey(){
     local keyID
     local editCommands
     local fifoDir
+    local keyType
 
     # get options
     while true ; do
@@ -44,8 +45,13 @@ Type '$PGRM help' for usage."
     check_gpg_authentication_subkey "$keyID"
 
     # generate the list of commands that will be passed to edit-key
+    # 7 for < 1.4.10
+    # 8 for >= 1.4.10
+    # 7 for < 2.0.13
+    # 8 for >= 2.0.13
+    keyType=8
     editCommands="addkey
-8
+$keyType
 S
 E
 A
