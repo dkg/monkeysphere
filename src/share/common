@@ -530,6 +530,15 @@ gpg2authorized_keys() {
 
 ### GPG UTILITIES
 
+# script to determine if gpg version is equal to or greater than specified version
+is_gpg_version_greater_equal() {
+    local gpgVersion=$(gpg --version | head -1 | awk '{ print $3 }')
+    local latest=$(printf '%s\n%s\n' "$1" "$gpgVersion" \
+	| tr '.' ' ' | sort -g -k1 -k2 -k3 \
+	| tail -1 | tr ' ' '.')
+    [[ "$gpgVersion" == "$latest" ]]
+}
+
 # retrieve all keys with given user id from keyserver
 # FIXME: need to figure out how to retrieve all matching keys
 # (not just first N (5 in this case))

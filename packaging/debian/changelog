@@ -3,14 +3,14 @@ monkeysphere (0.27-1~pre1) UNRELEASED; urgency=low
   * New upstream release:
     - fixed monkeysphere gen-subkey subcommand that was erroneously
       creating DSA subkeys due to unannounced change in gpg edit-key UI.
+      Now tests for gpg version.
     - add new monkeysphere keys-from-userid subcommand to output all
       acceptable keys for a given user ID literal
   * updated debian/copyright to match the latest revision of DEP5.
   * updated standards version to 3.8.3 (no changes needed)
-  * updated Depends to require >=1.4.10 due to gpg UI change.
   * add cpio to Build-Depends (used in test suite) (Closes: #562444)
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Sun, 10 Jan 2010 16:52:54 -0500
+ -- Jameson Rollins <jrollins@finestructure.net>  Sun, 10 Jan 2010 18:45:37 -0500
 
 monkeysphere (0.26-1) unstable; urgency=low
 
