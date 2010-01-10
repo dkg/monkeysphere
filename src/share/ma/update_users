@@ -27,9 +27,6 @@ else
     unames=$(list_users)
 fi
 
-# set mode
-MODE="authorized_keys"
-
 # set gnupg home
 GNUPGHOME="$GNUPGHOME_SPHERE"
 
