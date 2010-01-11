@@ -219,7 +219,7 @@ export LOG_PREFIX
 
 # get subcommand
 COMMAND="$1"
-[ "$COMMAND" ] || $PGRM help
+[ "$COMMAND" ] || (usage; exit 1)
 shift
 
 case $COMMAND in
