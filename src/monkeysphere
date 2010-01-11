@@ -275,11 +275,11 @@ case $COMMAND in
 	keys_from_userid "$@"
 	;;
 
-    'version'|'v')
+    'version'|'--version'|'v')
 	version
 	;;
 
-    '--help'|'help'|'-h'|'h'|'?')
+    'help'|'--help'|'-h'|'h'|'?')
         usage
         ;;
 
