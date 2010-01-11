@@ -1,8 +1,8 @@
 Source: monkeysphere
 Section: net
 Priority: extra
-Maintainer: Jameson Graef Rollins <jrollins@finestructure.net>
-Uploaders: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Maintainer: Jameson Rollins <jrollins@finestructure.net>
+Uploaders:  Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 Build-Depends: debhelper (>= 7.0), cpio, socat, openssh-server, gnupg, libcrypt-openssl-rsa-perl, libdigest-sha-perl, lockfile-progs | procmail
 Standards-Version: 3.8.3
 Homepage: http://web.monkeysphere.info/

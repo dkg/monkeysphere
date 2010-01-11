@@ -48,7 +48,7 @@ offering:
 
 	git clone git://lair.fifthhorseman.net/~dkg/monkeysphere
 
-[Jameson Graef Rollins](http://cmrg.fifthhorseman.net/wiki/jrollins):
+[Jameson Rollins](http://cmrg.fifthhorseman.net/wiki/jrollins):
 
 	git clone git://lair.fifthhorseman.net/~jrollins/monkeysphere
 
