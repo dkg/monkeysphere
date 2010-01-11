@@ -217,9 +217,13 @@ mkdir -p -m 0700 "$GNUPGHOME"
 export LOG_LEVEL
 export LOG_PREFIX
 
+if [ "$#" -eq 0 ] ; then 
+    usage
+    failure "Please supply a subcommand."
+fi
+
 # get subcommand
 COMMAND="$1"
-[ "$COMMAND" ] || (usage; exit 1)
 shift
 
 case $COMMAND in
@@ -285,6 +289,6 @@ case $COMMAND in
 
     *)
         failure "Unknown command: '$COMMAND'
-Type '$PGRM help' for usage."
+Try '$PGRM help' for usage."
         ;;
 esac
