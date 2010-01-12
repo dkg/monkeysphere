@@ -50,7 +50,7 @@ subcommands:
  subkey-to-ssh-agent (s)             store authentication subkey in ssh-agent
  sshfpr (f) KEYID                    output ssh fingerprint of gpg key
 
- keys-from-userid (u) USERID         output valid keys for user id literal
+ keys-for-userid (u) USERID          output valid keys for user id literal
  gen-subkey (g) [KEYID]              generate an authentication subkey
    --length (-l) BITS                  key length in bits (2048)
 
@@ -275,8 +275,13 @@ case $COMMAND in
 	gpg_ssh_fingerprint "$@"
 	;;
 
-    'keys-from-userid'|'u')
-	keys_from_userid "$@"
+    'keys-for-userid'|'u')
+	keys_for_userid "$@"
+	;;
+
+    'keys-from-userid')
+	echo "Warning: this usage is deprecated.  Please use 'keys-for-userid' instead." >&2
+	keys_for_userid "$@"
 	;;
 
     'version'|'--version'|'v')

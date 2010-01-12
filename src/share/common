@@ -762,7 +762,7 @@ process_user_id() {
 }
 
 # output all valid keys for specified user ID literal
-keys_from_userid() {
+keys_for_userid() {
     local userID
     local noKey=
     local nKeys
