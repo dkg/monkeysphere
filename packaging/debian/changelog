@@ -1,4 +1,4 @@
-monkeysphere (0.27-1~pre1) UNRELEASED; urgency=low
+monkeysphere (0.27-1) unstable; urgency=low
 
   * New upstream release:
     - fixed monkeysphere gen-subkey subcommand that was erroneously
@@ -10,7 +10,7 @@ monkeysphere (0.27-1~pre1) UNRELEASED; urgency=low
   * updated standards version to 3.8.3 (no changes needed)
   * add cpio to Build-Depends (used in test suite) (Closes: #562444)
 
- -- Jameson Rollins <jrollins@finestructure.net>  Sun, 10 Jan 2010 18:45:37 -0500
+ -- Jameson Rollins <jrollins@finestructure.net>  Mon, 11 Jan 2010 20:54:21 -0500
 
 monkeysphere (0.26-1) unstable; urgency=low
 
