@@ -280,7 +280,7 @@ case $COMMAND in
 	;;
 
     'keys-from-userid')
-	echo "Warning: this usage is deprecated.  Please use 'keys-for-userid' instead." >&2
+	echo "Warning: 'keys-from-userid' is deprecated.  Please use 'keys-for-userid' instead." >&2
 	keys_for_userid "$@"
 	;;
 
