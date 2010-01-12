@@ -86,38 +86,38 @@ For those that would like to download the source directly, [the source
 is available](/community) via [git](http://git.or.cz/).
 
 The [latest
-tarball](http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_0.26.orig.tar.gz)
+tarball](http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_0.27.orig.tar.gz)
 is also available, and has these checksums:
 
 <pre>
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA512
 
-checksums for the monkeysphere 0.26 release:
+checksums for the monkeysphere 0.27 release:
 
 MD5:
-f0e5fe66a9affd951e601ea5d6188972  monkeysphere_0.26.orig.tar.gz
+1b664bb2f699914071eab58da410f568  monkeysphere_0.27.orig.tar.gz
 
 SHA1:
-de0125e43c8c7d7d98f45f9395576ff06e150307  monkeysphere_0.26.orig.tar.gz
+7bb926bd58602a4e760e2794cfbda9c54a187e0a  monkeysphere_0.27.orig.tar.gz
 
 SHA256:
-e743a0642f0da5d6ecea6cb3c8ff6c05ac56a094c351a7fdca2a4a707fe05c00  monkeysphere_0.26.orig.tar.gz
+3757554c0e17081b8d30d7550d00a1aca3d886b194f8ba3871f68b457de9d3b9  monkeysphere_0.27.orig.tar.gz
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-iQIVAwUBSnSzIRjmZ/HrivMUAQqQdw//SZ5OrjB+FFe/+sRyRBv3YcjSO7Iif8uo
-ZG8LPbba9v0qUT/pOvMTXij2Wm3dFwgphrNCJgYriHx/0MdvPuHpz+TXRIVFRD7Q
-CNHrG9kuf6BFClqyQwqD1/5FMehu8hEWm0DdyEhB5pUcHzo9ExpjFGGImpI/XvZz
-/HWL7hCoZvJ8iBKyZ0dNSbDZA8WcWkYVKbc42sYYpqHM4kVjfQq37vUDBgq78d4d
-rTDiEF1+4kuwZtKKxJq8woN9+/5atpknFcnICSOobeX1PAOkj96yEAczr39pQNam
-3z2YjdQM0tJsGjguYIiYxwUAs38a/p+rX7+PvS5xY85RCLSsgOplnhSLXluXp5fO
-7Ok2FFmimxYcNfsKFaJQiOa3OaRW6u15+sxb7KNC+raNVwyw8fsaDe7eKGx/xQI5
-fnvjFHJDM3HwzBSRNcBZNacsMAfq0jaN4BAalv9nzpcynsG+vkNI6mus9eopC9/n
-9UwhMRpObndSjNoR/Erbh99jv0mvTeqdG9h9Kjbr38TT5qLWSYRftK7FHglZMmzN
-or3lgUs3bTc6bJlWE9YvGlwEduaaEY0us7fW4nPDQhT+OCHCrjCBk1ppA4SzAnE1
-qTUt5Fa7vjLPaefT58qKRXlglUhsbtVabVoeCFKBFvAebm/XS3kPh2P9Qfk6azQ7
-iJM65kCCil0=
-=tyHC
+iQIVAwUBS0vWxBjmZ/HrivMUAQpXuQ/8CilKg4Va3BnBvieiBR4g3LCIxpgCwOgL
+t4HdVw3M3Ip20qfCXCb4Y/COCX173VEasrCtpdfaCVIUiOLRPaPA1dV7Czk8Ql9s
+WCRzhg/a/cF3jA4co90Vce1fDQjiZH+5hQyLA628Kza/eyL0ZW5DJsG3JqRhmEC/
+NRjXiVRnHOrptf8fp3NelbC63/BX7noANr1NjRSWhlzUc4ETd2AS6xrvaP66L+yt
+znJaAJwZE11G6GvUJbsmdJOeGzVb1rLjwzu5EvNs+en9XqNn+fjC5aYrMDiypuVA
+aJUTuSqsyCw0uRGlfa9dHc+FKfEjuPCZ/nUuC/DNY4e7FeOW8EHpLD8Rf+bZG0WV
+GyCPozP3sDAq+MOygergBV1fUKb95aJks+CdScFElVMsSL6KZFFPJF+5e1Vvl4ka
+Kb2u90p7DChugAblVFfsDlJBtjVUMG1w2+zoghZir6htHhbyrQi3bpZLyRMMyZgr
+0xglI8HjXVafUUOkM2sssIFXx2/yi9ymE+WcpbH5eSOn0uzpbtltT6rZeb9TCasC
+ekhX21e0vkDyVaFQSzQckrLQYwo1MaPOJO0jihdluFa2BRGzzVMs+1r0zlmO6RKE
+RcLIzL66Pnf56qTwBWgBhi2meKcdzFjdYChlAhdgwiMtbaKjceec1mqNQY6Yn0ke
+Og7cZUTa39U=
+=E7NZ
 -----END PGP SIGNATURE-----
 </pre>
