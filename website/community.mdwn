@@ -38,6 +38,10 @@ the following from inside the monkeysphere top level directory:
 This command will build an upstream tarball, attach the debian packaging
 directory, and build a sample deb.
 
+If you want to help extend the scope of the Monkeysphere, take a look
+at our
+[list of environments that could make use of the project](/expansion).
+
 ### Individual developer repositories ###
 
 You might also be interested in the repositories of individual
