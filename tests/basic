@@ -505,8 +505,8 @@ echo "### ssh connection test directly to 'testhost2' without new name..."
 target_hostname=testhost2 ssh_test 255
 echo
 echo "##################################################"
-echo "### add hostname, certify by admin, import by user..."
-monkeysphere-host add-hostname ssh://testhost2
+echo "### add servicename, certify by admin, import by user..."
+monkeysphere-host add-servicename ssh://testhost2
 < "$MONKEYSPHERE_SYSCONFIGDIR"/ssh_host_rsa_key.pub.gpg gpgadmin --import
 printf "y\ny\n" | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
 
@@ -527,7 +527,7 @@ target_hostname=testhost2 ssh_test
 echo
 echo "##################################################"
 echo "### ssh connection test for failure with 'testhost2' revoked..."
-monkeysphere-host revoke-hostname ssh://testhost2
+monkeysphere-host revoke-servicename ssh://testhost2
 gpg --import <"$MONKEYSPHERE_SYSCONFIGDIR"/ssh_host_rsa_key.pub.gpg
 gpg --check-trustdb
 target_hostname=testhost2 ssh_test 255
@@ -535,9 +535,7 @@ target_hostname=testhost2 ssh_test 255
 # FIXME: addtest: remove admin as id-certifier and check ssh failure
 
 # FIXME: addtest: how do we test that set-expire makes sense after new
-# hostnames have been added?
-
-# FIXME: addtest: revoke the host key and check ssh failure
+# servicenames have been added?
 
 # test to make sure things are OK after the previous tests:
 echo
@@ -551,7 +549,7 @@ ssh_test
 
 echo
 echo "##################################################"
-echo "### revoking host key..."
+echo "### revoking ssh host key..."
 # generate the revocation certificate and feed it directly to the test
 # user's keyring (we're not publishing to the keyservers)
 monkeysphere-host revoke-key | gpg --import
