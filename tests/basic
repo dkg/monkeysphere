@@ -549,6 +549,19 @@ ssh_test
 
 echo
 echo "##################################################"
+echo "### Testing TLS setup..."
+
+openssl req -config "$TESTDIR"/openssl.cnf -x509 -newkey rsa:1024 -subj '/DC=net/DC=example/DC=testhost/CN=testhost.example.net/' -days 3 -keyout "$TEMPDIR"/tls_key.pem -nodes >"$TEMPDIR"/tls_cert.pem
+monkeysphere-host import-key "$TEMPDIR"/tls_key.pem https://testhost
+
+# FIXME: how can we test this via an https client?  
+# We don't currently provide one.
+
+# FIXME: should we test other monkeysphere-host operations somehow now
+# that we have more than one key in the host keyring?
+
+echo
+echo "##################################################"
 echo "### revoking ssh host key..."
 # generate the revocation certificate and feed it directly to the test
 # user's keyring (we're not publishing to the keyservers)
