@@ -255,8 +255,8 @@ monkeysphere-host import-key "$TEMPDIR"/ssh_host_rsa_key ssh://testhost
 echo
 echo "##################################################"
 echo "### getting host key fingerprint..."
-HOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
-echo "$HOSTKEYID"
+SSHHOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
+echo "$SSHHOSTKEYID"
 
 # change host key expiration
 echo
@@ -270,8 +270,8 @@ monkeysphere-host set-expire 1
 echo
 echo "##################################################"
 echo "### certifying server host key..."
-< "$MONKEYSPHERE_SYSCONFIGDIR"/ssh_host_rsa_key.pub.gpg gpgadmin --import
-echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
+< "$MONKEYSPHERE_SYSCONFIGDIR"/host_keys.pub.gpg gpgadmin --import
+echo y | gpgadmin --command-fd 0 --sign-key "$SSHHOSTKEYID"
 
 # FIXME: add revoker?
 
@@ -321,7 +321,7 @@ monkeysphere gen-subkey
 echo
 echo "##################################################"
 echo "### export server key to testuser..."
-gpgadmin --armor --export "$HOSTKEYID" | gpg --import
+gpgadmin --armor --export "$SSHHOSTKEYID" | gpg --import
 
 # teach the "server" about the testuser's key
 echo
@@ -507,20 +507,20 @@ echo
 echo "##################################################"
 echo "### add servicename, certify by admin, import by user..."
 monkeysphere-host add-servicename ssh://testhost2
-< "$MONKEYSPHERE_SYSCONFIGDIR"/ssh_host_rsa_key.pub.gpg gpgadmin --import
-printf "y\ny\n" | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
+< "$MONKEYSPHERE_SYSCONFIGDIR"/host_keys.pub.gpg gpgadmin --import
+printf "y\ny\n" | gpgadmin --command-fd 0 --sign-key "$SSHHOSTKEYID"
 
 echo
 echo "##################################################"
 echo "### ssh connection test with hostname 'testhost2' added..."
-gpgadmin --export "$HOSTKEYID" | gpg --import
+gpgadmin --export "$SSHHOSTKEYID" | gpg --import
 gpg --check-trustdb
 ssh_test
 
 echo
 echo "##################################################"
 echo "### ssh connection test directly to 'testhost2' ..."
-gpg --import <"$MONKEYSPHERE_SYSCONFIGDIR"/ssh_host_rsa_key.pub.gpg 
+gpg --import <"$MONKEYSPHERE_SYSCONFIGDIR"/host_keys.pub.gpg 
 gpg --check-trustdb
 target_hostname=testhost2 ssh_test
 
@@ -528,7 +528,7 @@ echo
 echo "##################################################"
 echo "### ssh connection test for failure with 'testhost2' revoked..."
 monkeysphere-host revoke-servicename ssh://testhost2
-gpg --import <"$MONKEYSPHERE_SYSCONFIGDIR"/ssh_host_rsa_key.pub.gpg
+gpg --import <"$MONKEYSPHERE_SYSCONFIGDIR"/host_keys.pub.gpg
 gpg --check-trustdb
 target_hostname=testhost2 ssh_test 255
 
