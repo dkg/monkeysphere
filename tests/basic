@@ -10,7 +10,7 @@
 #   Jameson Rollins <jrollins@fifthhorseman.net>
 #   Micah Anderson <micah@riseup.net> 
 #
-# Copyright: 2008-2009
+# Copyright: © 2008-2010
 # License: GPL v3 or later
 
 # these tests should all be able to run as a non-privileged user.
@@ -339,6 +339,12 @@ monkeysphere-authentication update-users $(whoami)
 
 ######################################################################
 ### TESTS
+
+## see whether keys-for-userid works from the client's perspective:
+echo
+echo "##################################################"
+echo "### testing monkeysphere keys-for-userid ..."
+diff -q <( monkeysphere keys-for-userid ssh://testhost ) <( cut -f1,2 -d' ' < "$TEMPDIR"/ssh_host_rsa_key.pub )
 
 # connect to test sshd, using monkeysphere ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
