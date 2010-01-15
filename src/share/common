@@ -1177,9 +1177,11 @@ process_authorized_user_ids() {
 # fingerprints, one per line:
 list_primary_fingerprints() {
     local fake=$(msmktempdir)
+    trap "rm -rf $fake" EXIT
     GNUPGHOME="$fake" gpg --no-tty --quiet --import
     GNUPGHOME="$fake" gpg --with-colons --fingerprint --list-keys | \
 	awk -F: '/^fpr:/{ print $10 }'
+    trap - EXIT
     rm -rf "$fake"
 }
 
