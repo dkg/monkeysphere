@@ -1,0 +1,26 @@
+# OpenSSL configuration for the purposes of the monkeysphere test suite:
+
+# This definition stops the following lines choking if HOME isn't
+# defined.
+HOME = .
+RANDFILE = $ENV::HOME/.rnd
+
+[ req ]
+attributes = req_attributes
+x509_extensions = monkeysphere_self_signed
+distinguished_name = req_dn
+attributes = req_attrs
+
+[ monkeysphere_self_signed ]
+
+# Just generate an X.509 cert that is for specific use as a TLS server
+basicConstraints = CA:FALSE
+keyUsage = digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+nsCertType = server
+
+[ req_dn ]
+commonName			= Common Name
+commonName_max			= 64
+
+[ req_attrs ]

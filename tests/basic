@@ -10,7 +10,7 @@
 #   Jameson Rollins <jrollins@fifthhorseman.net>
 #   Micah Anderson <micah@riseup.net> 
 #
-# Copyright: 2008-2009
+# Copyright: © 2008-2010
 # License: GPL v3 or later
 
 # these tests should all be able to run as a non-privileged user.
@@ -257,8 +257,8 @@ monkeysphere-host import-key "$TEMPDIR"/ssh_host_rsa_key ssh://testhost
 echo
 echo "##################################################"
 echo "### getting host key fingerprint..."
-HOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
-echo "$HOSTKEYID"
+SSHHOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
+echo "$SSHHOSTKEYID"
 
 # change host key expiration
 echo
@@ -273,7 +273,7 @@ echo
 echo "##################################################"
 echo "### certifying server host key..."
 < "$HOST_KEY_FILE" gpgadmin --import
-echo y | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
+echo y | gpgadmin --command-fd 0 --sign-key "$SSHHOSTKEYID"
 
 # FIXME: add revoker?
 
@@ -323,7 +323,7 @@ monkeysphere gen-subkey
 echo
 echo "##################################################"
 echo "### export server key to testuser..."
-gpgadmin --armor --export "$HOSTKEYID" | gpg --import
+gpgadmin --armor --export "$SSHHOSTKEYID" | gpg --import
 
 # teach the "server" about the testuser's key
 echo
@@ -341,6 +341,12 @@ monkeysphere-authentication update-users $(whoami)
 
 ######################################################################
 ### TESTS
+
+## see whether keys-for-userid works from the client's perspective:
+echo
+echo "##################################################"
+echo "### testing monkeysphere keys-for-userid ..."
+diff -q <( monkeysphere keys-for-userid ssh://testhost ) <( cut -f1,2 -d' ' < "$TEMPDIR"/ssh_host_rsa_key.pub )
 
 # connect to test sshd, using monkeysphere ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
@@ -501,15 +507,15 @@ echo "### ssh connection test directly to 'testhost2' without new name..."
 target_hostname=testhost2 ssh_test 255
 echo
 echo "##################################################"
-echo "### add hostname, certify by admin, import by user..."
-monkeysphere-host add-hostname ssh://testhost2
+echo "### add servicename, certify by admin, import by user..."
+monkeysphere-host add-servicename ssh://testhost2
 <"$HOST_KEY_FILE" gpgadmin --import
-printf "y\ny\n" | gpgadmin --command-fd 0 --sign-key "$HOSTKEYID"
+printf "y\ny\n" | gpgadmin --command-fd 0 --sign-key "$SSHHOSTKEYID"
 
 echo
 echo "##################################################"
 echo "### ssh connection test with hostname 'testhost2' added..."
-gpgadmin --export "$HOSTKEYID" | gpg --import
+gpgadmin --export "$SSHHOSTKEYID" | gpg --import
 gpg --check-trustdb
 ssh_test
 
@@ -523,7 +529,7 @@ target_hostname=testhost2 ssh_test
 echo
 echo "##################################################"
 echo "### ssh connection test for failure with 'testhost2' revoked..."
-monkeysphere-host revoke-hostname ssh://testhost2
+monkeysphere-host revoke-servicename ssh://testhost2
 gpg --import <"$HOST_KEY_FILE"
 gpg --check-trustdb
 target_hostname=testhost2 ssh_test 255
@@ -531,9 +537,7 @@ target_hostname=testhost2 ssh_test 255
 # FIXME: addtest: remove admin as id-certifier and check ssh failure
 
 # FIXME: addtest: how do we test that set-expire makes sense after new
-# hostnames have been added?
-
-# FIXME: addtest: revoke the host key and check ssh failure
+# servicenames have been added?
 
 # test to make sure things are OK after the previous tests:
 echo
@@ -547,7 +551,20 @@ ssh_test
 
 echo
 echo "##################################################"
-echo "### revoking host key..."
+echo "### Testing TLS setup..."
+
+openssl req -config "$TESTDIR"/openssl.cnf -x509 -newkey rsa:1024 -subj '/DC=net/DC=example/DC=testhost/CN=testhost.example.net/' -days 3 -keyout "$TEMPDIR"/tls_key.pem -nodes >"$TEMPDIR"/tls_cert.pem
+monkeysphere-host import-key "$TEMPDIR"/tls_key.pem https://testhost
+
+# FIXME: how can we test this via an https client?  
+# We don't currently provide one.
+
+# FIXME: should we test other monkeysphere-host operations somehow now
+# that we have more than one key in the host keyring?
+
+echo
+echo "##################################################"
+echo "### revoking ssh host key..."
 # generate the revocation certificate and feed it directly to the test
 # user's keyring (we're not publishing to the keyservers)
 monkeysphere-host revoke-key | gpg --import

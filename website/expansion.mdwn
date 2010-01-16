@@ -1,0 +1,49 @@
+[[meta title="Expanding the Monkeysphere"]]
+
+# Expanding the Monkeysphere #
+
+The Monkeysphere currently has implementations that support two
+popular protocols in use on the internet today:
+
+ * SSH: Monkeysphere supports the OpenSSH implementation of the Secure
+   Shell protocol, for authenticating both hosts and users.
+   
+ * HTTPS: Monkeysphere supports secure web traffic by allowing users
+   of Mozilla-based browsers (such as
+   [Firefox](http://www.mozilla.com/en-US/firefox) or
+   [Iceweasel](http://wiki.debian.org/Iceweasel)) to authenticate web
+   sites that are not authenticated by the browser's built-in X.509
+   verification.  This should work with any HTTPS-capable web server.
+   
+But there are many protocols and implementations on the 'net that
+could use the Monkeysphere for key-based authentication but currently
+do not.  Here are some examples of places we think it could be useful.
+If you can help with these (or suggest others), please pitch in!
+
+ * HTTPS client authentication: web servers should be able to
+   authenticate clients that use asymmetric crypto.  That is, the
+   client holds an RSA secret key, offers a (potentially self-signed)
+   X.509 Cert to the server as part of the TLS handshake, and the
+   server verifies the key material and commonName or subjectAltName
+   in the cert via the OpenPGP web of trust.
+   
+ * Other TLS connections: for example, SMTP services using STARTTLS
+   (server-to-server and client-to-server), IMAP or POP daemons (using
+   STARTTLS or a direct TLS wrapper), LDAP servers (or LDAPS), XMPP
+   connections (client-to-server and server-to-server)
+   
+ * IRC connections: this could be at the TLS layer, or maybe via some
+   exchange with the NickServ?
+   
+ * [OTR](http://www.cypherpunks.ca/otr) client-to-client handshakes.
+ 
+ * Integration with
+   [OpenPGP Certificates for TLS (RFC 5081)](http://tools.ietf.org/html/rfc5081)
+   -- TLS clients or servers who receive an OpenPGP certificate from
+   their peer should be able to ask some part of the Monkeysphere
+   toolchain if the particular certificate is valid for the
+   connection.
+   
+ * [PKINIT](http://tools.ietf.org/html/rfc4556) for
+   [Kerberos](http://web.mit.edu/Kerberos/)
+

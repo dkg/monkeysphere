@@ -1,8 +1,8 @@
 Monkeysphere Server Administrator README
 ========================================
 
-	Note: This documentation is for Monkeysphere version 0.23 or later.
-	If you are running a version prior to 0.23, we recommend that you upgrade.
+	Note: This documentation is for Monkeysphere version 0.28 or later.
+	If you are running a version prior to 0.28, we recommend that you upgrade.
 
 As the administrator of an SSH server, you can take advantage of the
 Monkeysphere in two ways:
@@ -25,11 +25,11 @@ To begin, you must first import an ssh host key.  This assumes that
 you have the ssh server installed, and that you have generated a host
 RSA key.  Once that has been done, import the key:
 
-	# monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key server.example.net
+	# monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key ssh://server.example.net
 
 This will generate an OpenPGP certificate for the server.  The primary
 user ID for this certificate will be the ssh service URI for the host,
-(eg. `ssh://server.example.net`).  Remember that the name you provide
+(e.g. `ssh://server.example.net`).  Remember that the name you provide
 here should probably be a fully qualified domain name for the host in
 order for your users to find it.
 
