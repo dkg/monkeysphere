@@ -567,7 +567,7 @@ echo "##################################################"
 echo "### revoking ssh host key..."
 # generate the revocation certificate and feed it directly to the test
 # user's keyring (we're not publishing to the keyservers)
-keyID=$(monkeysphere-host s 'https://testhost' | grep 'OpenPGP fingerprint:' | awk '{ print $3 }')
+keyID=$(monkeysphere-host s 'ssh://testhost' | grep 'OpenPGP fingerprint:' | awk '{ print $3 }')
 monkeysphere-host revoke-key "$keyID" >"$TEMPDIR"/revcert
 cat "$TEMPDIR"/revcert
 <"$TEMPDIR"/revcert gpg --import
