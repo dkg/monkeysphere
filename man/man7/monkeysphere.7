@@ -7,10 +7,12 @@ Trust
 
 .SH DESCRIPTION
 
-\fBMonkeysphere\fP is a framework to leverage the OpenPGP Web of Trust
-for ssh authentication.  OpenPGP keys are tracked via GnuPG, and added
-to the authorized_keys and known_hosts files used by ssh for
-connection authentication.
+\fBMonkeysphere\fP is a framework to leverage the OpenPGP web of trust
+for OpenSSH and TLS key-based authentication.  OpenPGP keys are
+tracked via GnuPG, and added to the authorized_keys and known_hosts
+files used by OpenSSH for connection authentication.  Monkeysphere can
+also be used by a monkeysphere validation agent to validate TLS
+connections on the web.
 
 .SH IDENTITY CERTIFIERS
 
@@ -44,10 +46,9 @@ address in the User ID).
 
 .SH KEY ACCEPTABILITY
 
-During known_host and authorized_keys updates, the monkeysphere
-commands work from a set of user IDs to determine acceptable keys for
-ssh authentication.  OpenPGP keys are considered acceptable if the
-following criteria are met:
+The monkeysphere commands work from a set of user IDs to determine
+acceptable keys for ssh and TLS authentication.  OpenPGP keys are
+considered acceptable if the following criteria are met:
 .TP
 .B capability
 The key must have the `authentication' (`a') usage flag set.
@@ -61,8 +62,15 @@ The relevant user ID must be signed by a trusted identity certifier.
 
 .SH HOST IDENTIFICATION
 
-The OpenPGP keys for hosts have associated user IDs that use the ssh
-URI specification for the host, i.e. `ssh://host.full.domain[:port]'.
+The OpenPGP keys for hosts have associated `service names` (OpenPGP
+user IDs) that are based on URI specifications for the service.  Some
+examples:
+.TP
+.B ssh:
+ssh://host.full.domain[:port]
+.TP
+.B https:
+https://host.full.domain[:port]
 
 .SH AUTHOR
 
