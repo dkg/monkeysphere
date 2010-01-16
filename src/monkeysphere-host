@@ -174,11 +174,6 @@ multi_key() {
 
     if [[ -z "$1" || "$1" == '--all' ]] ; then
 	keys="${fprs[@]}"
-    else
-	for key in $keys ; do
-	    printf '%s\n' "${fprs[@]}" | grep "${key}$" \
-		|| failure "Key '$key' not found."
-	done
     fi
 
     for key in $keys ; do
@@ -208,7 +203,10 @@ show_key() {
 
     # create the ssh key
     TMPSSH="$GNUPGHOME"/ssh_host_key_rsa_pub
-    gpg --export "$id" | openpgp2ssh 2>/dev/null >"$TMPSSH"
+    if ! gpg --export "$id" 2>/dev/null \
+	| openpgp2ssh 2>/dev/null >"$TMPSSH" ; then
+	failure "Key '$id' not found."
+    fi
 
     # get the gpg fingerprint
     fingerprint=$(gpg --quiet --list-keys \
