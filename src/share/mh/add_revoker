@@ -8,24 +8,27 @@
 # Jamie McClelland <jm@mayfirst.org>
 # Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #
-# They are Copyright 2008, and are all released under the GPL, version 3
-# or later.
+# They are Copyright 2008-2010, and are all released under the GPL,
+# version 3 or later.
 
 # add a revoker to the host key
 
 add_revoker() {
 
+local revokerKeyID
 local keyID
 local tmpDir
 local fingerprint
 local addrevokerCommand
 
-keyID="$1"
-
 # check that key ID or file is specified
-if [ -z "$keyID" ] ; then
+if [ -z "$1" ] ; then
     failure "You must specify the key ID of a revoker key, or specify a file to read the key from."
 fi
+revokerKeyID="$1"
+shift
+
+keyID=$(check_key_input "$@")
 
 # make a temporary directory for storing keys during import, and set
 # the trap to delete it on exit
@@ -33,33 +36,33 @@ tmpDir=$(msmktempdir)
 trap "rm -rf $tmpDir" EXIT
 
 # if file is specified
-if [ -f "$keyID" -o "$keyID" = '-' ] ; then
+if [ -f "$revokerKeyID" -o "$revokerKeyID" = '-' ] ; then
     # load the key from stdin
-    if [ "$keyID" = '-' ] ; then
+    if [ "$revokerKeyID" = '-' ] ; then
 	# make a temporary file to hold the key from stdin
-	keyID="$tmpDir"/importkey
-	log verbose "reading key from stdin..."
-	cat > "$keyID"
+	revokerKeyID="$tmpDir"/importkey
+	log verbose "reading revoker key from stdin..."
+	cat > "$revokerKeyID"
 
     # load the key from the file
-    elif [ -f "$keyID" ] ; then
-	log verbose "reading key from file '$keyID'..."
+    elif [ -f "$revokerKeyID" ] ; then
+	log verbose "reading revoker key from file '$revokerKeyID'..."
     fi
 
     # check the key is ok as monkeysphere user before loading
     log debug "checking keys in file..."
     fingerprint=$(su_monkeysphere_user \
-	". ${SYSSHAREDIR}/common; list_primary_fingerprints" < "$keyID")
+	". ${SYSSHAREDIR}/common; list_primary_fingerprints" < "$revokerKeyID")
 
     if [ $(printf "%s" "$fingerprint" | egrep -c '^[A-F0-9]{40}$') -ne 1 ] ; then
 	failure "There was not exactly one gpg key in the file."
     fi
 
     # load the key
-    gpg_host --import <"$keyID" \
-	|| failure "could not read key from '$keyID'"
+    gpg_host --import <"$revokerKeyID" \
+	|| failure "could not read revoker key from '$revokerKeyID'"
 
-# else, get the key from the keyserver
+# else, get the revoker key from the keyserver
 else
     # fix permissions and ownership on temporary directory which will
     # be used by monkeysphere user for storing the downloaded key
@@ -67,13 +70,13 @@ else
     chown "$MONKEYSPHERE_USER":"$MONKEYSPHERE_GROUP" "$tmpDir"
 
     # download the key from the keyserver as the monkeysphere user
-    log verbose "searching keyserver $KEYSERVER for keyID $keyID..."
-    su_monkeysphere_user "GNUPGHOME=$tmpDir gpg --quiet --keyserver $KEYSERVER --recv-key 0x${keyID}!" \
-	|| failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
+    log verbose "searching keyserver $KEYSERVER for revoker keyID $revokerKeyID..."
+    su_monkeysphere_user "GNUPGHOME=$tmpDir gpg --quiet --keyserver $KEYSERVER --recv-key 0x${revokerKeyID}!" \
+	|| failure "Could not receive a key with this ID from keyserver '$KEYSERVER'."
 
     # get the full fingerprint of new revoker key
     log debug "getting fingerprint of revoker key..."
-    fingerprint=$(su_monkeysphere_user "GNUPGHOME=$tmpDir gpg --list-key --with-colons --with-fingerprint 0x${keyID}!" \
+    fingerprint=$(su_monkeysphere_user "GNUPGHOME=$tmpDir gpg --list-key --with-colons --with-fingerprint ${revokerKeyID}" \
 	| grep '^fpr:' | cut -d: -f10)
 
     # test that there is only a single fingerprint
@@ -86,11 +89,11 @@ EOF
 	failure
     fi
 
-    log info "key found:"
+    log info "revoker key found:"
     su_monkeysphere_user "GNUPGHOME=$tmpDir gpg --fingerprint 0x${fingerprint}!"
 
     if [ "$PROMPT" = "true" ] ; then
-	printf "Are you sure you want to add the above key as a revoker\nof the host key? (Y/n) " >&2
+	printf "Are you sure you want to add the above key as a revoker\nof the key '$keyID'? (Y/n) " >&2
 	read OK; OK=${OK:-Y}
 	if [ "${OK/y/Y}" != 'Y' ] ; then
 	    failure "revoker not added."
@@ -100,7 +103,7 @@ EOF
     fi
 
     # export the new key to the host keyring
-    log debug "loading key into host keyring..."
+    log debug "loading revoker key into host keyring..."
     su_monkeysphere_user "GNUPGHOME=$tmpDir gpg --quiet --export 0x${fingerprint}!" \
 	| gpg_host --import
 fi
@@ -115,7 +118,7 @@ save
 
 # core ltsigns the newly imported revoker key
 log debug "executing add revoker script..."
-if echo "$addrevokerCommand" | gpg_host_edit ; then
+if echo "$addrevokerCommand" | gpg_host_edit "0x${keyID}!" ; then
 
     update_gpg_pub_file
 

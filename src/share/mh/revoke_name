@@ -8,14 +8,15 @@
 # Jamie McClelland <jm@mayfirst.org>
 # Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #
-# They are Copyright 2008-2009, and are all released under the GPL,
+# They are Copyright 2008-2010, and are all released under the GPL,
 # version 3 or later.
 
-# revoke hostname user ID from host key
+# revoke service name user ID from host key
 
-revoke_hostname() {
+revoke_name() {
 
-local userID
+local serviceName
+local keyID
 local fingerprint
 local tmpuidMatch
 local line
@@ -23,23 +24,25 @@ local message
 local revuidCommand
 
 if [ -z "$1" ] ; then
-    failure "You must specify a hostname to revoke."
+    failure "You must specify a service name to revoke."
 fi
+serviceName="$1"
+shift
 
-userID="ssh://${1}"
+keyID=$(check_key_input "$@")
 
-# make sure the user ID to revoke
-find_host_userid "$userID" || \
-    failure "No non-revoked user ID found matching '$userID'."
+# make sure the user ID to revoke exists
+check_key_userid "$keyID" "$serviceName" || \
+    failure "No non-revoked service name found matching '$serviceName'."
 
 if [ "$PROMPT" = "true" ] ; then
-    printf "The following host key user ID will be revoked:\n  %s\nAre you sure you would like to revoke this user ID? (Y/n) " "$userID" >&2
+    printf "The following service name on key '$keyID' will be revoked:\n  %s\nAre you sure you would like to revoke this service name? (Y/n) " "$serviceName" >&2
     read OK; OK=${OK:=Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then
 	failure "User ID not revoked."
     fi
 else
-    log debug "revoking user ID without prompting."
+    log debug "revoking service name without prompting."
 fi
 
 # actually revoke:
@@ -49,20 +52,21 @@ fi
 # --export won't contain the secret key.  "keytrans revokeuserid"
 # needs access to both pieces, so we feed it both of them.
 
-if (cat "$GNUPGHOME_HOST/secring.gpg" && gpg_host --export "$HOST_FINGERPRINT") | \
-    "$SYSSHAREDIR/keytrans" revokeuserid \
-    "$HOST_FINGERPRINT" "$userID" | gpg_host --import ; then
+if (cat "$GNUPGHOME_HOST/secring.gpg" && gpg_host --export "$keyID") \
+    | "$SYSSHAREDIR/keytrans" revokeuserid "$keyID" "$serviceName" \
+    | gpg_host --import ; then
+
     gpg_host --check-trustdb
 
     update_gpg_pub_file
 
-    show_key
+    show_key "$keyID"
 
     echo
-    echo "NOTE: User ID revoked, but revocation not published."
+    echo "NOTE: Service name revoked, but revocation not published."
     echo "Run '$PGRM publish-key' to publish the revocation."
 else
-    failure "Problem revoking user ID."
+    failure "Problem revoking service name."
 fi
 
 }

@@ -1,0 +1,68 @@
+# -*-shell-script-*-
+# This should be sourced by bash (though we welcome changes to make it POSIX sh compliant)
+
+# Monkeysphere host add-hostname subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@finestructure.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2008-2010, and are all released under the GPL,
+# version 3 or later.
+
+# add servicename user ID to server key
+
+add_name() {
+
+local serviceName
+local keyID
+local fingerprint
+local tmpuidMatch
+local line
+local adduidCommand
+
+if [ -z "$1" ] ; then
+    failure "You must specify a service name to add."
+fi
+serviceName="$1"
+shift
+
+keyID=$(check_key_input "$@")
+
+# test that the desired user ID does not already exist
+check_key_userid "$keyID" "$serviceName" && \
+    failure "Service name '$serviceName' already exists on key '$keyID'."
+
+check_service_name "$serviceName"
+
+if [ "$PROMPT" = "true" ] ; then
+    printf "The following service name will be added to key '$keyID':\n  %s\nAre you sure you would like to add this service name? (Y/n) " "$serviceName" >&2
+    read OK; OK=${OK:=Y}
+    if [ "${OK/y/Y}" != 'Y' ] ; then
+	failure "Service name not added."
+    fi
+else
+    log debug "adding service name without prompting."
+fi
+
+# execute edit-key script
+if PEM2OPENPGP_USAGE_FLAGS=authenticate \
+    <"$GNUPGHOME_HOST/secring.gpg" \
+    "$SYSSHAREDIR/keytrans" adduserid "$keyID" "$serviceName" \
+    | gpg_host --import ; then
+
+    gpg_host --check-trustdb
+
+    update_gpg_pub_file
+
+    show_key "$keyID"
+
+    echo
+    echo "NOTE: Service name added to key, but key not published."
+    echo "Run '$PGRM publish-key' to publish the new service name."
+else
+    failure "Problem adding service name."
+fi
+
+}

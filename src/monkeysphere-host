@@ -8,7 +8,7 @@
 # Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Micah Anderson <micah@riseup.net>
 #
-# They are Copyright 2008-2009, and are all released under the GPL,
+# They are Copyright 2008-2010, and are all released under the GPL,
 # version 3 or later.
 
 ########################################################################
@@ -34,7 +34,9 @@ MHSHAREDIR="${SYSSHAREDIR}/mh"
 MHDATADIR="${SYSDATADIR}/host"
 
 # host pub key files
-HOST_KEY_FILE="${SYSDATADIR}/ssh_host_rsa_key.pub.gpg"
+HOST_KEY_FILE="${SYSDATADIR}/host_keys.pub.gpg"
+# host pub key fingerprints file
+HOST_KEY_FPR_FILE="${SYSDATADIR}/host_keys.fprs"
 
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
@@ -52,18 +54,21 @@ usage: $PGRM <subcommand> [options] [args]
 Monkeysphere host admin tool.
 
 subcommands:
- import-key (i) FILE NAME[:PORT]     import existing ssh key to gpg
- show-key (s)                        output all host key information
- publish-key (p)                     publish host key to keyserver
- set-expire (e) [EXPIRE]             set host key expiration
- add-hostname (n+) NAME[:PORT]       add hostname user ID to host key
- revoke-hostname (n-) NAME[:PORT]    revoke hostname user ID
- add-revoker (r+) KEYID|FILE         add a revoker to the host key
- revoke-key                          generate and/or publish revocation
-                                     certificate for host key
+ import-key (i) FILE SERVICENAME       import PEM-encoded key from file
+ show-keys (s) [KEYID ...]             output host key information
+ publish-keys (p) [KEYID ...]          publish key(s) to keyserver
+ set-expire (e) EXPIRE [KEYID]         set key expiration
+ add-servicename (n+) SERVICENAME [KEYID]
+                                       add a service name to key
+ revoke-servicename (n-) SERVICENAME [KEYID]
+                                       revoke a service name from key
+ add-revoker (r+) REVOKER_KEYID|FILE [KEYID]
+                                       add a revoker to key
+ revoke-key [KEYID]                    generate and/or publish revocation
+                                       certificate for key
 
- version (v)                         show version number
- help (h,?)                          this help
+ version (v)                           show version number
+ help (h,?)                            this help
 
 See ${PGRM}(8) for more info.
 EOF
@@ -74,84 +79,122 @@ gpg_host() {
     GNUPGHOME="$GNUPGHOME_HOST" gpg --no-greeting --quiet --no-tty "$@"
 }
 
-# command to list the info about the host key, in colon format, to
-# stdout
-gpg_host_list() {
+# list the info about the a key, in colon format, to stdout
+gpg_host_list_keys() {
     gpg_host --list-keys --with-colons --fixed-list-mode \
 	--with-fingerprint --with-fingerprint \
-	"0x${HOST_FINGERPRINT}!"
-
+	"$1"
 }
 
-# command for edit key scripts, takes scripts on stdin
+# edit key scripts, takes scripts on stdin, and keyID as first input
 gpg_host_edit() {
-    gpg_host --command-fd 0 --edit-key "0x${HOST_FINGERPRINT}!" "$@"
+    gpg_host --command-fd 0 --edit-key "$@"
 }
 
-# export the host public key to the monkeysphere gpg pub key file
+# export the monkeysphere gpg pub key file
 update_gpg_pub_file() {
     log debug "updating openpgp public key file '$HOST_KEY_FILE'..."
-    gpg_host --export --armor --export-options export-minimal \
-	"0x${HOST_FINGERPRINT}!" > "$HOST_KEY_FILE"
+    gpg_host --export --armor --export-options export-minimal > "$HOST_KEY_FILE"
+    log debug "updating fingerprint file '$HOST_KEY_FPR_FILE'..."
+    gpg_host --list-secret-key --with-colons --with-fingerprint \
+	| awk -F: '/^fpr:/{ print $10 }' > "$HOST_KEY_FPR_FILE"
 }
 
-# load the host fingerprint into the fingerprint variable, using the
-# export gpg pub key file
-# FIXME: this seems much less than ideal, with all this temp keyring
-# stuff.  is there a way we can do this without having to create temp
-# files?  what if we stored the fingerprint in MHDATADIR/fingerprint?
-load_fingerprint() {
-    if [ -f "$HOST_KEY_FILE" ] ; then
-	HOST_FINGERPRINT=$( \
-	    (FUBAR=$(msmktempdir) && export GNUPGHOME="$FUBAR" \
-	    && gpg --quiet --import \
-	    && gpg --quiet --list-keys --with-colons --with-fingerprint \
-	    && rm -rf "$FUBAR") <"$HOST_KEY_FILE" \
-	    | grep '^fpr:' | cut -d: -f10 )
-    else
-	failure "host key gpg pub file not found."
-    fi
+host_fingerprints() {
+    local fprs=($(cat "$HOST_KEY_FPR_FILE"))
+
+    log debug "host key fingerprints:"
+    printf '%s\n' "${fprs[@]}" | log debug
+    printf '%s\n' "${fprs[@]}"
 }
 
-# load the host fingerprint into the fingerprint variable, using the
-# gpg host secret key
-load_fingerprint_secret() {
-    HOST_FINGERPRINT=$( \
-	gpg_host --list-secret-key --with-colons --with-fingerprint \
-	| grep '^fpr:' | cut -d: -f10 )
-}
-
-# fail if host key present
-check_host_key() {
-    [ ! -s "$HOST_KEY_FILE" ] \
-	|| failure "An OpenPGP host key already exists."
+# check that the service name is well formed
+check_service_name() {
+    local name="$1"
+    log error "FIX ME: check service name"
 }
 
 # fail if host key not present
-check_host_no_key() {
-    [ -s "$HOST_KEY_FILE" ] \
+check_no_keys() {
+    [ -s "$HOST_KEY_FILE" ] || [ -s "$HOST_KEY_FPR_FILE" ] \
 	|| failure "You don't appear to have a Monkeysphere host key on this server.
-Please run 'monkeysphere-host import-key...' first."
+Please run 'monkeysphere-host import-key' import a key."
+}
+
+# key input to functions, outputs full fingerprint of specified key if
+# found
+check_key_input() {
+    local keyID="$1"
+    # array of fingerprints
+    local fprs=($(host_fingerprints))
+
+    case ${#fprs[@]} in
+	0)
+	    failure "You don't appear to have any Monkeysphere host keys.
+Please run 'monkeysphere-host import-key' to import a key."
+	    ;;
+	1)
+	    :
+	    ;;
+	*)
+	    if [ -z "$keyID" ] ; then
+		failure "Keyring contains multiple keys.  Please specify one to act on (see 'monkeysphere-host show-key')."
+	    fi
+	    ;;
+    esac
+    printf '%s\n' "${fprs[@]}" | grep "${keyID}$" \
+	|| failure "Key '$keyID' not found."
 }
 
 # return 0 if user ID was found.
 # return 1 if user ID not found.
-find_host_userid() {
-    local userID="$1"
+check_key_userid() {
+    local keyID="$1"
+    local userID="$2"
     local tmpuidMatch
 
     # match to only "unknown" user IDs (host has no need for ultimate trust)
     tmpuidMatch="uid:-:$(echo $userID | gpg_escape)"
 
     # See whether the requsted user ID is present
-    gpg_host_list | cut -f1,2,10 -d: | \
+    gpg_host_list_keys "$keyID" | cut -f1,2,10 -d: | \
 	grep -q -x -F "$tmpuidMatch" 2>/dev/null
 }
 
-# show info about the host key
+# run command looped over keys
+multi_key() {
+    local cmd="$1"
+    shift
+    local keys=$@
+    local i=0
+    local fprs=($(host_fingerprints))
+    local key
+
+    check_no_keys
+
+    if [[ -z "$1" || "$1" == '--all' ]] ; then
+	keys="${fprs[@]}"
+    else
+	for key in $keys ; do
+	    printf '%s\n' "${fprs[@]}" | grep "${key}$" \
+		|| failure "Key '$key' not found."
+	done
+    fi
+
+    for key in $keys ; do
+	if (( i++ > 0 )) ; then
+	    echo "##############################"
+	fi
+	eval "$cmd" "$key"
+    done
+}
+
+# show info about the a key
 show_key() {
+    local id="$1"
     local GNUPGHOME
     local TMPSSH
+    local fingerprint
     local revokers
 
     # tmp gpghome dir
@@ -165,22 +208,22 @@ show_key() {
 
     # create the ssh key
     TMPSSH="$GNUPGHOME"/ssh_host_key_rsa_pub
-    gpg --export | openpgp2ssh 2>/dev/null >"$TMPSSH"
+    gpg --export "$id" | openpgp2ssh 2>/dev/null >"$TMPSSH"
 
     # get the gpg fingerprint
-    HOST_FINGERPRINT=$(gpg --quiet --list-keys --with-colons --with-fingerprint \
+    fingerprint=$(gpg --quiet --list-keys \
+	--with-colons --with-fingerprint "$id" \
 	| grep '^fpr:' | cut -d: -f10 )
 
     # list the host key info
     # FIXME: make no-show-keyring work so we don't have to do the grep'ing
     # FIXME: can we show uid validity somehow?
-    gpg --list-keys --fingerprint \
-	--list-options show-unusable-uids 2>/dev/null \
+    gpg --list-keys --list-options show-unusable-uids "$id" 2>/dev/null \
 	| grep -v "^${GNUPGHOME}/pubring.gpg$" \
 	| egrep -v '^-+$'
 
     # list revokers, if there are any
-    revokers=$(gpg --list-keys --with-colons --fixed-list-mode \
+    revokers=$(gpg --list-keys --with-colons --fixed-list-mode "$id" \
 	| awk -F: '/^rvk:/{ print $10 }' )
     if [ "$revokers" ] ; then
 	echo "The following keys are allowed to revoke this host key:"
@@ -191,7 +234,7 @@ show_key() {
     fi
 
     # list the pgp fingerprint
-    echo "OpenPGP fingerprint: $HOST_FINGERPRINT"
+    echo "OpenPGP fingerprint: $fingerprint"
 
     # list the ssh fingerprint
     echo -n "ssh fingerprint: "
@@ -247,56 +290,42 @@ shift
 
 case $COMMAND in
     'import-key'|'i')
-	check_host_key
 	source "${MHSHAREDIR}/import_key"
 	import_key "$@"
 	;;
 
-    'show-key'|'show'|'s')
-	check_host_no_key
-	show_key
+    'show-keys'|'show-key'|'show'|'s')
+	multi_key show_key "$@"
 	;;
 
     'set-expire'|'extend-key'|'e')
-	check_host_no_key
-	load_fingerprint
 	source "${MHSHAREDIR}/set_expire"
 	set_expire "$@"
 	;;
 
-    'add-hostname'|'add-name'|'n+')
-	check_host_no_key
-	load_fingerprint
-	source "${MHSHAREDIR}/add_hostname"
-	add_hostname "$@"
+    'add-servicename'|'add-hostname'|'add-name'|'n+')
+	source "${MHSHAREDIR}/add_name"
+	add_name "$@"
 	;;
 
-    'revoke-hostname'|'revoke-name'|'n-')
-	check_host_no_key
-	load_fingerprint
-	source "${MHSHAREDIR}/revoke_hostname"
-	revoke_hostname "$@"
+    'revoke-servicename'|'revoke-hostname'|'revoke-name'|'n-')
+	source "${MHSHAREDIR}/revoke_name"
+	revoke_name "$@"
 	;;
 
     'add-revoker'|'r+')
-	check_host_no_key
-	load_fingerprint
 	source "${MHSHAREDIR}/add_revoker"
 	add_revoker "$@"
 	;;
 
     'revoke-key')
-	check_host_no_key
-	load_fingerprint
 	source "${MHSHAREDIR}/revoke_key"
 	revoke_key "$@"
 	;;
 
-    'publish-key'|'publish'|'p')
-	check_host_no_key
-	load_fingerprint
+    'publish-keys'|'publish-key'|'publish'|'p')
 	source "${MHSHAREDIR}/publish_key"
-	publish_key
+	multi_key publish_key "$@"
 	;;
 
     'diagnostics'|'d')
@@ -305,7 +334,6 @@ case $COMMAND in
 	;;
 
     'update-gpg-pub-file')
-	load_fingerprint_secret
 	update_gpg_pub_file
 	;;
 

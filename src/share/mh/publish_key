@@ -8,23 +8,24 @@
 # Jamie McClelland <jm@mayfirst.org>
 # Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #
-# They are Copyright 2008-2009, and are all released under the GPL, version 3
-# or later.
+# They are Copyright 2008-2010, and are all released under the GPL,
+# version 3 or later.
 
-# publish server key to keyserver
+# publish keys to keyserver
 
 publish_key() {
 
+local keyID="$1"
 local GNUPGHOME
 
 if [ "$PROMPT" = "true" ] ; then
-    printf "Really publish host key to $KEYSERVER? (Y/n) " >&2
+    printf "Really publish key '$keyID' to $KEYSERVER? (Y/n) " >&2
     read OK; OK=${OK:=Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then
 	failure "key not published."
     fi
 else
-    log debug "publishing key without prompting."
+    log debug "publishing key '$keyID' without prompting."
 fi
 
 # create a temporary gnupg directory from which to publish the key
@@ -35,13 +36,13 @@ chown "$MONKEYSPHERE_USER":"$MONKEYSPHERE_GROUP" "$GNUPGHOME"
 # trap to remove tmp dir if break
 trap "rm -rf $GNUPGHOME" EXIT
 
-# import the host key into the tmp dir
+# import the key into the tmp dir
 su_monkeysphere_user \
     "gpg --quiet --import" <"$HOST_KEY_FILE"
 
-# publish host key
+# publish key
 su_monkeysphere_user \
-    "gpg --keyserver $KEYSERVER --send-keys '0x${HOST_FINGERPRINT}!'"
+    "gpg --keyserver $KEYSERVER --send-keys '0x${keyID}!'"
 
 # remove the tmp file
 trap - EXIT

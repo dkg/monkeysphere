@@ -8,23 +8,24 @@
 # Jamie McClelland <jm@mayfirst.org>
 # Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #
-# They are Copyright 2008-2009, and are all released under the GPL,
+# They are Copyright 2008-2010, and are all released under the GPL,
 # version 3 or later.
 
 # revoke host key
 
 revoke_key() {
 
-# Coming in here, we expect $HOST_FINGERPRINT to be set, and we
-# believe that there is in fact a key.
+    local keyID
+    local publish
+
+    keyID=$(check_key_input "$@")
 
     if [ "$PROMPT" = "false" ] ; then
 	publish=N
     else
 	cat <<EOF >&2
-This will generate a revocation certificate for your host key
-(fingerprint: $HOST_FINGERPRINT) and
-dump the certificate to standard output.
+This will generate a revocation certificate for key $keyID
+and dump the certificate to standard output.
 
 It can also directly publish the new revocation certificate
 to the public keyservers via $KEYSERVER if you want it to.
@@ -65,14 +66,13 @@ Monkeysphere host key revocation (automated) $(date '+%F_%T%z')
 y
 
 "
-	revcert=$(GNUPGHOME="$GNUPGHOME_HOST" gpg_host --command-fd 0 --armor --gen-revoke "0x${HOST_FINGERPRINT}!" <<<"$revoke_commands" ) \
+	revcert=$(GNUPGHOME="$GNUPGHOME_HOST" gpg_host --command-fd 0 --armor --gen-revoke "0x${keyID}!" <<<"$revoke_commands" ) \
 	    || failure "Failed to generate revocation certificate!"
-
 
     else
     # note: we're not using the gpg_host function because we actually
     # want to use gpg's UI in this case, so we want to omit --no-tty
-	revcert=$(GNUPGHOME="$GNUPGHOME_HOST" gpg --no-greeting --quiet --armor --gen-revoke "0x${HOST_FINGERPRINT}!") \
+	revcert=$(GNUPGHOME="$GNUPGHOME_HOST" gpg --no-greeting --quiet --armor --gen-revoke "0x${keyID}!") \
 	    || failure "Failed to generate revocation certificate!"
     fi
 

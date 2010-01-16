@@ -8,53 +8,43 @@
 # Jamie McClelland <jm@mayfirst.org>
 # Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #
-# They are Copyright 2008-2009 and are all released under the GPL,
+# They are Copyright 2008-2010 and are all released under the GPL,
 # version 3 or later.
 
 import_key() {
 
-local sshKeyFile
-local hostName
-local domain
-local userID
-
-sshKeyFile="$1"
-hostName="$2"
+local keyFile="$1"
+local serviceName="$2"
 
 # check that key file specified
-if [ -z "$sshKeyFile" ] ; then
-    failure "Must specify ssh key file to import, or specify '-' for stdin."
+if [ -z "$keyFile" ] ; then
+    failure "Must specify PEM-encoded key file to import, or specify '-' for stdin."
 fi
 
 # fail if hostname not specified
-if [ -z "$hostName" ] ; then
-    failure "You must specify a fully-qualified domain name for use in the host certificate user ID."
+if [ -z "$serviceName" ] ; then
+    failure "You must specify a service name for use in the OpenPGP certificate user ID."
 fi
 
-userID="ssh://${hostName}"
+# check that the service name is well formatted
+check_service_name "$serviceName"
 
 # create host home
 mkdir -p "${MHDATADIR}"
 mkdir -p "${GNUPGHOME_HOST}"
 chmod 700 "${GNUPGHOME_HOST}"
 
-# import ssh key to a private key
-if [ "$sshKeyFile" = '-' ] ; then
-    log verbose "importing ssh key from stdin..."
-    PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" \
+# import pem-encoded key to an OpenPGP private key
+if [ "$keyFile" = '-' ] ; then
+    log verbose "importing key from stdin..."
+    PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$serviceName" \
 	| gpg_host --import
 else
-    log verbose "importing ssh key from file '$sshKeyFile'..."
-    PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" \
-	<"$sshKeyFile" \
+    log verbose "importing key from file '$keyFile'..."
+    PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$serviceName" \
+	<"$keyFile" \
 	| gpg_host --import
 fi
-
-# load the new host fpr into the fpr variable.  this is so we can
-# create the gpg pub key file.  we have to do this from the secret key
-# ring since we obviously don't have the gpg pub key file yet, since
-# that's what we're trying to produce (see below).
-load_fingerprint_secret
 
 # export to gpg public key to file
 update_gpg_pub_file
@@ -62,6 +52,6 @@ update_gpg_pub_file
 log info "host key imported:"
 
 # show info about new key
-show_key
+show_key "$serviceName"
 
 }
