@@ -1,9 +1,12 @@
 monkeysphere (0.28-1~pre1) UNRELEASED; urgency=low
 
   * New upstream release:
-    - rename keys-from-userid command to more accurate keys-for-userid
+    - Major rework of monkeysphere-host to handle multiple host keys.  We
+      also no longer assume ssh service keys.  monkeysphere-host is now a
+      general-purpose host service OpenPGP key management UI.
+    - Rename keys-from-userid command to more accurate keys-for-userid
 
- -- Jameson Rollins <jrollins@finestructure.net>  Mon, 11 Jan 2010 23:16:56 -0500
+ -- Jameson Rollins <jrollins@finestructure.net>  Sat, 16 Jan 2010 11:56:45 -0500
 
 monkeysphere (0.27-1) unstable; urgency=low
 
