@@ -35,7 +35,7 @@ shift
 
 keyID=$(check_key_input "$@")
 
-if [ "$PROMPT" = "true" ] ; then
+if [ "$PROMPT" != "false" ] ; then
     printf "Are you sure you want to change the expiration on key '$keyID' by '%s'? (Y/n) " "$extendBy" >&2
     read OK; OK=${OK:-Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then

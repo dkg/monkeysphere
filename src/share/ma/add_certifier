@@ -135,7 +135,7 @@ EOF
     log info "key found:"
     gpg_sphere "--fingerprint 0x${fingerprint}!"
 
-    if [ "$PROMPT" = "true" ] ; then
+    if [ "$PROMPT" != "false" ] ; then
 	printf "Are you sure you want to add the above key as a certifier\nof users on this system? (Y/n) " >&2
 	read OK; OK=${OK:-Y}
 	if [ "${OK/y/Y}" != 'Y' ] ; then

@@ -35,7 +35,7 @@ keyID=$(check_key_input "$@")
 check_key_userid "$keyID" "$serviceName" || \
     failure "No non-revoked service name found matching '$serviceName'."
 
-if [ "$PROMPT" = "true" ] ; then
+if [ "$PROMPT" != "false" ] ; then
     printf "The following service name on key '$keyID' will be revoked:\n  %s\nAre you sure you would like to revoke this service name? (Y/n) " "$serviceName" >&2
     read OK; OK=${OK:=Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then

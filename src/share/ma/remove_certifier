@@ -26,7 +26,7 @@ fi
 # FIXME: should we be doing a fancier list_certifier output here?
 gpg_core --list-key --fingerprint "0x${keyID}!" || failure
 
-if [ "$PROMPT" = "true" ] ; then
+if [ "$PROMPT" != "false" ] ; then
     printf "Really remove the above listed identity certifier? (Y/n) " >&2 
     read OK; OK=${OK:-Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then

@@ -18,7 +18,7 @@ publish_key() {
 local keyID="$1"
 local GNUPGHOME
 
-if [ "$PROMPT" = "true" ] ; then
+if [ "$PROMPT" != "false" ] ; then
     printf "Really publish key '$keyID' to $KEYSERVER? (Y/n) " >&2
     read OK; OK=${OK:=Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then
