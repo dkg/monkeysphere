@@ -189,8 +189,8 @@ multi_key() {
 show_key() {
     local id="$1"
     local GNUPGHOME
-    local TMPSSH
     local fingerprint
+    local tmpssh
     local revokers
 
     # tmp gpghome dir
@@ -202,27 +202,29 @@ show_key() {
     # import the host key into the tmp dir
     gpg --quiet --import <"$HOST_KEY_FILE"
 
-    # create the ssh key
-    TMPSSH="$GNUPGHOME"/ssh_host_key_rsa_pub
-    if ! gpg --export "$id" 2>/dev/null \
-	| openpgp2ssh 2>/dev/null >"$TMPSSH" ; then
-	failure "Key '$id' not found."
+    # get the gpg fingerprint
+    if gpg --quiet --list-keys \
+	--with-colons --with-fingerprint "$id" \
+	| grep '^fpr:' | cut -d: -f10 > "$GNUPGHOME"/fingerprint ; then
+	fingerprint=$(cat "$GNUPGHOME"/fingerprint)
+    else
+	failure "ID '$id' not found."
     fi
 
-    # get the gpg fingerprint
-    fingerprint=$(gpg --quiet --list-keys \
-	--with-colons --with-fingerprint "$id" \
-	| grep '^fpr:' | cut -d: -f10 )
+    # create the ssh key
+    tmpssh="$GNUPGHOME"/ssh_host_key_rsa_pub
+    gpg --export "$fingerprint" 2>/dev/null \
+	| openpgp2ssh 2>/dev/null >"$tmpssh"
 
     # list the host key info
     # FIXME: make no-show-keyring work so we don't have to do the grep'ing
     # FIXME: can we show uid validity somehow?
-    gpg --list-keys --list-options show-unusable-uids "$id" 2>/dev/null \
+    gpg --list-keys --list-options show-unusable-uids "$fingerprint" 2>/dev/null \
 	| grep -v "^${GNUPGHOME}/pubring.gpg$" \
 	| egrep -v '^-+$'
 
     # list revokers, if there are any
-    revokers=$(gpg --list-keys --with-colons --fixed-list-mode "$id" \
+    revokers=$(gpg --list-keys --with-colons --fixed-list-mode "$fingerprint" \
 	| awk -F: '/^rvk:/{ print $10 }' )
     if [ "$revokers" ] ; then
 	echo "The following keys are allowed to revoke this host key:"
@@ -237,7 +239,7 @@ show_key() {
 
     # list the ssh fingerprint
     echo -n "ssh fingerprint: "
-    ssh-keygen -l -f "$TMPSSH" | awk '{ print $1, $2, $4 }'
+    ssh-keygen -l -f "$tmpssh" | awk '{ print $1, $2, $4 }'
 
     # remove the tmp file
     trap - EXIT
