@@ -196,6 +196,7 @@ uid:-::::$(($timestamp + 1))::A0D708F51CC257DEFC01AEDE1E0A5F329DFD8F16::fubar:
 sig:!::1:$NEWKEYID:$(($timestamp + 1))::::fubar:13x:
 EOF
 
+echo "test: diff expected gpg list output"
 diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
 
 cat >"$TEMPDIR"/expectedout <<EOF
@@ -203,7 +204,16 @@ $KEYFPR
 $NEWKEYFPR
 EOF
 
-diff -u "$TEMPDIR"/expectedout <( < "$TEMPDIR"/secring.gpg keytrans listfprs)
+echo "test: diff expected keytrans listfpr output"
+if ! diff -u "$TEMPDIR"/expectedout <( < "$TEMPDIR"/secring.gpg keytrans listfprs) ; then
+    # test reverse order
+    echo "test: diff test again with permuted order"
+    cat >"$TEMPDIR"/expectedout <<EOF
+$NEWKEYFPR
+$KEYFPR
+EOF
+    diff -u "$TEMPDIR"/expectedout <( < "$TEMPDIR"/secring.gpg keytrans listfprs)
+fi
 
 ## FIXME: addtest: not testing subkeys at the moment.
 
