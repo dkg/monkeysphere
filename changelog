@@ -1,1 +1,388 @@
-packaging/debian/changelog
+monkeysphere (0.28~pre1) UNRELEASED; urgency=low
+
+  * Major rework of monkeysphere-host to handle multiple host keys.  We
+    also no longer assume ssh service keys.  monkeysphere-host is now a
+    general-purpose host service OpenPGP key management UI.
+  * Rename keys-from-userid command to more accurate keys-for-userid
+  * separate upstream and debian changelogs
+
+ -- Jameson Rollins <jrollins@finestructure.net>  Sat, 16 Jan 2010 12:21:34 -0500
+
+monkeysphere (0.27) unstable; urgency=low
+
+  * fixed monkeysphere gen-subkey subcommand that was erroneously creating
+    DSA subkeys due to unannounced change in gpg edit-key UI.  Now tests
+    for gpg version (closes MS #1536)
+  * add new monkeysphere keys-from-userid subcommand to output all
+    acceptable keys for a given user ID literal
+
+ -- Jameson Rollins <jrollins@finestructure.net>  Mon, 11 Jan 2010 20:54:21 -0500
+
+monkeysphere (0.26) unstable; urgency=low
+
+  * add 'refresh-keys' subcommand to monkeysphere-authentication
+  * improve marginal UI (closes MS #1141)
+  * add MONKEYSPHERE_STRICT_MODES configuration to avoid
+    permission-checking (closes MS #649)
+  * test scripts use STRICT_MODES to avoid failure when built under /tmp
+  * do permissions checks with a perl script instead of non-portable
+    readlink GNUisms
+  * bail on permissions check if we hit the home directory (helpful on Mac
+    OS and other systems with loose /home or /Users (closes MS #675)
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 01 Aug 2009 17:11:05 -0400
+
+monkeysphere (0.25) unstable; urgency=low
+
+  * New upstream release:
+  * update/fix the marginal ui output
+  * use msmktempdir everywhere (avoid unwrapped calls to mktemp for
+    portability)
+  * clean out some redundant "cat"s
+  * fix monkeysphere update-known_hosts for sshd running on non-standard
+    ports
+  * add 'sshfpr' subcommand to output the ssh fingerprint of a gpg key
+  * pem2openpgp now generates self-sigs over SHA-256 instead of SHA-1
+    (changes dependency to libdigest-sha-perl)
+  * some portability improvements
+  * properly handle translation of keys with fingerprints with leading
+    all-zero bytes.
+  * resolve symlinks when checking paths (thanks Silvio Rhatto)
+    (closes MS #917)
+  * explicitly set and use MONKEYSPHERE_GROUP from system "groups"
+  * monkeysphere-host now uses keytrans to add and revoke hostname
+    (closes MS #422)
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Thu, 16 Jul 2009 22:09:19 -0400
+
+monkeysphere (0.24) unstable; urgency=low
+
+  * fixed how version information is stored/retrieved
+  * now uses perl-based keytrans for both pem2openpgp and openpgp2ssh
+  * no longer needs base64 in PATH
+  * added "test" make target
+  * improved transitions/0.23 script so it no longer fails in common
+    circumstances (Closes: #517779)
+  * RSA only: no longer handles DSA keys
+  * added ability to specify subkeys to add to ssh agent with new
+    MONKEYSPHERE_SUBKEYS_FOR_AGENT environment variable
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Tue, 03 Mar 2009 19:38:33 -0500
+
+monkeysphere (0.23) unstable; urgency=low
+
+  "The Golden Bezoar Release"
+
+  * rearchitect UI:
+    - replace monkeysphere-server with monkeysphere-{authentication,host}
+    - fold monkeysphere-ssh-proxycommand into /usr/bin/monkeysphere
+  * new ability to import existing ssh host key into monkeysphere.  So now
+    m-a import-key replaces m-s gen-key.
+  * provide pem2openpgp for translating unencrypted PEM-encoded raw key
+    material into OpenPGP keys (introduces new perl dependencies)
+  * get rid of getopts dependency
+  * added version output option
+  * better checks for the existence of a host private key for
+    monkeysphere-host subcommands that need it.
+  * better checks on validity of existing authentication subkeys when
+    doing monkeysphere gen_subkey.
+  * add transition infrastructure for major changes between releases (see
+    transitions/README.txt)
+  * implement and document two new monkeysphere-host subcommands:
+    revoke-key and add-revoker
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sat, 21 Feb 2009 17:51:06 -0500
+
+monkeysphere (0.22) unstable; urgency=low
+
+  [ Jameson Graef Rollins ]
+  * added info log output when a new key is added to known_hosts file.
+  * added some useful output to the ssh-proxycommand for "marginal" cases
+    where keys are found for host but do not have full validity.
+  * force ssh-keygen to read from stdin to get ssh key fingerprint.
+
+  [ Daniel Kahn Gillmor ]
+  * automatically output two copies of the host's public key: one standard
+    ssh public key file, and the other a minimal OpenPGP key with just the
+    latest valid self-sig.
+  * debian/control: corrected alternate dependency from procfile to
+    procmail (which provides /usr/bin/lockfile)
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Fri, 28 Nov 2008 14:23:31 -0500
+
+monkeysphere (0.21) unstable; urgency=low
+
+  * move debian packaging to packaging subdirectory.
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 15 Nov 2008 16:14:27 -0500
+
+monkeysphere (0.20) unstable; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * ensure that tempdirs are properly created, bail out otherwise instead
+    of stumbling ahead.
+  * minor fussing with the test script to make it cleaner.
+
+  [ Jameson Graef Rollins ]
+  * clean up Makefile to generate more elegant source tarballs.
+  * make myself the maintainer.
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 15 Nov 2008 13:12:57 -0500
+
+monkeysphere (0.19) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * simulating an X11 session in the test script.
+  * updated packaging so that symlinks to config files are correct.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 29 Oct 2008 02:47:49 -0400
+
+monkeysphere (0.18) experimental; urgency=low
+
+  [ Jameson Graef Rollins ]
+  * Fix bugs in authorized_{user_ids,keys} file permission checking.
+  * Add new monkeysphere tmpdir to enable atomic moves of authorized_keys
+    files.
+  * chown authorized_keys files to `whoami`, for compatibility with test
+    suite.
+  * major improvements to test suite, added more tests.
+
+  [ Daniel Kahn Gillmor ]
+  * update make install to ensure placement of
+    /etc/monkeysphere/gnupg-{host,authentication}.conf
+  * choose either --quick-random or --debug-quick-random depending on
+    which gpg supports for the test suite.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 29 Oct 2008 00:41:38 -0400
+
+monkeysphere (0.17) experimental; urgency=low
+
+  [ Jameson Graef Rollins ]
+  * Fix some bugs in, and cleanup, authorized_keys file creation in
+    monkeysphere-server update-users.
+  * Move to using the empty string for not adding a user-controlled
+    authorized_keys file in the RAW_AUTHORIZED_KEYS variable.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 28 Oct 2008 02:04:22 -0400
+
+monkeysphere (0.16) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * replaced "#!/bin/bash" with "#!/usr/bin/env bash" for better
+    portability.
+  * fixed busted lockfile arrangement, where empty file was being locked
+  * portability fixes in the way we use date, mktemp, hostname, su
+  * stop using /usr/bin/stat, since the syntax appears to be totally
+    unportable
+  * require GNU getopt, and test for getopt failures (look for getopt in
+    /usr/local/bin first, since that's where FreeBSD's GNU-compatible
+    getopt lives.
+  * monkeysphere-server diagnostics now counts problems and suggests a
+    re-run after they have been resolved.
+  * completed basic test suite: this can be run from the git sources or
+    the tarball with: cd tests && ./basic
+
+  [ Jameson Graef Rollins ]
+  * Genericize fs location variables.
+  * break out gpg.conf files into SYSCONFIGDIR, and not auto-generated at
+    install.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sun, 26 Oct 2008 03:06:18 -0400
+
+monkeysphere (0.15) experimental; urgency=low
+
+  * porting work and packaging simplification: clarifying makefiles,
+    pruning dependencies, etc.
+  * added tests to monkeysphere-server diagnostics
+  * moved monkeysphere(5) to section 7 of the manual
+  * now shipping TODO in /usr/share/doc/monkeysphere
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 04 Sep 2008 19:08:40 -0400
+
+monkeysphere (0.14) experimental; urgency=low
+
+  * changing debian packaging back to format 1.0 so we get automatic
+    tarballs, and easier inclusion in other build networks.
+  * no other source changes.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 04 Sep 2008 13:03:35 -0400
+
+monkeysphere (0.13) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * tweaks in /usr/bin/monkeysphere to handle odd secret keyrings.
+  * updated makefile to reflect the package building technique we've been
+    using for a month now.
+
+  [ Jameson Graef Rollins ]
+  * move location of user config directory to ~/.monkeysphere.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 03 Sep 2008 17:26:10 -0400
+
+monkeysphere (0.12) experimental; urgency=low
+
+  [ Jameson Graef Rollins ]
+  * Improved output handling.  New LOG_LEVEL variable.
+
+  [ Daniel Kahn Gillmor ]
+  * debian/control: switched Homepage: and Vcs-Git: to canonicalized
+    upstream hostnames.
+  * updated documentation for new release.
+  * changed my associated e-mail address for this package.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 02 Sep 2008 18:54:29 -0400
+
+monkeysphere (0.11) experimental; urgency=low
+
+  [ Jameson Graef Rollins ]
+  * fix bug in trustdb update on add/revoke-hostname.
+
+  [ Daniel Kahn Gillmor ]
+  * debian/control: added Build-Depends: git-core for the new packaging
+    format
+  * new subcommand: monkeysphere subkey-to-ssh-agent (relies on a patched
+    GnuTLS to deal with GPG's gnu-dummy S2K extension, but fails cleanly
+    if not found).
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Wed, 20 Aug 2008 11:24:35 -0400
+
+monkeysphere (0.10) experimental; urgency=low
+
+  [ Jameson Graef Rollins ]
+  * brown paper bag release: invert test on calculated validity of keys.
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 18 Aug 2008 16:22:34 -0400
+
+monkeysphere (0.9) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * implemented "monkeysphere-server extend-key" to adjust expiration
+    date of host key.
+  * removed "monkeysphere-server fingerprint".  Use "monkeysphere-server
+    show-key" instead.
+
+  [ Jameson Graef Rollins ]
+  * fixed bug in user id processing that prevented bad primary keys from
+    being properly removed.
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 18 Aug 2008 15:42:12 -0400
+
+monkeysphere (0.8) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * debian/control: switched Vcs-Git to use "centralized" git repo instead
+    of my own.
+  * More monkeysphere-server diagnostics
+  * monkeysphere --gen-subkey now guesses what KeyID you meant.
+  * added Recommends: ssh-askpass to ensure monkeysphere --gen-subkey
+    works sensibly under X11
+
+  [ Jameson Graef Rollins ]
+  * fix another bug when known_hosts files are missing.
+  * sort processed keys so that "good" keys are processed after "bad"
+    keys.  This will prevent malicious bad keys from causing good keys to
+    be removed from key files.
+  * enabled host key publication.
+  * added checking of gpg.conf for keyserver
+  * new functions to add/revoke host key user IDs
+  * improved list-certifiers function (now non-privileged)
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 18 Aug 2008 12:43:37 -0400
+
+monkeysphere (0.7) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * Added monkeysphere-server diagnostics subcommand.
+  * rebuilding package using Format: 3.0 (git)
+
+  [ Jameson Graef Rollins ]
+  * fix how check for file modification is done.
+  * rework out user id processing is done to provide more verbose log
+    output.
+  * fix bug in monkeysphpere update-authorized_keys subcommand where
+    disallowed keys failed to be remove from authorized_keys file.
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 04 Aug 2008 10:47:41 -0400
+
+monkeysphere (0.6) experimental; urgency=low
+
+  [ Jameson Graef Rollins ]
+  * Fix bug in return on error of ssh-proxycommand.
+
+  [ Daniel Kahn Gillmor ]
+  * try socat if netcat is not available in proxycommand.
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Tue, 29 Jul 2008 10:27:20 -0400
+
+monkeysphere (0.5) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * updated READMEs to match current state of code
+
+  [ Jameson Graef Rollins ]
+  * Tweak how empty authorized_user_ids and known_hosts files are handled.
+  * Do not fail when authorized_user_ids or known_hosts file is not found.
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 28 Jul 2008 10:50:02 -0400
+
+monkeysphere (0.4) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * New version.
+  * Fixed return code error in openpgp2ssh
+
+  [ Jameson Graef Rollins ]
+  * Privilege separation: use monkeysphere user to handle maintenance of
+    the gnupg authentication keychain for server.
+  * Improved certifier key management.
+  * Fixed variable scoping and config file precedence.
+  * Add options for key generation and add-certifier functions.
+  * Fix return codes for known_host and authorized_keys updating
+    functions.
+  * Add write permission check on authorized_keys, known_hosts, and
+    authorized_user_ids files.
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Tue, 22 Jul 2008 21:50:17 -0400
+
+monkeysphere (0.3) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * new version.
+
+  [ Jameson Graef Rollins ]
+  * Move files in /var/cache/monkeysphere and GNUPGHOME for server to
+    the more appropriate /var/lib/monkeysphere.
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Tue, 24 Jun 2008 00:55:29 -0400
+
+monkeysphere (0.2) experimental; urgency=low
+
+  * added lockfile-progs dependency
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 23 Jun 2008 19:34:05 -0400
+
+monkeysphere (0.2) experimental; urgency=low
+
+  [ Daniel Kahn Gillmor ]
+  * openpgp2ssh now supports specifying keys by full fingerprint.
+
+  [ Jameson Graef Rollins ]
+  * Add AUTHORIZED_USER_IDS config variable for server, which defaults to
+    %h/.config/monkeysphere/authorized_user_ids, instead of
+    /etc/monkeysphere/authorized_user_ids.
+  * Remove {update,remove}-userids functions, since we decided they
+    weren't useful enough to be worth maintaining.
+  * Better handling of unknown users in server update-users
+  * Add file locking when modifying known_hosts or authorized_keys
+  * Better failure/prompting for gen-subkey
+  * Add ability to set any owner trust level for keys in server keychain.
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Mon, 23 Jun 2008 17:03:19 -0400
+
+monkeysphere (0.1) experimental; urgency=low
+
+  * First release of debian package for monkeysphere.
+  * This is experimental -- please report bugs!
+
+ -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Thu, 19 Jun 2008 00:34:53 -0400
+

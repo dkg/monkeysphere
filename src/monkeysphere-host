@@ -138,12 +138,13 @@ Please run 'monkeysphere-host import-key' to import a key."
 	    ;;
 	*)
 	    if [ -z "$keyID" ] ; then
-		failure "Keyring contains multiple keys.  Please specify one to act on (see 'monkeysphere-host show-key')."
+		failure "Your host keyring contains multiple keys.
+Please specify one to act on (see 'monkeysphere-host show-key')."
 	    fi
 	    ;;
     esac
     printf '%s\n' "${fprs[@]}" | grep "${keyID}$" \
-	|| failure "Key '$keyID' not found."
+	|| failure "Host key '$keyID' not found."
 }
 
 # return 0 if user ID was found.

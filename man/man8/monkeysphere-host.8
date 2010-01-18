@@ -37,12 +37,12 @@ added to the user ID, which means the default port for that service
 (e.g. 22 for ssh) is assumed.  `i' may be used in place of
 `import\-key'.
 .TP
-.B show\-key [KEYID ...]
+.B show\-keys [KEYID ...]
 Output information about the OpenPGP certificate(s) for services
 offered by the host, including their KEYIDs.  If no KEYID is specified
 (or if the special string `--all' is used), output information about
 all certificates managed by \fBmonkeysphere\-host\fP.  `s' may be used
-in place of `show\-key'.
+in place of `show\-keys'.
 .TP
 .B set\-expire EXPIRE [KEYID]
 Extend the validity of the OpenPGP certificate specified until EXPIRE
@@ -62,11 +62,11 @@ Add a service-specific user ID to the specified certificate.  For
 example, the operator of `https://example.net' may wish to add an
 additional servicename of `https://www.example.net' to the certificate
 corresponding to the secret key used by the TLS-enabled web server.
-`n+' may be used in place of `add\-hostname'.
+`add-name' or `n+' may be used in place of `add\-hostname'.
 .TP
 .B revoke\-servicename SCHEME://HOSTNAME[:PORT] [KEYID]
 Revoke a service-specific user ID from the specified certificate.
-`n\-' may be used in place of `revoke\-hostname'.
+`revoke-name' or `n\-' may be used in place of `revoke\-hostname'.
 .TP
 .B add\-revoker REVOKER_KEYID|FILE [KEYID]
 Add a revoker to the specified OpenPGP certificate.  The revoker can
@@ -87,11 +87,11 @@ tell it to publish the revocation certificate immediately, it will
 send it to the public keyservers.  PUBLISH THESE CERTIFICATES ONLY IF
 YOU ARE SURE THE CORRESPONDING KEY WILL NEVER BE RE-USED!
 .TP
-.B publish\-key [KEYID ...]
+.B publish\-keys [KEYID ...]
 Publish the specified OpenPGP certificates to the public keyservers.
 If the special string `--all' is specified, all of the host's OpenPGP
 certificates will be published.  `p' may be used in place of
-`publish-key'.  Note that there is no way to remove a key from the
+`publish-keys'.  NOTE: that there is no way to remove a key from the
 public keyservers once it is published!
 .TP
 .B version
@@ -101,9 +101,6 @@ Show the monkeysphere version number.  `v' may be used in place of
 .B help
 Output a brief usage summary.  `h' or `?' may be used in place of
 `help'.
-
-
-Other commands:
 .TP
 .B diagnostics
 Review the state of the monkeysphere server host key and report on
@@ -216,12 +213,18 @@ If set to `false', never prompt the user for confirmation. (true)
 System monkeysphere\-host config file.
 .TP
 /var/lib/monkeysphere/host_keys.pub.gpg
-A world-readable copy of all of the host's public keys in OpenPGP
-format, including all relevant self-signatures.
+A world-readable copy of the host's OpenPGP public keyring in
+ASCII armored format.  This includes the public key certificates,
+including all relevant self-signatures, of all host keys and host key
+revokers.
+.TP
+/var/lib/monkeysphere/host_keys.pub.fprs
+A world-readable file containing the OpenPGP fingerprints of all host
+keys, one per line.
 .TP
 /var/lib/monkeysphere/host/
 A locked directory (readable only by the superuser) containing copies
-of all imported secret keys.
+of all imported secret keys (this is the host's GNUPGHOME directory).
 
 .SH AUTHOR
 
@@ -233,8 +236,8 @@ Matthew Goins <mjgoins@openflows.com>
 .SH SEE ALSO
 
 .BR monkeysphere (1),
-.BR monkeysphere\-authentication (8),
 .BR monkeysphere (7),
 .BR gpg (1),
+.BR monkeysphere\-authentication (8),
 .BR ssh (1),
 .BR sshd (8)
