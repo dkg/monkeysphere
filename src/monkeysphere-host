@@ -79,9 +79,14 @@ gpg_host() {
 
 # list the info about the a key, in colon format, to stdout
 gpg_host_list_keys() {
-    gpg_host --list-keys --with-colons --fixed-list-mode \
-	--with-fingerprint --with-fingerprint \
-	"$1"
+    if [ "$1" ] ; then
+	gpg_host --list-keys --with-colons --fixed-list-mode \
+	    --with-fingerprint --with-fingerprint \
+	    "$1"
+    else
+	gpg_host --list-keys --with-colons --fixed-list-mode \
+	    --with-fingerprint --with-fingerprint
+    fi
 }
 
 # edit key scripts, takes scripts on stdin, and keyID as first input
@@ -149,6 +154,25 @@ check_key_userid() {
     # See whether the requsted user ID is present
     gpg_host_list_keys "$keyID" | cut -f1,2,10 -d: | \
 	grep -q -x -F "$tmpuidMatch" 2>/dev/null
+}
+
+prompt_userid_exists() {
+    local userID="$1"
+    local gpgOut
+    local fingerprint
+
+    if gpgOut=$(gpg_host_list_keys "=${userID}" 2>/dev/null) ; then
+	fingerprint=$(echo "$gpgOut" | grep '^fpr:' | cut -d: -f10)
+	if [ "$PROMPT" = "true" ] ; then
+	    printf "Service name '%s' is already being used by key '%s'.\nAre you sure you want to use it again? (y/N) " "$fingerprint" "$userID" >&2
+	    read OK; OK=${OK:=N}
+	    if [ "${OK/y/Y}" != 'Y' ] ; then
+		failure "Service name not added."
+	    fi
+	else
+	    log info "Key '%s' is already using the service name '%s'." "$fingerprint" "$userID" >&2
+	fi
+    fi
 }
 
 # run command looped over keys

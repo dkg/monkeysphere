@@ -27,8 +27,7 @@ if [ -z "$serviceName" ] ; then
 fi
 
 # test that a key with that user ID does not already exist
-check_key_userid "$serviceName" "$serviceName" && \
-    failure "A key with service name '$serviceName' already exists."
+prompt_userid_exists "$serviceName"
 
 # check that the service name is well formatted
 check_service_name "$serviceName"

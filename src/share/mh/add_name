@@ -34,6 +34,9 @@ keyID=$(check_key_input "$@")
 check_key_userid "$keyID" "$serviceName" && \
     failure "Service name '$serviceName' already exists on key '$keyID'."
 
+# test that a key with that user ID does not already exist
+prompt_userid_exists "$serviceName"
+
 check_service_name "$serviceName"
 
 if [ "$PROMPT" = "true" ] ; then
