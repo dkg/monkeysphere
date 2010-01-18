@@ -62,11 +62,11 @@ Add a service-specific user ID to the specified certificate.  For
 example, the operator of `https://example.net' may wish to add an
 additional servicename of `https://www.example.net' to the certificate
 corresponding to the secret key used by the TLS-enabled web server.
-`add-name' or `n+' may be used in place of `add\-hostname'.
+`add-name' or `n+' may be used in place of `add\-servicename'.
 .TP
 .B revoke\-servicename SCHEME://HOSTNAME[:PORT] [KEYID]
 Revoke a service-specific user ID from the specified certificate.
-`revoke-name' or `n\-' may be used in place of `revoke\-hostname'.
+`revoke-name' or `n\-' may be used in place of `revoke\-servicename'.
 .TP
 .B add\-revoker REVOKER_KEYID|FILE [KEYID]
 Add a revoker to the specified OpenPGP certificate.  The revoker can

@@ -11,8 +11,8 @@ Trust
 for OpenSSH and TLS key-based authentication.  OpenPGP keys are
 tracked via GnuPG, and added to the authorized_keys and known_hosts
 files used by OpenSSH for connection authentication.  Monkeysphere can
-also be used by a monkeysphere validation agent to validate TLS
-connections on the web.
+also be used by a validation agent to validate TLS connections
+(e.g. https).
 
 .SH IDENTITY CERTIFIERS
 
@@ -67,10 +67,10 @@ user IDs) that are based on URI specifications for the service.  Some
 examples:
 .TP
 .B ssh:
-ssh://host.full.domain[:port]
+ssh://host.example.com[:port]
 .TP
 .B https:
-https://host.full.domain[:port]
+https://host.example.com[:port]
 
 .SH AUTHOR
 
