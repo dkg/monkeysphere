@@ -810,6 +810,40 @@ sub openpgp2rsa {
   return $data->{key}->{rsa};
 }
 
+sub findkeyfprs {
+  my $data = shift;
+  my $instr = shift;
+  my $tag = shift;
+  my $packetlen = shift;
+
+  findkey($data, $instr, $tag, $packetlen);
+  if (defined($data->{key})) {
+    if (defined($data->{key}->{rsa}) && defined($data->{key}->{timestamp})) {
+      $data->{keys}->{fingerprint($data->{key}->{rsa}, $data->{key}->{timestamp})} = $data->{key};
+    } else {
+      die "should have found some key here";
+    }
+    undef($data->{key});
+  }
+};
+
+sub getallprimarykeys {
+  my $instr = shift;
+
+  my $subs = { $packet_types->{pubkey} => \&findkeyfprs,
+               $packet_types->{seckey} => \&findkeyfprs,
+	     };
+  my $data = {target => { } };
+
+  packetwalk($instr, $subs, $data);
+
+  if (defined $data->{keys}) {
+    return $data->{keys};
+  } else {
+    return {};
+  }
+}
+
 sub adduserid {
   my $instr = shift;
   my $fpr = shift;
@@ -1102,6 +1136,12 @@ for (basename($0)) {
 			       });
 
 	print $newuid;
+      } elsif (/^listfprs$/) {
+        my $instream;
+	open($instream,'-');
+	binmode($instream, ":bytes");
+        my $keys = getallprimarykeys($instream);
+        printf("%s\n", join("\n", map { uc(unpack('H*', $_)) } keys(%{$keys})));
       } else {
 	die "Unrecognized subcommand.  keytrans subcommands are not a stable interface!\n";
       }
