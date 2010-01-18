@@ -50,8 +50,8 @@ else
 	| gpg_host --import
 fi
 
-# export to gpg public key to file
-update_gpg_pub_file
+# export to OpenPGP public key to file
+update_pgp_pub_file
 
 log info "host key imported:"
 

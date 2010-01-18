@@ -54,7 +54,7 @@ if PEM2OPENPGP_USAGE_FLAGS=authenticate \
 
     gpg_host --check-trustdb
 
-    update_gpg_pub_file
+    update_pgp_pub_file
 
     show_key "$keyID"
 

@@ -33,7 +33,7 @@ if ! [ -d "$SYSDATADIR" ] ; then
 fi
 
 if ! [ -f "$HOST_KEY_FILE" ] ; then
-    echo "No host key gpg pub file found!"
+    echo "No host key OpenPGP pub file found!"
     echo " - Recommendation: run 'monkeysphere-host import-key'"
     exit
 fi

@@ -120,7 +120,7 @@ save
 log debug "executing add revoker script..."
 if echo "$addrevokerCommand" | gpg_host_edit "0x${keyID}!" ; then
 
-    update_gpg_pub_file
+    update_pgp_pub_file
 
     log info "Revoker added."
 else

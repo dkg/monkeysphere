@@ -53,7 +53,7 @@ $extendBy
 save
 EOF
 
-update_gpg_pub_file
+update_pgp_pub_file
 
 log info <<EOF
 NOTE: Key expiration date adjusted, but not yet published.
