@@ -26,6 +26,10 @@ if [ -z "$serviceName" ] ; then
     failure "You must specify a service name for use in the OpenPGP certificate user ID."
 fi
 
+# test that a key with that user ID does not already exist
+check_key_userid "$serviceName" "$serviceName" && \
+    failure "A key with service name '$serviceName' already exists."
+
 # check that the service name is well formatted
 check_service_name "$serviceName"
 
