@@ -97,14 +97,6 @@ update_pgp_pub_file() {
         > "$HOST_KEY_FILE"
 }
 
-host_fingerprints() {
-    local fprs=($(gpg_host --list-secret-keys --with-colons --fingerprint | grep ^fpr: | cut -f10 -d:))
-
-    log debug "host key fingerprints:"
-    printf '%s\n' "${fprs[@]}" | log debug
-    printf '%s\n' "${fprs[@]}"
-}
-
 # check that the service name is well formed
 check_service_name() {
     local name="$1"
@@ -123,7 +115,7 @@ Please run 'monkeysphere-host import-key' import a key."
 check_key_input() {
     local keyID="$1"
     # array of fingerprints
-    local fprs=($(host_fingerprints))
+    local fprs=($(list_primary_fingerprints <"$HOST_KEY_FILE"))
 
     case ${#fprs[@]} in
 	0)
@@ -165,7 +157,7 @@ multi_key() {
     shift
     local keys=$@
     local i=0
-    local fprs=($(host_fingerprints))
+    local fprs=($(list_primary_fingerprints <"$HOST_KEY_FILE"))
     local key
 
     check_no_keys
