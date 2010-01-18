@@ -92,10 +92,9 @@ gpg_host_edit() {
 # export the monkeysphere gpg pub key file
 update_gpg_pub_file() {
     log debug "updating openpgp public key file '$HOST_KEY_FILE'..."
-    gpg_host --export --armor --export-options export-minimal > "$HOST_KEY_FILE"
-    log debug "updating fingerprint file '$HOST_KEY_FPR_FILE'..."
-    gpg_host --list-secret-key --with-colons --with-fingerprint \
-	| awk -F: '/^fpr:/{ print $10 }' > "$HOST_KEY_FPR_FILE"
+    gpg_host --export --armor --export-options export-minimal \
+        $(gpg_host --list-secret-keys --with-colons --fingerprint | grep ^fpr | cut -f9 -d:) \
+        > "$HOST_KEY_FILE"
 }
 
 host_fingerprints() {

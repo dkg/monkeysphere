@@ -213,14 +213,12 @@ If set to `false', never prompt the user for confirmation. (true)
 System monkeysphere\-host config file.
 .TP
 /var/lib/monkeysphere/host_keys.pub.gpg
-A world-readable copy of the host's OpenPGP public keyring in
-ASCII armored format.  This includes the public key certificates,
-including all relevant self-signatures, of all host keys and host key
-revokers.
-.TP
-/var/lib/monkeysphere/host_keys.pub.fprs
-A world-readable file containing the OpenPGP fingerprints of all host
-keys, one per line.
+
+A world-readable copy of the host's OpenPGP certificates in ASCII
+armored format.  This includes the certificates (including the public
+keys, servicename-based User IDs, and most recent relevant
+self-signatures) corresponding to every key used by
+Monkeysphere-enabled services on the host.
 .TP
 /var/lib/monkeysphere/host/
 A locked directory (readable only by the superuser) containing copies
