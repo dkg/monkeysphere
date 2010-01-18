@@ -722,6 +722,7 @@ sub findkey {
   my $foundfprstr = Crypt::OpenSSL::Bignum->new_from_bin($foundfpr)->to_hex();
   # left-pad with 0's to bring up to full 40-char (160-bit) fingerprint:
   $foundfprstr = sprintf("%040s", $foundfprstr);
+  my $matched = 0;
 
   # is this a match?
   if ((!defined($data->{target}->{fpr})) ||
@@ -731,6 +732,7 @@ sub findkey {
     }
     $data->{key} = { 'rsa' => $pubkey,
 		     'timestamp' => $key_timestamp };
+    $matched = 1;
   }
 
   if ($tag != $packet_types->{seckey} &&
@@ -740,7 +742,7 @@ sub findkey {
     }
     return;
   }
-  if (!defined($data->{key})) {
+  if (!$matched) {
     # we don't think the public part of this key matches
     if ($readbytes < $packetlen) {
       read($instr, $dummy, $packetlen - $readbytes) or die "Could not skip past this packet.\n";
