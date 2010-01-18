@@ -101,7 +101,7 @@ update_gpg_pub_file() {
 }
 
 host_fingerprints() {
-    local fprs=($(cat "$HOST_KEY_FPR_FILE"))
+    local fprs=($(cat "$HOST_KEY_FPR_FILE" 2>/dev/null))
 
     log debug "host key fingerprints:"
     printf '%s\n' "${fprs[@]}" | log debug
