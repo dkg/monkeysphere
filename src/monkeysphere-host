@@ -35,8 +35,6 @@ MHDATADIR="${SYSDATADIR}/host"
 
 # host pub key files
 HOST_KEY_FILE="${SYSDATADIR}/host_keys.pub.gpg"
-# host pub key fingerprints file
-HOST_KEY_FPR_FILE="${SYSDATADIR}/host_keys.fprs"
 
 # UTC date in ISO 8601 format if needed
 DATE=$(date -u '+%FT%T')
@@ -101,7 +99,7 @@ update_gpg_pub_file() {
 }
 
 host_fingerprints() {
-    local fprs=($(cat "$HOST_KEY_FPR_FILE" 2>/dev/null))
+    local fprs=($(<"$HOST_KEY_FILE" "$SYSSHAREDIR/keytrans" listfprs))
 
     log debug "host key fingerprints:"
     printf '%s\n' "${fprs[@]}" | log debug
@@ -116,7 +114,7 @@ check_service_name() {
 
 # fail if host key not present
 check_no_keys() {
-    [ -s "$HOST_KEY_FILE" ] || [ -s "$HOST_KEY_FPR_FILE" ] \
+    [ -s "$HOST_KEY_FILE" ] \
 	|| failure "You don't appear to have a Monkeysphere host key on this server.
 Please run 'monkeysphere-host import-key' import a key."
 }
