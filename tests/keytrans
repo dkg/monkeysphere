@@ -180,8 +180,6 @@ NEWKEYID=$( printf "%s" "$NEWKEYFPR" | cut -b25-40)
 PEM2OPENPGP_TIMESTAMP="$timestamp" \
     keytrans adduserid "$KEYID" "baz" | gpg --import
 
-gpg --check-sigs --with-colons --fixed-list-mode
-
 cat >"$TEMPDIR"/expectedout <<EOF
 pub:u:1024:1:$KEYID:$timestamp:::u:::scSC:
 uid:u::::$timestamp::E90EC72E68C6C2A0751DADC70F54F60D27B88C3D::monkeymonkey:
@@ -199,21 +197,13 @@ EOF
 echo "test: diff expected gpg list output"
 diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
 
-cat >"$TEMPDIR"/expectedout <<EOF
+sort >"$TEMPDIR"/expectedout <<EOF
 $KEYFPR
 $NEWKEYFPR
 EOF
 
 echo "test: diff expected keytrans listfpr output"
-if ! diff -u "$TEMPDIR"/expectedout <( < "$TEMPDIR"/secring.gpg keytrans listfprs) ; then
-    # test reverse order
-    echo "test: diff test again with permuted order"
-    cat >"$TEMPDIR"/expectedout <<EOF
-$NEWKEYFPR
-$KEYFPR
-EOF
-    diff -u "$TEMPDIR"/expectedout <( < "$TEMPDIR"/secring.gpg keytrans listfprs)
-fi
+diff -u "$TEMPDIR"/expectedout <( < "$TEMPDIR"/secring.gpg keytrans listfprs | sort )
 
 ## FIXME: addtest: not testing subkeys at the moment.
 
