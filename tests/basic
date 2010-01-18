@@ -133,7 +133,7 @@ export MONKEYSPHERE_SYSCONFIGDIR="$TEMPDIR"
 export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src/share
 export MONKEYSPHERE_MONKEYSPHERE_USER=$(whoami)
 
-HOST_KEY_FILE="$MONKEYSPHERE_SYSCONFIGDIR"/host_keys.pub.gpg
+HOST_KEY_FILE="$MONKEYSPHERE_SYSCONFIGDIR"/host_keys.pub.pgp
 
 export MONKEYSPHERE_CHECK_KEYSERVER=false
 # example.org does not respond to the HKP port, so this should cause
