@@ -257,7 +257,7 @@ monkeysphere-host import-key "$TEMPDIR"/ssh_host_rsa_key ssh://testhost
 echo
 echo "##################################################"
 echo "### getting host key fingerprint..."
-SSHHOSTKEYID=$( monkeysphere-host show-key | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
+SSHHOSTKEYID=$( monkeysphere-host show-keys | grep '^OpenPGP fingerprint: ' | cut -f3 -d\  )
 echo "$SSHHOSTKEYID"
 
 # change host key expiration

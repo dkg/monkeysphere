@@ -93,12 +93,12 @@ gpg_host_edit() {
 update_pgp_pub_file() {
     log debug "updating openpgp public key file '$HOST_KEY_FILE'..."
     gpg_host --export --armor --export-options export-minimal \
-        $(gpg_host --list-secret-keys --with-colons --fingerprint | grep ^fpr | cut -f9 -d:) \
+        $(gpg_host --list-secret-keys --with-colons --fingerprint | grep ^fpr | cut -f10 -d:) \
         > "$HOST_KEY_FILE"
 }
 
 host_fingerprints() {
-    local fprs=($(<"$HOST_KEY_FILE" "$SYSSHAREDIR/keytrans" listfprs))
+    local fprs=($(gpg_host --list-secret-keys --with-colons --fingerprint | grep ^fpr: | cut -f10 -d:))
 
     log debug "host key fingerprints:"
     printf '%s\n' "${fprs[@]}" | log debug
@@ -136,7 +136,7 @@ Please run 'monkeysphere-host import-key' to import a key."
 	*)
 	    if [ -z "$keyID" ] ; then
 		failure "Your host keyring contains multiple keys.
-Please specify one to act on (see 'monkeysphere-host show-key')."
+Please specify one to act on (see 'monkeysphere-host show-keys')."
 	    fi
 	    ;;
     esac
