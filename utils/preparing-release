@@ -1,7 +1,7 @@
 ### Notes about preparing a release for the monkeysphere ###
 
- * make sure that packaging/debian/changelog has a reasonable version
-   number.
+ * make sure that changelog and packaging/debian/changelog both have
+   reasonable version numbers.
 
  * have the monkeysphere archive signing key handy!
 

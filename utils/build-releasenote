@@ -1,10 +1,18 @@
 #!/bin/bash
 
-VERSION=`head -n1 packaging/debian/changelog | sed 's/.*(\([^)]*\)).*/\1/'`
+# script to build a release announcement for the Monkeysphere
+# if you're running this, you probably also want to read through
+# the checklist in utils/preparing-release.
+
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Copyright: © 2008-2010
+# License: GPL, v3 or later
+
+VERSION=`head -n1 changelog | sed 's/.*(\([^)]*\)).*/\1/'`
 
 { 
     sed "s/__VERSION__/$VERSION/g" < utils/releasenote.header
-    head -n$(( $(grep -n '^ --' packaging/debian/changelog  | head -n1 | cut -f1 -d:) - 2 )) packaging/debian/changelog | tail -n+3
+    head -n$(( $(grep -n '^ --' changelog  | head -n1 | cut -f1 -d:) - 2 )) changelog | tail -n+3
     sed "s/__VERSION__/$VERSION/g" < utils/releasenote.footer
 } > "website/news/release-$VERSION.mdwn"
 
