@@ -73,7 +73,7 @@ ssh_test() {
     # make a client connection to the socket
     echo "##### starting ssh client..."
     ssh-agent bash -c \
-	"monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config ${target_hostname:-testhost} true" \
+	"monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config ${target_hostname:-testhost.example} true" \
 	|| RETURN="$?"
 
     # kill the sshd process if it's still running
@@ -252,7 +252,7 @@ echo
 echo "##################################################"
 echo "### import host key..."
 ssh-keygen -b 1024 -t rsa -N '' -f "$TEMPDIR"/ssh_host_rsa_key
-monkeysphere-host import-key "$TEMPDIR"/ssh_host_rsa_key ssh://testhost
+monkeysphere-host import-key "$TEMPDIR"/ssh_host_rsa_key ssh://testhost.example
 
 echo
 echo "##################################################"
@@ -297,7 +297,7 @@ EOF
 monkeysphere-authentication setup
 get_gpg_prng_arg >> "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
 
-# add admin as identity certifier for testhost
+# add admin as identity certifier for testhost.example
 echo
 echo "##################################################"
 echo "### adding admin as certifier..."
@@ -346,7 +346,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### testing monkeysphere keys-for-userid ..."
-diff -q <( monkeysphere keys-for-userid ssh://testhost ) <( cut -f1,2 -d' ' < "$TEMPDIR"/ssh_host_rsa_key.pub )
+diff -q <( monkeysphere keys-for-userid ssh://testhost.example ) <( cut -f1,2 -d' ' < "$TEMPDIR"/ssh_host_rsa_key.pub )
 
 # connect to test sshd, using monkeysphere ssh-proxycommand to verify
 # the identity before connection.  This should work in both directions!
@@ -503,36 +503,36 @@ ssh_test
 
 echo
 echo "##################################################"
-echo "### ssh connection test directly to 'testhost2' without new name..."
-target_hostname=testhost2 ssh_test 255
+echo "### ssh connection test directly to 'testhost2.example' without new name..."
+target_hostname=testhost2.example ssh_test 255
 echo
 echo "##################################################"
 echo "### add servicename, certify by admin, import by user..."
-monkeysphere-host add-servicename ssh://testhost2
+monkeysphere-host add-servicename ssh://testhost2.example
 <"$HOST_KEY_FILE" gpgadmin --import
 printf "y\ny\n" | gpgadmin --command-fd 0 --sign-key "$SSHHOSTKEYID"
 
 echo
 echo "##################################################"
-echo "### ssh connection test with hostname 'testhost2' added..."
+echo "### ssh connection test with hostname 'testhost2.example' added..."
 gpgadmin --export "$SSHHOSTKEYID" | gpg --import
 gpg --check-trustdb
 ssh_test
 
 echo
 echo "##################################################"
-echo "### ssh connection test directly to 'testhost2' ..."
+echo "### ssh connection test directly to 'testhost2.example' ..."
 gpg --import <"$HOST_KEY_FILE"
 gpg --check-trustdb
-target_hostname=testhost2 ssh_test
+target_hostname=testhost2.example ssh_test
 
 echo
 echo "##################################################"
-echo "### ssh connection test for failure with 'testhost2' revoked..."
-monkeysphere-host revoke-servicename ssh://testhost2
+echo "### ssh connection test for failure with 'testhost2.example' revoked..."
+monkeysphere-host revoke-servicename ssh://testhost2.example
 gpg --import <"$HOST_KEY_FILE"
 gpg --check-trustdb
-target_hostname=testhost2 ssh_test 255
+target_hostname=testhost2.example ssh_test 255
 
 # FIXME: addtest: remove admin as id-certifier and check ssh failure
 
@@ -553,8 +553,8 @@ echo
 echo "##################################################"
 echo "### Testing TLS setup..."
 
-openssl req -config "$TESTDIR"/openssl.cnf -x509 -newkey rsa:1024 -subj '/DC=net/DC=example/DC=testhost/CN=testhost.example.net/' -days 3 -keyout "$TEMPDIR"/tls_key.pem -nodes >"$TEMPDIR"/tls_cert.pem
-monkeysphere-host import-key "$TEMPDIR"/tls_key.pem https://testhost
+openssl req -config "$TESTDIR"/openssl.cnf -x509 -newkey rsa:1024 -subj '/DC=example/DC=testhost/CN=testhost.example/' -days 3 -keyout "$TEMPDIR"/tls_key.pem -nodes >"$TEMPDIR"/tls_cert.pem
+monkeysphere-host import-key "$TEMPDIR"/tls_key.pem https://testhost.example
 
 # FIXME: how can we test this via an https client?  
 # We don't currently provide one.

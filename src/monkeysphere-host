@@ -102,10 +102,80 @@ update_pgp_pub_file() {
         > "$HOST_KEY_FILE"
 }
 
-# check that the service name is well formed
+# check that the service name is well formed. we assume that the
+# service name refers to a host; DNS labels for host names are limited
+# to a very small range of characters (see RFC 1912, section 2.1).
+
+# FIXME: i'm failing to check here for label components that are
+# all-number (e.g. ssh://666.666), which are technically not allowed
+# (though some exist on the 'net, apparently)
+
 check_service_name() {
     local name="$1"
-    log error "FIX ME: check service name"
+    local errs=""
+    local scheme
+    local port
+    local assigned_ports
+
+    [ -n "$name" ] || \
+        failure "You must supply a service name to check"
+
+    printf '%s' "$name" | perl -n -e '($str = $_) =~ s/\s//g ; exit !(lc($str) eq $_);' || \
+        failure "Not a valid service name: '$name'
+
+Service names should be canonicalized to all lower-case,
+with no whitespace"
+
+    [[ "$name" =~ ^[a-z0-9./:-]+$ ]] || \
+        failure "Not a valid service name: '$name'
+
+Service names should contain only lower-case ASCII letters
+numbers, dots (.), hyphens (-), slashes (/), and a colon (:).
+If you are using non-ASCII characters (e.g. IDN), you should
+use the canonicalized ASCII (NAMEPREP -> Punycode) representation
+(see RFC 3490)."
+
+    [[ "$name" =~ \. ]] || \
+        failure "Not a valid service name: '$name'
+
+Service names should use fully-qualified domain names (FQDN), but the
+domain name you chose appears to only have the local part.  For
+example: don't use 'ssh://foo' ; use 'ssh://foo.example.com' instead."
+
+    [[ "$name" =~ ^[a-z]([a-z0-9-]*[a-z0-9])?://[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.|((\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+))(:[1-9][0-9]{0,4})?$ ]] || \
+        failure "Not a valid service name: '$name'
+
+Service names look like <scheme>://full.example.com[:<portnumber>],
+where <scheme> is something like ssh or https, and <portnumber> is
+a decimal number (supplied only if the service is on a non-standard
+port)."
+    
+    scheme=$(cut -f1 -d: <<<"$name")
+    port=$(cut -f3 -d: <<<"$name")
+    
+    # check that the scheme name is found in the system services
+    # database
+    available_=$(get_port_for_service "$scheme") || \
+        log error "Error looking up service scheme named '%s'" "$scheme"
+
+    # FIXME: if the service isn't found, or does not have a port, what
+    # should we do? at the moment, we're just warning.
+    
+    if [ -n "$port" ]; then
+    # check that the port number is a legitimate port number (> 0, < 65536)
+        [ "$port" -gt 0 ] && [ "$port" -lt 65536 ] || \
+            failure "The given port number should be greater than 0 and
+less than 65536.  '$port' is not OK"
+
+    # if the port number is given, and the scheme is in the services
+    # database, check that the port number does *not* match the
+    # default port.
+        if (printf '%s' "$assigned_ports" | grep -q -F -x "$port" ) ; then
+            failure $(printf "The scheme %s uses port number %d by default.
+You should leave off the port number if it is the default" "$scheme" "$port")
+        fi
+    fi
+
 }
 
 # fail if host key not present

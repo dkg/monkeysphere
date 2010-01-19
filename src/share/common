@@ -436,6 +436,28 @@ list_users() {
     fi
 }
 
+# take one argument, a service name.  in response, print a series of
+# lines, each with a unique numeric port number that might be
+# associated with that service name.  (e.g. in: "https", out: "443")
+# if nothing is found, print nothing, and return 0.
+# 
+# return 1 if there was an error in the search somehow
+get_port_for_service() {
+
+    [[ "$1" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] || \
+        failure $(printf "This is not a valid service name: '%s'" "$1")
+    if type getent &>/dev/null ; then
+        # for linux and FreeBSD systems (getent returns 2 if not found, 0 on success, 1 or 3 on various failures)
+        (getent services "$service" || if [ "$?" -eq 2 ] ; then true ; else false; fi) | awk '{ print $2 }' | cut -f1 -d/ | sort -u
+    elif [ -r /etc/services ] ; then
+        # fall back to /etc/services for systems that don't have getent (MacOS?)
+        # FIXME: doesn't handle aliases like "null" (or "http"?), which don't show up at the beginning of the line.
+        awk $(printf '/^%s[[:space:]]/{ print $2 }' "$1") /etc/services | cut -f1 -d/ | sort -u
+    else
+        return 1
+    fi
+}
+
 # return the path to the home directory of a user
 get_homedir() {
     local uname=${1:-`whoami`}
