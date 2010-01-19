@@ -256,10 +256,11 @@ multi_key() {
     shift
     local keys=$@
     local i=0
-    local fprs=($(list_primary_fingerprints <"$HOST_KEY_FILE"))
     local key
 
     check_no_keys
+
+    local fprs=($(list_primary_fingerprints <"$HOST_KEY_FILE"))
 
     if [[ -z "$1" || "$1" == '--all' ]] ; then
 	keys="${fprs[@]}"
