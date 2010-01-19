@@ -1,0 +1,15 @@
+[[meta title="Monkeysphere 0.28 released!"]]
+
+Monkeysphere 0.28 has been released.  
+
+Notes from the changelog:
+
+<pre>
+  * Major rework of monkeysphere-host to handle multiple host keys.  We
+    also no longer assume ssh service keys.  monkeysphere-host is now a
+    general-purpose host service OpenPGP key management UI.
+  * Rename keys-from-userid command to more accurate keys-for-userid
+  * separate upstream and debian changelogs
+</pre>
+
+[[Download]] it now!
