@@ -1,9 +1,9 @@
-monkeysphere (0.28~pre1-1) UNRELEASED; urgency=low
+monkeysphere (0.28-1) unstable; urgency=low
 
   * New upstream release
   * Separate upstream and debian changelogs
 
- -- Jameson Rollins <jrollins@finestructure.net>  Sat, 16 Jan 2010 12:27:04 -0500
+ -- Jameson Rollins <jrollins@finestructure.net>  Tue, 19 Jan 2010 13:56:17 -0500
 
 monkeysphere (0.27-1) unstable; urgency=low
 

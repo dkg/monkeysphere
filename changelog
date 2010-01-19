@@ -1,4 +1,4 @@
-monkeysphere (0.28~pre1) UNRELEASED; urgency=low
+monkeysphere (0.28) unstable; urgency=low
 
   * Major rework of monkeysphere-host to handle multiple host keys.  We
     also no longer assume ssh service keys.  monkeysphere-host is now a
@@ -6,7 +6,7 @@ monkeysphere (0.28~pre1) UNRELEASED; urgency=low
   * Rename keys-from-userid command to more accurate keys-for-userid
   * separate upstream and debian changelogs
 
- -- Jameson Rollins <jrollins@finestructure.net>  Sat, 16 Jan 2010 12:21:34 -0500
+ -- Jameson Rollins <jrollins@finestructure.net>  Tue, 19 Jan 2010 13:50:31 -0500
 
 monkeysphere (0.27) unstable; urgency=low
 
