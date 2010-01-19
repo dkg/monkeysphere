@@ -264,7 +264,7 @@ multi_key() {
 	if (( i++ > 0 )) ; then
 	    echo "##############################"
 	fi
-	eval "$cmd" "$key"
+	"$cmd" "$key"
     done
 }
 
