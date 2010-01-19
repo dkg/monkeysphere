@@ -5,7 +5,7 @@
 # © 2008-2010 Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Licensed under GPL v3 or later
 
-MONKEYSPHERE_VERSION = `head -n1 packaging/debian/changelog | sed 's/.*(\([^-]*\)-.*/\1/'`
+MONKEYSPHERE_VERSION = `head -n1 changelog | sed 's/.*(\([^-]*\)).*/\1/'`
 
 # these defaults are for debian.  porters should probably adjust them
 # before calling make install
