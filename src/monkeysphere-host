@@ -110,6 +110,11 @@ update_pgp_pub_file() {
 # all-number (e.g. ssh://666.666), which are technically not allowed
 # (though some exist on the 'net, apparently)
 
+# FIXME: this will probably misbehave if raw IP addresses are provided,
+# either IPv4 or IPv6 using the bracket notation.
+
+# FIXME: this doesn't address the use of hashed User IDs.
+
 check_service_name() {
     local name="$1"
     local errs=""
