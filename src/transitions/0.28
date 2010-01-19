@@ -21,5 +21,5 @@ SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
 OLD_HOST_KEY_FILE="$SYSDATADIR"/ssh_host_rsa_key.pub.gpg
 if [ -f "$OLD_HOST_KEY_FILE" ] ; then
     monkeysphere-host update-pgp-pub-file
-    rm -rf "$OLD_HOST_KEY_FILE"
+    rm -f "$OLD_HOST_KEY_FILE"
 fi
