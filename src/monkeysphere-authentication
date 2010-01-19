@@ -211,7 +211,7 @@ case $COMMAND in
 	gpg_sphere "$@"
 	;;
 
-    'version'|'v')
+    'version'|'--version'|'v')
 	version
 	;;
 
