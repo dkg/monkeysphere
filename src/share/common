@@ -1207,6 +1207,18 @@ list_primary_fingerprints() {
     rm -rf "$fake"
 }
 
+# takes an OpenPGP key or set of keys on stdin, a fingerprint or other
+# key identifier as $1, and outputs the gpg-formatted information for
+# the requested keys from the material on stdin
+get_cert_info() {
+    local fake=$(msmktempdir)
+    trap "rm -rf $fake" EXIT
+    GNUPGHOME="$fake" gpg --no-tty --quiet --import
+    GNUPGHOME="$fake" gpg --with-colons --fingerprint --list-keys "$1"
+    trap - EXIT
+    rm -rf "$fake"
+}
+
 
 check_cruft_file() {
     local loc="$1"
