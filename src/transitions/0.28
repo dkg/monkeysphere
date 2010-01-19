@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# This is a post-install script for monkeysphere, to transition an old
+# (<0.28) setup to the new (>=0.28) setup.
+
+# You should be able to run this script after any version >= 0.23 is
+# installed.  This script should be well-behaved, even if it is run
+# repeatedly.
+
+# Written by
+# Jameson Rollins <jrollins@finestructure.net>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# Copyright 2010, released under the GPL, version 3 or later
+
+# any unexpected errors should cause this script to bail:
+set -e
+
+SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
+
+OLD_HOST_KEY_FILE="$SYSDATADIR"/ssh_host_rsa_key.pub.gpg
+if [ -f "$OLD_HOST_KEY_FILE" ] ; then
+    monkeysphere-host update-pgp-pub-file
+    rm -rf "$OLD_HOST_KEY_FILE"
+fi

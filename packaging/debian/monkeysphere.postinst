@@ -22,7 +22,7 @@ case $1 in
 	fi
 
 	# try all available transitions:
-	for trans in 0.23 ; do
+	for trans in 0.23 0.28 ; do
 	    /usr/share/monkeysphere/transitions/$trans || { \
 		RET=$?
 		echo "Failed running transition script /usr/share/monkeysphere/transitions/$trans" >&2
