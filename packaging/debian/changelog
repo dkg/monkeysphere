@@ -1,3 +1,9 @@
+monkeysphere (0.28-2~pre1) UNRELEASED; urgency=low
+
+  * bumped Standards-Version to 3.8.3 (no changes needed)
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Mon, 01 Feb 2010 01:41:40 -0500
+
 monkeysphere (0.28-1) unstable; urgency=low
 
   * New upstream release
