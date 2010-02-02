@@ -251,7 +251,7 @@ case $COMMAND in
 	process_authorized_user_ids "$AUTHORIZED_USER_IDS"
 	;;
 
-    'import-subkey'|'i')
+    'import-subkey'|'import'|'i')
 	source "${MSHAREDIR}/import_subkey"
 	import_subkey "$@"
 	;;

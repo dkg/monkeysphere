@@ -379,7 +379,7 @@ COMMAND="$1"
 shift
 
 case $COMMAND in
-    'import-key'|'i')
+    'import-key'|'import'|'i')
 	source "${MHSHAREDIR}/import_key"
 	import_key "$@"
 	;;
@@ -388,7 +388,7 @@ case $COMMAND in
 	multi_key show_key "$@"
 	;;
 
-    'set-expire'|'extend-key'|'e')
+    'set-expire'|'extend-key'|'extend'|'e')
 	source "${MHSHAREDIR}/set_expire"
 	set_expire "$@"
 	;;
