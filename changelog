@@ -1,3 +1,9 @@
+monkeysphere (0.28.1) unstable; urgency=low
+
+  * Fix man page typo about monkeysphere authorized_keys location
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Thu, 04 Feb 2010 11:57:45 -0500
+
 monkeysphere (0.28) unstable; urgency=low
 
   * Major rework of monkeysphere-host to handle multiple host keys.  We

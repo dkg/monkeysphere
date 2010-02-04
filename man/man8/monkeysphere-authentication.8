@@ -131,7 +131,7 @@ user authentication, the AuthorizedKeysFile parameter must be set in
 the sshd_config to point to the monkeysphere\-generated
 authorized_keys files:
 
-AuthorizedKeysFile /var/lib/monkeysphere/authentication/authorized_keys/%u
+AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
 
 It is recommended to add "monkeysphere\-authentication update\-users"
 to a system crontab, so that user keys are kept up-to-date, and key
