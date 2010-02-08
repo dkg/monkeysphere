@@ -1,0 +1,43 @@
+outline for 1 hr seminar talk to CS/security academics
+
+ - key-based authentication is here to stay. (e.g. https, ssh).
+  - host vs. user
+
+ - raises key management/distribution issues
+
+ - what PKIs are available?  X.509, OpenPGP, SPKI
+
+ - social vulnerabilities - single-signer vs. multi-signer
+
+ - protocol vulnerabilities - single cert vs. multi-cert (server
+   vs. client again)
+
+ - utility for group-internal work, phased approach to public
+
+
+
+Stream-based communications over the public network have an
+authentication problem.  Most data streams are not authenticated in
+either direction, and most of those that are authenticated in at least
+one direction use authentication regimes which suffer from a range of
+known structural problems.
+
+Public-key-based authentication offers security advantages over
+shared-secret approaches, but it introduces additional questions of
+key distribution, binding, and revocation.  Two common solutions to
+these problems on today's network are X.509 certificates (used by TLS
+connections like HTTPS) and so-called "key continuity management"
+(KCM) (used by popular SSH implementations and the "security
+exceptions" interface for some web browsers).  Both of these schemes
+present security concerns of their own: KCM has trouble with initial
+contact, key revocation, and re-keying; and X.509's single-issuer
+certificate format has a systemic bias that selects for unaccountable
+third-party authorities.  New work ("the Monkeysphere") extends the
+OpenPGP Web of Trust into authenticating stream-based communications
+(instead of its traditional message-based environment of e-mails and
+files) by means of a protocol-independent overlay.  As a simple,
+alternative PKI, the Monkeysphere resolves these failings, and also
+provides features currently only available as protocol extensions
+(such as SNI).
+
+
