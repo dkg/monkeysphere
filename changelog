@@ -1,8 +1,10 @@
-monkeysphere (0.28.1) unstable; urgency=low
+monkeysphere (0.29~pre1) UNRELEASED; urgency=low
 
   * Fix man page typo about monkeysphere authorized_keys location
+  * Monkeysphere should work properly even if the user has "armor" in
+    their gpg.conf (closes MS #1625)
 
- -- Jameson Graef Rollins <jrollins@finestructure.net>  Thu, 04 Feb 2010 11:57:45 -0500
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 18 Feb 2010 12:38:43 -0500
 
 monkeysphere (0.28) unstable; urgency=low
 
