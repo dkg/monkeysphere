@@ -74,7 +74,7 @@ gpg_ssh_fingerprint() {
     trap "rm -f $tmpfile" EXIT
 
     # use temporary file, since ssh-keygen won't accept keys on stdin
-    gpg_user --export "$keyid" | openpgp2ssh "$keyid" >"$tmpfile"
+    gpg_user --export "$keyid" --no-armor | openpgp2ssh "$keyid" >"$tmpfile"
     ssh-keygen -l -f "$tmpfile" | awk '{ print $1, $2, $4 }'
 
     # remove the tmp file

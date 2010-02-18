@@ -355,6 +355,14 @@ echo "##################################################"
 echo "### ssh connection test for success..."
 ssh_test
 
+# Make sure it works if there is "armor" written in gpg.conf
+# add other weirdnesses here as they come up.
+echo
+echo "##################################################"
+echo "### testing functionality in the face of unusual gpg.conf settings..."
+echo 'armor' >> "$GNUPGHOME"/gpg.conf
+ssh_test
+
 # remove the testuser's authorized_user_ids file, update, and make
 # sure that the ssh authentication FAILS
 echo

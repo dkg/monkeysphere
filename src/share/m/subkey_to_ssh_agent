@@ -98,14 +98,14 @@ You might want to run 'monkeysphere gen-subkey'."
 
 	if [ "$1" = '-d' ]; then
 	    # we're removing the subkey:
-	    gpg_user --export "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname"
+	    gpg_user --export --no-armor "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname"
 	    (cd "$workingdir" && ssh-add -d "$kname") || keysuccess="$?"
 	else
 	    # we're adding the subkey:
 	    mkfifo "$workingdir/$kname"
 	    gpg_user --passphrase-fd 3 3<"$workingdir/passphrase" \
 		--export-options export-reset-subkey-passwd,export-minimal,no-export-attributes \
-		--export-secret-subkeys "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname" &
+		--export-secret-subkeys --no-armor "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname" &
 	    (cd "$workingdir" && DISPLAY=nosuchdisplay SSH_ASKPASS=/bin/false ssh-add "$@" "$kname" </dev/null )&
 
 	    passphrase_prompt "Enter passphrase for key $kname: " "$workingdir/passphrase"

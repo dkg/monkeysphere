@@ -302,7 +302,7 @@ show_key() {
 
     # create the ssh key
     tmpssh="$GNUPGHOME"/ssh_host_key_rsa_pub
-    gpg --export "$fingerprint" 2>/dev/null \
+    gpg --export --no-armor "$fingerprint" 2>/dev/null \
 	| openpgp2ssh 2>/dev/null >"$tmpssh"
 
     # list the host key info
