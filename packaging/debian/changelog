@@ -5,6 +5,7 @@ monkeysphere (0.29~pre1-1) UNRELEASED; urgency=low
 
   [ Daniel Kahn Gillmor ]
   * bumped Standards-Version to 3.8.4 (no changes needed)
+  * indicated bash dependency on version 3.2 or later (see MS #1687)
 
  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 18 Feb 2010 12:40:56 -0500
 
