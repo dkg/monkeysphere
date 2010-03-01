@@ -2,7 +2,7 @@
 
 .SH NAME
 
-monkeysphere\-host - Monkeysphere host key administration tool.
+monkeysphere\-host \- Monkeysphere host key administration tool.
 
 .SH SYNOPSIS
 
@@ -11,7 +11,7 @@ monkeysphere\-host - Monkeysphere host key administration tool.
 .SH DESCRIPTION
 
 \fBMonkeysphere\fP is a framework to leverage the OpenPGP web of trust
-for SSH and TLS key-based authentication.
+for SSH and TLS key\-based authentication.
 
 \fBmonkeysphere\-host\fP stores and manages OpenPGP certificates for
 various services offered by the host.
@@ -27,11 +27,11 @@ be omitted, and \fBmonkeysphere\-host\fP will operate on it.
 \fBmonkeysphere\-host\fP takes various subcommands:
 .TP
 .B import\-key FILE SCHEME://HOSTNAME[:PORT]
-Import a PEM-encoded host secret key from file FILE.  If FILE is `\-',
-then the key will be imported from stdin.  Only RSA keys are supported
-at the moment.  SCHEME://HOSTNAME[:PORT] is used to specify the scheme
-(e.g. ssh or https), fully-qualified hostname (and port) used in the
-user ID of the new OpenPGP key (e.g. ssh://example.net or
+Import a PEM\-encoded host secret key from file FILE.  If FILE is
+`\-', then the key will be imported from stdin.  Only RSA keys are
+supported at the moment.  SCHEME://HOSTNAME[:PORT] is used to specify
+the scheme (e.g. ssh or https), fully\-qualified hostname (and port)
+used in the user ID of the new OpenPGP key (e.g. ssh://example.net or
 https://www.example.net).  If PORT is not specified, then no port is
 added to the user ID, which means the default port for that service
 (e.g. 22 for ssh) is assumed.  `i' may be used in place of
@@ -40,7 +40,7 @@ added to the user ID, which means the default port for that service
 .B show\-keys [KEYID ...]
 Output information about the OpenPGP certificate(s) for services
 offered by the host, including their KEYIDs.  If no KEYID is specified
-(or if the special string `--all' is used), output information about
+(or if the special string `\-\-all' is used), output information about
 all certificates managed by \fBmonkeysphere\-host\fP.  `s' may be used
 in place of `show\-keys'.
 .TP
@@ -58,40 +58,40 @@ from today's date):
 `e' may be used in place of `set\-expire'.
 .TP
 .B add\-servicename SCHEME://HOSTNAME[:PORT] [KEYID]
-Add a service-specific user ID to the specified certificate.  For
+Add a service\-specific user ID to the specified certificate.  For
 example, the operator of `https://example.net' may wish to add an
 additional servicename of `https://www.example.net' to the certificate
-corresponding to the secret key used by the TLS-enabled web server.
-`add-name' or `n+' may be used in place of `add\-servicename'.
+corresponding to the secret key used by the TLS\-enabled web server.
+`add\-name' or `n+' may be used in place of `add\-servicename'.
 .TP
 .B revoke\-servicename SCHEME://HOSTNAME[:PORT] [KEYID]
-Revoke a service-specific user ID from the specified certificate.
-`revoke-name' or `n\-' may be used in place of `revoke\-servicename'.
+Revoke a service\-specific user ID from the specified certificate.
+`revoke\-name' or `n\-' may be used in place of `revoke\-servicename'.
 .TP
 .B add\-revoker REVOKER_KEYID|FILE [KEYID]
 Add a revoker to the specified OpenPGP certificate.  The revoker can
 be specified by their own REVOKER_KEYID (in which case it will be
 loaded from an OpenPGP keyserver), or by specifying a path to a file
 containing the revoker's OpenPGP certificate, or by specifying `\-' to
-load from stdin.  `r+' may be be used in place of `add-revoker'.
+load from stdin.  `r+' may be be used in place of `add\-revoker'.
 .TP
 .B revoke\-key [KEYID]
 Generate (with the option to publish) a revocation certificate for
 given OpenPGP certificate.  If such a certificate is published, the
 given key will be permanently revoked, and will no longer be accepted
-by monkeysphere-enabled clients.  This subcommand will ask you a
+by monkeysphere\-enabled clients.  This subcommand will ask you a
 series of questions, and then generate a key revocation certificate,
 sending it to stdout.  You might want to store these certificates
 safely offline, to publish in case of compromise).  If you explicitly
 tell it to publish the revocation certificate immediately, it will
 send it to the public keyservers.  PUBLISH THESE CERTIFICATES ONLY IF
-YOU ARE SURE THE CORRESPONDING KEY WILL NEVER BE RE-USED!
+YOU ARE SURE THE CORRESPONDING KEY WILL NEVER BE RE\-USED!
 .TP
 .B publish\-keys [KEYID ...]
 Publish the specified OpenPGP certificates to the public keyservers.
-If the special string `--all' is specified, all of the host's OpenPGP
-certificates will be published.  `p' may be used in place of
-`publish-keys'.  NOTE: that there is no way to remove a key from the
+If the special string `\-\-all' is specified, all of the host's
+OpenPGP certificates will be published.  `p' may be used in place of
+`publish\-keys'.  NOTE: that there is no way to remove a key from the
 public keyservers once it is published!
 .TP
 .B version
@@ -115,8 +115,8 @@ To enable users to verify your SSH host's key via the monkeysphere, an
 OpenPGP certificate must be made out of the host's RSA ssh key, and
 the certificate must be published to the Web of Trust.  Certificate
 publication is not done by default.  The first step is to import the
-host's ssh key into a monkeysphere-style OpenPGP certificate.  This is
-done with the import\-key command.  For example:
+host's ssh key into a monkeysphere\-style OpenPGP certificate.  This
+is done with the import\-key command.  For example:
 
 # monkeysphere\-host import\-key /etc/ssh/ssh_host_rsa_key ssh://host.example.org
 
@@ -129,29 +129,29 @@ host once the key is imported into \fBmonkeysphere\-host\fP.
 
 .SH SETUP WEB SERVER CERTIFICATES
 
-You can set up your HTTPS-capable web server so that your users can
+You can set up your HTTPS\-capable web server so that your users can
 verify it via the monkeysphere, without changing your server's
-software at all.  You just need access to a (PEM-encoded) version of
+software at all.  You just need access to a (PEM\-encoded) version of
 the server's RSA secret key (most secret keys are already stored
-PEM-encoded).  The first step is to import the web server's key into a
-monkeysphere-style OpenPGP certificate.  This is done with the
+PEM\-encoded).  The first step is to import the web server's key into
+a monkeysphere\-style OpenPGP certificate.  This is done with the
 import\-key command.  For example:
 
-# monkeysphere\-host import-key /etc/ssl/private/host.example.net-key.pem https://host.example.net
+# monkeysphere\-host import\-key /etc/ssl/private/host.example.net\-key.pem https://host.example.net
 
 If you don't know where the web server's key is stored on your
 machine, consult the configuration files for your web server.
-Debian-based systems using the `ssl-cert' packages often have a
-default self-signed certificate stored in
-`/etc/ssl/private/ssl-cert-snakeoil.key' ; if you're using that key,
+Debian\-based systems using the `ssl\-cert' packages often have a
+default self\-signed certificate stored in
+`/etc/ssl/private/ssl\-cert\-snakeoil.key' ; if you're using that key,
 your users are getting browser warnings about it.  You can keep using
 the same key, but help them use the OpenPGP WoT to verify that it does
 belong to your web server by using something like:
 
-# monkeysphere\-host import-key /etc/ssl/private/ssl-cert-snakeoil.key https://$(hostname --fqdn)
+# monkeysphere\-host import\-key /etc/ssl/private/ssl\-cert\-snakeoil.key https://$(hostname \-\-fqdn)
 
 If you offer multiple HTTPS websites using the same secret key, you
-should add the additional website names with the `add-servicename'
+should add the additional website names with the `add\-servicename'
 subcommand.
 
 See PUBLISHING AND CERTIFYING MONKEYSPHERE SERVICE CERTIFICATES (the
@@ -168,16 +168,16 @@ must be published to the Web of Trust so that users can retrieve the
 cert when connecting to the host.  The host certificates are published
 to the keyserver with the publish\-key command:
 
-$ monkeysphere\-host publish\-key --all
+$ monkeysphere\-host publish\-key \-\-all
 
 In order for users accessing the system to be able to identify the
 host's service via the monkeysphere, at least one person (e.g. a
 server admin) will need to sign the host's certificate.  This is done
 using standard OpenPGP keysigning techniques.  Usually: pull the
 host's OpenPGP certificate from the keyserver, verify and sign it, and
-then re-publish your signature.  More than one person can certify any
+then re\-publish your signature.  More than one person can certify any
 certificate.  Please see
-http://web.monkeysphere.info/signing-host-keys/ for more information
+http://web.monkeysphere.info/signing\-host\-keys/ for more information
 and details.  Once an admin's signature is published, users accessing
 the host can use the certificate to validate the host's key without
 having to manually check the host key's fingerprint (in the case of
@@ -213,12 +213,11 @@ If set to `false', never prompt the user for confirmation. (true)
 System monkeysphere\-host config file.
 .TP
 /var/lib/monkeysphere/host_keys.pub.pgp
-
-A world-readable copy of the host's OpenPGP certificates in ASCII
+A world\-readable copy of the host's OpenPGP certificates in ASCII
 armored format.  This includes the certificates (including the public
-keys, servicename-based User IDs, and most recent relevant
-self-signatures) corresponding to every key used by
-Monkeysphere-enabled services on the host.
+keys, servicename\-based User IDs, and most recent relevant
+self\-signatures) corresponding to every key used by
+Monkeysphere\-enabled services on the host.
 .TP
 /var/lib/monkeysphere/host/
 A locked directory (readable only by the superuser) containing copies
