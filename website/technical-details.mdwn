@@ -1,4 +1,4 @@
-[[meta title="Technical Details"]]
+[[!meta title="Technical Details"]]
 
 # Technical Details #
 

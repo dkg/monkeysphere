@@ -1,4 +1,4 @@
-[[meta title="revoke-hostname function revokes wrong hostname user ID"]]
+[[!meta title="revoke-hostname function revokes wrong hostname user ID"]]
 
 It appears that the monkeysphere-server revoke-hostname function will
 occasionaly revoke the wrong hostname.  I say occasionally, but it

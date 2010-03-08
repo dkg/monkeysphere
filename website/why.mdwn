@@ -1,4 +1,4 @@
-[[meta title="Why should you be interested in the Monkeysphere?"]]
+[[!meta title="Why should you be interested in the Monkeysphere?"]]
 
 # Why should you be interested in the Monkeysphere? #
 

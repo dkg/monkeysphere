@@ -1,4 +1,4 @@
-[[meta title="MonkeySphere 0.12-1 released!"]]
+[[!meta title="MonkeySphere 0.12-1 released!"]]
 
 # MonkeySphere 0.12-1 released! #
 

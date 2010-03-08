@@ -1,4 +1,4 @@
-[[meta title="Monkeysphere support for options in authorized_keys"]]
+[[!meta title="Monkeysphere support for options in authorized_keys"]]
 
 OpenSSH [allows users to control the capabilities granted to remote
 key-based

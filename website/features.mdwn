@@ -1,4 +1,4 @@
-[[meta title="Features"]]
+[[!meta title="Features"]]
 
 # Features #
 

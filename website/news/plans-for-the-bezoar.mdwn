@@ -1,4 +1,4 @@
-[[meta title="Plans for The Golden Bezoar"]]
+[[!meta title="Plans for The Golden Bezoar"]]
 
 A workday with several Monkeysphere contributors on 2009-01-31
 resulted in a significant reorganization of the project in several

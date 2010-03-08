@@ -1,4 +1,4 @@
-[[meta title="Missing `~/.ssh/known_hosts` file causes errors from monkeysphere-ssh-proxycommand"]]
+[[!meta title="Missing `~/.ssh/known_hosts` file causes errors from monkeysphere-ssh-proxycommand"]]
 
 As a user, if you don't have a `~/.ssh/known_hosts` file,
 `monkeysphere-ssh-proxycommand` produces some bogus output, like:

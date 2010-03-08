@@ -1,4 +1,4 @@
-[[meta title="Documentation"]]
+[[!meta title="Documentation"]]
 
 # Documentation #
 

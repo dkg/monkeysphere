@@ -1,4 +1,4 @@
-[[meta title="Add man pages to web site"]]
+[[!meta title="Add man pages to web site"]]
 
 We should publish the various monkeysphere man pages in browsable form
 somewhere under http://web.monkeysphere.info/.  Ideally, this would be

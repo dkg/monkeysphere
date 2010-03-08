@@ -1,4 +1,4 @@
-[[meta title="Support multiple host names for monkeysphere-enabled servers"]]
+[[!meta title="Support multiple host names for monkeysphere-enabled servers"]]
 
 Some monkeysphere-enabled hosts answer to multiple host names, but the
 current `monkeysphere-server` only generates a single User ID

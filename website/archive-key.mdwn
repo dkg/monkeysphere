@@ -1,4 +1,4 @@
-[[meta title="Monkeysphere archive signing key"]]
+[[!meta title="Monkeysphere archive signing key"]]
 [[toc ]]
 
 ## Verifying the key ##

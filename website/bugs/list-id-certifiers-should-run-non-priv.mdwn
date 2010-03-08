@@ -1,4 +1,4 @@
-[[meta title="list-identity-certfiers should run as the non-privileged user"]]
+[[!meta title="list-identity-certfiers should run as the non-privileged user"]]
 
 Right now, `monkeysphere-server list-identity-certifiers` runs as the
 superuser, and just lists the keys in the host's keyring.  This might

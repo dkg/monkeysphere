@@ -1,4 +1,4 @@
-[[meta title="GnuTLS 2.6.x enables Monkeysphere to read authentication subkeys"]]
+[[!meta title="GnuTLS 2.6.x enables Monkeysphere to read authentication subkeys"]]
 
 -----
 

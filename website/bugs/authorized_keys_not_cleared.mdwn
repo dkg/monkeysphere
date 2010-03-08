@@ -1,4 +1,4 @@
-[[meta title="users with missing or empty authorized keys and User IDs should have MS-generated keys cleared" ]]
+[[!meta title="users with missing or empty authorized keys and User IDs should have MS-generated keys cleared" ]]
 
 I had a user who had a bunch of entries in
 `~/.monkeysphere/authorized_user_ids`, and a bunch of raw keys in

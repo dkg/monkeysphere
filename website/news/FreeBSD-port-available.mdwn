@@ -1,4 +1,4 @@
-[[meta title="FreeBSD port available"]]
+[[!meta title="FreeBSD port available"]]
 
 Update: [FreeBSD's official ports tree now contains monkeysphere
 0.24](FreeBSD-0.24-port-accepted).

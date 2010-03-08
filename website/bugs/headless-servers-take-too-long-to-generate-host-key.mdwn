@@ -1,4 +1,4 @@
-[[meta title="Running `monkeysphere gen-key` on a headless server takes way too long"]]
+[[!meta title="Running `monkeysphere gen-key` on a headless server takes way too long"]]
 
 When i try to generate a key on a headless machine (no kbd, no mouse,
 no Human Input Device (HID) at all), `monkeysphere gen-key` hangs for
