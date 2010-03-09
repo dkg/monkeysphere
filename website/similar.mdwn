@@ -1,4 +1,4 @@
-[[meta title="Similar Projects"]]
+[[!meta title="Similar Projects"]]
 
 The monkeysphere isn't the only project intending to implement a PKI
 for OpenSSH.  We provide links to these other projects because they're

@@ -1,4 +1,4 @@
-[[meta title="Setup test public server/gpg key"]]
+[[!meta title="Setup test public server/gpg key"]]
 
 It would be really useful for people trying out the monkeysphere to be able to
 test it with a participating server as soon as they've finished setting things

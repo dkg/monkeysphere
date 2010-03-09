@@ -1,4 +1,4 @@
-[[meta title="`monkeysphere gen-key` should guess at KeyID if none provided"]]
+[[!meta title="`monkeysphere gen-key` should guess at KeyID if none provided"]]
 
 Currently, if you have a single private key in your GnuPG keyring, and
 you call:

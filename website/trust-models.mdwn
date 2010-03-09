@@ -1,4 +1,4 @@
-[[meta title="OpenPGP Trust Models"]]
+[[!meta title="OpenPGP Trust Models"]]
 
 # OpenPGP Trust Models #
 
@@ -133,7 +133,7 @@ formally public by publishing the trust signature to any keyserver.
 
 If you trust my judgement in this area ([the
 spec](http://tools.ietf.org/html/rfc4880#section-5.2.3.13) calls my
-role in this scenario a "meta introducer"), then you should be able to
+role in this scenario a "!meta introducer"), then you should be able to
 automatically accept certifications made by my sister by creating a
 level 2 trust signature on my key.  You can choose whether to publish
 this trust signature or not, but as long as your `gpg` instance knows

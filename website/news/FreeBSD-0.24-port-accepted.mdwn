@@ -1,4 +1,4 @@
-[[meta title="FreeBSD 0.24 port accepted"]]
+[[!meta title="FreeBSD 0.24 port accepted"]]
 
 FreeBSD's ports tree now contains [a port of the
 Monkeysphere](http://www.freebsd.org/cgi/ports.cgi?query=monkeysphere),

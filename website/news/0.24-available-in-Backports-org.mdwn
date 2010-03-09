@@ -1,4 +1,4 @@
-[[meta title="Monkeysphere 0.24 accepted as a Debian Backport"]]
+[[!meta title="Monkeysphere 0.24 accepted as a Debian Backport"]]
 
 [Monkeysphere 0.24 is now available at [Backports.org](http://backports.org).
 If you are running Debian stable ("Lenny"), you can install this version

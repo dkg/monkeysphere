@@ -1,4 +1,4 @@
-[[meta title="Screenshots"]]
+[[!meta title="Screenshots"]]
 
 # Screenshots #
 

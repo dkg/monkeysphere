@@ -6,6 +6,10 @@
 *  Please add new entries in reverse chronological order whenever you make   *
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
+2010-03-08 - mjgoins
+	* Adding self to webmaster's authorized_user_ids
+	* updating ikiwiki to use the version from lenny backports 
+	* changing the ikiwki markup to be appropriate for version 3.2xxx
 
 2010-02-23 - dkg
 	* add lenny-backports repo.

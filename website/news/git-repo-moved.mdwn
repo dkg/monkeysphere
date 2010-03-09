@@ -1,4 +1,4 @@
-[[meta title="git repository moved"]]
+[[!meta title="git repository moved"]]
 
 The monkeysphere git repository has been moved from
 `git://monkeysphere.info/monkeysphere` to

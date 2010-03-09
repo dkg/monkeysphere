@@ -1,4 +1,4 @@
-[[meta title="Problems with root-owned gpg keyrings"]]
+[[!meta title="Problems with root-owned gpg keyrings"]]
 
 `/var/lib/monkeysphere/gnupg-host/` is root-owned, and the public
 keyring in that directory is controlled by the superuser.

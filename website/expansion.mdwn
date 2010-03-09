@@ -1,4 +1,4 @@
-[[meta title="Expanding the Monkeysphere"]]
+[[!meta title="Expanding the Monkeysphere"]]
 
 # Expanding the Monkeysphere #
 

@@ -1,4 +1,4 @@
-[[meta title="Advanced usage of the Monkeysphere"]]
+[[!meta title="Advanced usage of the Monkeysphere"]]
 
 Advanced usage of the monkeysphere
 ==================================

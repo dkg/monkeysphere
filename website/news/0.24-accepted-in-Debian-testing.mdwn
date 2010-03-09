@@ -1,4 +1,4 @@
-[[meta title="Monkeysphere 0.24 accepted in Debian testing"]]
+[[!meta title="Monkeysphere 0.24 accepted in Debian testing"]]
 
 [Monkeysphere 0.24 is now available in the Debian testing distribution
 ("squeeze")](http://packages.debian.org/testing/monkeysphere).

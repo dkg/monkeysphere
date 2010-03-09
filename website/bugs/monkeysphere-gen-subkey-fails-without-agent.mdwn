@@ -1,4 +1,4 @@
-[[meta title="monkeysphere --gen-subkey seems to fail if no gpg-agent is running"]]
+[[!meta title="monkeysphere --gen-subkey seems to fail if no gpg-agent is running"]]
 
 Consider the following transcript of a user who starts with no OpenPGP
 key in the first place:

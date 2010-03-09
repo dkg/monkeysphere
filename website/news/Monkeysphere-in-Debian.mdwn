@@ -1,4 +1,4 @@
-[[meta title="Monkeysphere now in Debian!"]]
+[[!meta title="Monkeysphere now in Debian!"]]
 
 [The Monkeysphere has made it into
 Debian!](http://packages.debian.org/sid/monkeysphere)

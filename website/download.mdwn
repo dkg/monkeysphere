@@ -1,4 +1,4 @@
-[[meta title="Download"]]
+[[!meta title="Download"]]
 
 # Downloading and Installing #
 

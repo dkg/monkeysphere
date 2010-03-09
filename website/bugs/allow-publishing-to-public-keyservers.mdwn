@@ -1,4 +1,4 @@
-[[meta title="monkeysphere-server publish-key does not work"]]
+[[!meta title="monkeysphere-server publish-key does not work"]]
 
 Currently, if you try to run `monkeysphere-server publish-key`, you
 can get the following output:

@@ -1,4 +1,4 @@
-[[meta title="Monkeysphere should consult keyserver setting in gpg.conf"]]
+[[!meta title="Monkeysphere should consult keyserver setting in gpg.conf"]]
 
 Currently, monkeysphere-ssh-proxycommand checks the following places to
 determine which keyserver to use (in order of priority):

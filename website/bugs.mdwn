@@ -1,4 +1,4 @@
-[[meta title="Open Bugs"]]
+[[!meta title="Open Bugs"]]
 
 # Bugs #
 
@@ -15,5 +15,5 @@ You can also browse our [completed bugs](done).
 Please feel free to also ask any questions on the [the monkeysphere
 mailing list](/community).
 
-[[inline pages="./bugs/* and !./bugs/done and !link(done) 
+[[!inline pages="./bugs/* and !./bugs/done and !link(done) 
 and !*/Discussion" actions=yes postform=yes show=0]]

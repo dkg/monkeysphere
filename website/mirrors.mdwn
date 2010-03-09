@@ -1,4 +1,4 @@
-[[meta title="Mirroring the Monkeysphere web site"]]
+[[!meta title="Mirroring the Monkeysphere web site"]]
 
 # Mirroring the Monkeysphere web site #
 

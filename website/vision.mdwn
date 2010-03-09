@@ -1,4 +1,4 @@
-[[meta title="Our vision for the future of the monkeysphere"]]
+[[!meta title="Our vision for the future of the monkeysphere"]]
 
 ## External Validation Agent ##
 

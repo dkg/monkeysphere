@@ -1,4 +1,4 @@
-[[meta title="Reorganize monkeysphere-server shortcuts"]]
+[[!meta title="Reorganize monkeysphere-server shortcuts"]]
 
 Currently, `monkeysphere-server` supports three subcommands to adjust
 the "identity certifiers":

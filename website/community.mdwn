@@ -1,4 +1,4 @@
-[[meta title="The Monkeysphere Community"]]
+[[!meta title="The Monkeysphere Community"]]
 
 # The Monkeysphere Community #
 

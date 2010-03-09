@@ -1,4 +1,4 @@
-[[meta title="Monkeysphere 0.28 released!"]]
+[[!meta title="Monkeysphere 0.28 released!"]]
 
 Monkeysphere 0.28 has been released.  
 
