@@ -1,0 +1,23 @@
+[[!meta title="Validation Agent Protocol"]]
+
+# Validation Agent Protocol #
+
+In its current form, the validation agent is conceived of as a
+minimalistic HTTP server that accepts two different requests:
+
+ GET /  -- initial contact query, protocol version compatibility.
+  (no query parameters)
+  (returns: protoversion, server, available)
+
+ POST /reviewcert  -- request validation of a certificate
+  (query parameters: uid, context, pkc)
+  (returns: valid, message)
+
+Query parameters are posted as a JSON blob (*not* as
+www-form-encoded).
+
+The variables that are returned are application/json as well.
+
+* PKC means: public key carrier: raw key, OpenPGP cert, or X.509 cert
+* UID means: User ID (like in OpenPGP)
+* context refers to the setting in which the certificate is offered.  For example, "https" means: "this certificate was offered by an HTTPS server"
