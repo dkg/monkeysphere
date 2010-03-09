@@ -73,7 +73,7 @@ Monkeysphere***.  OpenSSH can be used as is; completely unpatched and
 
 ## License ##
 
-All Monkeysphere software is copyright, 2007, by [the
+All Monkeysphere software is copyright, 2007-2010, by [the
 authors](community), and released under [GPL, version 3 or
 later](http://www.gnu.org/licenses/gpl-3.0.html).
 
