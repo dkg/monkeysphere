@@ -2,8 +2,9 @@
 
 # Validation Agent Protocol #
 
-In its current form, the validation agent is conceived of as a
-minimalistic HTTP server that accepts two different requests:
+In its current form, the
+[Monkeysphere Validation Agent](/validation-agent) is conceived of as
+a minimalistic HTTP server that accepts two different requests:
 
  GET /  -- initial contact query, protocol version compatibility.
   (no query parameters)
