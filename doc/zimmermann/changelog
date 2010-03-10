@@ -7,6 +7,10 @@
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
 
+2010-03-10 - micah
+	* Updated /etc/monkeysphere/*.conf to use zimmermann
+	for the keyserver
+
 2008-11-29 - dkg
 	* zimmermann now uses an X.509 certificate signed by the MF/PL CA
 	for its HTTPS connection.
