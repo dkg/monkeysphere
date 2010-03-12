@@ -24,18 +24,15 @@
 
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 
-STARTMSVA=
 MSVAGENT=/usr/bin/monkeysphere-validation-agent
 MSSYSCONFIG=/etc/monkeysphere/monkeysphere.conf
 MSUSERCONFIG="$HOME/.monkeysphere/monkeysphere.conf"
 
 if [ -x "$MSVAGENT" ] ; then
-    USEMSVAGENT=$(USE_VALIDATION_AGENT=
+   if [ "$(USE_VALIDATION_AGENT=
 . "$MSSYSCONFIG" 2>/dev/null
 . "$MSUSERCONFIG" 2>/dev/null || :
-printf '%s' "$USE_VALIDATION_AGENT")
-    
-    if [ "$USEMSVAGENT" = "true" ] ; then
+printf '%s' "$USE_VALIDATION_AGENT")" = "true" ] ; then
         STARTUP="$MSVAGENT $STARTUP"
     fi
 fi
