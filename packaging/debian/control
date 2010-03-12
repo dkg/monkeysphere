@@ -28,6 +28,7 @@ Depends: openssh-client,
  adduser,
  ${misc:Depends}
 Recommends: netcat | socat, ssh-askpass, cron
+Suggests: monkeysphere-validation-agent
 Enhances: openssh-client, openssh-server
 Description: leverage the OpenPGP web of trust for SSH and TLS authentication
  SSH key-based authentication is tried-and-true, but it lacks a true

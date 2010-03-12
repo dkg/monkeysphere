@@ -6,8 +6,11 @@ monkeysphere (0.29~pre1-1) UNRELEASED; urgency=low
   [ Daniel Kahn Gillmor ]
   * bumped Standards-Version to 3.8.4 (no changes needed)
   * indicated bash dependency on version 3.2 or later (see MS #1687)
+  * including /etc/Xsession.d/70monkeysphere_use_validation_agent so that
+    administrators can start up a validation agent by default for each X
+    session by adding a single line to /etc/X11/Xsession.options.
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 18 Feb 2010 12:40:56 -0500
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Fri, 12 Mar 2010 01:57:39 -0500
 
 monkeysphere (0.28-1) unstable; urgency=low
 
