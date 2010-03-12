@@ -4,9 +4,9 @@
 # startup argument with a monkeysphere-validation-agent nested
 # process, if available and none already exist.
 
-# Enable this system-wide by adding a line to
-# /etc/X11/Xsession.options that reads:
-# use-monkeysphere-validation-agent
+# Enable this system-wide by setting
+# MONKEYSPHERE_USE_VALIDATION_AGENT=true in
+# /etc/monkeysphere/monkeysphere.conf
 
 # Note that there is some weird interaction between this and
 # dbus-session at the moment: dbus-launch can start the msva just
@@ -22,9 +22,16 @@
 
 STARTMSVA=
 MSVAGENT=/usr/bin/monkeysphere-validation-agent
+MSSYSCONFIG=/etc/monkeysphere/monkeysphere.conf
+MSUSERCONFIG="$HOME/.monkeysphere/monkeysphere.conf"
 
-if grep -qs ^use-monkeysphere-validation-agent "$OPTIONFILE"; then
-  if [ -x "$MSVAGENT" ] && [ -z "$MONKEYSPHERE_VALIDATION_AGENT_SOCKET" ]; then
-    STARTUP="$MSVAGENT $STARTUP"
-  fi
+if [ -x "$MSVAGENT" ] ; then
+    USEMSVAGENT=$(sh -c "
+. '$MSSYSCONFIG' 2>/dev/null
+. '$MSUSERCONFIG' 2>/dev/null || :
+printf '%s' "'"$MONKEYSPHERE_USE_VALIDATION_AGENT"')
+    
+    if [ "$USEMSVAGENT" == "true" ] ; then
+        STARTUP="$MSVAGENT $STARTUP"
+    fi
 fi
