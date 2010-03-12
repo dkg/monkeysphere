@@ -1,4 +1,4 @@
-# /etc/X11/Xsession.d/70monkeysphere_use_validation_agent
+# /etc/X11/Xsession.d/70monkeysphere_use-validation-agent
 
 # This is a script to be sourced by Xsession.  It wraps the session
 # startup argument with a monkeysphere-validation-agent nested
