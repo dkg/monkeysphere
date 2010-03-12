@@ -26,10 +26,10 @@ MSSYSCONFIG=/etc/monkeysphere/monkeysphere.conf
 MSUSERCONFIG="$HOME/.monkeysphere/monkeysphere.conf"
 
 if [ -x "$MSVAGENT" ] ; then
-    USEMSVAGENT=$(sh -c "
+    USEMSVAGENT=$(sh -c "USE_VALIDATION_AGENT=
 . '$MSSYSCONFIG' 2>/dev/null
 . '$MSUSERCONFIG' 2>/dev/null || :
-printf '%s' "'"$MONKEYSPHERE_USE_VALIDATION_AGENT"')
+printf '%s' "'"$USE_VALIDATION_AGENT"')
     
     if [ "$USEMSVAGENT" == "true" ] ; then
         STARTUP="$MSVAGENT $STARTUP"
