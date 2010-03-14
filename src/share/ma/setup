@@ -43,6 +43,7 @@ EOF
 # Edits will be overwritten.
 no-greeting
 list-options show-uid-validity
+keyserver-options ca-cert-file=${SYSCONFIGDIR}/monkeysphere-authentication-x509-anchors.crt
 EOF
 
     # make sure the monkeysphere user owns everything in the sphere
