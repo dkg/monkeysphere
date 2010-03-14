@@ -48,9 +48,9 @@ subcommands:
  ssh-proxycommand HOST [PORT]        monkeysphere ssh ProxyCommand
    --no-connect                        do not make TCP connection to host
  subkey-to-ssh-agent (s)             store authentication subkey in ssh-agent
- sshfpr (f) KEYID                    output ssh fingerprint of gpg key
 
- keys-for-userid (u) USERID          output valid keys for user id literal
+ keys-for-userid (u) USERID          output valid keys for given user ids
+ sshfprs-for-userid USERID           output ssh fingerprints for given user ids
  gen-subkey (g) [KEYID]              generate an authentication subkey
    --length (-l) BITS                  key length in bits (2048)
 
@@ -271,13 +271,27 @@ case $COMMAND in
 	subkey_to_ssh_agent "$@"
 	;;
 
-    'sshfpr'|'f')
+    'sshfpr')
+	echo "Warning: 'sshfpr' is deprecated.  Please use 'sshfprs-for-userid' instead." >&2
 	gpg_ssh_fingerprint "$@"
 	;;
 
     'keys-for-userid'|'u')
 	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
 	keys_for_userid "$@"
+	;;
+
+    'sshfprs-for-userid')
+	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
+        keytmpdir=$(msmktempdir)
+        keytmpfile="$keytmpdir/ "
+        cd "$keytmpdir"
+	keys_for_userid "$@" | while read KEYLINE ; do
+            printf '%s\n' "$KEYLINE" > "$keytmpdir/ "
+            ssh-keygen -l -f ' '
+        done
+        rm -f "$keytmpfile"
+        rmdir "$keytmpdir"
 	;;
 
     'keys-from-userid')
