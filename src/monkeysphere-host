@@ -239,7 +239,7 @@ prompt_userid_exists() {
     if gpgOut=$(gpg_host_list_keys "=${userID}" 2>/dev/null) ; then
 	fingerprint=$(echo "$gpgOut" | grep '^fpr:' | cut -d: -f10)
 	if [ "$PROMPT" != "false" ] ; then
-	    printf "Service name '%s' is already being used by key '%s'.\nAre you sure you want to use it again? (y/N) " "$fingerprint" "$userID" >&2
+	    printf "Service name '%s' is already being used by key '%s'.\nAre you sure you want to use it again? (y/N) " "$userID" "$fingerprint" >&2
 	    read OK; OK=${OK:=N}
 	    if [ "${OK/y/Y}" != 'Y' ] ; then
 		failure "Service name not added."
