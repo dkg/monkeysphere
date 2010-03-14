@@ -3,7 +3,7 @@
 # monkeysphere: Monkeysphere client tool
 #
 # The monkeysphere scripts are written by:
-# Jameson Rollins <jrollins@fifthhorseman.net>
+# Jameson Rollins <jrollins@finestructure.net>
 # Jamie McClelland <jm@mayfirst.org>
 # Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Micah Anderson <micah@riseup.net>
@@ -276,6 +276,7 @@ case $COMMAND in
 	;;
 
     'keys-for-userid'|'u')
+	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
 	keys_for_userid "$@"
 	;;
 

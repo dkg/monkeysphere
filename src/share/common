@@ -581,6 +581,10 @@ gpg_fetch_userid() {
 	--search ="$userID" &>/dev/null
     returnCode="$?"
 
+    if [ "$returnCode" != 0 ] ; then
+        log error "Failure ($returnCode) searching keyserver $KEYSERVER for user id '$userID'"
+    fi
+
     return "$returnCode"
 }
 

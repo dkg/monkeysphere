@@ -1,0 +1,38 @@
+# /etc/X11/Xsession.d/70monkeysphere_use-validation-agent
+
+# This is a script to be sourced by Xsession.  It wraps the session
+# startup argument with a monkeysphere-validation-agent nested
+# process, if available and none already exist.
+
+# Enable this system-wide by setting
+# MONKEYSPHERE_USE_VALIDATION_AGENT=true in
+# /etc/monkeysphere/monkeysphere.conf
+
+# Note that there is some weird interaction between this and
+# dbus-session at the moment: dbus-launch can start the msva just
+# fine, but if msva tries to start dbus-launch, dbus-launch fails
+# with:
+
+# Failed to waitpid() for babysitter intermediate process: No child processes
+
+# So this is placed at position 70 -- *before* the dbus Xsession
+# startup script, which is at 75 as of 2010-03-12, when i wrote this.
+
+# this is also good, because it means that the MSVA will learn about
+# the dbus session parameters, in case we want the agent to use dbus
+# to communicate with the user.
+
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+
+MSVAGENT=/usr/bin/monkeysphere-validation-agent
+MSSYSCONFIG=/etc/monkeysphere/monkeysphere.conf
+MSUSERCONFIG="$HOME/.monkeysphere/monkeysphere.conf"
+
+if [ -x "$MSVAGENT" ] ; then
+   if [ "$(USE_VALIDATION_AGENT=
+. "$MSSYSCONFIG" 2>/dev/null
+. "$MSUSERCONFIG" 2>/dev/null || :
+printf '%s' "$USE_VALIDATION_AGENT")" = "true" ] ; then
+        STARTUP="$MSVAGENT $STARTUP"
+    fi
+fi

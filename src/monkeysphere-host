@@ -74,7 +74,7 @@ EOF
 
 # function to interact with the gpg keyring
 gpg_host() {
-    GNUPGHOME="$GNUPGHOME_HOST" gpg --no-greeting --quiet --no-tty "$@"
+    GNUPGHOME="$GNUPGHOME_HOST" gpg --no-auto-check-trustdb --no-greeting --quiet --no-tty "$@"
 }
 
 # list the info about the a key, in colon format, to stdout
@@ -239,7 +239,7 @@ prompt_userid_exists() {
     if gpgOut=$(gpg_host_list_keys "=${userID}" 2>/dev/null) ; then
 	fingerprint=$(echo "$gpgOut" | grep '^fpr:' | cut -d: -f10)
 	if [ "$PROMPT" != "false" ] ; then
-	    printf "Service name '%s' is already being used by key '%s'.\nAre you sure you want to use it again? (y/N) " "$fingerprint" "$userID" >&2
+	    printf "Service name '%s' is already being used by key '%s'.\nAre you sure you want to use it again? (y/N) " "$userID" "$fingerprint" >&2
 	    read OK; OK=${OK:=N}
 	    if [ "${OK/y/Y}" != 'Y' ] ; then
 		failure "Service name not added."
@@ -268,7 +268,7 @@ multi_key() {
 
     for key in $keys ; do
 	if (( i++ > 0 )) ; then
-	    echo "##############################"
+	    printf "\n"
 	fi
 	"$cmd" "$key"
     done
@@ -309,8 +309,9 @@ show_key() {
     # FIXME: make no-show-keyring work so we don't have to do the grep'ing
     # FIXME: can we show uid validity somehow?
     gpg --list-keys --list-options show-unusable-uids "$fingerprint" 2>/dev/null \
-	| grep -v "^${GNUPGHOME}/pubring.gpg$" \
-	| egrep -v '^-+$'
+        | grep -v "^${GNUPGHOME}/pubring.gpg$" \
+        | egrep -v '^-+$' \
+        | grep -v '^$'
 
     # list revokers, if there are any
     revokers=$(gpg --list-keys --with-colons --fixed-list-mode "$fingerprint" \
@@ -320,7 +321,6 @@ show_key() {
 	for key in $revokers ; do
 	    echo "revoker: $key"
 	done
-	echo
     fi
 
     # list the pgp fingerprint

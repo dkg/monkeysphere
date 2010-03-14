@@ -6,6 +6,11 @@
 *  Please add new entries in reverse chronological order whenever you make   *
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
+2010-03-09 - micah
+ 	* setup /srv/micah.monkeysphere.info
+	* replaced /etc/mathopd.conf virtual for daniel with one for me
+	* removed /srv/daniel.monkeysphere.info - not used
+
 2010-03-08 - mjgoins
 	* Adding self to webmaster's authorized_user_ids
 	* updating ikiwiki to use the version from lenny backports 
