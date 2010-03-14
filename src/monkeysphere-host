@@ -268,7 +268,7 @@ multi_key() {
 
     for key in $keys ; do
 	if (( i++ > 0 )) ; then
-	    echo "##############################"
+	    printf "\n"
 	fi
 	"$cmd" "$key"
     done
@@ -309,8 +309,9 @@ show_key() {
     # FIXME: make no-show-keyring work so we don't have to do the grep'ing
     # FIXME: can we show uid validity somehow?
     gpg --list-keys --list-options show-unusable-uids "$fingerprint" 2>/dev/null \
-	| grep -v "^${GNUPGHOME}/pubring.gpg$" \
-	| egrep -v '^-+$'
+        | grep -v "^${GNUPGHOME}/pubring.gpg$" \
+        | egrep -v '^-+$' \
+        | grep -v '^$'
 
     # list revokers, if there are any
     revokers=$(gpg --list-keys --with-colons --fixed-list-mode "$fingerprint" \
@@ -320,7 +321,6 @@ show_key() {
 	for key in $revokers ; do
 	    echo "revoker: $key"
 	done
-	echo
     fi
 
     # list the pgp fingerprint
