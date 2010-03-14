@@ -282,6 +282,7 @@ case $COMMAND in
 
     'keys-from-userid')
 	echo "Warning: 'keys-from-userid' is deprecated.  Please use 'keys-for-userid' instead." >&2
+	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
 	keys_for_userid "$@"
 	;;
 
