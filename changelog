@@ -3,6 +3,8 @@ monkeysphere (0.29~pre1) UNRELEASED; urgency=low
   * Fix man page typo about monkeysphere authorized_keys location
   * Monkeysphere should work properly even if the user has "armor" in
     their gpg.conf (closes MS #1625)
+  * monkeysphere keys-for-userid now respects MONKEYSPHERE_CHECK_KEYSERVER
+    environment variable (and defaults to true)
 
  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 18 Feb 2010 12:38:43 -0500
 

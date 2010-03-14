@@ -276,6 +276,7 @@ case $COMMAND in
 	;;
 
     'keys-for-userid'|'u')
+	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
 	keys_for_userid "$@"
 	;;
 
