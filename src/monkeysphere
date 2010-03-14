@@ -68,7 +68,7 @@ gpg_user() {
 # output the ssh fingerprint of a gpg key
 gpg_ssh_fingerprint() {
     keyid="$1"
-    local tmpfile=$(mktemp)
+    local tmpfile=$(msmktempfile)
 
     # trap to remove tmp file if break
     trap "rm -f $tmpfile" EXIT
