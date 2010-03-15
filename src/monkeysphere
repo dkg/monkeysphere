@@ -284,6 +284,8 @@ case $COMMAND in
     'sshfprs-for-userid')
 	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
         keytmpdir=$(msmktempdir)
+        # use a file named " " to avoid arbitrary non-whitespace text
+        # in the fingerprint output
         keytmpfile="$keytmpdir/ "
         cd "$keytmpdir"
 	keys_for_userid "$@" | while read KEYLINE ; do
