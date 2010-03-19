@@ -7,19 +7,11 @@ page](/doc) to read up on how to get started [as a regular
 user](/getting-started-user) or [as a systems
 administrator](/getting-started-admin).
 
-## Dependencies ##
-
-Monkeysphere relies on:
-
- * [OpenSSH](http://openssh.com/)
- * [GnuPG](http://gnupg.org/)
- * [Perl](http://www.perl.org/) (including the [Crypt::OpenSSL::RSA](http://search.cpan.org/dist/Crypt-OpenSSL-RSA/) and [Digest::SHA](http://search.cpan.org/dist/Digest-SHA/) modules and their dependencies)
-
-## Firefox (or Iceweasel) ##
+# Installing the Firefox (or Iceweasel) add-on #
 
 To use the Monkeysphere for website validation, you will need the
 Firefox (Iceweasel) add-on, the monkeysphere package and the
-validation agent. 
+validation agent.
 
 [Download and install the Firefox (Iceweasel)
 add-on](http://archive.monkeysphere.info/monkeysphere.xul)
@@ -27,6 +19,16 @@ add-on](http://archive.monkeysphere.info/monkeysphere.xul)
 Once you have installed the add-on, you will need to restart your
 browser, and then proceed to install the monkeysphere package and
 validation agent below.
+
+# Installing the Monkeysphere package and validation agent # 
+
+## Dependencies ##
+
+Monkeysphere relies on:
+
+ * [OpenSSH](http://openssh.com/)
+ * [GnuPG](http://gnupg.org/)
+ * [Perl](http://www.perl.org/) (including the [Crypt::OpenSSL::RSA](http://search.cpan.org/dist/Crypt-OpenSSL-RSA/) and [Digest::SHA](http://search.cpan.org/dist/Digest-SHA/) modules and their dependencies)
 
 ## Debian ##
 
