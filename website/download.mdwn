@@ -14,7 +14,7 @@ Firefox/Iceweasel add-on, the monkeysphere package and the
 validation agent.
 
 [Download and install the Firefox/Iceweasel
-add-on](http://archive.monkeysphere.info/monkeysphere.xul)
+add-on](http://archive.monkeysphere.info/xul-ext/monkeysphere.xpi)
 
 Once you have installed the add-on, you will need to restart your
 browser, and then proceed to install the monkeysphere package and
