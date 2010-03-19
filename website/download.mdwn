@@ -15,6 +15,19 @@ Monkeysphere relies on:
  * [GnuPG](http://gnupg.org/)
  * [Perl](http://www.perl.org/) (including the [Crypt::OpenSSL::RSA](http://search.cpan.org/dist/Crypt-OpenSSL-RSA/) and [Digest::SHA](http://search.cpan.org/dist/Digest-SHA/) modules and their dependencies)
 
+## Firefox (or Iceweasel) ##
+
+To use the Monkeysphere for website validation, you will need the
+Firefox (Iceweasel) add-on, the monkeysphere package and the
+validation agent. 
+
+[Download and install the Firefox (Iceweasel)
+add-on](http://archive.monkeysphere.info/monkeysphere.xul)
+
+Once you have installed the add-on, you will need to restart your
+browser, and then proceed to install the monkeysphere package and
+validation agent below.
+
 ## Debian ##
 
 If you are running a [Debian](http://www.debian.org/) system, the
@@ -27,6 +40,13 @@ version as follows:
 
 If you are running Debian stable, you can get the monkeysphere package
 from [backports.org](http://backports.org/dokuwiki/doku.php?id=instructions)
+
+To get started using the Monkeysphere for website validation, you will
+need to install the Monkeysphere Validation Agent. Currently the perl
+version of the agent is available in Debian sid, or directly from our
+APT repository (see below):
+
+    aptitude install msva-perl
 
 ## Debian derivatives (including Ubuntu) ##
 
