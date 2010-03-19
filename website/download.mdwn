@@ -7,20 +7,20 @@ page](/doc) to read up on how to get started [as a regular
 user](/getting-started-user) or [as a systems
 administrator](/getting-started-admin).
 
-# Installing the Firefox (or Iceweasel) add-on #
+# Installing the Firefox/Iceweasel add-on #
 
 To use the Monkeysphere for website validation, you will need the
-Firefox (Iceweasel) add-on, the monkeysphere package and the
+Firefox/Iceweasel add-on, the monkeysphere package and the
 validation agent.
 
-[Download and install the Firefox (Iceweasel)
+[Download and install the Firefox/Iceweasel
 add-on](http://archive.monkeysphere.info/monkeysphere.xul)
 
 Once you have installed the add-on, you will need to restart your
 browser, and then proceed to install the monkeysphere package and
 validation agent below.
 
-# Installing the Monkeysphere package and validation agent # 
+# Installing the Monkeysphere package and validation agent #
 
 ## Dependencies ##
 
