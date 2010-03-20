@@ -6,6 +6,12 @@
 *  Please add new entries in reverse chronological order whenever you make   *
 *  changes to this system (first command at top, last at bottom)             *
 ******************************************************************************
+2010-03-19 - dkg
+	* set up /srv/xul-ext to publish our .xpi files (modified
+	/etc/mathopd.conf to publish it via
+	http://archive.monkeysphere.info and serve .xpi files with the
+	correct mime type
+
 2010-03-09 - micah
  	* setup /srv/micah.monkeysphere.info
 	* replaced /etc/mathopd.conf virtual for daniel with one for me
@@ -13,7 +19,7 @@
 
 2010-03-08 - mjgoins
 	* Adding self to webmaster's authorized_user_ids
-	* updating ikiwiki to use the version from lenny backports 
+	* updating ikiwiki to use the version from lenny backports
 	* changing the ikiwki markup to be appropriate for version 3.2xxx
 
 2010-02-23 - dkg
@@ -21,7 +27,7 @@
 	* remove monkeysphere repo.
 	* aptitude update && aptitude full-upgrade (including monkeysphere
 	0.28-1~bpo50+1, and backported gpg)
-	
+
 2010-01-12 - dkg
 	* aptitude update && aptitude full-upgrade (including monkeysphere
 	0.27-1)
