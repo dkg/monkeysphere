@@ -128,13 +128,12 @@ specify the full fingerprints of specific keys to add to the agent
 (space separated), instead of adding them all.  `s' may be used in
 place of `subkey\-to\-ssh\-agent'.
 .TP
-.B sshfpr KEYID
-Output the ssh fingerprint of a key in your gpg keyring. `f' may be
-used in place of `fingerprint'.
-.TP
 .B keys\-for\-userid USERID
-Output to stdout all acceptable keys for a given user ID literal.
+Output to stdout all acceptable keys for a given user ID.
 `u' may be used in place of `keys\-for\-userid'.
+.TP
+.B sshfprs\-for\-userid USERID
+Output the ssh fingerprints of acceptable keys for a given user ID.
 .TP
 .B version
 Show the monkeysphere version number.  `v' may be used in place of

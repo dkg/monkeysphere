@@ -8,11 +8,11 @@
 # Copyright: © 2008-2010
 # License: GPL, v3 or later
 
-VERSION=`head -n1 changelog | sed 's/.*(\([^)]*\)).*/\1/'`
+VERSION=`head -n1 Changelog | sed 's/.*(\([^)]*\)).*/\1/'`
 
 { 
     sed "s/__VERSION__/$VERSION/g" < utils/releasenote.header
-    head -n$(( $(grep -n '^ --' changelog  | head -n1 | cut -f1 -d:) - 2 )) changelog | tail -n+3
+    head -n$(( $(grep -n '^ --' Changelog  | head -n1 | cut -f1 -d:) - 2 )) Changelog | tail -n+3
     sed "s/__VERSION__/$VERSION/g" < utils/releasenote.footer
 } > "website/news/release-$VERSION.mdwn"
 

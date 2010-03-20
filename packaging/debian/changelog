@@ -1,4 +1,4 @@
-monkeysphere (0.29~pre1-1) UNRELEASED; urgency=low
+monkeysphere (0.29-1) unstable; urgency=low
 
   [ Jameson Graef Rollins ]
   * New upstream release
@@ -10,7 +10,7 @@ monkeysphere (0.29~pre1-1) UNRELEASED; urgency=low
     administrators and users can choose to start up a validation agent for
     each X session using monkeysphere.conf
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Fri, 12 Mar 2010 01:57:39 -0500
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sun, 14 Mar 2010 21:07:17 -0400
 
 monkeysphere (0.28-1) unstable; urgency=low
 

@@ -1,12 +1,22 @@
-monkeysphere (0.29~pre1) UNRELEASED; urgency=low
+monkeysphere (0.29) unstable; urgency=low
 
+  * This is mainly a bugfix release
   * Fix man page typo about monkeysphere authorized_keys location
   * Monkeysphere should work properly even if the user has "armor" in
     their gpg.conf (closes MS #1625)
   * monkeysphere keys-for-userid now respects MONKEYSPHERE_CHECK_KEYSERVER
     environment variable (and defaults to true)
+  * introduce monkeysphere sshfprs-for-userid (deprecates sshfpr), closes
+    MS #1436
+  * respect CHECK_KEYSERVER in more places (closes MS #1997)
+  * warn on keyserver failures for monkeysphere-authentication (closes MS
+    #1750)
+  * avoid checking trustdb for monkeysphere-host (closes MS #1957)
+  * allow monkeysphere-authentication to use hkps with trusted X.509 root
+    certificate authorities in
+    /etc/monkeysphere/monkeysphere-authentication-x509-anchors.crt
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 18 Feb 2010 12:38:43 -0500
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sun, 14 Mar 2010 21:00:47 -0400
 
 monkeysphere (0.28) unstable; urgency=low
 

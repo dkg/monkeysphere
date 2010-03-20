@@ -1,0 +1,20 @@
+[[!meta title="Monkeysphere Validation Agent (Perl) 0.2 released!"]]
+
+Version 0.2 of the Perl implementation of the Monkeysphere Validation
+Agent has been released.
+
+Notes from the changelog:
+
+<pre>
+  * can now be invoked with a sub-command; will run until subcommand
+    completes, and then terminate with the same return code (this is
+    similar to the ssh-agent technique, and enables inclusion in
+    Xsession.d; see monkeysphere 0.29 package for automatic startup).
+  * chooses arbitrary open port by default (can still be specified with
+    MSVA_PORT environment variable)
+  * minimized logging spew by default.
+  * now shipping README.schema (notes about possible future MSVA
+    implementations)
+  * cleanup Makefile and distribution strategies.
+</pre>
+
