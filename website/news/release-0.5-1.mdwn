@@ -1,6 +1,0 @@
-# MonkeySphere 0.5-1 released! #
-
-MonkeySphere 0.5-1 has been released.  It includes updates to
-documentation and a few adjustments to behavior in the corner case
-where `authorized_user_ids` files are empty or missing.  [[download]]
-it now!
