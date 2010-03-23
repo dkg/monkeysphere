@@ -26,11 +26,8 @@ tarball: clean
 	tar -ch --exclude='*~' monkeysphere-$(MONKEYSPHERE_VERSION) | gzip -n > monkeysphere_$(MONKEYSPHERE_VERSION).orig.tar.gz
 	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
 
-debian-package: tarball
-	tar xzf monkeysphere_$(MONKEYSPHERE_VERSION).orig.tar.gz
-	cp -a packaging/debian monkeysphere-$(MONKEYSPHERE_VERSION)
-	(cd monkeysphere-$(MONKEYSPHERE_VERSION) && debuild -uc -us)
-	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
+debian-package:
+	git buildpackage -uc -us --git-upstream-branch=master --git-debian-branch=debian --git-no-pristine-tar --git-ignore-new
 
 # don't explicitly depend on the tarball, since our tarball
 # (re)generation is not idempotent even when no source changes.
