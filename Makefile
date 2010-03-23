@@ -5,7 +5,7 @@
 # © 2008-2010 Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Licensed under GPL v3 or later
 
-MONKEYSPHERE_VERSION:=$(shell head -n1 Changelog | sed 's/.*(\([^-]*\)).*/\1/')
+MONKEYSPHERE_VERSION = `head -n1 Changelog | sed 's/.*(\([^-]*\)).*/\1/'`
 
 # these defaults are for debian.  porters should probably adjust them
 # before calling make install
@@ -16,9 +16,6 @@ MANPREFIX ?= $(PREFIX)/share/man
 
 # nothing actually needs to be built now.
 all: 
-
-VERSION: Changelog
-	sed 's/^Monkeysphere .*$$/Monkeysphere '$(MONKEYSPHERE_VERSION)'/' -i VERSION
 
 debian-package:
 	git buildpackage -uc -us
@@ -42,7 +39,7 @@ install: all installman
 	mkdir -p $(DESTDIR)$(PREFIX)/share/monkeysphere/m $(DESTDIR)$(PREFIX)/share/monkeysphere/mh $(DESTDIR)$(PREFIX)/share/monkeysphere/ma $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions
 	mkdir -p $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
 	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
-	install -m 0644 VERSION $(DESTDIR)$(PREFIX)/share/monkeysphere
+	printf "Monkeysphere %s\n" $(MONKEYSPHERE_VERSION) > $(DESTDIR)$(PREFIX)/share/monkeysphere/VERSION
 	install src/monkeysphere $(DESTDIR)$(PREFIX)/bin
 	install src/monkeysphere-host src/monkeysphere-authentication $(DESTDIR)$(PREFIX)/sbin
 	install -m 0644 src/share/common $(DESTDIR)$(PREFIX)/share/monkeysphere
