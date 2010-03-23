@@ -17,15 +17,6 @@ MANPREFIX ?= $(PREFIX)/share/man
 # nothing actually needs to be built now.
 all: 
 
-tarball: clean
-	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
-	ln -s ../Changelog ../COPYING ../etc ../Makefile ../man ../src ../tests monkeysphere-$(MONKEYSPHERE_VERSION)
-	echo Monkeysphere $(MONKEYSPHERE_VERSION) > monkeysphere-$(MONKEYSPHERE_VERSION)/VERSION
-	echo -n "git revision " >> monkeysphere-$(MONKEYSPHERE_VERSION)/VERSION
-	git rev-parse HEAD >> monkeysphere-$(MONKEYSPHERE_VERSION)/VERSION
-	tar -ch --exclude='*~' monkeysphere-$(MONKEYSPHERE_VERSION) | gzip -n > monkeysphere_$(MONKEYSPHERE_VERSION).orig.tar.gz
-	rm -rf monkeysphere-$(MONKEYSPHERE_VERSION)
-
 VERSION: Changelog
 	sed 's/^Monkeysphere .*$$/Monkeysphere '$(MONKEYSPHERE_VERSION)'/' -i VERSION
 
