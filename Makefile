@@ -21,7 +21,7 @@ VERSION: Changelog
 	sed 's/^Monkeysphere .*$$/Monkeysphere '$(MONKEYSPHERE_VERSION)'/' -i VERSION
 
 debian-package:
-	git buildpackage -uc -us --git-upstream-branch=master --git-debian-branch=debian --git-no-pristine-tar --git-ignore-new
+	git buildpackage -uc -us
 
 # don't explicitly depend on the tarball, since our tarball
 # (re)generation is not idempotent even when no source changes.
