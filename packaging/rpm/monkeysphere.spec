@@ -1,7 +1,7 @@
 Name: monkeysphere
 Summary: Use the OpenPGP web of trust to verify ssh connections
 Version: 0.29
-Release: 1
+Release: 2
 License: GPLv3+
 Group: Applications/Internet
 URL: http://web.monkeysphere.info/
@@ -30,13 +30,26 @@ users to get validated host keys, and for hosts to authenticate users.
 %install
 %{__rm} -rf %{buildroot}
 make DESTDIR=%{buildroot} install
+mkdir -p %{buildroot}%{_var}/lib/monkeysphere
 
 %clean
 %{__rm} -rf %{buildroot}
 
+%pre
+getent group %{name} >/dev/null || groupadd -r %{name}
+getent passwd %{name} >/dev/null || \
+useradd -r -g %{name} -d %{_var}/lib/%{name} -s /sbin/nologin \
+	-c "Monkeysphere authentication user" %{name}
+exit 0
+
+%postun
+userdel %{name} >/dev/null
+groupdel %{name} >/dev/null
+
 %files
 %defattr(-, root, root, 0755)
 
+%dir %{_sysconfdir}/monkeysphere
 %config(noreplace) %{_sysconfdir}/monkeysphere/monkeysphere-authentication.conf
 %config(noreplace) %{_sysconfdir}/monkeysphere/monkeysphere-host.conf
 %config(noreplace) %{_sysconfdir}/monkeysphere/monkeysphere.conf
@@ -45,19 +58,24 @@ make DESTDIR=%{buildroot} install
 %{_bindir}/pem2openpgp
 %{_sbindir}/monkeysphere-authentication
 %{_sbindir}/monkeysphere-host
+%doc %dir %{_docdir}/monkeysphere
 %doc %{_docdir}/monkeysphere/Changelog
 %doc %{_docdir}/monkeysphere/MonkeySpec
 %doc %{_docdir}/monkeysphere/TODO
 %doc %{_docdir}/monkeysphere/getting-started-admin.mdwn
 %doc %{_docdir}/monkeysphere/getting-started-user.mdwn
-%{_mandir}/man1/*
-%{_mandir}/man7/*
-%{_mandir}/man8/*
-%{_datadir}/monkeysphere/*
+%doc %{_mandir}/man1/*
+%doc %{_mandir}/man7/*
+%doc %{_mandir}/man8/*
+%doc %{_datadir}/monkeysphere/*
+%dir %{_var}/lib/monkeysphere
 
 
 %changelog
-* Tue Mar 30 2010 Bernie Innocenti <bernie@codewiz.org> - 0.28
+* Tue Mar 30 2010 Bernie Innocenti <bernie@codewiz.org> - 0.28-2
+- Create user monkeysphere on installation.
+
+* Tue Mar 30 2010 Bernie Innocenti <bernie@codewiz.org> - 0.28-1
 - Update to 0.28.
 - Various fixes for Fedora.
 
