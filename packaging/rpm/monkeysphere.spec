@@ -1,7 +1,7 @@
 Name: monkeysphere
 Summary: Use the OpenPGP web of trust to verify ssh connections
 Version: 0.29
-Release: 2
+Release: 3
 License: GPLv3+
 Group: Applications/Internet
 URL: http://web.monkeysphere.info/
@@ -36,15 +36,14 @@ mkdir -p %{buildroot}%{_var}/lib/monkeysphere
 %{__rm} -rf %{buildroot}
 
 %pre
-getent group %{name} >/dev/null || groupadd -r %{name}
-getent passwd %{name} >/dev/null || \
-useradd -r -g %{name} -d %{_var}/lib/%{name} -s /sbin/nologin \
-	-c "Monkeysphere authentication user" %{name}
+groupadd -r %{name} &>/dev/null || :
+useradd -r -g %{name} -d %{_var}/lib/%{name} -s /bin/bash \
+	-c "Monkeysphere authentication user" %{name} &>/dev/null || :
 exit 0
 
 %postun
-userdel %{name} >/dev/null
-groupdel %{name} >/dev/null
+test "$1" != 0 || userdel  %{name} &>/dev/null || :
+test "$1" != 0 || groupdel %{name} &>/dev/null || :
 
 %files
 %defattr(-, root, root, 0755)
@@ -72,6 +71,10 @@ groupdel %{name} >/dev/null
 
 
 %changelog
+* Tue Mar 30 2010 Bernie Innocenti <bernie@codewiz.org> - 0.28-3
+- Give a real shell to monkeysphere user.
+- Simplify pre/postun macros.
+
 * Tue Mar 30 2010 Bernie Innocenti <bernie@codewiz.org> - 0.28-2
 - Create user monkeysphere on installation.
 
