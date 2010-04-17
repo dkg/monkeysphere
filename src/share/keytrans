@@ -1144,6 +1144,19 @@ for (basename($0)) {
 	binmode($instream, ":bytes");
         my $keys = getallprimarykeys($instream);
         printf("%s\n", join("\n", map { uc(unpack('H*', $_)) } keys(%{$keys})));
+      } elsif (/^openpgp2sshfpr$/) {
+        my $fpr = shift;
+        my $instream;
+        open($instream,'-');
+        binmode($instream, ":bytes");
+        my $key = openpgp2rsa($instream, $fpr);
+        if (defined($key)) {
+          # openssh uses MD5 for key fingerprints:
+          use Digest::MD5;
+          printf("%s\n", join(':', map({unpack("H*", $_)} split(//, Digest::MD5::md5(openssh_pubkey_pack($key))))));
+        } else {
+          die "No matching key found.\n";
+        }
       } else {
 	die "Unrecognized subcommand.  keytrans subcommands are not a stable interface!\n";
       }
