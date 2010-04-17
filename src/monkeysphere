@@ -272,17 +272,7 @@ case $COMMAND in
 
     'sshfprs-for-userid')
 	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
-        keytmpdir=$(msmktempdir)
-        # use a file named " " to avoid arbitrary non-whitespace text
-        # in the fingerprint output
-        keytmpfile="$keytmpdir/ "
-        cd "$keytmpdir"
-	keys_for_userid "$@" | while read KEYLINE ; do
-            printf '%s\n' "$KEYLINE" > "$keytmpdir/ "
-            ssh-keygen -l -f ' '
-        done
-        rm -f "$keytmpfile"
-        rmdir "$keytmpdir"
+	keys_for_userid "$@" | "$SYSSHAREDIR/keytrans" sshfpr
 	;;
 
     'keys-from-userid')

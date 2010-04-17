@@ -210,6 +210,15 @@ sub simple_checksum {
   return unpack("%16C*",$bytes);
 }
 
+
+# calculate/print the fingerprint of an openssh-style keyblob:
+
+sub sshfpr {
+  my $keyblob = shift;
+  use Digest::MD5;
+  return join(':', map({unpack("H*", $_)} split(//, Digest::MD5::md5($keyblob))));
+}
+
 # calculate the multiplicative inverse of a mod b this is euclid's
 # extended algorithm.  For more information see:
 # http://en.wikipedia.org/wiki/Extended_Euclidean_algorithm the
@@ -1144,6 +1153,13 @@ for (basename($0)) {
 	binmode($instream, ":bytes");
         my $keys = getallprimarykeys($instream);
         printf("%s\n", join("\n", map { uc(unpack('H*', $_)) } keys(%{$keys})));
+      } elsif (/^sshfpr$/) {
+        use MIME::Base64;
+        my $b64keyblob;
+        my $dummy;
+        while (($dummy,$b64keyblob) = split(/ /, <STDIN>)) {
+          printf("%s\n", sshfpr(decode_base64($b64keyblob)));
+        }
       } elsif (/^openpgp2sshfpr$/) {
         my $fpr = shift;
         my $instream;
@@ -1152,10 +1168,9 @@ for (basename($0)) {
         my $key = openpgp2rsa($instream, $fpr);
         if (defined($key)) {
           # openssh uses MD5 for key fingerprints:
-          use Digest::MD5;
           printf("%d %s %s\n",
                  $key->size() * 8, # size() is in bytes -- we want bits
-                 join(':', map({unpack("H*", $_)} split(//, Digest::MD5::md5(openssh_pubkey_pack($key))))),
+                 sshfpr(openssh_pubkey_pack($key)),
                  '(RSA)', # FIXME when we support other than RSA.
                 );
         } else {
