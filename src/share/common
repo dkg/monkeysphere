@@ -602,7 +602,7 @@ gpg_fetch_userid() {
 # flag:sshKey
 #
 # "flag" is an acceptability flag, 0 = ok, 1 = bad
-# "sshKey" is the translated gpg key
+# "sshKey" is the relevant OpenPGP key, in the form accepted by OpenSSH
 #
 # all log output must go to stderr, as stdout is used to pass the
 # flag:sshKey to the calling function.
