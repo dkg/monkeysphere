@@ -1153,7 +1153,11 @@ for (basename($0)) {
         if (defined($key)) {
           # openssh uses MD5 for key fingerprints:
           use Digest::MD5;
-          printf("%s\n", join(':', map({unpack("H*", $_)} split(//, Digest::MD5::md5(openssh_pubkey_pack($key))))));
+          printf("%d %s %s\n",
+                 $key->size() * 8, # size() is in bytes -- we want bits
+                 join(':', map({unpack("H*", $_)} split(//, Digest::MD5::md5(openssh_pubkey_pack($key))))),
+                 '(RSA)', # FIXME when we support other than RSA.
+                );
         } else {
           die "No matching key found.\n";
         }
