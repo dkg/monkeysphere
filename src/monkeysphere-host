@@ -279,7 +279,6 @@ show_key() {
     local id="$1"
     local GNUPGHOME
     local fingerprint
-    local tmpssh
     local revokers
 
     # tmp gpghome dir
@@ -299,11 +298,6 @@ show_key() {
     else
 	failure "ID '$id' not found."
     fi
-
-    # create the ssh key
-    tmpssh="$GNUPGHOME"/ssh_host_key_rsa_pub
-    gpg --export --no-armor "$fingerprint" 2>/dev/null \
-	| openpgp2ssh 2>/dev/null >"$tmpssh"
 
     # list the host key info
     # FIXME: make no-show-keyring work so we don't have to do the grep'ing
@@ -327,8 +321,8 @@ show_key() {
     echo "OpenPGP fingerprint: $fingerprint"
 
     # list the ssh fingerprint
-    echo -n "ssh fingerprint: "
-    ssh-keygen -l -f "$tmpssh" | awk '{ print $1, $2, $4 }'
+    printf "ssh fingerprint: %s\n" \
+    "$(gpg --export --no-armor "$fingerprint" 2>/dev/null | "$SYSSHAREDIR/keytrans" openpgp2sshfpr "$fingerprint")"
 
     # remove the tmp file
     trap - EXIT
