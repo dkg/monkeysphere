@@ -1,8 +1,11 @@
 monkeysphere (0.30~pre) UNRELEASED; urgency=low
 
   * changing tarball creation and packaging strategies
+  * make non-ssh parts of monkeysphere work well when openssh is not
+    installed; degrade ssh-specific parts gracefully when openssh is not
+    installed.
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 23 Mar 2010 13:57:31 -0400
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sat, 17 Apr 2010 16:46:52 -0400
 
 monkeysphere (0.29) unstable; urgency=low
 

@@ -24,11 +24,7 @@ show_key_info() {
     local otherUids
 
     # get the ssh key of the gpg key
-    sshKeyGPGFile=$(msmktempfile)
-    gpg2ssh "$keyid" >"$sshKeyGPGFile"
-    sshFingerprint=$(ssh-keygen -l -f "$sshKeyGPGFile" | \
-        awk '{ print $2 }')
-    rm -f "$sshKeyGPGFile"
+    sshFingerprint=$(gpg2ssh "$keyid" | "$SYSSHAREDIR/keytrans" sshfpr)
 
     # get the sigs for the matching key
     gpgSigOut=$(gpg_user --check-sigs \
@@ -83,9 +79,12 @@ output_no_valid_key() {
 
     LOG_PREFIX=
 
+    # if we don't have ssh-keyscan, we just don't scan:
+    if ( type ssh-keyscan &>/dev/null ) ; then
     # retrieve the ssh key being offered by the host
-    sshKeyOffered=$(ssh-keyscan -t rsa -p "$PORT" "$HOST" 2>/dev/null \
-	| awk '{ print $2, $3 }')
+        sshKeyOffered=$(ssh-keyscan -t rsa -p "$PORT" "$HOST" 2>/dev/null \
+	    | awk '{ print $2, $3 }')
+    fi
 
     # get the gpg info for userid
     gpgOut=$(gpg_user --list-key --fixed-list-mode --with-colon \
@@ -190,6 +189,7 @@ EOF
 
 # the ssh proxycommand function itself
 ssh_proxycommand() {
+local hostKey
 
 if [ "$1" = '--no-connect' ] ; then
     NO_CONNECT='true'
@@ -230,8 +230,17 @@ if gpg_user --list-key ="${URI}" &>/dev/null ; then
 
 # if the host is NOT in the keyring...
 else
-    # if the host key is found in the known_hosts file...
-    hostKey=$( [ ! -r "$KNOWN_HOSTS" ] || ssh-keygen -F "$HOST" -f "$KNOWN_HOSTS" 2>/dev/null)
+    # FIXME: what about system-wide known_hosts file (/etc/ssh/known_hosts)?
+
+    if [ -r "$KNOWN_HOSTS" ]; then
+    # look up the host key is found in the known_hosts file...
+        if (type ssh-keygen &>/dev/null) ; then
+            hostKey=$(ssh-keygen -F "$HOST" -f "$KNOWN_HOSTS" 2>/dev/null)
+        else
+            # FIXME: we're not dealing with digested known_hosts if we don't 
+            hostKey=$(cut -f1 -d\  < .ssh/known_hosts | tr ',' '\n' | grep -Fx -e "$HOST" || :)
+        fi
+    fi
 
     if [ "$hostKey" ] ; then
 	# do not check the keyserver
