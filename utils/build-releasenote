@@ -9,26 +9,33 @@
 # License: GPL, v3 or later
 
 VERSION=`head -n1 Changelog | sed 's/.*(\([^)]*\)).*/\1/'`
+WEBSITEDIR=../monkeysphere-docs/website
+
+if [ ! -d "$WEBSITEDIR" ]; then
+    echo "you need to check out the monkeysphere-docs git repo" >&2
+    echo "as a peer of this repository to create a releasenote" >&2
+    exit 1
+fi
 
 { 
     sed "s/__VERSION__/$VERSION/g" < utils/releasenote.header
     head -n$(( $(grep -n '^ --' Changelog  | head -n1 | cut -f1 -d:) - 2 )) Changelog | tail -n+3
     sed "s/__VERSION__/$VERSION/g" < utils/releasenote.footer
-} > "website/news/release-$VERSION.mdwn"
+} > "$WEBSITEDIR/news/release-$VERSION.mdwn"
 
-git add "website/news/release-$VERSION.mdwn"
+(cd "$WEBSITEDIR" && git add "news/release-$VERSION.mdwn" )
 
 checksums() {
     echo "checksums for the monkeysphere ${VERSION%%-*} release:"
     echo
     echo "MD5:"
-    md5sum "monkeysphere_${VERSION%%-*}.orig.tar.gz"
+    md5sum "../monkeysphere_${VERSION%%-*}.orig.tar.gz"
     echo
     echo "SHA1:"
-    sha1sum "monkeysphere_${VERSION%%-*}.orig.tar.gz"
+    sha1sum "../monkeysphere_${VERSION%%-*}.orig.tar.gz"
     echo
     echo "SHA256:"
-    sha256sum "monkeysphere_${VERSION%%-*}.orig.tar.gz"
+    sha256sum "../monkeysphere_${VERSION%%-*}.orig.tar.gz"
 } 
 
 checksums
@@ -36,16 +43,16 @@ checksums
 temprelease=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
 trap "rm -f $temprelease" EXIT
 set -e
-head -n$(( $(grep -n '^-----BEGIN PGP SIGNED MESSAGE-----$' website/download.mdwn | head -n1 | cut -f1 -d:) - 1 )) website/download.mdwn | \
+head -n$(( $(grep -n '^-----BEGIN PGP SIGNED MESSAGE-----$' "$WEBSITEDIR/download.mdwn" | head -n1 | cut -f1 -d:) - 1 )) "$WEBSITEDIR/download.mdwn" | \
  sed -e 's|http://archive\.monkeysphere\.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_[[:digit:].]\+\.orig\.tar\.gz|http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/monkeysphere_'"${VERSION%%-*}"'.orig.tar.gz|g' >$temprelease
 checksums | gpg --no-tty --clearsign --default-key EB8AF314 >>$temprelease
 cat utils/download.mdwn.footer >>$temprelease
-mv "$temprelease" website/download.mdwn
+mv "$temprelease" "$WEBSITEDIR/download.mdwn"
 trap - EXIT
 set +e
 
-git add website/download.mdwn
+(cd "$WEBSITEDIR" && git add "download.mdwn")
 
-gpg --verify website/download.mdwn
+gpg --verify "$WEBSITEDIR/download.mdwn"
 
 printf "please remember to add the new version to the bugtracker:\n  https://labs.riseup.net/code/projects/settings/monkeysphere\n"

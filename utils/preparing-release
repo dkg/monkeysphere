@@ -5,41 +5,22 @@
 
  * have the monkeysphere archive signing key handy!
 
- * make tarball
-
- * make releasenote
-
- * commit outstanding changes.
-
  * create upstream version tag: 
 
-    git tag -s -m 'Tagging Monkeysphere $whatever' monkeysphere_$whatever
-
- * run commands from make debian-package by hand (?) so that it
-   doesn't trigger another tarball rebuild.  Make sure the package
-   passes lintian checks, installs, upgrades, removes reasonably, etc.
-
- * debsign -k$GPGID *.changes
+    git tag -s -m 'Tagging Monkeysphere $whatever' monkeysphere_$version master
 
  * create debian-specific version tag:
 
-    git tag -s -m 'Tagging Monkeysphere $whatever-1' monkeysphere_$whatever-1
+    git tag -s -m 'Tagging Monkeysphere $whatever-1' monkeysphere_$version-1 debian
+
+ * make releasenote
 
  * upload to monkeysphere repo:
 
-    cd repo && reprepro --ignore=wrongdistribution include experimental ../*.changes
+    (cd ../monkeysphere-docs/repo && reprepro --ignore=wrongdistribution include experimental ../monkeysphere_$version-1_*.changes)
 
- * push git changes (including tags!)
+ * upload to debian:
 
- * update FreeBSD and Macports info:
+   (cd .. && dupload monkeysphere_$version-1_*.changes)
 
-    make freebsd-distinfo
-    make macports-portsfile
-
-   (probably should consider tagging these ports as well to make them
-   easy to recover)
-
- * remember to add the new version (n + 1) to the bugtracker if it's
-   not already:
-
-     https://labs.riseup.net/code/projects/settings/monkeysphere
+ * git push central master debian && git push --tags central master debian
