@@ -1,4 +1,4 @@
-monkeysphere (0.30~pre) UNRELEASED; urgency=low
+monkeysphere (0.30) unstable; urgency=low
 
   * changing tarball creation and packaging strategies
   * make non-ssh parts of monkeysphere work well when openssh is not
