@@ -885,13 +885,25 @@ process_host_known_hosts() {
 
 	    # hash if specified
 	    if [ "$HASH_KNOWN_HOSTS" = 'true' ] ; then
+                if (type ssh-keygen >/dev/null) ; then
 		# FIXME: this is really hackish cause ssh-keygen won't
 		# hash from stdin to stdout
-		tmpfile=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
-		ssh2known_hosts "$host" "$sshKey" > "$tmpfile"
-		ssh-keygen -H -f "$tmpfile" 2>/dev/null
-		cat "$tmpfile" >> "$KNOWN_HOSTS"
-		rm -f "$tmpfile" "${tmpfile}.old"
+		    tmpfile=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+		    ssh2known_hosts "$host" "$sshKey" > "$tmpfile"
+		    ssh-keygen -H -f "$tmpfile" 2>/dev/null
+		    cat "$tmpfile" >> "$KNOWN_HOSTS"
+		    rm -f "$tmpfile" "${tmpfile}.old"
+                else
+       # FIXME: we could do this without needing ssh-keygen.  hashed
+       # known_hosts looks like: |1|X|Y where 1 means SHA1 (nothing
+       # else is defined in openssh sources), X is the salt (same
+       # length as the digest output), base64-encoded, and Y is the
+       # digested hostname (also base64-encoded).
+
+       # see hostfile.{c,h} in openssh sources.
+
+                    failure "Cannot hash known_hosts as requested"
+                fi
 	    else
 		ssh2known_hosts "$host" "$sshKey" >> "$KNOWN_HOSTS"
 	    fi
