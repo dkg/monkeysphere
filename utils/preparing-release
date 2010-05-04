@@ -24,3 +24,5 @@
    (cd .. && dupload monkeysphere_$version-1_*.changes)
 
  * git push central master debian && git push --tags central master debian
+
+ * switch over to monkeysphere-docs, inspect, and then push out those changes.
