@@ -2,6 +2,8 @@ monkeysphere (0.31~pre) UNRELEASED; urgency=low
 
   * support x509 anchors for monkeysphere-host, allow shared anchor
     between m-h and m-a (closes MS #2288)
+  * do not bail or fail on m-h publish-key if the admin interactively
+    declines to publish one of the keys key (closes MS #1945)
 
  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 06 May 2010 11:23:38 -0400
 

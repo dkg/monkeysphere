@@ -22,7 +22,8 @@ if [ "$PROMPT" != "false" ] ; then
     printf "Really publish key '$keyID' to $KEYSERVER? (Y/n) " >&2
     read OK; OK=${OK:=Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then
-	failure "key not published."
+	log error "key not published."
+        return
     fi
 else
     log debug "publishing key '$keyID' without prompting."
