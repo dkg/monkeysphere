@@ -40,9 +40,16 @@ trap "rm -rf $GNUPGHOME" EXIT
 su_monkeysphere_user \
     "gpg --quiet --import" <"$HOST_KEY_FILE"
 
+KEYSERVER_OPTIONS=""
+for anchorfile in "${SYSCONFIGDIR}/monkeysphere-host-x509-anchors.crt" "${SYSCONFIGDIR}/monkeysphere-x509-anchors.crt"; do
+    if [ -z "$KEYSERVER_OPTIONS" ] && [ -r "$anchorfile"  ] ; then
+        KEYSERVER_OPTIONS="--keyserver-options 'ca-cert-file=$anchorfile'"
+    fi
+done
+
 # publish key
 su_monkeysphere_user \
-    "gpg --keyserver $KEYSERVER --send-keys '0x${keyID}!'"
+    "gpg --keyserver $KEYSERVER $KEYSERVER_OPTIONS --send-keys '0x${keyID}!'"
 
 # remove the tmp file
 trap - EXIT

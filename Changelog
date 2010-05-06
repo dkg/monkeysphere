@@ -1,3 +1,10 @@
+monkeysphere (0.31~pre) UNRELEASED; urgency=low
+
+  * support x509 anchors for monkeysphere-host, allow shared anchor
+    between m-h and m-a (closes MS #2288)
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 06 May 2010 11:23:38 -0400
+
 monkeysphere (0.30) unstable; urgency=low
 
   * changing tarball creation and packaging strategies

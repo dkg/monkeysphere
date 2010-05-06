@@ -177,10 +177,13 @@ false may expose users to abuse by other users on the system. (true)
 /etc/monkeysphere/monkeysphere\-authentication.conf
 System monkeysphere-authentication config file.
 .TP
-/etc/monkeysphere/monkeysphere\-authentication\-x509\-anchors.crt
+/etc/monkeysphere/monkeysphere\-authentication\-x509\-anchors.crt or\p \
+/etc/monkeysphere/monkeysphere\-x509\-anchors.crt
 If monkeysphere-authentication is configured to query an hkps
 keyserver, it will use X.509 Certificate Authority certificates in
 this file to validate any X.509 certificates used by the keyserver.
+If the monkeysphere-authentication-x509 file is present, the
+monkeysphere-x509 file will be ignored.
 .TP
 /var/lib/monkeysphere/authorized_keys/USER
 Monkeysphere-generated user authorized_keys files.

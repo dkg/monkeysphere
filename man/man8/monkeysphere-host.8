@@ -222,6 +222,14 @@ Monkeysphere\-enabled services on the host.
 /var/lib/monkeysphere/host/
 A locked directory (readable only by the superuser) containing copies
 of all imported secret keys (this is the host's GNUPGHOME directory).
+.TP
+/etc/monkeysphere/monkeysphere\-host\-x509\-anchors.crt or\p \
+/etc/monkeysphere/monkeysphere\-x509\-anchors.crt
+If monkeysphere-host is configured to query an hkps keyserver for
+publish-keys, it will use X.509 Certificate Authority certificates in
+this file to validate any X.509 certificates used by the keyserver.
+If the monkeysphere-host-x509 file is present, the monkeysphere-x509
+file will be ignored.
 
 .SH AUTHOR
 

@@ -36,6 +36,14 @@ setup() {
 no-greeting
 EOF
 
+    KEYSERVER_OPTIONS=""
+    for anchorfile in "${SYSCONFIGDIR}/monkeysphere-authentication-x509-anchors.crt" "${SYSCONFIGDIR}/monkeysphere-x509-anchors.crt"; do
+        if [ -z "$KEYSERVER_OPTIONS" ] && [ -r "$anchorfile" ] ; then
+            KEYSERVER_OPTIONS="keyserver-options ca-cert-file=$anchorfile"
+            log debug "using $anchorfile for keyserver X.509 anchor"
+        fi
+    done
+
     log debug "writing sphere gpg.conf..."
     cat >"${GNUPGHOME_SPHERE}"/gpg.conf <<EOF
 # Monkeysphere trust sphere GnuPG configuration
@@ -43,7 +51,7 @@ EOF
 # Edits will be overwritten.
 no-greeting
 list-options show-uid-validity
-keyserver-options ca-cert-file=${SYSCONFIGDIR}/monkeysphere-authentication-x509-anchors.crt
+${KEYSERVER_OPTIONS}
 EOF
 
     # make sure the monkeysphere user owns everything in the sphere
