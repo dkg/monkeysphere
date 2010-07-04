@@ -88,7 +88,7 @@ sub permissions_ok {
   # OpenSSH sources for an explanation of this bailout (see also
   # monkeysphere #675):
   if ($path eq $user->dir) {
-    mslog('DEBUG', "stopping at the %s's home directory '%s'\n", $user->name, $path);
+    mslog('DEBUG', "stopping at %s's home directory '%s'\n", $user->name, $path);
     return undef;
   }
 
