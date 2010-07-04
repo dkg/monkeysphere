@@ -1,4 +1,4 @@
-.TH MONKEYSPHERE-AUTHENTICATION "8" "January 2010" "monkeysphere" "System Commands"
+.TH MONKEYSPHERE-AUTHENTICATION "8" "July 3, 2010" "monkeysphere" "System Commands"
 
 .SH NAME
 
@@ -41,6 +41,11 @@ used in place of `update\-users'.
 Refresh all keys in the monkeysphere-authentication keyring.  If no
 accounts are specified, then all accounts on the system are processed.
 `r' may be used in place of `refresh\-keys'.
+.TP
+.B keys\-for\-user USER
+Output to stdout all acceptable keys for a given user.  User IDs are
+read from the user's authorized_user_ids file (see
+MONKEYSPHERE_AUTHORIZED_USER_IDS below).
 .TP
 .B add\-id\-certifier KEYID|FILE
 Instruct system to trust user identity certifications made by KEYID.

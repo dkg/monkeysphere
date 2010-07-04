@@ -42,6 +42,7 @@ install: all installman
 	printf "Monkeysphere %s\n" $(MONKEYSPHERE_VERSION) > $(DESTDIR)$(PREFIX)/share/monkeysphere/VERSION
 	install src/monkeysphere $(DESTDIR)$(PREFIX)/bin
 	install src/monkeysphere-host src/monkeysphere-authentication $(DESTDIR)$(PREFIX)/sbin
+	install src/monkeysphere-authentication-keys-for-user $(DESTDIR)$(PREFIX)/share/monkeysphere
 	install -m 0644 src/share/common $(DESTDIR)$(PREFIX)/share/monkeysphere
 	install -m 0644 src/share/defaultenv $(DESTDIR)$(PREFIX)/share/monkeysphere
 	install -m 0755 src/share/checkperms $(DESTDIR)$(PREFIX)/share/monkeysphere
