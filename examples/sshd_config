@@ -1,0 +1,6 @@
+# Monkeysphere sshd config (for use in /etc/sshd_config)
+# This checks for user keys in the OpenPGP WoT:
+AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
+
+# be sure to also add a scheduled job to update these keys
+# (see the example cronjob)

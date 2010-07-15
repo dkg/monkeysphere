@@ -7,6 +7,8 @@ monkeysphere (0.31~pre) UNRELEASED; urgency=low
     declines to publish one of the keys key (closes MS #1945)
   * report updated expiration date upon successful conclusion of m-h
     set-expire (closes MS #2291)
+  * added some files in examples/ to demonstrate system integration
+    with OpenSSH
 
   [ Jameson Rollins ]
   * add keys-for-user subcommand to monkeysphere-authentication

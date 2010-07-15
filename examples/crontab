@@ -1,0 +1,6 @@
+# example Monkeysphere cron job:
+
+# Hourly: update the per-user authorized_keys in /var based on
+# ~/.monkeysphere/authorized_user_ids
+
+36 * * * * root /usr/sbin/monkeysphere-authentication update-users
