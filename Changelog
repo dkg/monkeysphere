@@ -1,4 +1,4 @@
-monkeysphere (0.31~pre) UNRELEASED; urgency=low
+monkeysphere (0.31) unstable; urgency=low
 
   [ Daniel Kahn Gillmor ]
   * support x509 anchors for monkeysphere-host, allow shared anchor
@@ -13,7 +13,7 @@ monkeysphere (0.31~pre) UNRELEASED; urgency=low
   [ Jameson Rollins ]
   * add keys-for-user subcommand to monkeysphere-authentication
 
- -- Jameson Rollins <jrollins@finestructure.net>  Sun, 04 Jul 2010 00:18:44 -0400
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 15 Jul 2010 19:20:35 -0400
 
 monkeysphere (0.30) unstable; urgency=low
 
