@@ -17,7 +17,7 @@
 
  * upload to monkeysphere repo:
 
-    (cd ../monkeysphere-docs/repo && reprepro --ignore=wrongdistribution include experimental ../monkeysphere_$version-1_*.changes)
+    (cd ../monkeysphere-docs/repo && reprepro --ignore=wrongdistribution include experimental ../../monkeysphere_$version-1_*.changes)
 
  * upload to debian:
 
