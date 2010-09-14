@@ -19,12 +19,12 @@ set -o pipefail
 
 PGRM=$(basename $0)
 
-SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"/usr/share/monkeysphere"}
+SYSSHAREDIR=${MONKEYSPHERE_SYSSHAREDIR:-"__SYSSHAREDIR_PREFIX__/share/monkeysphere"}
 export SYSSHAREDIR
 . "${SYSSHAREDIR}/defaultenv"
 . "${SYSSHAREDIR}/common"
 
-SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"/var/lib/monkeysphere"}
+SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"__SYSDATADIR_PREFIX__/monkeysphere"}
 export SYSDATADIR
 
 # sharedir for host functions
