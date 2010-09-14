@@ -54,8 +54,8 @@ install: all installman
 	sed -i 's:__SYSDATADIR_PREFIX__:$(LOCALSTATEDIR):' $(DESTDIR)$(PREFIX)/share/monkeysphere/defaultenv
 	install -m 0755 src/share/checkperms $(DESTDIR)$(PREFIX)/share/monkeysphere
 	install -m 0755 src/share/keytrans $(DESTDIR)$(PREFIX)/share/monkeysphere
-	ln -s ../share/monkeysphere/keytrans $(DESTDIR)$(PREFIX)/bin/pem2openpgp
-	ln -s ../share/monkeysphere/keytrans $(DESTDIR)$(PREFIX)/bin/openpgp2ssh
+	ln -sf ../share/monkeysphere/keytrans $(DESTDIR)$(PREFIX)/bin/pem2openpgp
+	ln -sf ../share/monkeysphere/keytrans $(DESTDIR)$(PREFIX)/bin/openpgp2ssh
 	install -m 0744 src/transitions/* $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions
 	sed -i 's:__SYSSHAREDIR_PREFIX__:$(PREFIX):' $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions/0.23
 	sed -i 's:__SYSSHAREDIR_PREFIX__:$(PREFIX):' $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions/0.28
