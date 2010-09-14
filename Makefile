@@ -42,13 +42,13 @@ install: all installman
 	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/monkeysphere
 	printf "Monkeysphere %s\n" $(MONKEYSPHERE_VERSION) > $(DESTDIR)$(PREFIX)/share/monkeysphere/VERSION
 	install src/monkeysphere $(DESTDIR)$(PREFIX)/bin
-	sed -i 's:__SYSSHAREDIR_PREFIX__:$(DESTDIR)$(PREFIX):' $(DESTDIR)$(PREFIX)/bin/monkeysphere
+	sed -i 's:__SYSSHAREDIR_PREFIX__:$(PREFIX):' $(DESTDIR)$(PREFIX)/bin/monkeysphere
 	install src/monkeysphere-host $(DESTDIR)$(PREFIX)/sbin
-	sed -i 's:__SYSSHAREDIR_PREFIX__:$(DESTDIR)$(PREFIX):' $(DESTDIR)$(PREFIX)/sbin/monkeysphere-host
-	sed -i 's:__SYSDATADIR_PREFIX__:$(DESTDIR)$(LOCALSTATEDIR):' $(DESTDIR)$(PREFIX)/sbin/monkeysphere-host
+	sed -i 's:__SYSSHAREDIR_PREFIX__:$(PREFIX):' $(DESTDIR)$(PREFIX)/sbin/monkeysphere-host
+	sed -i 's:__SYSDATADIR_PREFIX__:$(LOCALSTATEDIR):' $(DESTDIR)$(PREFIX)/sbin/monkeysphere-host
 	install src/monkeysphere-authentication $(DESTDIR)$(PREFIX)/sbin
-	sed -i 's:__SYSSHAREDIR_PREFIX__:$(DESTDIR)$(PREFIX):' $(DESTDIR)$(PREFIX)/sbin/monkeysphere-authentication
-	sed -i 's:__SYSDATADIR_PREFIX__:$(DESTDIR)$(LOCALSTATEDIR):' $(DESTDIR)$(PREFIX)/sbin/monkeysphere-authentication
+	sed -i 's:__SYSSHAREDIR_PREFIX__:$(PREFIX):' $(DESTDIR)$(PREFIX)/sbin/monkeysphere-authentication
+	sed -i 's:__SYSDATADIR_PREFIX__:$(LOCALSTATEDIR):' $(DESTDIR)$(PREFIX)/sbin/monkeysphere-authentication
 	install src/monkeysphere-authentication-keys-for-user $(DESTDIR)$(PREFIX)/share/monkeysphere
 	install -m 0644 src/share/common $(DESTDIR)$(PREFIX)/share/monkeysphere
 	install -m 0644 src/share/defaultenv $(DESTDIR)$(PREFIX)/share/monkeysphere
