@@ -9,8 +9,10 @@
 # Copyright 2009, released under the GPL, version 3 or later
 
 # managed directories
-SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"/etc/monkeysphere"}
+SYSCONFIGDIR=${MONKEYSPHERE_SYSCONFIGDIR:-"__SYSCONFDIR_PREFIX__/etc/monkeysphere"}
 export SYSCONFIGDIR
+SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"__SYSDATADIR_PREFIX__/monkeysphere"}
+export SYSDATADIR
 
 # default log level
 LOG_LEVEL="INFO"

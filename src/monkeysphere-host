@@ -24,9 +24,6 @@ export SYSSHAREDIR
 . "${SYSSHAREDIR}/defaultenv"
 . "${SYSSHAREDIR}/common"
 
-SYSDATADIR=${MONKEYSPHERE_SYSDATADIR:-"__SYSDATADIR_PREFIX__/monkeysphere"}
-export SYSDATADIR
-
 # sharedir for host functions
 MHSHAREDIR="${SYSSHAREDIR}/mh"
 

@@ -118,10 +118,10 @@ publication is not done by default.  The first step is to import the
 host's ssh key into a monkeysphere\-style OpenPGP certificate.  This
 is done with the import\-key command.  For example:
 
-# monkeysphere\-host import\-key /etc/ssh/ssh_host_rsa_key ssh://host.example.org
+# monkeysphere\-host import\-key __SYSCONFDIR_PREFIX__/etc/ssh/ssh_host_rsa_key ssh://host.example.org
 
 On most systems, sshd's RSA secret key is stored at
-/etc/ssh/ssh_host_rsa_key.
+__SYSCONFDIR_PREFIX__/etc/ssh/ssh_host_rsa_key.
 
 See PUBLISHING AND CERTIFYING MONKEYSPHERE SERVICE CERTIFICATES for
 how to make sure your users can verify the ssh service offered by your
@@ -137,18 +137,19 @@ PEM\-encoded).  The first step is to import the web server's key into
 a monkeysphere\-style OpenPGP certificate.  This is done with the
 import\-key command.  For example:
 
-# monkeysphere\-host import\-key /etc/ssl/private/host.example.net\-key.pem https://host.example.net
+# monkeysphere\-host import\-key __SYSCONFDIR_PREFIX__/etc/ssl/private/host.example.net\-key.pem https://host.example.net
 
 If you don't know where the web server's key is stored on your
 machine, consult the configuration files for your web server.
 Debian\-based systems using the `ssl\-cert' packages often have a
 default self\-signed certificate stored in
-`/etc/ssl/private/ssl\-cert\-snakeoil.key' ; if you're using that key,
-your users are getting browser warnings about it.  You can keep using
-the same key, but help them use the OpenPGP WoT to verify that it does
-belong to your web server by using something like:
+`__SYSCONFDIR_PREFIX__/etc/ssl/private/ssl\-cert\-snakeoil.key' ; if
+you're using that key, your users are getting browser warnings about
+it.  You can keep using the same key, but help them use the OpenPGP
+WoT to verify that it does belong to your web server by using
+something like:
 
-# monkeysphere\-host import\-key /etc/ssl/private/ssl\-cert\-snakeoil.key https://$(hostname \-\-fqdn)
+# monkeysphere\-host import\-key __SYSCONFDIR_PREFIX__/etc/ssl/private/ssl\-cert\-snakeoil.key https://$(hostname \-\-fqdn)
 
 If you offer multiple HTTPS websites using the same secret key, you
 should add the additional website names with the `add\-servicename'
@@ -188,7 +189,7 @@ ssh) or without seeing a nasty "security warning" in their browsers
 
 Note that \fBmonkeysphere\-host\fP currently caches a copy of all
 imported secret keys (stored in OpenPGP form for future manipulation)
-in /var/lib/monkeysphere/host/secring.gpg.  Cleartext backups of this
+in __SYSDATADIR_PREFIX__/monkeysphere/host/secring.gpg.  Cleartext backups of this
 file could expose secret key material if not handled sensitively.
 
 .SH ENVIRONMENT
@@ -209,22 +210,22 @@ If set to `false', never prompt the user for confirmation. (true)
 .SH FILES
 
 .TP
-/etc/monkeysphere/monkeysphere\-host.conf
+__SYSCONFDIR_PREFIX__/etc/monkeysphere/monkeysphere\-host.conf
 System monkeysphere\-host config file.
 .TP
-/var/lib/monkeysphere/host_keys.pub.pgp
+__SYSDATADIR_PREFIX__/monkeysphere/host_keys.pub.pgp
 A world\-readable copy of the host's OpenPGP certificates in ASCII
 armored format.  This includes the certificates (including the public
 keys, servicename\-based User IDs, and most recent relevant
 self\-signatures) corresponding to every key used by
 Monkeysphere\-enabled services on the host.
 .TP
-/var/lib/monkeysphere/host/
+__SYSDATADIR_PREFIX__/monkeysphere/host/
 A locked directory (readable only by the superuser) containing copies
 of all imported secret keys (this is the host's GNUPGHOME directory).
 .TP
-/etc/monkeysphere/monkeysphere\-host\-x509\-anchors.crt or\p \
-/etc/monkeysphere/monkeysphere\-x509\-anchors.crt
+__SYSCONFDIR_PREFIX__/etc/monkeysphere/monkeysphere\-host\-x509\-anchors.crt or\p \
+__SYSCONFDIR_PREFIX__/etc/monkeysphere/monkeysphere\-x509\-anchors.crt
 If monkeysphere-host is configured to query an hkps keyserver for
 publish-keys, it will use X.509 Certificate Authority certificates in
 this file to validate any X.509 certificates used by the keyserver.

@@ -136,7 +136,7 @@ user authentication, the AuthorizedKeysFile parameter must be set in
 the sshd_config to point to the monkeysphere\-generated
 authorized_keys files:
 
-AuthorizedKeysFile /var/lib/monkeysphere/authorized_keys/%u
+AuthorizedKeysFile __SYSDATADIR_PREFIX__/monkeysphere/authorized_keys/%u
 
 It is recommended to add "monkeysphere\-authentication update\-users"
 to a system crontab, so that user keys are kept up-to-date, and key
@@ -179,18 +179,18 @@ false may expose users to abuse by other users on the system. (true)
 .SH FILES
 
 .TP
-/etc/monkeysphere/monkeysphere\-authentication.conf
+__SYSCONFDIR_PREFIX__/etc/monkeysphere/monkeysphere\-authentication.conf
 System monkeysphere-authentication config file.
 .TP
-/etc/monkeysphere/monkeysphere\-authentication\-x509\-anchors.crt or\p \
-/etc/monkeysphere/monkeysphere\-x509\-anchors.crt
+__SYSCONFDIR_PREFIX__/etc/monkeysphere/monkeysphere\-authentication\-x509\-anchors.crt or\p \
+__SYSCONFDIR_PREFIX__/etc/monkeysphere/monkeysphere\-x509\-anchors.crt
 If monkeysphere-authentication is configured to query an hkps
 keyserver, it will use X.509 Certificate Authority certificates in
 this file to validate any X.509 certificates used by the keyserver.
 If the monkeysphere-authentication-x509 file is present, the
 monkeysphere-x509 file will be ignored.
 .TP
-/var/lib/monkeysphere/authorized_keys/USER
+__SYSDATADIR_PREFIX__/monkeysphere/authorized_keys/USER
 Monkeysphere-generated user authorized_keys files.
 .TP
 ~/.monkeysphere/authorized_user_ids
