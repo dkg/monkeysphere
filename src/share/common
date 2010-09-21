@@ -709,7 +709,7 @@ process_user_id() {
 		if [ "$keyOK" -a "$uidOK" -a "$lastKeyOK" ] ; then
 		    log verbose "  * acceptable primary key."
 		    if [ -z "$sshKey" ] ; then
-			log error "    ! primary key could not be translated (not RSA?)."
+			log verbose "    ! primary key could not be translated (not RSA?)."
 		    else
 			echo "0:${sshKey}"
 		    fi
