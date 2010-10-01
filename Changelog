@@ -3,7 +3,11 @@ monkeysphere (0.32~pre) unstable; urgency=low
   * Fix specification of install paths in all scripts and man pages
     (closes MS #2491)
 
- -- Jameson Rollins <jrollins@finestructure.net>  Tue, 14 Sep 2010 12:24:35 -0400
+  [ Micah Anderson ]
+  
+  * fix monkeysphere-host revoke-key, which never worked properly :(
+
+ -- Jameson Rollins <jrollins@finestructure.net>  Fri, 01 Oct 2010 10:44:55 -0400
 
 monkeysphere (0.31) unstable; urgency=low
 
