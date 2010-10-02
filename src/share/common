@@ -509,7 +509,7 @@ ssh2authorized_keys() {
     local userID="$2"
     local key="$3"
 
-    if [[ -z $koptions ]]; then
+    if [[ -z "$koptions" ]]; then
         printf "%s MonkeySphere%s %s\n" "$key" "$DATE" "$userID"
     else
         printf "%s %s MonkeySphere%s %s\n" "$koptions" "$key" "$DATE" "$userID"
@@ -1142,22 +1142,23 @@ update_authorized_keys() {
             koptions="$x"
         else
             userID="$x"
-	# process the user ID, change return code if key not found for
-	# user ID
-	process_uid_authorized_keys "$koptions" "$userID" || returnCode="$?"
 
-	# note the result
-	case "$returnCode" in
-	    0)
-		nIDsOK=$((nIDsOK+1))
-		;;
-	    2)
-		nIDsBAD=$((nIDsBAD+1))
-		;;
-	esac
+	    # process the user ID, change return code if key not found
+	    # for user ID
+	    process_uid_authorized_keys "$koptions" "$userID" || returnCode="$?"
 
-	# touch the lockfile, for good measure.
-	lock touch "$AUTHORIZED_KEYS"
+	    # note the result
+	    case "$returnCode" in
+		0)
+		    nIDsOK=$((nIDsOK+1))
+		    ;;
+		2)
+		    nIDsBAD=$((nIDsBAD+1))
+		    ;;
+	    esac
+
+	    # touch the lockfile, for good measure.
+	    lock touch "$AUTHORIZED_KEYS"
 	fi
     done
 
@@ -1222,19 +1223,19 @@ process_authorized_user_ids() {
     IFS=$'\n'
     for line in $(meat "$authorizedUserIDs") ; do
 	case "$line" in
-	  (" "*|$'\t'*)
-	    if [[ -z ${koptions[${nline}]} ]]; then
-	        koptions[${nline}]=$(echo $line | sed 's/^[ 	]*//;s/[ 	]$//;')
-	    else
-	        koptions[${nline}]="${koptions[${nline}]},$(echo $line | sed 's/^[ 	]*//;s/[ 	]$//;')"
-	    fi
-	    ;;
-          (*)
-	    ((nline++))
-	    userIDs[${nline}]="$line"
-	    unset koptions[${nline}] || true
-            ;;
-	  esac
+	    (" "*|$'\t'*)
+		if [[ -z ${koptions[${nline}]} ]]; then
+	            koptions[${nline}]=$(echo $line | sed 's/^[ 	]*//;s/[ 	]$//;')
+		else
+	            koptions[${nline}]="${koptions[${nline}]},$(echo $line | sed 's/^[ 	]*//;s/[ 	]$//;')"
+		fi
+		;;
+            (*)
+		((nline++))
+		userIDs[${nline}]="$line"
+		unset koptions[${nline}] || true
+		;;
+	esac
     done
 
     for i in $(seq 1 $nline); do
