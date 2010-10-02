@@ -19,6 +19,7 @@ local keyID="$1"
 local GNUPGHOME
 
 if [ "$PROMPT" != "false" ] ; then
+    log debug "Because \$MONKEYSPHERE_PROMPT is set to $PROMPT, interactively confirm publishing key"
     printf "Really publish key '$keyID' to $KEYSERVER? (Y/n) " >&2
     read OK; OK=${OK:=Y}
     if [ "${OK/y/Y}" != 'Y' ] ; then
@@ -44,11 +45,13 @@ su_monkeysphere_user \
 KEYSERVER_OPTIONS=""
 for anchorfile in "${SYSCONFIGDIR}/monkeysphere-host-x509-anchors.crt" "${SYSCONFIGDIR}/monkeysphere-x509-anchors.crt"; do
     if [ -z "$KEYSERVER_OPTIONS" ] && [ -r "$anchorfile"  ] ; then
+	log debug "using trust anchor file: $anchorfile"
         KEYSERVER_OPTIONS="--keyserver-options 'ca-cert-file=$anchorfile'"
     fi
 done
 
 # publish key
+log debug "publishing key with the following gpg command line and options:"
 su_monkeysphere_user \
     "gpg --keyserver $KEYSERVER $KEYSERVER_OPTIONS --send-keys '0x${keyID}!'"
 

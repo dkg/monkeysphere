@@ -257,16 +257,22 @@ multi_key() {
 
     check_no_keys
 
+    log debug "listing primary fingerprints from $HOST_KEY_FILE"
     local fprs=($(list_primary_fingerprints <"$HOST_KEY_FILE"))
+    log debug "obtained the following fingerprints: $fprs"
 
     if [[ -z "$1" || "$1" == '--all' ]] ; then
+	log debug "publishing all keys"
 	keys="${fprs[@]}"
     fi
+
+    log debug "using keys: $keys"
 
     for key in $keys ; do
 	if (( i++ > 0 )) ; then
 	    printf "\n"
 	fi
+	log debug "invoking $cmd $key"
 	"$cmd" "$key"
     done
 }
@@ -338,6 +344,7 @@ show_key() {
 # defaults
 LOG_LEVEL=${MONKEYSPHERE_LOG_LEVEL:=$LOG_LEVEL}
 KEYSERVER=${MONKEYSPHERE_KEYSERVER:=$KEYSERVER}
+log debug "using keyserver: $KEYSERVER"
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
 MONKEYSPHERE_USER=${MONKEYSPHERE_MONKEYSPHERE_USER:=$MONKEYSPHERE_USER}
 MONKEYSPHERE_GROUP=$(get_primary_group "$MONKEYSPHERE_USER")
