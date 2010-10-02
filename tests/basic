@@ -509,6 +509,25 @@ echo "### making sure we are back to normal..."
 monkeysphere-authentication update-users $(whoami)
 ssh_test true
 
+# check ssh authorized_key options
+echo
+echo "##################################################"
+echo "### checking ssh authorized_key option support..."
+cp "$TESTHOME"/.monkeysphere/authorized_user_ids{,.bak}
+echo ' no-X11-forwarding' >>"$TESTHOME"/.monkeysphere/authorized_user_ids
+echo '    no-port-forwarding' >>"$TESTHOME"/.monkeysphere/authorized_user_ids
+echo '	command="/bin/false"' >>"$TESTHOME"/.monkeysphere/authorized_user_ids
+monkeysphere-authentication update-users $(whoami)
+ssh_test /bin/true 1
+ssh_test /bin/false 1
+mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
+
+# ensure we're back to normal:
+echo
+echo "##################################################"
+echo "### making sure we are back to normal..."
+monkeysphere-authentication update-users $(whoami)
+ssh_test true
 
 echo
 echo "##################################################"
