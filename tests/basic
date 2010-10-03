@@ -55,10 +55,11 @@ gpgadmin() {
 # first argument is expected return code from ssh connection
 ssh_test() {
     local RETURN=0
+    local remote_command=${1:-true}
 
     umask 0077
 
-    CODE=${1:-0}
+    CODE=${2:-0}
 
     # start the ssh daemon on the socket
     echo "##### starting ssh server..."
@@ -73,7 +74,7 @@ ssh_test() {
     # make a client connection to the socket
     echo "##### starting ssh client..."
     ssh-agent bash -c \
-	"monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config ${target_hostname:-testhost.example} true" \
+	"monkeysphere subkey-to-ssh-agent && ssh -F $TEMPDIR/testuser/.ssh/config ${target_hostname:-testhost.example} $remote_command" \
 	|| RETURN="$?"
 
     # kill the sshd process if it's still running
@@ -353,7 +354,7 @@ diff -q <( monkeysphere keys-for-userid ssh://testhost.example ) <( cut -f1,2 -d
 echo
 echo "##################################################"
 echo "### ssh connection test for success..."
-ssh_test
+ssh_test true
 
 # Make sure it works if there is "armor" written in gpg.conf
 # add other weirdnesses here as they come up.
@@ -361,7 +362,7 @@ echo
 echo "##################################################"
 echo "### testing functionality in the face of unusual gpg.conf settings..."
 echo 'armor' >> "$GNUPGHOME"/gpg.conf
-ssh_test
+ssh_test true
 
 # remove the testuser's authorized_user_ids file, update, and make
 # sure that the ssh authentication FAILS
@@ -373,7 +374,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_test 255
+ssh_test true 255
 mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
 
 # put improper permissions on authorized_user_ids file, update, and
@@ -386,7 +387,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_good_perm_test 255
+ssh_good_perm_test true 255
 chmod g-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 echo
 echo "##################################################"
@@ -396,7 +397,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_good_perm_test 255
+ssh_good_perm_test true 255
 chmod o-w "$TESTHOME"/.monkeysphere/authorized_user_ids
 monkeysphere-authentication update-users $(whoami)
 
@@ -415,7 +416,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for success..."
-ssh_test
+ssh_test true
 echo
 echo "##################################################"
 echo "### create bad permissions on link dir and updating..."
@@ -424,7 +425,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_good_perm_test 255
+ssh_good_perm_test true 255
 chmod o-w "$TESTHOME"/.monkeysphere.linktest
 echo
 echo "##################################################"
@@ -434,7 +435,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for success..."
-ssh_test
+ssh_test true
 echo
 echo "##################################################"
 echo "### create bad permissions on link dir updating..."
@@ -443,7 +444,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_good_perm_test 255
+ssh_good_perm_test true 255
 chmod o-w "$TESTHOME"/.monkeysphere.linktest
 # FIXME: implement check of link path, and uncomment this test
 # echo
@@ -454,7 +455,7 @@ chmod o-w "$TESTHOME"/.monkeysphere.linktest
 # echo
 # echo "##################################################"
 # echo "### ssh connection test for failure..."
-# ssh_good_perm_test 255
+# ssh_good_perm_test true 255
 # chmod o-w "$TESTHOME"/.monkeysphere
 rm "$TESTHOME"/.monkeysphere/authorized_user_ids
 mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
@@ -468,7 +469,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for success..."
-ssh_test
+ssh_test true
 echo
 echo "##################################################"
 echo "### create bad permissions on link dir and updating..."
@@ -477,7 +478,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_good_perm_test 255
+ssh_good_perm_test true 255
 chmod o-w "$TESTHOME"/.monkeysphere.linktest
 echo
 echo "##################################################"
@@ -487,7 +488,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for success..."
-ssh_test
+ssh_test true
 echo
 echo "##################################################"
 echo "### create bad permissions on link dir updating..."
@@ -496,7 +497,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_good_perm_test 255
+ssh_good_perm_test true 255
 chmod o-w "$TESTHOME"/.monkeysphere.linktest
 rm "$TESTHOME"/.monkeysphere
 mv "$TESTHOME"/.monkeysphere{.bak,}
@@ -506,13 +507,32 @@ echo
 echo "##################################################"
 echo "### making sure we are back to normal..."
 monkeysphere-authentication update-users $(whoami)
-ssh_test
+ssh_test true
 
+# check ssh authorized_key options
+echo
+echo "##################################################"
+echo "### checking ssh authorized_key option support..."
+cp "$TESTHOME"/.monkeysphere/authorized_user_ids{,.bak}
+echo ' no-X11-forwarding' >>"$TESTHOME"/.monkeysphere/authorized_user_ids
+echo '    no-port-forwarding' >>"$TESTHOME"/.monkeysphere/authorized_user_ids
+echo '	command="/bin/false"' >>"$TESTHOME"/.monkeysphere/authorized_user_ids
+monkeysphere-authentication update-users $(whoami)
+ssh_test /bin/true 1
+ssh_test /bin/false 1
+mv "$TESTHOME"/.monkeysphere/authorized_user_ids{.bak,}
+
+# ensure we're back to normal:
+echo
+echo "##################################################"
+echo "### making sure we are back to normal..."
+monkeysphere-authentication update-users $(whoami)
+ssh_test true
 
 echo
 echo "##################################################"
 echo "### ssh connection test directly to 'testhost2.example' without new name..."
-target_hostname=testhost2.example ssh_test 255
+target_hostname=testhost2.example ssh_test true 255
 echo
 echo "##################################################"
 echo "### add servicename, certify by admin, import by user..."
@@ -525,14 +545,14 @@ echo "##################################################"
 echo "### ssh connection test with hostname 'testhost2.example' added..."
 gpgadmin --export "$SSHHOSTKEYID" | gpg --import
 gpg --check-trustdb
-ssh_test
+ssh_test true
 
 echo
 echo "##################################################"
 echo "### ssh connection test directly to 'testhost2.example' ..."
 gpg --import <"$HOST_KEY_FILE"
 gpg --check-trustdb
-target_hostname=testhost2.example ssh_test
+target_hostname=testhost2.example ssh_test true
 
 echo
 echo "##################################################"
@@ -540,7 +560,7 @@ echo "### ssh connection test for failure with 'testhost2.example' revoked..."
 monkeysphere-host revoke-servicename ssh://testhost2.example
 gpg --import <"$HOST_KEY_FILE"
 gpg --check-trustdb
-target_hostname=testhost2.example ssh_test 255
+target_hostname=testhost2.example ssh_test true 255
 
 # FIXME: addtest: remove admin as id-certifier and check ssh failure
 
@@ -555,7 +575,7 @@ monkeysphere-authentication update-users $(whoami)
 echo
 echo "##################################################"
 echo "### ssh connection test for success..."
-ssh_test
+ssh_test true
 
 echo
 echo "##################################################"
@@ -579,7 +599,7 @@ monkeysphere-host revoke-key "$SSHHOSTKEYID" | gpg --import
 echo
 echo "##################################################"
 echo "### ssh connection test for failure..."
-ssh_test 255
+ssh_test true 255
 
 
 ######################################################################

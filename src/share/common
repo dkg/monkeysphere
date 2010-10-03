@@ -505,13 +505,15 @@ ssh2known_hosts() {
 
 # output authorized_keys line from ssh key
 ssh2authorized_keys() {
-    local userID
-    local key
-    
-    userID="$1"
-    key="$2"
+    local koptions="$1"
+    local userID="$2"
+    local key="$3"
 
-    printf "%s MonkeySphere%s %s\n" "$key" "$DATE" "$userID"
+    if [[ -z "$koptions" ]]; then
+        printf "%s MonkeySphere%s %s\n" "$key" "$DATE" "$userID"
+    else
+        printf "%s %s MonkeySphere%s %s\n" "$koptions" "$key" "$DATE" "$userID"
+    fi
 }
 
 # convert key from gpg to ssh known_hosts format
@@ -608,7 +610,7 @@ gpg_fetch_userid() {
 # flag:sshKey to the calling function.
 process_user_id() {
     local returnCode=0
-    local userID
+    local userID="$1"
     local requiredCapability
     local requiredPubCapability
     local gpgOut
@@ -622,8 +624,6 @@ process_user_id() {
     local lastKey
     local lastKeyOK
     local fingerprint
-
-    userID="$1"
 
     # set the required key capability based on the mode
     requiredCapability=${REQUIRED_KEY_CAPABILITY:="a"}
@@ -1042,6 +1042,7 @@ process_known_hosts() {
 # process uids for the authorized_keys file
 process_uid_authorized_keys() {
     local userID
+    local koptions
     local nKeys
     local nKeysOK
     local ok
@@ -1050,7 +1051,8 @@ process_uid_authorized_keys() {
     # set the key processing mode
     export REQUIRED_KEY_CAPABILITY="$REQUIRED_USER_KEY_CAPABILITY"
 
-    userID="$1"
+    koptions="$1"
+    userID="$2"
 
     log verbose "processing: $userID"
 
@@ -1077,7 +1079,7 @@ process_uid_authorized_keys() {
 	    # note that key was found ok
 	    nKeysOK=$((nKeysOK+1))
 
-	    ssh2authorized_keys "$userID" "$sshKey" >> "$AUTHORIZED_KEYS"
+	    ssh2authorized_keys "$koptions" "$userID" "$sshKey" >> "$AUTHORIZED_KEYS"
 	fi
     done
 
@@ -1105,9 +1107,14 @@ update_authorized_keys() {
     local nIDsOK
     local nIDsBAD
     local fileCheck
+    local x koptions
+    declare -i argtype
+
+    if (( $# % 2 )); then log error "Bad number of arguments; this should never happen."; return 1; fi
 
     # the number of ids specified on command line
-    nIDs="$#"
+    (( nIDs=$#/2 ))
+    (( argtype=0 ))
 
     nIDsOK=0
     nIDsBAD=0
@@ -1129,23 +1136,30 @@ update_authorized_keys() {
     # remove any monkeysphere lines from authorized_keys file
     remove_monkeysphere_lines "$AUTHORIZED_KEYS"
 
-    for userID ; do
-	# process the user ID, change return code if key not found for
-	# user ID
-	process_uid_authorized_keys "$userID" || returnCode="$?"
+    for x; do
+        (( argtype++ ))
+        if (( $argtype % 2 )); then
+            koptions="$x"
+        else
+            userID="$x"
 
-	# note the result
-	case "$returnCode" in
-	    0)
-		nIDsOK=$((nIDsOK+1))
-		;;
-	    2)
-		nIDsBAD=$((nIDsBAD+1))
-		;;
-	esac
+	    # process the user ID, change return code if key not found
+	    # for user ID
+	    process_uid_authorized_keys "$koptions" "$userID" || returnCode="$?"
 
-	# touch the lockfile, for good measure.
-	lock touch "$AUTHORIZED_KEYS"
+	    # note the result
+	    case "$returnCode" in
+		0)
+		    nIDsOK=$((nIDsOK+1))
+		    ;;
+		2)
+		    nIDsBAD=$((nIDsBAD+1))
+		    ;;
+	    esac
+
+	    # touch the lockfile, for good measure.
+	    lock touch "$AUTHORIZED_KEYS"
+	fi
     done
 
     # remove the lockfile and the trap
@@ -1178,10 +1192,14 @@ update_authorized_keys() {
 # process an authorized_user_ids file for authorized_keys
 process_authorized_user_ids() {
     local line
-    local nline
-    local userIDs
+    declare -i nline
+    declare -a userIDs
+    declare -a koptions
+    declare -a export_array
 
     authorizedUserIDs="$1"
+
+    (( nline=0 ))
 
     # exit if the authorized_user_ids file is empty
     if [ ! -e "$authorizedUserIDs" ] ; then
@@ -1204,11 +1222,27 @@ process_authorized_user_ids() {
     # extract user IDs from authorized_user_ids file
     IFS=$'\n'
     for line in $(meat "$authorizedUserIDs") ; do
-	userIDs["$nline"]="$line"
-	nline=$((nline+1))
+	case "$line" in
+	    (" "*|$'\t'*)
+		if [[ -z ${koptions[${nline}]} ]]; then
+	            koptions[${nline}]=$(echo $line | sed 's/^[ 	]*//;s/[ 	]$//;')
+		else
+	            koptions[${nline}]="${koptions[${nline}]},$(echo $line | sed 's/^[ 	]*//;s/[ 	]$//;')"
+		fi
+		;;
+            (*)
+		((nline++))
+		userIDs[${nline}]="$line"
+		unset koptions[${nline}] || true
+		;;
+	esac
     done
 
-    update_authorized_keys "${userIDs[@]}"
+    for i in $(seq 1 $nline); do
+        export_array+=("${koptions[$i]}" "${userIDs[$i]}")
+    done
+
+    update_authorized_keys "${export_array[@]}"
 }
 
 # takes a gpg key or keys on stdin, and outputs a list of

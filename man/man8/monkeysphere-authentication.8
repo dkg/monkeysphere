@@ -197,7 +197,9 @@ Monkeysphere-generated user authorized_keys files.
 A list of OpenPGP user IDs, one per line.  OpenPGP keys with an
 exactly-matching User ID (calculated valid by the designated identity
 certifiers), will have any valid authorization-capable keys or subkeys
-added to the given user's authorized_keys file.
+added to the given user's authorized_keys file.  Any line with initial
+whitespace will be interpreted as ssh authorized_keys options
+applicable to the preceding User ID.
 
 .SH AUTHOR
 
