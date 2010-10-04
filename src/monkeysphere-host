@@ -71,7 +71,7 @@ EOF
 
 # function to interact with the gpg keyring
 gpg_host() {
-    GNUPGHOME="$GNUPGHOME_HOST" gpg --no-auto-check-trustdb --trust-model=always --no-greeting --quiet --no-tty "$@"
+    GNUPGHOME="$GNUPGHOME_HOST" LC_ALL=C gpg --no-auto-check-trustdb --trust-model=always --no-greeting --quiet --no-tty "$@"
 }
 
 # list the info about the a key, in colon format, to stdout
