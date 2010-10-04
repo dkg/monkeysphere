@@ -103,12 +103,12 @@ su_monkeysphere_user() {
     case $(id -un) in
 	# if monkeysphere user, run the command under bash
 	"$MONKEYSPHERE_USER")
-	    bash -c "$@"
+	    bash -c "$*"
 	    ;;
 
          # if root, su command as monkeysphere user
 	'root')
-	    su "$MONKEYSPHERE_USER" -c "$@"
+	    su "$MONKEYSPHERE_USER" -c "$*"
 	    ;;
 
 	# otherwise, fail

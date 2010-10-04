@@ -3,6 +3,8 @@ monkeysphere (0.32~pre) unstable; urgency=low
   [ Jameson Rollins ]
   * Fix specification of install paths in all scripts and man pages
     (closes MS #2491)
+  * Fix need for single argument to gpg_sphere (thanks Clint)
+    (closes MS #442)
 
   [ Micah Anderson ]
   * fix monkeysphere-host revoke-key, which never worked properly :(
@@ -15,8 +17,7 @@ monkeysphere (0.32~pre) unstable; urgency=low
     whitespace-prefixed lines immediately following that User ID. 
     (closes MS #440)
 
- -- Jameson Rollins <jrollins@finestructure.net>  Sun, 03 Oct 2010 00:23:08 -0400
-
+ -- Jameson Rollins <jrollins@finestructure.net>  Mon, 04 Oct 2010 00:36:08 -0400
 
 monkeysphere (0.31) unstable; urgency=low
 
