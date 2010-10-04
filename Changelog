@@ -1,4 +1,4 @@
-monkeysphere (0.32~pre) unstable; urgency=low
+monkeysphere (0.32) unstable; urgency=low
 
   [ Jameson Rollins ]
   * Fix specification of install paths in all scripts and man pages
