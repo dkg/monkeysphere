@@ -37,12 +37,12 @@ else
 fi
 
 # delete the requested key from the sphere keyring
-if gpg_sphere "--delete-key --batch --yes 0x${keyID}!" ; then
+if gpg_sphere --delete-key --batch --yes "0x${keyID}!" ; then
     # delete key from core keyring as well
     gpg_core --delete-key --batch --yes "0x${keyID}!"
 
     # update the trustdb for the authentication keyring
-    gpg_sphere "--check-trustdb"
+    gpg_sphere --check-trustdb
 
     log info "Identity certifier removed."
 else

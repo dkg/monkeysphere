@@ -108,18 +108,18 @@ if [ -f "$keyID" -o "$keyID" = '-' ] ; then
     fi
 
     # load the key
-    gpg_sphere "--import" <"$keyID" 2>/dev/null \
+    gpg_sphere --import <"$keyID" 2>/dev/null \
 	|| failure "could not read key from '$keyID'"
 
 # else, get the key from the keyserver
 else
     log verbose "searching keyserver $KEYSERVER for keyID $keyID..."
-    gpg_sphere "--keyserver $KEYSERVER --recv-key '0x${keyID}!'" \
+    gpg_sphere --keyserver "$KEYSERVER" --recv-key "0x${keyID}!" \
 	|| failure "Could not receive a key with this ID from the '$KEYSERVER' keyserver."
 
     # get the full fingerprint of new certifier key
     log debug "getting fingerprint of certifier key..."
-    fingerprint=$(gpg_sphere "--list-key --with-colons --with-fingerprint 0x${keyID}!" \
+    fingerprint=$(gpg_sphere --list-key --with-colons --with-fingerprint "0x${keyID}!" \
 	| grep '^fpr:' | cut -d: -f10)
 
     # test that there is only a single fingerprint
@@ -133,7 +133,7 @@ EOF
     fi
 
     log info "key found:"
-    gpg_sphere "--fingerprint 0x${fingerprint}!"
+    gpg_sphere --fingerprint "0x${fingerprint}!"
 
     if [ "$PROMPT" != "false" ] ; then
 	printf "Are you sure you want to add the above key as a certifier\nof users on this system? (Y/n) " >&2
@@ -149,7 +149,7 @@ fi
 # export the key to the core keyring so that the core can sign the
 # new certifier key
 log debug "loading key into core keyring..."
-gpg_sphere "--export 0x${fingerprint}!" | gpg_core --import
+gpg_sphere --export "0x${fingerprint}!" | gpg_core --import
 
 # edit-key script to ltsign key
 # NOTE: *all* user IDs will be ltsigned
@@ -172,7 +172,7 @@ if echo "$ltsignCommand" | \
 
     # update the sphere trustdb
     log debug "updating sphere trustdb..."
-    gpg_sphere "--check-trustdb" 2>&1 | log debug
+    gpg_sphere --check-trustdb 2>&1 | log debug
 
     log info "Identity certifier added."
 else

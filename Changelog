@@ -19,7 +19,7 @@ monkeysphere (0.32) unstable; urgency=low
     whitespace-prefixed lines immediately following that User ID.
     (closes MS #440)
 
- -- Jameson Rollins <jrollins@finestructure.net>  Mon, 04 Oct 2010 00:36:08 -0400
+ -- Jameson Rollins <jrollins@finestructure.net>  Wed, 06 Oct 2010 17:41:09 -0400
 
 monkeysphere (0.31) unstable; urgency=low
 

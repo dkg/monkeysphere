@@ -87,12 +87,12 @@ EOF
 
     # export the core key to the sphere keyring
     log debug "exporting core pub key to sphere keyring..."
-    gpg_core --export | gpg_sphere "--import"
+    gpg_core --export | gpg_sphere --import
 
     # ensure that the authentication sphere checker has absolute ownertrust on the expected key.
     log debug "setting ultimate owner trust on core key in gpg_sphere..."
-    printf "%s:6:\n" "$CORE_FPR" | gpg_sphere "--import-ownertrust" 2>&1 | log verbose
-    gpg_sphere "--export-ownertrust" 2>&1 | log debug
+    printf "%s:6:\n" "$CORE_FPR" | gpg_sphere --import-ownertrust 2>&1 | log verbose
+    gpg_sphere --export-ownertrust 2>&1 | log debug
 
     # check the owner trust
     log debug "checking gpg_sphere owner trust set properly..."
