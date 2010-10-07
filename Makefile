@@ -89,8 +89,10 @@ installman:
 	sed -i 's:__SYSDATADIR_PREFIX__:$(LOCALSTATEDIR):' $(DESTDIR)$(MANPREFIX)/man8/monkeysphere-authentication.8
 	gzip -n $(DESTDIR)$(MANPREFIX)/man8/monkeysphere-authentication.8
 
+# this target depends on you having the monkeysphere-docs
+# repo checked out as a peer of your monkeysphere repo.
 releasenote:
-	./utils/build-releasenote
+	../monkeysphere-docs/utils/build-releasenote
 
 test: test-keytrans test-basic
 
