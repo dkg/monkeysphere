@@ -1,3 +1,10 @@
+monkeysphere (0.33~pre1) unstable; urgency=low
+
+  * defaulting MONKEYSPHERE_HASH_KNOWN_HOSTS to false
+    (closes MS #2483)
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Fri, 08 Oct 2010 16:14:53 -0400
+
 monkeysphere (0.32) unstable; urgency=low
 
   [ Jameson Rollins ]
@@ -12,7 +19,7 @@ monkeysphere (0.32) unstable; urgency=low
   * fix monkeysphere-host revoke-key, which never worked properly :(
   * add some debug output to monkeysphere-host publish-key
     (closes MS #2289)
-  
+
   [ Clint Adams ]
   * add support for options to the authorized User IDs file.  Options that
     should apply to keys for a given User ID should be on

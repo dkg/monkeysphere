@@ -156,7 +156,7 @@ check_gpg_authentication_subkey() {
 # set unset default variables
 GNUPGHOME=${GNUPGHOME:="${HOME}/.gnupg"}
 KNOWN_HOSTS="${HOME}/.ssh/known_hosts"
-HASH_KNOWN_HOSTS="true"
+HASH_KNOWN_HOSTS="false"
 AUTHORIZED_KEYS="${HOME}/.ssh/authorized_keys"
 
 # unset the check keyserver variable, since that needs to have
