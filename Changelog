@@ -1,9 +1,17 @@
-monkeysphere (0.33~pre1) unstable; urgency=low
+monkeysphere (0.33) unstable; urgency=low
 
+  [ Daniel Kahn Gillmor ]
   * defaulting MONKEYSPHERE_HASH_KNOWN_HOSTS to false
     (closes MS #2483)
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Fri, 08 Oct 2010 16:14:53 -0400
+  [ Jameson Rollins ]
+  * fix security vulnerability is parsing userids in
+    monkeysphere-authentication keys-for-user (Closes: #600304)
+  * fix failure after first invalid key in monkeysphere-authentication
+    keys-for-user (closes MS #2545)
+  * ignore command options in monkeysphere-authentication keys-for-user
+
+ -- Jameson Rollins <jrollins@finestructure.net>  Fri, 15 Oct 2010 18:05:18 -0400
 
 monkeysphere (0.32) unstable; urgency=low
 
