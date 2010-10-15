@@ -43,6 +43,9 @@ export GNUPGHOME
 # extract user IDs from authorized_user_ids file
 IFS=$'\n'
 for line in $(meat "$authorizedUserIDs") ; do
+    if [[ "$line" =~ ^[[:space:]] ]] ; then
+	continue
+    fi
     printf '%s' "$line" | \
 	su_monkeysphere_user ". ${SYSSHAREDIR}/common; read X; keys_for_userid \"\$X\"" || true
 done
