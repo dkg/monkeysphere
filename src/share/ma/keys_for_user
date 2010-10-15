@@ -19,7 +19,6 @@ keys_for_user() {
 local uname
 local authorizedUserIDs
 local line
-local userIDs
 
 # get users from command line
 uname="$1"
@@ -44,7 +43,8 @@ export GNUPGHOME
 # extract user IDs from authorized_user_ids file
 IFS=$'\n'
 for line in $(meat "$authorizedUserIDs") ; do
-    su_monkeysphere_user ". ${SYSSHAREDIR}/common; keys_for_userid '$line'"
+    printf '%s' "$line" | \
+	su_monkeysphere_user ". ${SYSSHAREDIR}/common; read X; keys_for_userid \"\$X\"" || true
 done
 
 }
