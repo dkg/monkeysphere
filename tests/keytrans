@@ -138,6 +138,12 @@ EOF
 diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
 
 echo "##################################################"
+echo "### sleeping to avoid test suite breakage on fast"
+echo "### processors (see http://bugs.debian.org/591118)"
+
+sleep 2
+
+echo "##################################################"
 echo "### test User ID revocation ... "
 
 revtime=$(($timestamp + 1))
