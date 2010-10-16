@@ -49,8 +49,8 @@ subcommands:
    --no-connect                        do not make TCP connection to host
  subkey-to-ssh-agent (s)             store authentication subkey in ssh-agent
 
- keys-for-userid (u) USERID          output valid keys for given user ids
- sshfprs-for-userid USERID           output ssh fingerprints for given user ids
+ keys-for-userid (u) USERID          output valid ssh keys for given user id
+ sshfprs-for-userid USERID           output ssh fingerprints for given user id
  gen-subkey (g) [KEYID]              generate an authentication subkey
    --length (-l) BITS                  key length in bits (2048)
 
