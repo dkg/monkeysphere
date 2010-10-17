@@ -51,8 +51,8 @@ Monkeysphere authentication admin tool.
 
 subcommands:
  update-users (u) [USER]...        update user authorized_keys files
+ keys-for-user (k) USER            output user authorized_keys lines to stdout
  refresh-keys (r)                  refresh keys in keyring
- keys-for-user (k) USER            output valid keys for user
 
  add-id-certifier (c+) KEYID|FILE  import and tsign a certification key
    [--domain (-n) DOMAIN]            limit ID certifications to DOMAIN
@@ -164,18 +164,20 @@ case $COMMAND in
 	source "${MASHAREDIR}/setup"
 	setup
 	source "${MASHAREDIR}/update_users"
-	update_users "$@"
+	OUTPUT_STDOUT= update_users "$@"
+	;;
+
+    'keys-for-user'|'k')
+	source "${MASHAREDIR}/setup"
+	setup
+	source "${MASHAREDIR}/update_users"
+	OUTPUT_STDOUT=true update_users "$1"
 	;;
 
     'refresh-keys'|'refresh'|'r')
 	source "${MASHAREDIR}/setup"
 	setup
 	gpg_sphere --keyserver "$KEYSERVER" --refresh-keys
-	;;
-
-    'keys-for-user'|'k')
-	source "${MASHAREDIR}/keys_for_user"
-	keys_for_user "$@"
 	;;
 
     'add-identity-certifier'|'add-id-certifier'|'add-certifier'|'c+')

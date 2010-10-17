@@ -1,3 +1,10 @@
+monkeysphere (0.34) unstable; urgency=low
+
+  * fix keys-for-user so that it outputs proper authorized_keys lines
+    (close MS #2550)
+
+ -- Jameson Rollins <jrollins@finestructure.net>  Sun, 17 Oct 2010 19:18:29 -0400
+
 monkeysphere (0.33) unstable; urgency=low
 
   [ Daniel Kahn Gillmor ]

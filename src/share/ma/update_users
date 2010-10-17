@@ -129,17 +129,23 @@ for uname in $unames ; do
 	# the same uid that sshd is launched as); change the group of
 	# the file so that members of the user's group can read it.
 
-	# FIXME: is there a better way to do this?
-	chown $(whoami) "$AUTHORIZED_KEYS" && \
-	    chgrp $(id -g "$uname") "$AUTHORIZED_KEYS" && \
-	    chmod g+r "$AUTHORIZED_KEYS" && \
-	    mv -f "$AUTHORIZED_KEYS" "${authorizedKeysDir}/${uname}" || \
-	    { 
-	    log error "Failed to install authorized_keys for '$uname'!"
-	    rm -f "${authorizedKeysDir}/${uname}"
-	    # indicate that there has been a failure:
-	    returnCode=1
-	}
+	if [ "$OUTPUT_STDOUT" ] ; then
+	    log debug "outputting keys to stdout..."
+	    cat "$AUTHORIZED_KEYS"
+	else
+	    log debug "moving new file to ${authorizedKeysDir}/${uname}..."
+	    # FIXME: is there a better way to do this?
+	    chown $(whoami) "$AUTHORIZED_KEYS" && \
+		chgrp $(id -g "$uname") "$AUTHORIZED_KEYS" && \
+		chmod g+r "$AUTHORIZED_KEYS" && \
+		mv -f "$AUTHORIZED_KEYS" "${authorizedKeysDir}/${uname}" || \
+		{
+		log error "Failed to install authorized_keys for '$uname'!"
+		rm -f "${authorizedKeysDir}/${uname}"
+		# indicate that there has been a failure:
+		returnCode=1
+	    }
+	fi
     else
 	rm -f "${authorizedKeysDir}/${uname}"
     fi

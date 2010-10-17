@@ -23,7 +23,7 @@ the WoT.
 
 \fBmonkeysphere\-authentication\fP takes various subcommands:
 .TP
-.B update\-users [ACCOUNT]...
+.B update\-users [USER]...
 Rebuild the monkeysphere-controlled authorized_keys files.  For each
 specified account, the user ID's listed in the account's
 authorized_user_ids file are processed.  For each user ID, gpg will be
@@ -37,15 +37,16 @@ monkeysphere-controlled authorized_keys file.  If no accounts are
 specified, then all accounts on the system are processed.  `u' may be
 used in place of `update\-users'.
 .TP
+.B keys\-for\-user USER
+Output to stdout authorized_keys lines for USER.  This command behaves
+exactly like update\-users (above), except that the resulting
+authorized_keys lines are output to stdout, instead of being written
+to the monkeysphere-controlled authorized_keys file.
+.TP
 .B refresh\-keys
 Refresh all keys in the monkeysphere-authentication keyring.  If no
 accounts are specified, then all accounts on the system are processed.
 `r' may be used in place of `refresh\-keys'.
-.TP
-.B keys\-for\-user USER
-Output to stdout all acceptable keys for a given user.  User IDs are
-read from the user's authorized_user_ids file (see
-MONKEYSPHERE_AUTHORIZED_USER_IDS below).
 .TP
 .B add\-id\-certifier KEYID|FILE
 Instruct system to trust user identity certifications made by KEYID.
@@ -191,7 +192,7 @@ If the monkeysphere-authentication-x509 file is present, the
 monkeysphere-x509 file will be ignored.
 .TP
 __SYSDATADIR_PREFIX__/monkeysphere/authorized_keys/USER
-Monkeysphere-generated user authorized_keys files.
+Monkeysphere-controlled user authorized_keys files.
 .TP
 ~/.monkeysphere/authorized_user_ids
 A list of OpenPGP user IDs, one per line.  OpenPGP keys with an
