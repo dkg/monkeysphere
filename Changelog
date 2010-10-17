@@ -1,4 +1,4 @@
-monkeysphere (0.34) unstable; urgency=low
+monkeysphere (0.34~pre) unstable; urgency=low
 
   * fix keys-for-user so that it outputs proper authorized_keys lines
     (close MS #2550)
