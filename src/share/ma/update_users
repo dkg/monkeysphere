@@ -86,7 +86,6 @@ for uname in $unames ; do
 
 	    # export needed variables
 	    export AUTHORIZED_KEYS
-	    export TMP_AUTHORIZED_USER_IDS
 
 	    # process authorized_user_ids file, as monkeysphere user
 	    su_monkeysphere_user \
