@@ -17,35 +17,34 @@ update_authorized_keys() {
     log debug "updating authorized_keys file:"
     log debug " $AUTHORIZED_KEYS"
 
-    # check permissions on the authorized_{keys,user_ids} file paths
     check_key_file_permissions $(whoami) "$AUTHORIZED_KEYS" || failure
     check_key_file_permissions $(whoami) "$AUTHORIZED_USER_IDS" || failure
 
-    # create a lockfile on authorized_keys
     lock create "$AUTHORIZED_KEYS"
 
-    # make temp file
-    #tmpFile="$(dirname "$keyFile")/.$(basename "$keyFile")."
+    # FIXME: we're discarding any pre-existing EXIT trap; is this bad?
+    trap "lock remove $AUTHORIZED_KEYS" EXIT
+
     tmpFile=$(mktemp "${AUTHORIZED_KEYS}.monkeysphere.XXXXXX")
 
-    # FIXME: we're discarding any pre-existing EXIT trap; is this bad?
     trap "lock remove $AUTHORIZED_KEYS; rm -f $tmpFile" EXIT
 
-    # remove any monkeysphere lines from authorized_keys file
+    # remove any monkeysphere lines from authorized_keys file this is
+    # to insure that that all old authorized keys that are no longer
+    # authorized are removed
     remove_monkeysphere_lines "$AUTHORIZED_KEYS" > "$tmpFile"
 
     process_authorized_user_ids "$tmpFile" \
 	< "$AUTHORIZED_USER_IDS"
 
-    # note if the authorized_keys file was updated
     if [ "$(file_hash "$AUTHORIZED_KEYS")" != "$(file_hash "$tmpFile")" ] ; then
-	log debug "authorized_keys file updated."
+	mv -f "$tmpFile" "$AUTHORIZED_KEYS"
+	log verbose "authorized_keys file updated."
+    else
+	rm -f "$tmpFile"
     fi
-    mv -f "$tmpFile" "$AUTHORIZED_KEYS"
 
-    # remove the lockfile and the trap
     lock remove "$AUTHORIZED_KEYS"
 
-    # remove the trap
     trap - EXIT
 }
