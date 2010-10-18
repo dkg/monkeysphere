@@ -32,36 +32,33 @@ update_known_hosts() {
 	    || failure "Unable to create known_hosts file '$KNOWN_HOSTS'"
     fi
 
-    # check permissions on the known_hosts file path
     check_key_file_permissions $(whoami) "$KNOWN_HOSTS" \
 	|| failure "Bad permissions governing known_hosts file '$KNOWN_HOSTS'"
 
-    # create a lockfile on known_hosts:
     lock create "$KNOWN_HOSTS"
 
-    # make temp file
+    # FIXME: we're discarding any pre-existing EXIT trap; is this bad?
+    trap "lock remove $KNOWN_HOSTS" EXIT
+
     tmpFile=$(mktemp "${KNOWN_HOSTS}.monkeysphere.XXXXXX")
 
-    # FIXME: we're discarding any pre-existing EXIT trap; is this bad?
     trap "lock remove $KNOWN_HOSTS; rm -f $tmpFile" EXIT
 
     for host ; do
 	FILE_TYPE='known_hosts' process_keys_for_file "$tmpFile" "ssh://${host}"
 
-	# touch the lockfile, for good measure.
 	lock touch "$KNOWN_HOSTS"
     done
 
-    # note if the authorized_keys file was updated
     if [ "$(file_hash "$KNOWN_HOSTS")" != "$(file_hash "$tmpFile")" ] ; then
+	mv -f "$tmpFile" "$KNOWN_HOSTS"
 	log debug "known_hosts file updated."
+    else
+	rm -f "$tmpFile"
     fi
-    mv -f "$tmpFile" "$KNOWN_HOSTS"
 
-    # remove the lockfile and the trap
     lock remove "$KNOWN_HOSTS"
 
-    # remove the trap
     trap - EXIT
 }
 
@@ -69,7 +66,6 @@ update_known_hosts() {
 process_known_hosts() {
     local hosts
 
-    # exit if the known_hosts file does not exist
     if [ ! -e "$KNOWN_HOSTS" ] ; then
 	failure "known_hosts file '$KNOWN_HOSTS' does not exist."
     fi
