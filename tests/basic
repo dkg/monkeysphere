@@ -570,7 +570,7 @@ target_hostname=testhost2.example ssh_test true 255
 echo
 echo "##################################################"
 echo "### testing monkeysphere authentication keys-for-user"
-diff -q <(monkeysphere-authentication keys-for-user $(whoami)) <(cut -d' ' -f1,2 ${MONKEYSPHERE_SYSDATADIR}/authorized_keys/${MONKEYSPHERE_MONKEYSPHERE_USER}) 
+diff -q <(monkeysphere-authentication keys-for-user $(whoami) | cut -d' ' -f1,2) <(cut -d' ' -f1,2 ${MONKEYSPHERE_SYSDATADIR}/authorized_keys/${MONKEYSPHERE_MONKEYSPHERE_USER}) 
 
 # test to make sure things are OK after the previous tests:
 echo
