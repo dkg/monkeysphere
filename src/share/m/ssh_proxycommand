@@ -272,6 +272,7 @@ CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
 
 # update the known_hosts file for the host
 local returnCode=0
+source "${MSHAREDIR}/update_known_hosts"
 update_known_hosts "$HOSTP" || returnCode="$?"
 
 # output on depending on the return of the update-known_hosts

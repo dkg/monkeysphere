@@ -1,0 +1,51 @@
+# -*-shell-script-*-
+# This should be sourced by bash (though we welcome changes to make it POSIX sh compliant)
+
+# Monkeysphere update_authorized_keys subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@finestructure.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2010, and are all released under the GPL, version
+# 3 or later.
+
+update_authorized_keys() {
+    local tmpFile
+
+    log debug "updating authorized_keys file:"
+    log debug " $AUTHORIZED_KEYS"
+
+    # check permissions on the authorized_{keys,user_ids} file paths
+    check_key_file_permissions $(whoami) "$AUTHORIZED_KEYS" || failure
+    check_key_file_permissions $(whoami) "$AUTHORIZED_USER_IDS" || failure
+
+    # create a lockfile on authorized_keys
+    lock create "$AUTHORIZED_KEYS"
+
+    # make temp file
+    #tmpFile="$(dirname "$keyFile")/.$(basename "$keyFile")."
+    tmpFile=$(mktemp "${AUTHORIZED_KEYS}.monkeysphere.XXXXXX")
+
+    # FIXME: we're discarding any pre-existing EXIT trap; is this bad?
+    trap "lock remove $AUTHORIZED_KEYS; rm -f $tmpFile" EXIT
+
+    # remove any monkeysphere lines from authorized_keys file
+    remove_monkeysphere_lines "$AUTHORIZED_KEYS" > "$tmpFile"
+
+    process_authorized_user_ids "$tmpFile" \
+	< "$AUTHORIZED_USER_IDS"
+
+    # note if the authorized_keys file was updated
+    if [ "$(file_hash "$AUTHORIZED_KEYS")" != "$(file_hash "$tmpFile")" ] ; then
+	log debug "authorized_keys file updated."
+    fi
+    mv -f "$tmpFile" "$AUTHORIZED_KEYS"
+
+    # remove the lockfile and the trap
+    lock remove "$AUTHORIZED_KEYS"
+
+    # remove the trap
+    trap - EXIT
+}

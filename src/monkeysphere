@@ -220,6 +220,8 @@ case $COMMAND in
 	# whether or not to check keyservers
 	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
 
+	source "${MSHAREDIR}/update_known_hosts"
+
 	# if hosts are specified on the command line, process just
 	# those hosts
 	if [ "$1" ] ; then
@@ -235,9 +237,8 @@ case $COMMAND in
     'update-authorized_keys'|'update-authorized-keys'|'a')
 	# whether or not to check keyservers
 	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
-
-	# process authorized_user_ids file
-	process_authorized_user_ids "$AUTHORIZED_USER_IDS"
+	source "${MSHAREDIR}/update_authorized_keys"
+	update_authorized_keys
 	;;
 
     'import-subkey'|'import'|'i')
@@ -267,17 +268,20 @@ case $COMMAND in
 
     'keys-for-userid'|'u')
 	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
+	source "${MSHAREDIR}/keys_for_userid"
 	keys_for_userid "$@"
 	;;
 
     'sshfprs-for-userid')
 	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
+	source "${MSHAREDIR}/keys_for_userid"
 	keys_for_userid "$@" | "$SYSSHAREDIR/keytrans" sshfpr
 	;;
 
     'keys-from-userid')
 	echo "Warning: 'keys-from-userid' is deprecated.  Please use 'keys-for-userid' instead." >&2
 	CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=${CHECK_KEYSERVER:="true"}}
+	source "${MSHAREDIR}/keys_for_userid"
 	keys_for_userid "$@"
 	;;
 

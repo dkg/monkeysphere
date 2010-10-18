@@ -1,0 +1,91 @@
+# -*-shell-script-*-
+# This should be sourced by bash (though we welcome changes to make it POSIX sh compliant)
+
+# Monkeysphere update_known_hosts subcommand
+#
+# The monkeysphere scripts are written by:
+# Jameson Rollins <jrollins@finestructure.net>
+# Jamie McClelland <jm@mayfirst.org>
+# Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+#
+# They are Copyright 2010, and are all released under the GPL, version
+# 3 or later.
+
+# update the known_hosts file for a set of hosts listed on command
+# line
+update_known_hosts() {
+    local returnCode=0
+    local fileCheck
+    local host
+    local newUmask
+
+    # touch the known_hosts file so that the file permission check
+    # below won't fail upon not finding the file
+    if [ ! -f "$KNOWN_HOSTS" ]; then
+	# make sure to create any files or directories with the appropriate write bits turned off:
+	newUmask=$(printf "%04o" $(( 0$(umask) | 0022 )) )
+	[ -d $(dirname "$KNOWN_HOSTS") ] \
+	    || (umask "$newUmask" && mkdir -p -m 0700 $(dirname "$KNOWN_HOSTS") ) \
+	    || failure "Could not create path to known_hosts file '$KNOWN_HOSTS'"
+	# make sure to create this file with the appropriate bits turned off:
+	(umask "$newUmask" && touch "$KNOWN_HOSTS") \
+	    || failure "Unable to create known_hosts file '$KNOWN_HOSTS'"
+    fi
+
+    # check permissions on the known_hosts file path
+    check_key_file_permissions $(whoami) "$KNOWN_HOSTS" \
+	|| failure "Bad permissions governing known_hosts file '$KNOWN_HOSTS'"
+
+    # create a lockfile on known_hosts:
+    lock create "$KNOWN_HOSTS"
+
+    # make temp file
+    tmpFile=$(mktemp "${KNOWN_HOSTS}.monkeysphere.XXXXXX")
+
+    # FIXME: we're discarding any pre-existing EXIT trap; is this bad?
+    trap "lock remove $KNOWN_HOSTS; rm -f $tmpFile" EXIT
+
+    for host ; do
+	FILE_TYPE='known_hosts' process_keys_for_file "$tmpFile" "ssh://${host}"
+
+	# touch the lockfile, for good measure.
+	lock touch "$KNOWN_HOSTS"
+    done
+
+    # note if the authorized_keys file was updated
+    if [ "$(file_hash "$KNOWN_HOSTS")" != "$(file_hash "$tmpFile")" ] ; then
+	log debug "known_hosts file updated."
+    fi
+    mv -f "$tmpFile" "$KNOWN_HOSTS"
+
+    # remove the lockfile and the trap
+    lock remove "$KNOWN_HOSTS"
+
+    # remove the trap
+    trap - EXIT
+}
+
+# process hosts from a known_hosts file
+process_known_hosts() {
+    local hosts
+
+    # exit if the known_hosts file does not exist
+    if [ ! -e "$KNOWN_HOSTS" ] ; then
+	failure "known_hosts file '$KNOWN_HOSTS' does not exist."
+    fi
+
+    log debug "processing known_hosts file:"
+    log debug " $KNOWN_HOSTS"
+
+    hosts=$(meat "$KNOWN_HOSTS" | cut -d ' ' -f 1 | grep -v '^|.*$' | tr , ' ' | tr '\n' ' ')
+
+    if [ -z "$hosts" ] ; then
+	log debug "no hosts to process."
+	return
+    fi
+
+    # take all the hosts from the known_hosts file (first
+    # field), grep out all the hashed hosts (lines starting
+    # with '|')...
+    update_known_hosts $hosts
+}
