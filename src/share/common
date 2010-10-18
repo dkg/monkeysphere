@@ -376,8 +376,8 @@ remove_monkeysphere_lines() {
     tempfile=$(mktemp "${file}.XXXXXXX") || \
 	failure "Could not make temporary file '${file}.XXXXXXX'."
 
-    egrep -v '^MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2}$' \
-	"$file" >"$tempfile"
+    egrep -v ' MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2} ' \
+	"$file" >"$tempfile" || true
     cat "$tempfile" > "$file"
     rm "$tempfile"
 }
