@@ -12,15 +12,5 @@
 # 3 or later.
 
 keys_for_userid() {
-    local tmpFile=$(msmktempfile)
-
-    trap "rm -f $tmpFile" EXIT
-
-    FILE_TYPE='raw' process_keys_for_file "$tmpFile" "$@"
-
-    cat "$tmpFile"
-
-    rm -f "$tmpFile"
-
-    trap - EXIT
+    FILE_TYPE='raw' process_keys_for_file - "$@"
 }

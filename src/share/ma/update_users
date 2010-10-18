@@ -79,8 +79,9 @@ for uname in $unames ; do
 
 	    # process authorized_user_ids file, as monkeysphere user
 	    su_monkeysphere_user \
-		". ${SYSSHAREDIR}/common; STRICT_MODES='$STRICT_MODES' process_authorized_user_ids $tmpAuthorizedKeys" \
-		< "$authorizedUserIDs"
+		". ${SYSSHAREDIR}/common; STRICT_MODES='$STRICT_MODES' process_authorized_user_ids -" \
+		< "$authorizedUserIDs" \
+		> "$tmpAuthorizedKeys"
 
 	else
 	    log debug "not processing authorized_user_ids."

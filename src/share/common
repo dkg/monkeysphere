@@ -795,10 +795,10 @@ process_keys_for_file() {
     local noKey=
 
     log verbose "processing: $userID"
-    log debug "keyFile: $keyFile"
+    log debug "key file: $keyFile"
 
     IFS=$'\n'
-    for line in $(process_user_id ssh "${userID}") ; do
+    for line in $(process_user_id "$userID") ; do
 	ok=${line%%:*}
 	sshKey=${line#*:}
 
@@ -807,29 +807,40 @@ process_keys_for_file() {
         fi
 
 	# remove the old host key line
-	case "$FILE_TYPE" in
-	    ('raw'|'authorized_keys')
-		remove_line "$keyFile" "$sshKey" || noKey=true
-		;;
-	    ('known_hosts')
-		host=${userID#ssh://}
-		remove_line "$keyFile" "${host}.*${sshKey}" || noKey=true
-		;;
-	esac
+	if [[ "$keyFile" != '-' ]] ; then
+	    case "$FILE_TYPE" in
+		('authorized_keys')
+		    remove_line "$keyFile" "$sshKey" || noKey=true
+		    ;;
+		('known_hosts')
+		    host=${userID#ssh://}
+		    remove_line "$keyFile" "${host}.*${sshKey}" || noKey=true
+		    ;;
+	    esac
+	fi
 
 	# if key OK, add new host line
 	if [ "$ok" -eq '0' ] ; then
 	    case "$FILE_TYPE" in
 		('raw')
 		    echo "$sshKey" | log debug
-		    echo "$sshKey" >> "$keyFile"
+		    if [[ "$keyFile" == '-' ]] ; then
+			echo "$sshKey"
+		    else
+			echo "$sshKey" >>"$keyFile"
+		    fi
 		    ;;
 		('authorized_keys')
 		    ssh2authorized_keys "$userID" "$sshKey" | log debug
-		    ssh2authorized_keys "$userID" "$sshKey" \
-			>> "$keyFile"
+		    if [[ "$keyFile" == '-' ]] ; then
+			ssh2authorized_keys "$userID" "$sshKey"
+		    else
+			ssh2authorized_keys "$userID" "$sshKey" >> "$keyFile"
+		    fi
 		    ;;
 		('known_hosts')
+		    host=${userID#ssh://}
+		    ssh2known_hosts "$host" "$sshKey" | log debug
 		    # hash if specified
 		    if [ "$HASH_KNOWN_HOSTS" = 'true' ] ; then
 			if (type ssh-keygen >/dev/null) ; then
@@ -840,7 +851,11 @@ process_keys_for_file() {
 			    ssh2known_hosts "$host" "$sshKey" \
 				> "$tmpfile"
 			    ssh-keygen -H -f "$tmpfile" 2>/dev/null
-			    cat "$tmpfile" >> "$keyFile"
+			    if [[ "$keyFile" == '-' ]] ; then
+				cat "$tmpfile"
+			    else
+				cat "$tmpfile" >> "$keyFile"
+			    fi
 			    rm -f "$tmpfile" "${tmpfile}.old"
 			    # FIXME: we could do this without needing
 			    # ssh-keygen.  hashed known_hosts looks
@@ -853,15 +868,17 @@ process_keys_for_file() {
 			else
 			    failure "Cannot hash known_hosts as requested"
 			fi
-		    else
-			ssh2known_hosts "$host" "$sshKey" | log debug
-			ssh2known_hosts "$host" "$sshKey" \
-			    >> "$keyFile"
-		    fi
 
-		    # log if this is a new key to the known_hosts file
-		    if [ "$noKey" ] ; then
-			log info "* new key will be added to known_hosts file."
+			# log if this is a new key to the known_hosts file
+			if [ "$noKey" ] ; then
+			    log info "* new key will be added to known_hosts file."
+			fi
+		    else
+			if [[ "$keyFile" == '-' ]] ; then
+			    ssh2known_hosts "$host" "$sshKey"
+			else
+			    ssh2known_hosts "$host" "$sshKey" >>"$keyFile"
+			fi
 		    fi
 		    ;;
 	    esac
