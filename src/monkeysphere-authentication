@@ -168,6 +168,7 @@ case $COMMAND in
 	;;
 
     'keys-for-user'|'k')
+	(( $# > 0 )) || failure "Must specify user."
 	source "${MASHAREDIR}/setup"
 	setup
 	source "${MASHAREDIR}/update_users"
