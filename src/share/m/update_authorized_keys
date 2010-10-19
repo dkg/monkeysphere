@@ -32,7 +32,7 @@ update_authorized_keys() {
     # remove any monkeysphere lines from authorized_keys file this is
     # to insure that that all old authorized keys that are no longer
     # authorized are removed
-    remove_monkeysphere_lines "$AUTHORIZED_KEYS" > "$tmpFile"
+    remove_monkeysphere_lines <"$AUTHORIZED_KEYS" >"$tmpFile"
 
     process_authorized_user_ids "$tmpFile" \
 	< "$AUTHORIZED_USER_IDS"

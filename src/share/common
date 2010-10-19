@@ -355,31 +355,9 @@ remove_line() {
     fi
 }
 
-# remove all lines with MonkeySphere strings in file
+# remove all lines with MonkeySphere strings from stdin
 remove_monkeysphere_lines() {
-    local file
-    local tempfile
-
-    file="$1"
-
-    # return error if file does not exist
-    if [ ! -e "$file" ] ; then
-	return 1
-    fi
-
-    # just return ok if the file is empty, since there aren't any
-    # lines to remove
-    if [ ! -s "$file" ] ; then
-	return 0
-    fi
-
-    tempfile=$(mktemp "${file}.XXXXXXX") || \
-	failure "Could not make temporary file '${file}.XXXXXXX'."
-
-    egrep -v ' MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2} ' \
-	"$file" >"$tempfile" || true
-    cat "$tempfile" > "$file"
-    rm "$tempfile"
+    egrep -v ' MonkeySphere[[:digit:]]{4}(-[[:digit:]]{2}){2}T[[:digit:]]{2}(:[[:digit:]]{2}){2} '
 }
 
 # translate ssh-style path variables %h and %u
