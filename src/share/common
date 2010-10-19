@@ -340,14 +340,13 @@ remove_line() {
     fi
 
     # if the string is in the file...
-    if grep -q -F "$string" "$file" 2>/dev/null ; then
+    if grep "$string" "$file" &>/dev/null ; then
 	tempfile=$(mktemp "${file}.XXXXXXX") || \
 	    failure "Unable to make temp file '${file}.XXXXXXX'"
 	
 	# remove the line with the string, and return 0
-	grep -v -F "$string" "$file" >"$tempfile"
-	cat "$tempfile" > "$file"
-	rm "$tempfile"
+	grep -v "$string" "$file" >"$tempfile"
+	mv -f "$tempfile" "$file"
 	return 0
     # otherwise return 1
     else
