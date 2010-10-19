@@ -44,6 +44,8 @@ update_known_hosts() {
 
     trap "lock remove $KNOWN_HOSTS; rm -f $tmpFile" EXIT
 
+    cat "$KNOWN_HOSTS" >"$tmpFile"
+
     for host ; do
 	FILE_TYPE='known_hosts' process_keys_for_file "$tmpFile" "ssh://${host}"
 
