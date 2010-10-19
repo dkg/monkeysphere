@@ -909,7 +909,7 @@ process_authorized_user_ids() {
 		fi
 		;;
             (*)
-		nline=$((nline+1))
+		((nline++))
 		userIDs[${nline}]="$line"
 		unset koptions[${nline}] || true
 		;;
