@@ -73,9 +73,9 @@ for uname in $unames ; do
     # translating ssh-style path variables
     authorizedUserIDs=$(translate_ssh_variables "$uname" "$AUTHORIZED_USER_IDS")
     if [ -s "$authorizedUserIDs" ] ; then
-	log debug "authorized_user_ids file found."
 	# check permissions on the authorized_user_ids file path
 	if check_key_file_permissions "$uname" "$authorizedUserIDs" ; then
+	    log verbose "processing authorized_user_ids..."
 
 	    # process authorized_user_ids file, as monkeysphere user
 	    su_monkeysphere_user \
@@ -98,10 +98,12 @@ for uname in $unames ; do
 	if [ -s "$rawAuthorizedKeys" ] ; then
 	    # check permissions on the authorized_keys file path
 	    if check_key_file_permissions "$uname" "$rawAuthorizedKeys" ; then
-		log verbose "adding raw authorized_keys file... "
+		log verbose "adding raw authorized_keys..."
+
 		cat "$rawAuthorizedKeys" >> "$tmpAuthorizedKeys"
+
 	    else
-		log debug "not adding raw authorized_keys file."		
+		log debug "not adding raw authorized_keys."
 	    fi
 	else
 	    log debug "empty or absent authorized_keys file."
