@@ -383,6 +383,23 @@ test_gpg_expire() {
     echo "$1" | egrep -q "^[0-9]+[mwy]?$"
 }
 
+# touch a key file if it doesn't exist, including creating needed
+# directories with correct permissions
+touch_key_file_or_fail() {
+    local keyFile="$1"
+    if [ ! -f "$keyFile" ]; then
+	# make sure to create files and directories with the
+	# appropriate write bits turned off:
+	newUmask=$(printf "%04o" $(( 0$(umask) | 0022 )) )
+	[ -d $(dirname "$keyFile") ] \
+	    || (umask "$newUmask" && mkdir -p -m 0700 $(dirname "$keyFile") ) \
+	    || failure "Could not create path to $keyFile"
+	# make sure to create this file with the appropriate bits turned off:
+	(umask "$newUmask" && touch "$keyFile") \
+	    || failure "Unable to create $keyFile"
+    fi
+}
+
 # check that a file is properly owned, and that all it's parent
 # directories are not group/other writable
 check_key_file_permissions() {
@@ -886,7 +903,7 @@ process_authorized_user_ids() {
 		fi
 		;;
             (*)
-		((nline++))
+		((++nline))
 		userIDs[${nline}]="$line"
 		unset koptions[${nline}] || true
 		;;

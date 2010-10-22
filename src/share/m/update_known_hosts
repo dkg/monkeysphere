@@ -21,28 +21,18 @@ update_known_hosts() {
 
     # touch the known_hosts file so that the file permission check
     # below won't fail upon not finding the file
-    if [ ! -f "$KNOWN_HOSTS" ]; then
-	# make sure to create any files or directories with the appropriate write bits turned off:
-	newUmask=$(printf "%04o" $(( 0$(umask) | 0022 )) )
-	[ -d $(dirname "$KNOWN_HOSTS") ] \
-	    || (umask "$newUmask" && mkdir -p -m 0700 $(dirname "$KNOWN_HOSTS") ) \
-	    || failure "Could not create path to known_hosts file '$KNOWN_HOSTS'"
-	# make sure to create this file with the appropriate bits turned off:
-	(umask "$newUmask" && touch "$KNOWN_HOSTS") \
-	    || failure "Unable to create known_hosts file '$KNOWN_HOSTS'"
-    fi
-
+    touch_key_file_or_fail "$KNOWN_HOSTS"
     check_key_file_permissions $(whoami) "$KNOWN_HOSTS" \
-	|| failure "Bad permissions governing known_hosts file '$KNOWN_HOSTS'"
+	|| failure "Bad permissions governing known_hosts file $KNOWN_HOSTS"
 
     lock create "$KNOWN_HOSTS"
 
     # FIXME: we're discarding any pre-existing EXIT trap; is this bad?
-    trap "lock remove $KNOWN_HOSTS" EXIT
+    trap "log debug TRAP; lock remove $KNOWN_HOSTS" EXIT
 
     tmpFile=$(mktemp "${KNOWN_HOSTS}.monkeysphere.XXXXXX")
 
-    trap "lock remove $KNOWN_HOSTS; rm -f $tmpFile" EXIT
+    trap "log debug TRAP; lock remove $KNOWN_HOSTS; rm -f $tmpFile" EXIT
 
     cat "$KNOWN_HOSTS" >"$tmpFile"
 

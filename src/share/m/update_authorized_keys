@@ -12,27 +12,36 @@
 # 3 or later.
 
 update_authorized_keys() {
+    local newUmask
     local tmpFile
 
-    log debug "updating authorized_keys file:"
-    log debug " $AUTHORIZED_KEYS"
+    if [ ! -s "$AUTHORIZED_USER_IDS" ] ; then
+	log error "empty or absent authorized_user_ids file."
+	failure
+    fi
+    check_key_file_permissions $(whoami) "$AUTHORIZED_USER_IDS" \
+	|| failure "Bad permissions governing authorized_user_ids file '$AUTHORIZED_USER_IDS'"
 
-    check_key_file_permissions $(whoami) "$AUTHORIZED_KEYS" || failure
-    check_key_file_permissions $(whoami) "$AUTHORIZED_USER_IDS" || failure
+    # touch the authorized_keys file so that the file permission check
+    # below won't fail upon not finding the file
+    touch_key_file_or_fail "$AUTHORIZED_KEYS"
+    check_key_file_permissions $(whoami) "$AUTHORIZED_KEYS" \
+	|| failure "Bad permissions governing authorized_keys file $AUTHORIZED_KEYS"
 
     lock create "$AUTHORIZED_KEYS"
 
     # FIXME: we're discarding any pre-existing EXIT trap; is this bad?
-    trap "lock remove $AUTHORIZED_KEYS" EXIT
+    trap "log debug TRAP; lock remove $AUTHORIZED_KEYS" EXIT
 
     tmpFile=$(mktemp "${AUTHORIZED_KEYS}.monkeysphere.XXXXXX")
 
-    trap "lock remove $AUTHORIZED_KEYS; rm -f $tmpFile" EXIT
+    trap "log debug TRAP; lock remove $AUTHORIZED_KEYS; rm -f $tmpFile" EXIT
 
     # remove any monkeysphere lines from authorized_keys file this is
     # to insure that that all old authorized keys that are no longer
     # authorized are removed
-    remove_monkeysphere_lines <"$AUTHORIZED_KEYS" >"$tmpFile"
+    log debug "removing old monkeysphere lines..."
+    remove_monkeysphere_lines <"$AUTHORIZED_KEYS" >"$tmpFile" || true
 
     process_authorized_user_ids "$tmpFile" \
 	< "$AUTHORIZED_USER_IDS"
