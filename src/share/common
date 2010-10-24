@@ -325,32 +325,29 @@ passphrase_prompt() {
 # remove all lines with specified string from specified file
 remove_line() {
     local file
-    local string
+    local lines
     local tempfile
 
     file="$1"
-    string="$2"
-
-    if [ -z "$file" -o -z "$string" ] ; then
-	return 1
-    fi
+    shift
 
     if [ ! -e "$file" ] ; then
 	return 1
     fi
 
-    # if the string is in the file...
-    if grep "$string" "$file" &>/dev/null ; then
+    if (($# == 1)) ; then
+	lines=$(grep -F "$1" "$file") || true
+    else
+	lines=$(grep -F "$1" "$file" | grep -F "$2") || true
+    fi
+
+    # if the string was found, remove it
+    if [ "$lines" ] ; then
+	log debug "removing matching key lines..."
 	tempfile=$(mktemp "${file}.XXXXXXX") || \
 	    failure "Unable to make temp file '${file}.XXXXXXX'"
-	
-	# remove the line with the string, and return 0
-	grep -v "$string" "$file" >"$tempfile"
+	grep -v -F "$lines" "$file" >"$tempfile"
 	mv -f "$tempfile" "$file"
-	return 0
-    # otherwise return 1
-    else
-	return 1
     fi
 }
 
@@ -786,7 +783,6 @@ process_keys_for_file() {
     local host
     local ok
     local sshKey
-    local noKey=
 
     log verbose "processing: $userID"
     log debug "key file: $keyFile"
@@ -804,11 +800,11 @@ process_keys_for_file() {
 	if [[ "$keyFile" != '-' ]] ; then
 	    case "$FILE_TYPE" in
 		('authorized_keys')
-		    remove_line "$keyFile" "$sshKey" || noKey=true
+		    remove_line "$keyFile" "$sshKey"
 		    ;;
 		('known_hosts')
 		    host=${userID#ssh://}
-		    remove_line "$keyFile" "${host}.*${sshKey}" || noKey=true
+		    remove_line "$keyFile" "$host" "$sshKey"
 		    ;;
 	    esac
 	fi
