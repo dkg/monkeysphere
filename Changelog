@@ -7,8 +7,10 @@ monkeysphere (0.34~pre) unstable; urgency=low
   * update authorized_keys and known_hosts in temp file that are
     atomically moved into place
   * don't fail if authorized_keys file not already present (Closes: 600644)
+  * document CHECK_KEYSERVER in monkeysphere-authentication man page
+    (close MS #2556)
 
- -- Jameson Rollins <jrollins@finestructure.net>  Fri, 22 Oct 2010 16:23:31 -0400
+ -- Jameson Rollins <jrollins@finestructure.net>  Tue, 26 Oct 2010 10:24:58 -0400
 
 monkeysphere (0.33) unstable; urgency=low
 
