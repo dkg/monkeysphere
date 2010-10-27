@@ -1,4 +1,4 @@
-monkeysphere (0.34) unstable; urgency=low
+monkeysphere (0.34) upstream;
 
   * fix keys-for-user so that it outputs proper authorized_keys lines
     (close MS #2550)
@@ -12,7 +12,7 @@ monkeysphere (0.34) unstable; urgency=low
 
  -- Jameson Rollins <jrollins@finestructure.net>  Tue, 26 Oct 2010 10:27:01 -0400
 
-monkeysphere (0.33) unstable; urgency=low
+monkeysphere (0.33) upstream;
 
   [ Daniel Kahn Gillmor ]
   * defaulting MONKEYSPHERE_HASH_KNOWN_HOSTS to false
@@ -27,7 +27,7 @@ monkeysphere (0.33) unstable; urgency=low
 
  -- Jameson Rollins <jrollins@finestructure.net>  Fri, 15 Oct 2010 18:05:18 -0400
 
-monkeysphere (0.32) unstable; urgency=low
+monkeysphere (0.32) upstream;
 
   [ Jameson Rollins ]
   * Fix specification of install paths in all scripts and man pages
@@ -50,7 +50,7 @@ monkeysphere (0.32) unstable; urgency=low
 
  -- Jameson Rollins <jrollins@finestructure.net>  Wed, 06 Oct 2010 17:41:09 -0400
 
-monkeysphere (0.31) unstable; urgency=low
+monkeysphere (0.31) upstream;
 
   [ Daniel Kahn Gillmor ]
   * support x509 anchors for monkeysphere-host, allow shared anchor
@@ -67,7 +67,7 @@ monkeysphere (0.31) unstable; urgency=low
 
  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 15 Jul 2010 19:20:35 -0400
 
-monkeysphere (0.30) unstable; urgency=low
+monkeysphere (0.30) upstream;
 
   * changing tarball creation and packaging strategies
   * make non-ssh parts of monkeysphere work well when openssh is not
@@ -76,7 +76,7 @@ monkeysphere (0.30) unstable; urgency=low
 
  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sat, 17 Apr 2010 16:46:52 -0400
 
-monkeysphere (0.29) unstable; urgency=low
+monkeysphere (0.29) upstream;
 
   * This is mainly a bugfix release
   * Fix man page typo about monkeysphere authorized_keys location
@@ -96,7 +96,7 @@ monkeysphere (0.29) unstable; urgency=low
 
  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sun, 14 Mar 2010 21:00:47 -0400
 
-monkeysphere (0.28) unstable; urgency=low
+monkeysphere (0.28) upstream;
 
   * Major rework of monkeysphere-host to handle multiple host keys.  We
     also no longer assume ssh service keys.  monkeysphere-host is now a
@@ -106,7 +106,7 @@ monkeysphere (0.28) unstable; urgency=low
 
  -- Jameson Rollins <jrollins@finestructure.net>  Tue, 19 Jan 2010 13:50:31 -0500
 
-monkeysphere (0.27) unstable; urgency=low
+monkeysphere (0.27) upstream;
 
   * fixed monkeysphere gen-subkey subcommand that was erroneously creating
     DSA subkeys due to unannounced change in gpg edit-key UI.  Now tests
@@ -116,7 +116,7 @@ monkeysphere (0.27) unstable; urgency=low
 
  -- Jameson Rollins <jrollins@finestructure.net>  Mon, 11 Jan 2010 20:54:21 -0500
 
-monkeysphere (0.26) unstable; urgency=low
+monkeysphere (0.26) upstream;
 
   * add 'refresh-keys' subcommand to monkeysphere-authentication
   * improve marginal UI (closes MS #1141)
@@ -130,7 +130,7 @@ monkeysphere (0.26) unstable; urgency=low
 
  -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 01 Aug 2009 17:11:05 -0400
 
-monkeysphere (0.25) unstable; urgency=low
+monkeysphere (0.25) upstream;
 
   * New upstream release:
   * update/fix the marginal ui output
@@ -153,7 +153,7 @@ monkeysphere (0.25) unstable; urgency=low
 
  -- Jameson Graef Rollins <jrollins@finestructure.net>  Thu, 16 Jul 2009 22:09:19 -0400
 
-monkeysphere (0.24) unstable; urgency=low
+monkeysphere (0.24) upstream;
 
   * fixed how version information is stored/retrieved
   * now uses perl-based keytrans for both pem2openpgp and openpgp2ssh
@@ -167,7 +167,7 @@ monkeysphere (0.24) unstable; urgency=low
 
  -- Jameson Graef Rollins <jrollins@finestructure.net>  Tue, 03 Mar 2009 19:38:33 -0500
 
-monkeysphere (0.23) unstable; urgency=low
+monkeysphere (0.23) upstream;
 
   "The Golden Bezoar Release"
 
@@ -191,7 +191,7 @@ monkeysphere (0.23) unstable; urgency=low
 
  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sat, 21 Feb 2009 17:51:06 -0500
 
-monkeysphere (0.22) unstable; urgency=low
+monkeysphere (0.22) upstream;
 
   [ Jameson Graef Rollins ]
   * added info log output when a new key is added to known_hosts file.
@@ -208,13 +208,13 @@ monkeysphere (0.22) unstable; urgency=low
 
  -- Jameson Graef Rollins <jrollins@finestructure.net>  Fri, 28 Nov 2008 14:23:31 -0500
 
-monkeysphere (0.21) unstable; urgency=low
+monkeysphere (0.21) upstream;
 
   * move debian packaging to packaging subdirectory.
 
  -- Jameson Graef Rollins <jrollins@finestructure.net>  Sat, 15 Nov 2008 16:14:27 -0500
 
-monkeysphere (0.20) unstable; urgency=low
+monkeysphere (0.20) upstream;
 
   [ Daniel Kahn Gillmor ]
   * ensure that tempdirs are properly created, bail out otherwise instead
@@ -483,4 +483,3 @@ monkeysphere (0.1) experimental; urgency=low
   * This is experimental -- please report bugs!
 
  -- Daniel Kahn Gillmor <dkg-debian.org@fifthhorseman.net>  Thu, 19 Jun 2008 00:34:53 -0400
-
