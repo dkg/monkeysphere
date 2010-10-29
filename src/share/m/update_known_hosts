@@ -17,7 +17,6 @@ update_known_hosts() {
     local returnCode=0
     local fileCheck
     local host
-    local newUmask
 
     # touch the known_hosts file so that the file permission check
     # below won't fail upon not finding the file

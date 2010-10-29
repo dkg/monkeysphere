@@ -384,6 +384,8 @@ test_gpg_expire() {
 # directories with correct permissions
 touch_key_file_or_fail() {
     local keyFile="$1"
+    local newUmask
+
     if [ ! -f "$keyFile" ]; then
 	# make sure to create files and directories with the
 	# appropriate write bits turned off:
