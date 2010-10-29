@@ -491,7 +491,36 @@ ssh2known_hosts() {
     if [ "$port" != "$host" ] ; then
 	host="[${host}]:${port}"
     fi
-    printf "%s %s MonkeySphere%s\n" "$host" "$key" "$DATE"
+
+    # hash if specified
+    if [ "$HASH_KNOWN_HOSTS" = 'true' ] ; then
+	if (type ssh-keygen >/dev/null) ; then
+	    log verbose "hashing known_hosts line"
+	    # FIXME: this is really hackish cause
+	    # ssh-keygen won't hash from stdin to
+	    # stdout
+	    tmpfile=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
+	    printf "%s %s MonkeySphere%s\n" "$host" "$key" "$DATE" \
+		> "$tmpfile"
+	    ssh-keygen -H -f "$tmpfile" 2>/dev/null
+	    if [[ "$keyFile" == '-' ]] ; then
+		cat "$tmpfile"
+	    else
+		cat "$tmpfile" >> "$keyFile"
+	    fi
+	    rm -f "$tmpfile" "${tmpfile}.old"
+	    # FIXME: we could do this without needing ssh-keygen.
+	    # hashed known_hosts looks like: |1|X|Y where 1 means SHA1
+	    # (nothing else is defined in openssh sources), X is the
+	    # salt (same length as the digest output), base64-encoded,
+	    # and Y is the digested hostname (also base64-encoded).
+	    # see hostfile.{c,h} in openssh sources.
+	else
+	    log error "Cannot hash known_hosts line as requested."
+	fi
+    else
+	printf "%s %s MonkeySphere%s\n" "$host" "$key" "$DATE"
+    fi
 }
 
 # output authorized_keys line from ssh key
@@ -783,6 +812,7 @@ process_keys_for_file() {
     local host
     local ok
     local sshKey
+    local keyLine
 
     log verbose "processing: $userID"
     log debug "key file: $keyFile"
@@ -796,7 +826,7 @@ process_keys_for_file() {
             continue
         fi
 
-	# remove the old host key line
+	# remove the old key line
 	if [[ "$keyFile" != '-' ]] ; then
 	    case "$FILE_TYPE" in
 		('authorized_keys')
@@ -809,69 +839,27 @@ process_keys_for_file() {
 	    esac
 	fi
 
-	# if key OK, add new host line
+	# if key OK, add new key line
 	if [ "$ok" -eq '0' ] ; then
 	    case "$FILE_TYPE" in
 		('raw')
-		    echo "$sshKey" | log debug
-		    if [[ "$keyFile" == '-' ]] ; then
-			echo "$sshKey"
-		    else
-			echo "$sshKey" >>"$keyFile"
-		    fi
+		    keyLine="$sshKey"
 		    ;;
 		('authorized_keys')
-		    ssh2authorized_keys "$userID" "$sshKey" | log debug
-		    if [[ "$keyFile" == '-' ]] ; then
-			ssh2authorized_keys "$userID" "$sshKey"
-		    else
-			ssh2authorized_keys "$userID" "$sshKey" >> "$keyFile"
-		    fi
+		    keyLine=$(ssh2authorized_keys "$userID" "$sshKey")
 		    ;;
 		('known_hosts')
 		    host=${userID#ssh://}
-		    ssh2known_hosts "$host" "$sshKey" | log debug
-		    # hash if specified
-		    if [ "$HASH_KNOWN_HOSTS" = 'true' ] ; then
-			if (type ssh-keygen >/dev/null) ; then
-			    # FIXME: this is really hackish cause
-			    # ssh-keygen won't hash from stdin to
-			    # stdout
-			    tmpfile=$(mktemp ${TMPDIR:-/tmp}/tmp.XXXXXXXXXX)
-			    ssh2known_hosts "$host" "$sshKey" \
-				> "$tmpfile"
-			    ssh-keygen -H -f "$tmpfile" 2>/dev/null
-			    if [[ "$keyFile" == '-' ]] ; then
-				cat "$tmpfile"
-			    else
-				cat "$tmpfile" >> "$keyFile"
-			    fi
-			    rm -f "$tmpfile" "${tmpfile}.old"
-			    # FIXME: we could do this without needing
-			    # ssh-keygen.  hashed known_hosts looks
-			    # like: |1|X|Y where 1 means SHA1 (nothing
-			    # else is defined in openssh sources), X
-			    # is the salt (same length as the digest
-			    # output), base64-encoded, and Y is the
-			    # digested hostname (also base64-encoded).
-			    # see hostfile.{c,h} in openssh sources.
-			else
-			    failure "Cannot hash known_hosts as requested"
-			fi
-
-			# log if this is a new key to the known_hosts file
-			if [ "$noKey" ] ; then
-			    log info "* new key will be added to known_hosts file."
-			fi
-		    else
-			if [[ "$keyFile" == '-' ]] ; then
-			    ssh2known_hosts "$host" "$sshKey"
-			else
-			    ssh2known_hosts "$host" "$sshKey" >>"$keyFile"
-			fi
-		    fi
+		    keyLine=$(ssh2known_hosts "$host" "$sshKey")
 		    ;;
 	    esac
+
+	    echo "$keyLine" | log debug
+	    if [[ "$keyFile" == '-' ]] ; then
+		echo "$keyLine"
+	    else
+		echo "$keyLine" >>"$keyFile"
+	    fi
 	fi
     done
 }
