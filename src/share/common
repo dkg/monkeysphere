@@ -346,7 +346,7 @@ remove_line() {
 	log debug "removing matching key lines..."
 	tempfile=$(mktemp "${file}.XXXXXXX") || \
 	    failure "Unable to make temp file '${file}.XXXXXXX'"
-	grep -v -x -F "$lines" "$file" >"$tempfile"
+	grep -v -x -F "$lines" "$file" >"$tempfile" || :
 	mv -f "$tempfile" "$file"
     fi
 }
