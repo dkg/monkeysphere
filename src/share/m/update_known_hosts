@@ -14,8 +14,7 @@
 # update the known_hosts file for a set of hosts listed on command
 # line
 update_known_hosts() {
-    local returnCode=0
-    local fileCheck
+    local tmpFile
     local host
 
     # touch the known_hosts file so that the file permission check
