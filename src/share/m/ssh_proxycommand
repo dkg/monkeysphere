@@ -15,6 +15,86 @@
 # established.  Can be added to ~/.ssh/config as follows:
 #  ProxyCommand monkeysphere ssh-proxycommand %h %p
 
+validate_monkeysphere() {
+    local hostKey
+
+    # specify keyserver checking.  the behavior of this proxy command
+    # is intentionally different than that of running monkeyesphere
+    # normally, and keyserver checking is intentionally done under
+    # certain circumstances.  This can be overridden by setting the
+    # MONKEYSPHERE_CHECK_KEYSERVER environment variable, or by setting
+    # the CHECK_KEYSERVER variable in the monkeysphere.conf file.
+
+    # if the host is in the gpg keyring...
+    if gpg_user --list-key ="${URI}" &>/dev/null ; then
+	# do not check the keyserver
+	CHECK_KEYSERVER=${CHECK_KEYSERVER:="false"}
+
+    # if the host is NOT in the keyring...
+    else
+	# FIXME: what about system-wide known_hosts file (/etc/ssh/known_hosts)?
+
+	if [ -r "$KNOWN_HOSTS" ]; then
+	    # look up the host key is found in the known_hosts file...
+            if (type ssh-keygen &>/dev/null) ; then
+		hostKey=$(ssh-keygen -F "$HOST" -f "$KNOWN_HOSTS" 2>/dev/null)
+            else
+		# FIXME: we're not dealing with digested known_hosts
+		# if we don't have ssh-keygen
+
+		# But we could do this without needing ssh-keygen.
+		# hashed known_hosts looks like: |1|X|Y where 1 means
+		# SHA1 (nothing else is defined in openssh sources), X
+		# is the salt (same length as the digest output),
+		# base64-encoded, and Y is the digested hostname (also
+		# base64-encoded).
+
+		# see hostfile.{c,h} in openssh sources.
+
+		hostKey=$(cut -f1 -d\  < .ssh/known_hosts | tr ',' '\n' | grep -Fx -e "$HOST" || :)
+            fi
+	fi
+
+	if [ "$hostKey" ] ; then
+	# do not check the keyserver
+	# FIXME: more nuanced checking should be done here to properly
+	# take into consideration hosts that join monkeysphere by
+	# converting an existing and known ssh key
+	    CHECK_KEYSERVER=${CHECK_KEYSERVER:="false"}
+
+	# if the host key is not found in the known_hosts file...
+	else
+	    # check the keyserver
+	    CHECK_KEYSERVER=${CHECK_KEYSERVER:="true"}
+	fi
+    fi
+
+    # finally look in the MONKEYSPHERE_ environment variable for a
+    # CHECK_KEYSERVER setting to override all else
+    CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
+
+    declare -i KEYS_PROCESSED=0
+    declare -i KEYS_VALID=0
+
+    # update the known_hosts file for the host
+    source "${MSHAREDIR}/update_known_hosts"
+    update_known_hosts "$HOSTP"
+
+    if ((KEYS_PROCESSED > 0)) && ((KEYS_VALID == 0)) ; then
+	log debug "output ssh marginal ui..."
+	output_no_valid_key
+    fi
+
+    # FIXME: what about the case where monkeysphere successfully finds
+    # a valid key for the host and adds it to the known_hosts file,
+    # but a different non-monkeysphere key for the host already exists
+    # in the known_hosts, and it is this non-ms key that is offered by
+    # the host?  monkeysphere will succeed, and the ssh connection
+    # will succeed, and the user will be left with the impression that
+    # they are dealing with a OpenPGP/PKI host key when in fact they
+    # are not.  should we use ssh-keyscan to compare the keys first?
+}
+
 # output the key info, including the RSA fingerprint
 show_key_info() {
     local keyid="$1"
@@ -190,7 +270,6 @@ EOF
 
 # the ssh proxycommand function itself
 ssh_proxycommand() {
-local hostKey
 
 if [ "$1" = '--no-connect' ] ; then
     NO_CONNECT='true'
@@ -217,80 +296,7 @@ else
 fi
 URI="ssh://${HOSTP}"
 
-# specify keyserver checking.  the behavior of this proxy command is
-# intentionally different than that of running monkeyesphere normally,
-# and keyserver checking is intentionally done under certain
-# circumstances.  This can be overridden by setting the
-# MONKEYSPHERE_CHECK_KEYSERVER environment variable, or by setting the
-# CHECK_KEYSERVER variable in the monkeysphere.conf file.
-
-# if the host is in the gpg keyring...
-if gpg_user --list-key ="${URI}" &>/dev/null ; then
-    # do not check the keyserver
-    CHECK_KEYSERVER=${CHECK_KEYSERVER:="false"}
-
-# if the host is NOT in the keyring...
-else
-    # FIXME: what about system-wide known_hosts file (/etc/ssh/known_hosts)?
-
-    if [ -r "$KNOWN_HOSTS" ]; then
-    # look up the host key is found in the known_hosts file...
-        if (type ssh-keygen &>/dev/null) ; then
-            hostKey=$(ssh-keygen -F "$HOST" -f "$KNOWN_HOSTS" 2>/dev/null)
-        else
-            # FIXME: we're not dealing with digested known_hosts if we
-            # don't have ssh-keygen
-
-       # But we could do this without needing ssh-keygen.  hashed
-       # known_hosts looks like: |1|X|Y where 1 means SHA1 (nothing
-       # else is defined in openssh sources), X is the salt (same
-       # length as the digest output), base64-encoded, and Y is the
-       # digested hostname (also base64-encoded).
-
-       # see hostfile.{c,h} in openssh sources.
-
-            hostKey=$(cut -f1 -d\  < .ssh/known_hosts | tr ',' '\n' | grep -Fx -e "$HOST" || :)
-        fi
-    fi
-
-    if [ "$hostKey" ] ; then
-	# do not check the keyserver
-	# FIXME: more nuanced checking should be done here to properly
-	# take into consideration hosts that join monkeysphere by
-	# converting an existing and known ssh key
-	CHECK_KEYSERVER=${CHECK_KEYSERVER:="false"}
-
-    # if the host key is not found in the known_hosts file...
-    else
-	# check the keyserver
-	CHECK_KEYSERVER=${CHECK_KEYSERVER:="true"}
-    fi
-fi
-
-# finally look in the MONKEYSPHERE_ environment variable for a
-# CHECK_KEYSERVER setting to override all else
-CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
-
-declare -i KEYS_PROCESSED=0
-declare -i KEYS_VALID=0
-
-# update the known_hosts file for the host
-source "${MSHAREDIR}/update_known_hosts"
-update_known_hosts "$HOSTP"
-
-if ((KEYS_PROCESSED > 0)) && ((KEYS_VALID == 0)) ; then
-    log debug "output ssh marginal ui..."
-    output_no_valid_key
-fi
-
-# FIXME: what about the case where monkeysphere successfully finds a
-# valid key for the host and adds it to the known_hosts file, but a
-# different non-monkeysphere key for the host already exists in the
-# known_hosts, and it is this non-ms key that is offered by the host?
-# monkeysphere will succeed, and the ssh connection will succeed, and
-# the user will be left with the impression that they are dealing with
-# a OpenPGP/PKI host key when in fact they are not.  should we use
-# ssh-keyscan to compare the keys first?
+validate_monkeysphere
 
 # exec a netcat passthrough to host for the ssh connection
 if [ -z "$NO_CONNECT" ] ; then
