@@ -1,8 +1,9 @@
-monkeysphere (0.35) upstream;
+monkeysphere (0.35~pre) upstream;
 
   * Remove reference to USE_VALIDATION_AGENT.
+  * Fix ssh_proxycommand for marginal hosts.
 
- -- Jameson Rollins <jrollins@finestructure.net>  Wed, 27 Oct 2010 10:46:28 -0400
+ -- Jameson Rollins <jrollins@finestructure.net>  Fri, 29 Oct 2010 20:21:54 -0400
 
 monkeysphere (0.34) upstream;
 
