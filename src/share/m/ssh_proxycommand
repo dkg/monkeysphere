@@ -53,6 +53,7 @@ EOF
     otherUids=$(echo "$gpgSigOut" | grep "^uid" | grep -v "$userID")
     if [ "$otherUids" ] ; then
 	log info <<EOF
+
 Other user IDs on this key:
 EOF
 	echo "$otherUids" | log info
@@ -270,34 +271,17 @@ fi
 # CHECK_KEYSERVER setting to override all else
 CHECK_KEYSERVER=${MONKEYSPHERE_CHECK_KEYSERVER:=$CHECK_KEYSERVER}
 
-# update the known_hosts file for the host
-local returnCode=0
-source "${MSHAREDIR}/update_known_hosts"
-update_known_hosts "$HOSTP" || returnCode="$?"
+declare -i KEYS_PROCESSED=0
+declare -i KEYS_VALID=0
 
-# output on depending on the return of the update-known_hosts
-# subcommand, which is (ultimately) the return code of the
-# update_known_hosts function in common
-case "$returnCode" in
-    0)
-	# acceptable host key found so continue to ssh
-	true
-	;;
-    1)
-	# no hosts at all found so also continue (drop through to
-	# regular ssh host verification)
-	true
-	;;
-    2)
-	# at least one *bad* host key (and no good host keys) was
-	# found, so output some usefull information
-	output_no_valid_key
-	;;
-    *)
-	# anything else drop through
-	true
-	;;
-esac
+# update the known_hosts file for the host
+source "${MSHAREDIR}/update_known_hosts"
+update_known_hosts "$HOSTP"
+
+if ((KEYS_PROCESSED > 0)) && ((KEYS_VALID == 0)) ; then
+    log debug "output ssh marginal ui..."
+    output_no_valid_key
+fi
 
 # FIXME: what about the case where monkeysphere successfully finds a
 # valid key for the host and adds it to the known_hosts file, but a

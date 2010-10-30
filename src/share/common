@@ -841,6 +841,8 @@ process_keys_for_file() {
 	    esac
 	fi
 
+	((++KEYS_PROCESSED))
+
 	# if key OK, add new key line
 	if [ "$ok" -eq '0' ] ; then
 	    case "$FILE_TYPE" in
@@ -862,8 +864,13 @@ process_keys_for_file() {
 	    else
 		echo "$keyLine" >>"$keyFile"
 	    fi
+
+	    ((++KEYS_VALID))
 	fi
     done
+
+    log debug "KEYS_PROCESSED=$KEYS_PROCESSED"
+    log debug "KEYS_VALID=$KEYS_VALID"
 }
 
 # process an authorized_user_ids file on stdin for authorized_keys
