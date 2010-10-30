@@ -15,6 +15,55 @@
 # established.  Can be added to ~/.ssh/config as follows:
 #  ProxyCommand monkeysphere ssh-proxycommand %h %p
 
+# the ssh proxycommand function itself
+ssh_proxycommand() {
+    local connect='true'
+    local HOST
+    local PORT
+    local HOSTP
+    local URI
+
+    if [[ "$1" == '--no-connect' ]] ; then
+	connect='false'
+	shift 1
+    fi
+
+    HOST="$1"
+    PORT="$2"
+
+    if [ -z "$HOST" ] ; then
+	log error "Host not specified."
+	usage
+	exit 255
+    fi
+    if [ -z "$PORT" ] ; then
+	PORT=22
+    fi
+
+    # set the host URI
+    if [ "$PORT" != '22' ] ; then
+	HOSTP="${HOST}:${PORT}"
+    else
+	HOSTP="${HOST}"
+    fi
+    URI="ssh://${HOSTP}"
+
+    # passed HOST/PORT/HOSTP/URI
+    validate_monkeysphere
+
+    # exec a netcat passthrough to host for the ssh connection
+    if [[ "$connect" == 'true' ]] ; then
+	if (type nc &>/dev/null); then
+	    exec nc "$HOST" "$PORT"
+	elif (type socat &>/dev/null); then
+	    exec socat STDIO "TCP:$HOST:$PORT"
+	else
+	    echo "Neither netcat nor socat found -- could not complete monkeysphere-ssh-proxycommand connection to $HOST:$PORT" >&2
+	    exit 255
+	fi
+    fi
+}
+
 validate_monkeysphere() {
     local hostKey
 
@@ -265,49 +314,4 @@ EOF
     log info <<EOF
 -------------------- ssh continues below --------------------
 EOF
-}
-
-
-# the ssh proxycommand function itself
-ssh_proxycommand() {
-
-if [ "$1" = '--no-connect' ] ; then
-    NO_CONNECT='true'
-    shift 1
-fi
-
-HOST="$1"
-PORT="$2"
-
-if [ -z "$HOST" ] ; then
-    log error "Host not specified."
-    usage
-    exit 255
-fi
-if [ -z "$PORT" ] ; then
-    PORT=22
-fi
-
-# set the host URI
-if [ "$PORT" != '22' ] ; then
-    HOSTP="${HOST}:${PORT}"
-else
-    HOSTP="${HOST}"
-fi
-URI="ssh://${HOSTP}"
-
-validate_monkeysphere
-
-# exec a netcat passthrough to host for the ssh connection
-if [ -z "$NO_CONNECT" ] ; then
-    if (type nc &>/dev/null); then
-	exec nc "$HOST" "$PORT"
-    elif (type socat &>/dev/null); then
-	exec socat STDIO "TCP:$HOST:$PORT"
-    else
-	echo "Neither netcat nor socat found -- could not complete monkeysphere-ssh-proxycommand connection to $HOST:$PORT" >&2
-	exit 255
-    fi
-fi
-
 }
