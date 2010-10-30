@@ -858,10 +858,11 @@ process_keys_for_file() {
 		    ;;
 	    esac
 
-	    echo "$keyLine" | log debug
+	    echo "key line: $keyLine" | log debug
 	    if [[ "$keyFile" == '-' ]] ; then
 		echo "$keyLine"
 	    else
+		log debug "adding key line to file..."
 		echo "$keyLine" >>"$keyFile"
 	    fi
 
