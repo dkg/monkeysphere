@@ -150,6 +150,10 @@ export MONKEYSPHERE_PROMPT=false
 # into trying to use the user's key, instead of the testuser's key
 unset MONKEYSPHERE_SUBKEYS_FOR_AGENT
 
+# unset MONKEYSPHERE_VALIDATION_AGENT_SOCKET variable which, if set,
+# would confuse the test into trying to talk the the user's agent
+unset MONKEYSPHERE_VALIDATION_AGENT_SOCKET
+
 export SSHD_CONFIG="$TEMPDIR"/sshd_config
 export SOCKET="$TEMPDIR"/ssh-socket
 
