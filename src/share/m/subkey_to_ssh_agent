@@ -97,7 +97,7 @@ You might want to run 'monkeysphere gen-subkey'."
 	primaryuid=$(gpg_user --with-colons --list-key "0x${subkey}!" | grep '^uid:' | head -n1 | cut -f10 -d: | tr -d /)
 
 	#kname="[monkeysphere] $primaryuid"
-	kname="$primaryuid"
+	kname="${primaryuid:-Monkeysphere Key 0x${subkey}}"
 
 	if [ "$1" = '-d' ]; then
 	    # we're removing the subkey:
