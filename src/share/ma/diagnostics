@@ -51,7 +51,7 @@ fi
 # sshd_config lives?
 sshd_config=/etc/ssh/sshd_config
 
-seckey=$(gpg_core --list-secret-keys --fingerprint --with-colons --fixed-list-mode)
+seckey=$(gpg_core --list-secret-keys --fingerprint --with-colons)
 keysfound=$(echo "$seckey" | grep -c ^sec:)
 curdate=$(date +%s)
 # warn when anything is 2 months away from expiration

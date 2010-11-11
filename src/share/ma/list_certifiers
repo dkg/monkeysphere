@@ -38,7 +38,7 @@ authgrip=$(core_fingerprint | cut -b 25-40)
 # fingerprint, the trust depth, the trust level (60 == marginal, 120
 # == full), and the domain regex (if any):
 
-gpg_sphere --fingerprint --with-colons --fixed-list-mode --check-sigs | \
+gpg_sphere --fingerprint --with-colons --check-sigs | \
     cut -f 1,2,5,8,9,10 -d: | \
     egrep '^(fpr:::::|uat:|uid:|sig:!:'"$authgrip"':[[:digit:]]+ [[:digit:]]+:)' | \
     while IFS=: read -r type validity grip trustparams trustdomain fpr ; do

@@ -66,6 +66,7 @@ cat > "$TEMPDIR"/gpg.conf <<EOF
 default-preference-list SHA512 SHA384 SHA256 SHA224 RIPEMD160 SHA1 ZLIB BZIP2 ZIP AES256 AES192 AES CAST5 3DES
 cert-digest-algo SHA256
 list-options show-uid-validity,show-unusable-uids
+fixed-list-mode
 EOF
 
 # generate a key
@@ -82,7 +83,7 @@ EOF
 
 echo "##################################################"
 echo "### retrieving key timestamp..."
-timestamp=$(gpg --list-key --with-colons --fixed-list-mode | \
+timestamp=$(gpg --list-key --with-colons | \
     grep ^pub: | cut -d: -f6)
 
 echo "##################################################"
@@ -135,7 +136,7 @@ uid:u::::$timestamp::8200BD0425CC70C7D698DF3FE412044EAAB83F94::testtest:
 sig:!::1:$KEYID:$timestamp::::monkeymonkey:13x:
 EOF
 
-diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
+diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons | grep -v ^tru)
 
 echo "##################################################"
 echo "### sleeping to avoid test suite breakage on fast"
@@ -165,7 +166,7 @@ rev:!::1:$KEYID:$revtime::::monkeymonkey:30x:
 EOF
 
 
-diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
+diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons | grep -v ^tru)
 
 
 echo "##################################################"
@@ -201,7 +202,7 @@ sig:!::1:$NEWKEYID:$(($timestamp + 1))::::fubar:13x:
 EOF
 
 echo "test: diff expected gpg list output"
-diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons --fixed-list-mode | grep -v ^tru)
+diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons | grep -v ^tru)
 
 sort >"$TEMPDIR"/expectedout <<EOF
 $KEYFPR

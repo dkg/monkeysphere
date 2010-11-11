@@ -73,7 +73,7 @@ gpg_core() {
     GNUPGHOME="$GNUPGHOME_CORE"
     export GNUPGHOME
 
-    gpg --no-greeting --quiet --no-tty "$@"
+    gpg --fixed-list-mode --no-greeting --quiet --no-tty "$@"
 }
 
 # function to interact with the gpg sphere keyring
@@ -81,7 +81,7 @@ gpg_sphere() {
     GNUPGHOME="$GNUPGHOME_SPHERE"
     export GNUPGHOME
  
-    su_monkeysphere_user "gpg --no-greeting --quiet --no-tty $@"
+    su_monkeysphere_user "gpg --fixed-list-mode --no-greeting --quiet --no-tty $@"
 }
 
 # output to stdout the core fingerprint from the gpg core secret
@@ -89,7 +89,7 @@ gpg_sphere() {
 core_fingerprint() {
     log debug "determining core key fingerprint..."
     gpg_core --list-secret-key --with-colons \
-	--fixed-list-mode --with-fingerprint \
+        --with-fingerprint \
 	| grep ^fpr: | cut -d: -f10
 }
 

@@ -62,7 +62,7 @@ EOF
 
 # user gpg command to define common options
 gpg_user() {
-    LC_ALL=C gpg --no-greeting --quiet --no-tty "$@"
+    LC_ALL=C gpg --fixed-list-mode --no-greeting --quiet --no-tty "$@"
 }
 
 # output the ssh fingerprint of a gpg key
@@ -78,10 +78,10 @@ check_gpg_sec_key_id() {
 
     case "$#" in
 	0)
-	    gpgSecOut=$(gpg_user --fixed-list-mode --list-secret-keys --with-colons 2>/dev/null | egrep '^sec:')
+	    gpgSecOut=$(gpg_user --list-secret-keys --with-colons 2>/dev/null | egrep '^sec:')
 	    ;;
 	1)
-	    gpgSecOut=$(gpg_user --fixed-list-mode --list-secret-keys --with-colons "$1" | egrep '^sec:') || failure
+	    gpgSecOut=$(gpg_user --list-secret-keys --with-colons "$1" | egrep '^sec:') || failure
 	    ;;
 	*)
 	    failure "You must specify only a single primary key ID."
@@ -119,7 +119,7 @@ check_gpg_authentication_subkey() {
 
     # check that a valid authentication key does not already exist
     IFS=$'\n'
-    for line in $(gpg_user --fixed-list-mode --list-keys --with-colons "$keyID") ; do
+    for line in $(gpg_user --list-keys --with-colons "$keyID") ; do
 	type=$(echo "$line" | cut -d: -f1)
 	validity=$(echo "$line" | cut -d: -f2)
 	usage=$(echo "$line" | cut -d: -f12)

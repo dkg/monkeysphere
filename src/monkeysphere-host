@@ -71,17 +71,17 @@ EOF
 
 # function to interact with the gpg keyring
 gpg_host() {
-    GNUPGHOME="$GNUPGHOME_HOST" LC_ALL=C gpg --no-auto-check-trustdb --trust-model=always --no-greeting --quiet --no-tty "$@"
+    GNUPGHOME="$GNUPGHOME_HOST" LC_ALL=C gpg --no-auto-check-trustdb --trust-model=always --no-greeting --quiet --no-tty --fixed-list-mode "$@"
 }
 
 # list the info about the a key, in colon format, to stdout
 gpg_host_list_keys() {
     if [ "$1" ] ; then
-	gpg_host --list-keys --with-colons --fixed-list-mode \
+	gpg_host --list-keys --with-colons \
 	    --with-fingerprint --with-fingerprint \
 	    "$1"
     else
-	gpg_host --list-keys --with-colons --fixed-list-mode \
+	gpg_host --list-keys --with-colons \
 	    --with-fingerprint --with-fingerprint
     fi
 }

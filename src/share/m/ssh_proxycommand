@@ -217,7 +217,7 @@ output_no_valid_key() {
     fi
 
     # get the gpg info for userid
-    gpgOut=$(gpg_user --list-key --fixed-list-mode --with-colon \
+    gpgOut=$(gpg_user --list-key --with-colons \
 	--with-fingerprint --with-fingerprint \
 	="$userID" 2>/dev/null)
 

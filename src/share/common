@@ -654,7 +654,7 @@ process_user_id() {
     gpg_fetch_userid "$userID"
 
     # output gpg info for (exact) userid and store
-    gpgOut=$(gpg --list-key --fixed-list-mode --with-colon \
+    gpgOut=$(gpg --list-key --fixed-list-mode --with-colons \
 	--with-fingerprint --with-fingerprint \
 	="$userID" 2>/dev/null) || returnCode="$?"
 

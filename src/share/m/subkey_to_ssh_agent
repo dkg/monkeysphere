@@ -47,7 +47,7 @@ subkey_to_ssh_agent() {
     else
 	# get list of secret keys
 	# (to work around bug https://bugs.g10code.com/gnupg/issue945):
-	secretkeys=$(gpg_user --list-secret-keys --with-colons --fixed-list-mode \
+	secretkeys=$(gpg_user --list-secret-keys --with-colons \
 	    --fingerprint | \
 	    grep '^fpr:' | cut -f10 -d: | awk '{ print "0x" $1 "!" }')
 
@@ -56,7 +56,7 @@ subkey_to_ssh_agent() {
 You might want to run 'gpg --gen-key'."
 	fi
     
-	authsubkeys=$(gpg_user --list-secret-keys --with-colons --fixed-list-mode \
+	authsubkeys=$(gpg_user --list-secret-keys --with-colons \
 	    --fingerprint --fingerprint $secretkeys | \
 	    cut -f1,5,10,12 -d: | grep -A1 '^ssb:[^:]*::[^:]*a[^:]*$' | \
 	    grep '^fpr::' | cut -f3 -d: | sort -u)
@@ -78,7 +78,7 @@ You might want to run 'monkeysphere gen-subkey'."
 
     for subkey in $authsubkeys; do
 	# test that the subkey has proper capability
-	capability=$(gpg_user --list-secret-keys --with-colons --fixed-list-mode \
+	capability=$(gpg_user --list-secret-keys --with-colons \
 	    --fingerprint --fingerprint "0x${subkey}!" \
 	    | egrep -B 1 "^fpr:::::::::${subkey}:$" | grep "^ssb:" | cut -d: -f12)
 	if ! check_capability "$capability" 'a' ; then
@@ -91,7 +91,10 @@ You might want to run 'monkeysphere gen-subkey'."
 	# fingerprint, but filtering out all / characters to make sure
 	# the filename is legit.
 
-	primaryuid=$(gpg_user --with-colons --list-key "0x${subkey}!" | grep '^pub:' | cut -f10 -d: | tr -d /)
+        # FIXME: this assumes that the first listed uid is the primary
+        # UID.  does gpg guarantee that?  is there some better way to
+        # get this info?
+	primaryuid=$(gpg_user --with-colons --list-key "0x${subkey}!" | grep '^uid:' | head -n1 | cut -f10 -d: | tr -d /)
 
 	#kname="[monkeysphere] $primaryuid"
 	kname="$primaryuid"

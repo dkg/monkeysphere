@@ -1,7 +1,8 @@
 monkeysphere (0.35~pre) upstream;
 
   * Remove reference to USE_VALIDATION_AGENT.
-  * Fix ssh_proxycommand for marginal hosts.
+  * Fix ssh_proxycommand for marginal hosts (closes MS #2593)
+  * GnuPG should always behave as --fixed-list-mode (closes MS #2587)
 
  -- Jameson Rollins <jrollins@finestructure.net>  Fri, 29 Oct 2010 20:21:54 -0400
 
