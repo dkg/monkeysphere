@@ -1,4 +1,4 @@
-monkeysphere (0.35~pre) upstream;
+monkeysphere (0.35) upstream;
 
   * Remove reference to USE_VALIDATION_AGENT.
   * Fix ssh_proxycommand for marginal hosts (closes MS #2593)
