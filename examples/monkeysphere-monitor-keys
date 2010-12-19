@@ -1,0 +1,102 @@
+#!/bin/perl
+
+# This script runs in a loop, monitoring existing ~/.ssh and 
+# ~/.monkeysphere directories for all users on the system. It's
+# designed to be started at system start time and should run 
+# as root.
+#
+# Optionally, pass the path to a file that is changed every
+# time a user is added and this script will re-load the 
+# list of directories to monitor to include new additions.
+# 
+# If liblinux-inotify2-perl is installed, then the Linux
+# inotify method is used to determine if a file has changed.
+# Otherwise, a generic/cross platform library is used.
+#
+# Known bugs: with inotify, if you pass /etc/passwd as the
+# first argument, the script will not detect changes to the 
+# file when a new user is added.
+
+use strict;
+use File::ChangeNotify;
+use File::Basename;
+
+sub get_home_dirs() {
+  my @home_dirs;
+  my @subdirs = ('.monkeysphere', '.ssh');
+  # get list of users on the system
+  while((my $name,my $passwd,my $uid,my $gid,my $gcos,my $dir,my $shell,my $home) = getpwent( )){
+    # only monitor regular users
+    if ( $uid >= 1000 ) {
+      # The default watcher complains about non-existing directories
+      # so you should include .monkeysphere and .ssh in /etc/skel
+      # if you want them monitored for all users.
+      for my $subdir (@subdirs) {
+        if ( -d "$home/$subdir" ) {
+          push(@home_dirs,"$home/$subdir");
+        }
+      }
+    }
+  }
+  endpwent();
+  return @home_dirs
+}
+
+sub get_watcher {
+  my($rescan_file) = $_[0]; 
+  my(@dirs) = get_home_dirs(); 
+  my @filters = ('authorized_keys', 'authorized_user_ids'); 
+
+  # if we have a rescan file that indicates when new users are added
+  # then monitor that file as well (could be /etc/passwd)
+  if ( -f "$rescan_file" ) {
+    push(@dirs,dirname($rescan_file));
+    push(@filters,basename($rescan_file));
+  }
+  # create combined file filters to limit our monitor
+  my $filter = '^(' . join("|",@filters) . ')$';
+
+  # return a watcher object
+  return my $watcher =
+    File::ChangeNotify->instantiate_watcher
+      ( directories => [ @dirs ],
+        filter      => qr/$filter/, 
+      );
+}
+
+sub watch {
+  my $watcher = $_[0];
+  my $rescan_file = $_[1];
+
+  while ( my @events = $watcher->wait_for_events() ) { 
+    my $rescan = 0;
+    my @users;
+    for my $event (@events) {
+      if($event->path eq "$rescan_file") {
+        $rescan = 1;
+      } else {
+        # if user deleted, file might not exist
+        if( -f $event->path) {
+          my $username = getpwuid((stat($event->path))[4]);
+          push(@users,$username);
+        }
+      }
+    }
+    for my $user (@users) {
+      my @args = ('u',$user);
+      system 'monkeysphere-authentication', @args;
+    }
+    # rescan users if necessary
+    if($rescan) {
+      # return to loop so we can be re-run after re-reading the
+      # user list 
+      return;
+    }
+  }
+}
+
+my $rescan_file = $ARGV[0];
+while(1) { 
+  my $watcher = get_watcher($rescan_file);
+  watch($watcher, $rescan_file);
+}
