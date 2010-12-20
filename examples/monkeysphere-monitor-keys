@@ -5,17 +5,10 @@
 # designed to be started at system start time and should run 
 # as root.
 #
-# Optionally, pass the path to a file that is changed every
-# time a user is added and this script will re-load the 
-# list of directories to monitor to include new additions.
-# 
-# If liblinux-inotify2-perl is installed, then the Linux
-# inotify method is used to determine if a file has changed.
-# Otherwise, a generic/cross platform library is used.
-#
-# Known bugs: with inotify, if you pass /etc/passwd as the
-# first argument, the script will not detect changes to the 
-# file when a new user is added.
+# File::ChangeNotify is cross platform - it will choose an 
+# sub class for monitoring file system changes appropriate to
+# your operating system (if you are running Linux, 
+# liblinux-inotify2-perl is recommended).
 
 use strict;
 use File::ChangeNotify;
