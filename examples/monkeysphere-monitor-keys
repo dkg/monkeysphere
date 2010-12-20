@@ -1,50 +1,102 @@
-#!/bin/perl
+#!/usr/bin/perl
 
-# This script runs in a loop, monitoring existing ~/.ssh and 
-# ~/.monkeysphere directories for all users on the system. It's
-# designed to be started at system start time and should run 
-# as root.
+# This script automatically runs:
 #
-# File::ChangeNotify is cross platform - it will choose an 
-# sub class for monitoring file system changes appropriate to
-# your operating system (if you are running Linux, 
-# liblinux-inotify2-perl is recommended).
+#   monkeysphere-authentication update-users <user> 
+#
+# every time it detects a change in an authorized_keys or authorized_user_ids
+# file. The update-users command operates on the username that owns the file
+# that was updated.
+#
+# The list of files to monitor is generated from the AUTHORIZED_USER_IDS and
+# RAW_AUTHORIZED_KEYS variables found in
+# /etc/monkeysphere/monkeysphere-authentication.conf and expanded using a list
+# of users on the system. 
+#
+# Additionally, the /var/lib/monkeysphere/user-update/lastchange file is
+# monitored. If a change is made to that file, the list of files to monitor is
+# re-generated based on a fresh listing of users. If you run a hook on user
+# creation and deletion that generates a file in this directory, you can ensure
+# that the list of files to monitor is always up-to-date.
+#
+# On debian system you can install required perl modules with: aptitude install
+# libfile-changenotify-perl libfile-spec-perl libconfig-general-perl
+#
+# This script is designed to run at system start and should be run with root
+# privileges.
+#
+# File::ChangeNotify is cross platform - it will choose a sub class for
+# monitoring file system changes appropriate to your operating system (if you
+# are running Linux, liblinux-inotify2-perl is recommended).
 
 use strict;
 use File::ChangeNotify;
 use File::Basename;
+use File::Spec;
+use Config::General;
 
-sub get_home_dirs() {
-  my @home_dirs;
-  my @subdirs = ('.monkeysphere', '.ssh');
+my $user_update_file = '/var/lib/monkeysphere/user-update/lastchange';
+my $debug = 0;
+
+sub debug {
+  if ($debug eq 1) { print $_[0]; }
+}
+
+sub get_watch_files() {
+  my @watch_files;
+  my %key_file_locations = get_key_file_locations(); 
   # get list of users on the system
   while((my $name,my $passwd,my $uid,my $gid,my $gcos,my $dir,my $shell,my $home) = getpwent( )){
-    # only monitor regular users
-    if ( $uid >= 1000 ) {
-      # The default watcher complains about non-existing directories
-      # so you should include .monkeysphere and .ssh in /etc/skel
-      # if you want them monitored for all users.
-      for my $subdir (@subdirs) {
-        if ( -d "$home/$subdir" ) {
-          push(@home_dirs,"$home/$subdir");
-        }
-      }
+    while (my ($key, $file) = each (%key_file_locations)) {
+      $file =~ s/%h/$home/;
+      $file =~ s/%u/$name/;
+      push(@watch_files,$file);
     }
   }
   endpwent();
-  return @home_dirs
+  push(@watch_files,$user_update_file);
+  return @watch_files;
+}
+
+sub get_key_file_locations {
+  # set defaults
+  my %key_file_locations;
+  $key_file_locations{ 'authorized_user_ids' } = '%h/.monkeysphere/authorized_user_ids';
+  $key_file_locations{ 'authorized_keys' } = '%h/.ssh/authorized_keys';
+
+  # check monkeysphere-authentication configuration
+  my $config_file = '/etc/monkeysphere/monkeysphere-authentication.conf';
+  if (-f $config_file) {
+    if (-r $config_file) {
+      my %config;
+      %config = Config::General::ParseConfig($config_file);
+      if (exists $config{'AUTHORIZED_USER_IDS'}) {
+        $key_file_locations{'authorized_user_ids'} = $config{'AUTHORIZED_USER_IDS'};
+      }
+      if (exists $config{'RAW_AUTHORIZED_KEYS'}) {
+        $key_file_locations{'authorized_keys'} = $config{'RAW_AUTHORIZED_KEYS'};
+      }
+    }
+  }
+  return %key_file_locations;
 }
 
 sub get_watcher {
-  my($rescan_file) = $_[0]; 
-  my(@dirs) = get_home_dirs(); 
-  my @filters = ('authorized_keys', 'authorized_user_ids'); 
+  my @filters; 
+  my @dirs;
 
-  # if we have a rescan file that indicates when new users are added
-  # then monitor that file as well (could be /etc/passwd)
-  if ( -f "$rescan_file" ) {
-    push(@dirs,dirname($rescan_file));
-    push(@filters,basename($rescan_file));
+  my(@files) = get_watch_files(); 
+  for my $file (@files) {
+    my $dir = dirname($file);
+    if ( -d $dir && !grep $_ eq $dir, @dirs ) {
+      debug "Watching dir: $dir\n";
+      push(@dirs,$dir);
+      my $file = basename($file);
+      if ( !grep $_ eq $file, @filters ) {
+        debug "Adding file filter: $file\n";
+        push(@filters,$file);
+      }
+    }
   }
   # create combined file filters to limit our monitor
   my $filter = '^(' . join("|",@filters) . ')$';
@@ -58,38 +110,30 @@ sub get_watcher {
 }
 
 sub watch {
-  my $watcher = $_[0];
-  my $rescan_file = $_[1];
-
+  my $watcher = get_watcher();
   while ( my @events = $watcher->wait_for_events() ) { 
-    my $rescan = 0;
     my @users;
     for my $event (@events) {
-      if($event->path eq "$rescan_file") {
-        $rescan = 1;
+      if($event->path eq "$user_update_file") {
+        debug "Reloading user list";
+        $watcher = get_watcher();
       } else {
         # if user deleted, file might not exist
         if( -f $event->path) {
           my $username = getpwuid((stat($event->path))[4]);
-          push(@users,$username);
+
+          if ( !grep $_ eq $username, @users ) {
+            push(@users,$username);
+          }
         }
       }
     }
     for my $user (@users) {
       my @args = ('u',$user);
+      debug "Updating user: $user";
       system 'monkeysphere-authentication', @args;
-    }
-    # rescan users if necessary
-    if($rescan) {
-      # return to loop so we can be re-run after re-reading the
-      # user list 
-      return;
     }
   }
 }
 
-my $rescan_file = $ARGV[0];
-while(1) { 
-  my $watcher = get_watcher($rescan_file);
-  watch($watcher, $rescan_file);
-}
+watch();
