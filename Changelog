@@ -1,3 +1,10 @@
+monkeysphere (0.36~pre) unstable; urgency=low
+
+  * keytrans no longer confuses user IDs across different keys (closes MS
+    #2682)
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Mon, 20 Dec 2010 19:31:30 -0500
+
 monkeysphere (0.35) upstream;
 
   * Remove reference to USE_VALIDATION_AGENT.
