@@ -29,6 +29,11 @@
 # monitoring file system changes appropriate to your operating system (if you
 # are running Linux, liblinux-inotify2-perl is recommended).
 
+# FIXME: does this handle revocations and re-keying?  if a sysadmin
+# switches over to this arrangement, how will the system check for
+# revocations?  Scheduling a simple gpg --refresh should handle
+# revocations.  I'm not sure how to best handle re-keyings.
+
 use strict;
 use warnings;
 use File::ChangeNotify;
@@ -50,7 +55,7 @@ sub debug {
 
 sub get_watch_files() {
   my @watch_files;
-  my %key_file_locations = get_key_file_locations(); 
+  my %key_file_locations = get_key_file_locations();
   # get list of users on the system
   while(my ($name, $passwd, $uid, $gid, $gcos, $dir, $shell, $home) = getpwent()) {
     while (my ($key, $file) = each (%key_file_locations)) {
@@ -104,7 +109,12 @@ sub get_watcher {
       }
     }
   }
+
   # create combined file filters to limit our monitor
+
+  # FIXME: what if the elements of @filters have some regex characters
+  # in them?  this seems like it could match all kinds of crazy stuff
+
   my $filter = '^(' . join("|",@filters) . ')$';
 
   # return a watcher object
@@ -126,8 +136,19 @@ sub watch {
       } else {
         # if user deleted, file might not exist
         if( -f $event->path) {
+          # FIXME: how is this choosing a username?  What if the
+          # sysadmin controls these files instead of the user?
+          # (e.g. /etc/monkeysphere/authorized_user_ids/%u) then won't
+          # the owner be the superuser each time?
+
+          # Is there some more clever way that we can get back to the
+          # user from the path itself?  maybe we store a lookup table
+          # when we're generating the path list and refer back to it?
           my $username = getpwuid((stat($event->path))[4]);
 
+          # FIXME: this seems like it is trying to treat an array as a
+          # set.  Maybe it'd be better to use the keys of a hash (or
+          # hashref) instead?
           if ( !grep $_ eq $username, @users ) {
             push(@users,$username);
           }
@@ -135,9 +156,12 @@ sub watch {
       }
     }
     for my $user (@users) {
-      my @args = ('u',$user);
       debug("Updating user: %s\n", $user);
-      system 'monkeysphere-authentication', @args;
+      # FIXME: this call blocks until m-a u finishes running, i think.
+      # what happens if other changes occur in the meantime?  Can we
+      # rate-limit this?  Could we instead spawn child processes that
+      # run this command directly?
+      system('monkeysphere-authentication', 'update-users', $user);
     }
   }
 }
