@@ -2,7 +2,7 @@
 
 # This script automatically runs:
 #
-#   monkeysphere-authentication update-users <user> 
+#   monkeysphere-authentication update-users <user>
 #
 # every time it detects a change in an authorized_keys or authorized_user_ids
 # file. The update-users command operates on the username that owns the file
@@ -11,7 +11,7 @@
 # The list of files to monitor is generated from the AUTHORIZED_USER_IDS and
 # RAW_AUTHORIZED_KEYS variables found in
 # /etc/monkeysphere/monkeysphere-authentication.conf and expanded using a list
-# of users on the system. 
+# of users on the system.
 #
 # Additionally, the /var/lib/monkeysphere/user-update/lastchange file is
 # monitored. If a change is made to that file, the list of files to monitor is
@@ -46,7 +46,7 @@ sub get_watch_files() {
   my @watch_files;
   my %key_file_locations = get_key_file_locations(); 
   # get list of users on the system
-  while((my $name,my $passwd,my $uid,my $gid,my $gcos,my $dir,my $shell,my $home) = getpwent( )){
+  while(my ($name, $passwd, $uid, $gid, $gcos, $dir, $shell, $home) = getpwent()) {
     while (my ($key, $file) = each (%key_file_locations)) {
       $file =~ s/%h/$home/;
       $file =~ s/%u/$name/;
@@ -82,10 +82,10 @@ sub get_key_file_locations {
 }
 
 sub get_watcher {
-  my @filters; 
+  my @filters;
   my @dirs;
 
-  my(@files) = get_watch_files(); 
+  my(@files) = get_watch_files();
   for my $file (@files) {
     my $dir = dirname($file);
     if ( -d $dir && !grep $_ eq $dir, @dirs ) {
@@ -105,13 +105,13 @@ sub get_watcher {
   return my $watcher =
     File::ChangeNotify->instantiate_watcher
       ( directories => [ @dirs ],
-        filter      => qr/$filter/, 
+        filter      => qr/$filter/,
       );
 }
 
 sub watch {
   my $watcher = get_watcher();
-  while ( my @events = $watcher->wait_for_events() ) { 
+  while ( my @events = $watcher->wait_for_events() ) {
     my @users;
     for my $event (@events) {
       if($event->path eq "$user_update_file") {
