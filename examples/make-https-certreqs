@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Date: 2010-12-20 20:54:55-0500
+
+# On a system with keys for https already imported into
+# monkeysphere-host, this script generates X.509 certificate requests
+# for each key, with appropriate subjectAltNames and the PGPExtension
+# embedded.
+
+# The generated requests get dumped to stdout. redirect to a file or
+# copy/paste if you want to save them/send them someplace.
+
+# This script uses bashisms
+
+# It currently needs OpenSSL binaries to work properly
+
+# It assumes that the monkeysphere-host keyring is in
+# /var/lib/monkeysphere/host (which it is on debian)
+
+# This should probably eventually be incorporated into
+# monkeysphere-host directly.
+
+get_openssl_config() {
+    # first param is seconds since the epoch:
+    X509_PGP_EXTENSION="$(TZ=UTC date -d "@$1" '+%Y%m%d%H%M%SZ')"
+    # next parameter is SAN names, separated by newlines:
+    SUBJECTALTNAME=$(printf "%s" "$2" | sed 's/^/DNS:/' | tr '\n' ',' | \
+        sed -e 's/,*$//' -e 's/^,*//')
+
+    printf "sAN: %s\n" "$SUBJECTALTNAME" >&2
+
+    cat <<EOF
+default_md              = sha256
+oid_section		= new_oids
+
+[ new_oids ]
+PGPExtension = 1.3.6.1.4.1.3401.8.1.1 
+
+[ req ]
+distinguished_name	= req_distinguished_name
+req_extensions = v3_req # The extensions to add to a certificate request
+
+[ req_distinguished_name ]
+commonName			= Common Name (e.g. www.example.org)
+commonName_max			= 64
+
+[ v3_req ]
+
+# Extensions to add to a certificate request
+
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = $SUBJECTALTNAME
+PGPExtension = ASN1:SEQUENCE:pgp_sect
+
+[ pgp_sect ]
+# see http://www.alvestrand.no/objectid/submissions/1.3.6.1.4.1.3401.8.1.1.html
+# this is equivalent to:
+#   Version  ::=  INTEGER  {  v1(0) }
+version = INTEGER:0
+
+# this is the OpenPGP creation timestamp
+keyCreation = GENERALIZEDTIME:$X509_PGP_EXTENSION
+EOF
+}
+
+gencertreq() {
+    keyid="$1"
+    
+    timestamp=$(gpg --fixed-list-mode --with-colons --list-keys "0x$keyid!" | grep ^pub: | cut -f6 -d:)
+    
+    san=''
+    primary=''
+# find all the https User IDs:
+    uids=$(gpg --fixed-list-mode --with-colons --list-keys "0x$keyid!" | \
+        grep '^uid:' | cut -f10 -d: | \
+        grep '^https\\x3a//' | \
+        sed -r -e 's!^https\\x3a//!!' -e 's!:[0-9]+$!!')
+    primary=$(printf "%s" "$uids" | head -n1)
+    
+    printf "Certificate Request for TLS WWW server %s\n[OpenPGP key %s]\n" "$primary" "$keyid"
+    openssl req -text -new \
+        -config <(get_openssl_config "$timestamp" "$uids") \
+        -key <(gpg --export-secret-key "$keyid" | openpgp2ssh "$keyid") \
+        -subj "/CN=${primary}/"
+}
+
+
+export GNUPGHOME=/var/lib/monkeysphere/host
+
+for fpr in $(gpg --fixed-list-mode --with-colons --fingerprint --list-secret-keys https:// | grep '^fpr:' | cut -f10 -d:); do
+    gencertreq "$fpr"
+done
