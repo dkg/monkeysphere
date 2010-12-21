@@ -30,6 +30,7 @@
 # are running Linux, liblinux-inotify2-perl is recommended).
 
 use strict;
+use warnings;
 use File::ChangeNotify;
 use File::Basename;
 use File::Spec;
@@ -37,9 +38,14 @@ use Config::General;
 
 my $user_update_file = '/var/lib/monkeysphere/user-update/lastchange';
 my $debug = 0;
+if (defined($ENV{MONKEYSPHERE_LOG_LEVEL}) &&
+    $ENV{MONKEYSPHERE_LOG_LEVEL} =~ /^debug/i) {
+  $debug = 1;
+}
 
 sub debug {
-  if ($debug eq 1) { print $_[0]; }
+  printf STDERR @_
+    if ($debug eq 1);
 }
 
 sub get_watch_files() {
@@ -89,11 +95,11 @@ sub get_watcher {
   for my $file (@files) {
     my $dir = dirname($file);
     if ( -d $dir && !grep $_ eq $dir, @dirs ) {
-      debug "Watching dir: $dir\n";
+      debug("Watching dir: %s\n", $dir);
       push(@dirs,$dir);
       my $file = basename($file);
       if ( !grep $_ eq $file, @filters ) {
-        debug "Adding file filter: $file\n";
+        debug("Adding file filter: %s\n", $file);
         push(@filters,$file);
       }
     }
@@ -115,7 +121,7 @@ sub watch {
     my @users;
     for my $event (@events) {
       if($event->path eq "$user_update_file") {
-        debug "Reloading user list";
+        debug("Reloading user list\n");
         $watcher = get_watcher();
       } else {
         # if user deleted, file might not exist
@@ -130,7 +136,7 @@ sub watch {
     }
     for my $user (@users) {
       my @args = ('u',$user);
-      debug "Updating user: $user";
+      debug("Updating user: %s\n", $user);
       system 'monkeysphere-authentication', @args;
     }
   }
