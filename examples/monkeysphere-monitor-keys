@@ -128,7 +128,7 @@ sub get_watcher {
 sub watch {
   my $watcher = get_watcher();
   while ( my @events = $watcher->wait_for_events() ) {
-    my @users;
+    my %users;
     for my $event (@events) {
       if($event->path eq "$user_update_file") {
         debug("Reloading user list\n");
@@ -142,23 +142,17 @@ sub watch {
         # file is gone.
         if( -f $event->path) {
           my $username = $watch_files { $event->path };
-
-          # FIXME: this seems like it is trying to treat an array as a
-          # set.  Maybe it'd be better to use the keys of a hash (or
-          # hashref) instead?
-          if ( !grep $_ eq $username, @users ) {
-            push(@users,$username);
-          }
+          $users{ $username } = 1;
         }
       }
     }
-    for my $user (@users) {
-      debug("Updating user: %s\n", $user);
+    for ((my $username) = each(%users)) {
+      debug("Updating user: %s\n", $username);
       # FIXME: this call blocks until m-a u finishes running, i think.
       # what happens if other changes occur in the meantime?  Can we
       # rate-limit this?  Could we instead spawn child processes that
       # run this command directly?
-      system('monkeysphere-authentication', 'update-users', $user);
+      system('monkeysphere-authentication', 'update-users', $username);
     }
   }
 }
