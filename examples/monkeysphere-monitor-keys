@@ -42,6 +42,8 @@ use File::Spec;
 use Config::General;
 
 my $user_update_file = '/var/lib/monkeysphere/user-update/lastchange';
+my %watch_files;
+
 my $debug = 0;
 if (defined($ENV{MONKEYSPHERE_LOG_LEVEL}) &&
     $ENV{MONKEYSPHERE_LOG_LEVEL} =~ /^debug/i) {
@@ -53,20 +55,18 @@ sub debug {
     if ($debug eq 1);
 }
 
-sub get_watch_files() {
-  my @watch_files;
+sub set_watch_files() {
   my %key_file_locations = get_key_file_locations();
   # get list of users on the system
   while(my ($name, $passwd, $uid, $gid, $gcos, $dir, $shell, $home) = getpwent()) {
     while (my ($key, $file) = each (%key_file_locations)) {
       $file =~ s/%h/$home/;
       $file =~ s/%u/$name/;
-      push(@watch_files,$file);
+      $watch_files{ $file } = $name;
     }
   }
   endpwent();
-  push(@watch_files,$user_update_file);
-  return @watch_files;
+  $watch_files{ $user_update_file } = '';
 }
 
 sub get_key_file_locations {
@@ -96,8 +96,8 @@ sub get_watcher {
   my @filters;
   my @dirs;
 
-  my(@files) = get_watch_files();
-  for my $file (@files) {
+  set_watch_files();
+  for my $file (%watch_files) {
     my $dir = dirname($file);
     if ( -d $dir && !grep $_ eq $dir, @dirs ) {
       debug("Watching dir: %s\n", $dir);
@@ -135,16 +135,13 @@ sub watch {
         $watcher = get_watcher();
       } else {
         # if user deleted, file might not exist
+        # FIXME - m-a u returns an error if the username
+        # doesn't exist. It should silently ensure that 
+        # the generated authorized_keys file is deleted.
+        # Once it's fixed, we should execute even if the 
+        # file is gone.
         if( -f $event->path) {
-          # FIXME: how is this choosing a username?  What if the
-          # sysadmin controls these files instead of the user?
-          # (e.g. /etc/monkeysphere/authorized_user_ids/%u) then won't
-          # the owner be the superuser each time?
-
-          # Is there some more clever way that we can get back to the
-          # user from the path itself?  maybe we store a lookup table
-          # when we're generating the path list and refer back to it?
-          my $username = getpwuid((stat($event->path))[4]);
+          my $username = $watch_files { $event->path };
 
           # FIXME: this seems like it is trying to treat an array as a
           # set.  Maybe it'd be better to use the keys of a hash (or
