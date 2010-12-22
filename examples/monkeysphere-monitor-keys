@@ -104,6 +104,7 @@ sub get_watcher {
       push(@dirs,$dir);
       my $file = basename($file);
       if ( !grep $_ eq $file, @filters ) {
+        $file = quotemeta($file);
         debug("Adding file filter: %s\n", $file);
         push(@filters,$file);
       }
@@ -111,10 +112,6 @@ sub get_watcher {
   }
 
   # create combined file filters to limit our monitor
-
-  # FIXME: what if the elements of @filters have some regex characters
-  # in them?  this seems like it could match all kinds of crazy stuff
-
   my $filter = '^(' . join("|",@filters) . ')$';
 
   # return a watcher object
