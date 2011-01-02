@@ -3,10 +3,10 @@
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Date: 2010-12-20 20:54:55-0500
 
-# On a system with keys for https already imported into
-# monkeysphere-host, this script generates X.509 certificate requests
-# for each key, with appropriate subjectAltNames and the PGPExtension
-# embedded.
+# On a system with keys for https (or some other X.509-using protocol)
+# already imported into monkeysphere-host, this script generates X.509
+# certificate requests for each key, with appropriate subjectAltNames
+# and the PGPExtension embedded.
 
 # The generated requests get dumped to stdout. redirect to a file or
 # copy/paste if you want to save them/send them someplace.
@@ -73,11 +73,11 @@ gencertreq() {
     
     san=''
     primary=''
-# find all the https User IDs:
+# find all the $proto-using User IDs:
     uids=$(gpg --fixed-list-mode --with-colons --list-keys "0x$keyid!" | \
         grep '^uid:' | cut -f10 -d: | \
-        grep '^https\\x3a//' | \
-        sed -r -e 's!^https\\x3a//!!' -e 's!:[0-9]+$!!')
+        grep '^'"${proto}"'\\x3a//' | \
+        sed -r -e 's!^'"${proto}"'\\x3a//!!' -e 's!:[0-9]+$!!')
     primary=$(printf "%s" "$uids" | head -n1)
     
     printf "Certificate Request for TLS WWW server %s\n[OpenPGP key %s]\n" "$primary" "$keyid"
@@ -89,7 +89,9 @@ gencertreq() {
 
 
 export GNUPGHOME=/var/lib/monkeysphere/host
+# default to looking for https keys.
+proto="${1:-https}"
 
-for fpr in $(gpg --fixed-list-mode --with-colons --fingerprint --list-secret-keys https:// | grep '^fpr:' | cut -f10 -d:); do
+for fpr in $(gpg --fixed-list-mode --with-colons --fingerprint --list-secret-keys "${proto}://" | grep '^fpr:' | cut -f10 -d:); do
     gencertreq "$fpr"
 done
