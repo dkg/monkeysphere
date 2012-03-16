@@ -231,6 +231,16 @@ advance_date() {
     fi
 }
 
+print_date_from_seconds_since_the_epoch() {
+    local seconds="$1"
+    local gnutry
+    
+    if ! date '+%F %T' -d @"${seconds}" 2>/dev/null ; then
+        # try it the BSD date way:
+        date -r "${seconds}" '+%F %T'
+    fi
+}
+
 
 # check that characters are in a string (in an AND fashion).
 # used for checking key capability
