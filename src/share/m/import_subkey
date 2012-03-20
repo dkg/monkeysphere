@@ -51,11 +51,11 @@ import_subkey() {
     if [ "$sshKeyFile" = '-' ] ; then
 	log verbose "importing ssh key from stdin..."
 	PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" \
-	    | gpg_user --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
+	    | gpg_user --batch --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
     else
 	log verbose "importing ssh key from file '$sshKeyFile'..."
 	PEM2OPENPGP_USAGE_FLAGS=authenticate pem2openpgp "$userID" <"$sshKeyFile" \
-	    | gpg_user --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
+	    | gpg_user --batch --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --import &
     fi
 
     # get the password if needed

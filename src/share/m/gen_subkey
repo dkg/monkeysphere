@@ -80,7 +80,7 @@ save"
 
     # FIXME: are we adequately cleaning up any trailing gpg process here?
     trap "rm -rf $fifoDir; kill %% || true" EXIT
-    echo "$editCommands" | gpg_user --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
+    echo "$editCommands" | gpg_user --batch --passphrase-fd 3 3< "$fifoDir/pass" --expert --command-fd 0 --edit-key "$keyID" &
 
     log debug "Prompting for passphrase"
     # FIXME: this needs to fail more gracefully if the passphrase is incorrect
