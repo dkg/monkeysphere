@@ -595,11 +595,10 @@ is_gpg_version_greater_equal() {
 }
 
 # retrieve all keys with given user id from keyserver
-# FIXME: need to figure out how to retrieve all matching keys
-# (not just first N (5 in this case))
 gpg_fetch_userid() {
     local returnCode=0
     local userID
+    local foundkeyids
 
     if [ "$CHECK_KEYSERVER" != 'true' ] ; then
 	return 0
@@ -608,16 +607,32 @@ gpg_fetch_userid() {
     userID="$1"
 
     log verbose " checking keyserver $KEYSERVER... "
-    echo 1,2,3,4,5 | \
+    foundkeyids="$(echo | \
 	gpg --quiet --batch --with-colons \
 	--command-fd 0 --keyserver "$KEYSERVER" \
-	--search ="$userID" &>/dev/null
+	--search ="$userID" 2>/dev/null)"
     returnCode="$?"
 
     if [ "$returnCode" != 0 ] ; then
         log error "Failure ($returnCode) searching keyserver $KEYSERVER for user id '$userID'"
+    else
+        log debug " keyserver raw output:
+-----
+$foundkeyids
+-----"
+        foundkeyids="$(printf "%s" "$foundkeyids" | grep '^pub:' | cut -f2 -d: | sed 's/^/0x/')"
+        log verbose " Found keyids on keyserver: $(printf "%s" "$foundkeyids" | tr '\n' ' ')"
+        if [ -n "$foundkeyids" ]; then
+            echo | gpg --quiet --batch --with-colons \
+                --command-fd 0 --keyserver "$KEYSERVER" \
+                --recv-keys $foundkeyids &>/dev/null
+            returnCode="$?"
+            if [ "$returnCode" != 0 ] ; then
+                log error "Failure ($returnCode) receiving keyids ($foundkeyids) from keyserver $KEYSERVER"
+            fi
+        fi
     fi
-
+    
     return "$returnCode"
 }
 

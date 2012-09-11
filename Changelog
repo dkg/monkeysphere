@@ -2,8 +2,10 @@ monkeysphere (0.36~pre) unstable; urgency=low
 
   * keytrans no longer confuses user IDs across different keys (closes MS
     #2682)
+  * fetch all available keys from keyserver instead of first 5 (closes MS
+    #1046)
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Mon, 20 Dec 2010 19:31:30 -0500
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 11 Sep 2012 15:45:51 -0400
 
 monkeysphere (0.35) upstream;
 
