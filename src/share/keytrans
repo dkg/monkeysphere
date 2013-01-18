@@ -1123,6 +1123,22 @@ for (basename($0)) {
 	die "No matching key found.\n";
       }
   }
+  elsif (/^openpgp2pem$/) {
+      my $fpr = shift;
+      my $instream;
+      open($instream,'-');
+      binmode($instream, ":bytes");
+      my $key = openpgp2rsa($instream, $fpr);
+      if (defined($key)) {
+	if ($key->is_private()) {
+	  print $key->get_private_key_string();
+	} else {
+	  print $key->get_public_key_string();
+	}
+      } else {
+	die "No matching key found.\n";
+      }
+  }
   elsif (/^keytrans$/) {
     # subcommands when keytrans is invoked directly are UNSUPPORTED,
     # UNDOCUMENTED, and WILL NOT BE MAINTAINED.

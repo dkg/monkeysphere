@@ -56,6 +56,7 @@ install: all installman
 	install -m 0755 src/share/keytrans $(DESTDIR)$(PREFIX)/share/monkeysphere
 	ln -sf ../share/monkeysphere/keytrans $(DESTDIR)$(PREFIX)/bin/pem2openpgp
 	ln -sf ../share/monkeysphere/keytrans $(DESTDIR)$(PREFIX)/bin/openpgp2ssh
+	ln -sf ../share/monkeysphere/keytrans $(DESTDIR)$(PREFIX)/bin/openpgp2pem
 	install -m 0744 src/transitions/* $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions
 	sed -i 's:__SYSSHAREDIR_PREFIX__:$(PREFIX):' $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions/0.23
 	sed -i 's:__SYSSHAREDIR_PREFIX__:$(PREFIX):' $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions/0.28
@@ -76,6 +77,7 @@ installman:
 	install man/man1/* $(DESTDIR)$(MANPREFIX)/man1
 	install man/man7/* $(DESTDIR)$(MANPREFIX)/man7
 	install man/man8/* $(DESTDIR)$(MANPREFIX)/man8
+	ln -s openpgp2ssh.1.gz $(DESTDIR)$(MANPREFIX)/man1/openpgp2pem.1.gz
 	gzip -d man/*/*
 	gzip -d $(DESTDIR)$(MANPREFIX)/man1/monkeysphere.1.gz
 	sed -i 's:__SYSCONFDIR_PREFIX__:$(ETCPREFIX):' $(DESTDIR)$(MANPREFIX)/man1/monkeysphere.1
