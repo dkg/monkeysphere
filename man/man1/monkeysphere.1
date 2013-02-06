@@ -94,7 +94,9 @@ by calling it with the "\-\-no\-connect" option, i.e.:
 This will run everything except the final exec of netcat to make the
 TCP connection to the host.  In this way this command can be added to
 another proxy command that does other stuff, and then makes the
-connection to the host itself.
+connection to the host itself.  For example, in ~/.ssh/config:
+
+.B ProxyCommand sh -c 'monkeysphere ssh-proxycommand --no-connect "%h" "%p"; ssh -W "%h:%p" jumphost.example.net'
 
 KEYSERVER CHECKING:
 The proxy command has a fairly nuanced policy for when keyservers are
