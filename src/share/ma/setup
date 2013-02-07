@@ -34,6 +34,7 @@ setup() {
 # This file is maintained by the Monkeysphere software.
 # Edits will be overwritten.
 no-greeting
+keyid-format 0xlong
 EOF
 
     KEYSERVER_OPTIONS=""
@@ -51,6 +52,7 @@ EOF
 # Edits will be overwritten.
 no-greeting
 list-options show-uid-validity
+keyid-format 0xlong
 ${KEYSERVER_OPTIONS}
 EOF
 
