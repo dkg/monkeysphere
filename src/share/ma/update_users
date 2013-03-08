@@ -79,7 +79,7 @@ for uname in $unames ; do
 
 	    # process authorized_user_ids file, as monkeysphere user
 	    su_monkeysphere_user \
-		". ${SYSSHAREDIR}/common; STRICT_MODES='$STRICT_MODES' process_authorized_user_ids -" \
+		"/usr/bin/env STRICT_MODES='$STRICT_MODES' ${SYSSHAREDIR}/common process_authorized_user_ids -" \
 		< "$authorizedUserIDs" \
 		> "$tmpAuthorizedKeys"
 
