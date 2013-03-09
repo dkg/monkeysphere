@@ -99,7 +99,7 @@ EOF
     # check the owner trust
     log debug "checking gpg_sphere owner trust set properly..."
     local ORIG_TRUST
-    if ORIG_TRUST=$(gpg_sphere "--export-ownertrust" | grep '^[^#]') ; then
+    if ORIG_TRUST=$(gpg_sphere --export-ownertrust | grep '^[^#]') ; then
 	if [ "${CORE_FPR}:6:" != "$ORIG_TRUST" ] ; then
 	    failure "Monkeysphere authentication trust sphere should explicitly trust the core.  It does not have proper ownertrust settings."
 	fi
@@ -112,7 +112,7 @@ EOF
     # our preferences are reasonable (i.e. 3 marginal OR 1 fully
     # trusted certifications are sufficient to grant full validity.
     log debug "checking trust model for authentication ..."
-    local TRUST_MODEL=$(gpg_sphere "--with-colons --list-keys" 2>/dev/null \
+    local TRUST_MODEL=$(gpg_sphere --with-colons --list-keys 2>/dev/null \
 	| head -n1 | grep "^tru:" | cut -d: -f3,6,7)
     log debug "sphere trust model: $TRUST_MODEL"
     if [ "$TRUST_MODEL" != '1:3:1' ] ; then

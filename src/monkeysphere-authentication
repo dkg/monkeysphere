@@ -81,7 +81,7 @@ gpg_sphere() {
     GNUPGHOME="$GNUPGHOME_SPHERE"
     export GNUPGHOME
  
-    su_monkeysphere_user "gpg --fixed-list-mode --no-greeting --quiet --no-tty $@"
+    su_monkeysphere_user gpg --fixed-list-mode --no-greeting --quiet --no-tty "$@"
 }
 
 # output to stdout the core fingerprint from the gpg core secret
