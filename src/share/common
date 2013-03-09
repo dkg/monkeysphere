@@ -102,14 +102,15 @@ su_monkeysphere_user() {
     # candidate for re-factoring if we switch implementation languages.
 
     case $(id -un) in
-	# if monkeysphere user, run the command under bash
+	# if monkeysphere user, run the command as a subshell
 	"$MONKEYSPHERE_USER")
-	    bash -c "$*"
+	    ( "$@" )
 	    ;;
 
          # if root, su command as monkeysphere user
 	'root')
-	    su "$MONKEYSPHERE_USER" -c "$*"
+            # requote arguments using bash builtin feature (see "help printf"):
+	    su "$MONKEYSPHERE_USER" -c "$(printf "%q " "$@")"
 	    ;;
 
 	# otherwise, fail
