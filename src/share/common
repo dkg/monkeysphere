@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # -*-shell-script-*-
 # This should be sourced by bash (though we welcome changes to make it POSIX sh compliant)
 
@@ -997,3 +998,7 @@ report_cruft() {
 	printf "The directories above are backups left over from a monkeysphere transition.\nThey may contain copies of sensitive data (host keys, certifier lists), but\nthey are no longer needed by monkeysphere.\nYou may remove them at any time.\n\n" | log info
     fi
 }
+
+if [ -n "$1" ] && [ "$(type -t "$1" || true)" = "function" ]; then
+    "$@"
+fi
