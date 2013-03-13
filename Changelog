@@ -6,7 +6,11 @@ monkeysphere (0.36~pre) unstable; urgency=low
     #1046)
   * enable openpgp2pem for keytrans (Closes: #698383)
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Fri, 18 Jan 2013 15:21:36 -0500
+  [ Jonas Smedegaard ]
+  * m-a gpg-cmd now takes its arguments as separate parameters, not as a
+    single string.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 13 Mar 2013 02:08:15 -0400
 
 monkeysphere (0.35) upstream;
 
