@@ -1,4 +1,4 @@
-.TH MONKEYSPHERE-AUTHENTICATION "8" "July 3, 2010" "monkeysphere" "System Commands"
+.TH MONKEYSPHERE-AUTHENTICATION "8" "March 13, 2013" "monkeysphere" "System Commands"
 
 .SH NAME
 
@@ -93,10 +93,10 @@ may be used in place of `diagnostics'.
 .TP
 .B gpg\-cmd
 Execute a gpg command, as the monkeysphere user, on the monkeysphere
-authentication `sphere' keyring.  This takes a single argument
-(i.e. multiple gpg arguments need to be quoted all together).  Use
-this command with caution, as modifying the authentication sphere
-keyring can affect ssh user authentication.
+authentication `sphere' keyring.  As of monkeysphere 0.36, this takes
+its arguments separately, not as a single string.  Use this command
+with caution, as modifying the authentication sphere keyring can
+affect ssh user authentication.
 
 .SH SETUP USER AUTHENTICATION
 
