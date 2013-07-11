@@ -1139,6 +1139,18 @@ for (basename($0)) {
 	die "No matching key found.\n";
       }
   }
+  elsif (/^openpgp2spki$/) {
+      my $fpr = shift;
+      my $instream;
+      open($instream,'-');
+      binmode($instream, ":bytes");
+      my $key = openpgp2rsa($instream, $fpr);
+      if (defined($key)) {
+        print $key->get_public_key_x509_string();
+      } else {
+	die "No matching key found.\n";
+      }
+  }
   elsif (/^keytrans$/) {
     # subcommands when keytrans is invoked directly are UNSUPPORTED,
     # UNDOCUMENTED, and WILL NOT BE MAINTAINED.

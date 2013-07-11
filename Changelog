@@ -1,16 +1,17 @@
-monkeysphere (0.36~pre) unstable; urgency=low
+monkeysphere (0.36) unstable; urgency=low
 
   * keytrans no longer confuses user IDs across different keys (closes MS
     #2682)
   * fetch all available keys from keyserver instead of first 5 (closes MS
     #1046)
   * enable openpgp2pem for keytrans (Closes: #698383)
+  * enable openpgp2spki as well
 
   [ Jonas Smedegaard ]
   * m-a gpg-cmd now takes its arguments as separate parameters, not as a
     single string.
 
- -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 13 Mar 2013 02:08:15 -0400
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Thu, 11 Jul 2013 13:19:45 -0400
 
 monkeysphere (0.35) upstream;
 
