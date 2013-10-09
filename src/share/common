@@ -863,6 +863,9 @@ process_keys_for_file() {
 		    ;;
 		('known_hosts')
 		    host=${userID#ssh://}
+                    if [[ "${host}" == *:* ]]; then
+			host="[${host%:*}]:${host##*:}"
+		    fi
 		    remove_line "$keyFile" "$host" "$sshKey"
 		    ;;
 	    esac
