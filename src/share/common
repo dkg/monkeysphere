@@ -916,7 +916,7 @@ process_authorized_user_ids() {
     IFS=$'\n'
     while read line ; do
 	case "$line" in
-	    ("#"*)
+	    ("#"*|"")
 		continue
 		;;
 	    (" "*|$'\t'*)
