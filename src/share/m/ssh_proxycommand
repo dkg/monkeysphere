@@ -86,7 +86,7 @@ validate_monkeysphere() {
 	if [ -r "$KNOWN_HOSTS" ]; then
 	    # look up the host key is found in the known_hosts file...
             if (type ssh-keygen &>/dev/null) ; then
-		hostKey=$(ssh-keygen -F "$HOST" -f "$KNOWN_HOSTS" 2>/dev/null)
+		hostKey=$(ssh-keygen -F "$HOST" -f "$KNOWN_HOSTS" 2>/dev/null || true)
             else
 		# FIXME: we're not dealing with digested known_hosts
 		# if we don't have ssh-keygen
