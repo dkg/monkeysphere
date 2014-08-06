@@ -46,7 +46,7 @@ log() {
     alllevels="DEBUG${IFS}VERBOSE${IFS}INFO${IFS}ERROR"
 
     # translate lowers to uppers in global log level
-    LOG_LEVEL=$(echo "$LOG_LEVEL" | tr "[:lower:]" "[:upper:]")
+    LOG_LEVEL=${LOG_LEVEL^^}
 
     # just go ahead and return if the log level is silent
     if [ "$LOG_LEVEL" = 'SILENT' ] ; then
@@ -65,7 +65,7 @@ log() {
 
     # get priority from first parameter, translating all lower to
     # uppers
-    priority=$(echo "$1" | tr "[:lower:]" "[:upper:]")
+    priority=${1^^}
     shift
 
     # scan over available levels
@@ -675,7 +675,7 @@ process_user_id() {
 
     # set the required key capability based on the mode
     requiredCapability=${REQUIRED_KEY_CAPABILITY:="a"}
-    requiredPubCapability=$(echo "$requiredCapability" | tr "[:lower:]" "[:upper:]")
+    requiredPubCapability=${requiredCapability^^}
 
     # fetch the user ID if necessary/requested
     gpg_fetch_userid "$userID"
