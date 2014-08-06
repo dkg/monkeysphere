@@ -1,3 +1,15 @@
+monkeysphere (0.37) unstable; urgency=medium
+
+  * Bugfix release with minor improvements and dependency accomodations.
+  * Test openpgp2ssh functionality (closes MS #6524)
+  * use new GnuPG with-colons output
+  * accomodate changed behavior of ssh-keygen -F
+  * accomodate multiple AuthorizedKeysFile directives
+  * deal sanely with empty lines in authorized_user_ids (closes MS #6344)
+  * treat non-standard ports properly (closes MS #3402)
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 06 Aug 2014 13:23:04 -0400
+
 monkeysphere (0.36) unstable; urgency=low
 
   * keytrans no longer confuses user IDs across different keys (closes MS
