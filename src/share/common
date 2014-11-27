@@ -38,6 +38,7 @@ log() {
     local output
     local alllevels
     local found=
+    local written=
 
     # don't include SILENT in alllevels: it's handled separately
     # list in decreasing verbosity (all caps).
@@ -50,6 +51,9 @@ log() {
 
     # just go ahead and return if the log level is silent
     if [ "$LOG_LEVEL" = 'SILENT' ] ; then
+        if [ ! "$2" ] ; then
+            cat >/dev/null
+        fi
 	return
     fi
 
@@ -81,8 +85,12 @@ log() {
 	    else
 		cat
 	    fi | sed 's/^/'"${LOG_PREFIX}"'/' >&2
+            written=true
 	fi
     done
+    if [ "$written" != 'true' -a ! "$1" ]; then
+        cat >/dev/null
+    fi
 }
 
 # run command as monkeysphere user
