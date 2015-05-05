@@ -122,9 +122,9 @@ echo "Checking for Monkeysphere-enabled public-key authentication for users ..."
 # Ensure that User ID authentication is enabled:
 if echo "AuthorizedKeysFile foo bar" | /usr/sbin/sshd -t -f /dev/stdin; then
     # OpenSSH >= 6.0, multiple authorized_keys file supported
-    if ! grep -q "^AuthorizedKeysFile[[:space:]]\+.*[[:space:]]\*${SYSDATADIR}/authorized_keys/%u$" "$sshd_config"; then
+    if ! grep -q "^AuthorizedKeysFile[[:space:]]\+.*[[:space:]]*${SYSDATADIR}/authorized_keys/%u$" "$sshd_config"; then
         echo "! $sshd_config does not point to monkeysphere authorized keys."
-        echo " - Recommendation: add a line to $sshd_config: 'AuthorizedKeysFile .ssh/authorized_keys .ssh/authorized_keys2 ${SYSDATADIR}/authorized_keys/%u'"
+        echo " - Recommendation: add a line to $sshd_config: 'AuthorizedKeysFile %h/.ssh/authorized_keys %h/.ssh/authorized_keys2 ${SYSDATADIR}/authorized_keys/%u'"
         problemsfound=$(($problemsfound+1))
     fi
     if [ "$RAW_AUTHORIZED_KEYS" != none ]; then
