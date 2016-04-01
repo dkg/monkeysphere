@@ -62,7 +62,7 @@ EOF
 
 # user gpg command to define common options
 gpg_user() {
-    LC_ALL=C gpg --fixed-list-mode --no-greeting --quiet --no-tty "$@"
+    LC_ALL=C "${GPG:-gpg}" --fixed-list-mode --no-greeting --quiet --no-tty "$@"
 }
 
 # output the ssh fingerprint of a gpg key
