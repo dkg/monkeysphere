@@ -1197,9 +1197,8 @@ for (basename($0)) {
         printf("%s\n", join("\n", map { uc(unpack('H*', $_)) } keys(%{$keys})));
       } elsif (/^sshfpr$/) {
         use MIME::Base64;
-        my $b64keyblob;
-        my $dummy;
-        while (($dummy,$b64keyblob) = split(/ /, <STDIN>)) {
+        while (<STDIN>) {
+          my ($dummy,$b64keyblob) = split(/ /, $_);
           printf("%s\n", sshfpr(decode_base64($b64keyblob)));
         }
       } elsif (/^openpgp2sshfpr$/) {
