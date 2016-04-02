@@ -214,9 +214,19 @@ sub simple_checksum {
 # calculate/print the fingerprint of an openssh-style keyblob:
 
 sub sshfpr {
+  sshfpr_sha256(shift);
+}
+
+sub sshfpr_md5 {
   my $keyblob = shift;
   use Digest::MD5;
-  return join(':', map({unpack("H*", $_)} split(//, Digest::MD5::md5($keyblob))));
+  return 'MD5:'.join(':', map({unpack("H*", $_)} split('', Digest::MD5::md5($keyblob))));
+}
+
+sub sshfpr_sha256 {
+  my $keyblob = shift;
+  use Digest::SHA;
+  return 'SHA256:'.Digest::SHA::sha256_base64($keyblob);
 }
 
 # calculate the multiplicative inverse of a mod b this is euclid's
