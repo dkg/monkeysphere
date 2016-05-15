@@ -11,6 +11,7 @@
 #include <sys/un.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <sys/select.h>
 
 #include "ssh-agent-proto.h"
 
@@ -209,8 +210,9 @@ int send_to_ssh_agent(struct exporter *e, int fd, unsigned int seconds, int conf
   unsigned char *msgbuf = NULL;
   uint32_t tmp;
   size_t slen;
-  ssize_t written;
-
+  ssize_t written, bytesread;
+  unsigned char resp;
+  
   len = 1 + /* request byte */
     4 + strlen(key_type) + /* type of key */
     get_ssh_sz (e->n) +
@@ -260,6 +262,30 @@ int send_to_ssh_agent(struct exporter *e, int fd, unsigned int seconds, int conf
     return -1;
   }
   free (msgbuf);
+
+  /* FIXME: this could actually be done in a select loop if we think the
+     ssh-agent will dribble out its response or not respond immediately.*/
+  bytesread = read (fd, &tmp, sizeof (tmp));
+  if (bytesread != sizeof (tmp)) {
+    fprintf (stderr, "failed to get %zu bytes from ssh-agent (got %zd)\n", sizeof (tmp), bytesread);
+    return -1;
+  }
+  slen = ntohl (tmp);
+  if (slen != sizeof(resp)) {
+    fprintf (stderr, "ssh-agent response was wrong size (expected: %zu; got %zu)\n", sizeof(resp), slen);
+    return -1;
+  }
+  bytesread = read (fd, &resp, sizeof (resp));
+  if (bytesread != sizeof (resp)) {
+    fprintf (stderr, "failed to get %zu bytes from ssh-agent (got %zd)\n", sizeof (resp), bytesread);
+    return -1;
+  }
+  if (resp != SSH_AGENT_SUCCESS) {
+    fprintf (stderr, "ssh-agent did not claim success (expected: %d; got %d)\n",
+             SSH_AGENT_SUCCESS, resp);
+    return -1;
+  }    
+    
   return 0;
 }
 
@@ -402,14 +428,8 @@ int main (int argc, const char* argv[]) {
     return 1;
   }
 
-  fprintf (stderr, "n: %d\n", gcry_mpi_get_nbits(e.n));
-  fprintf (stderr, "e: %d\n", gcry_mpi_get_nbits(e.e));
-  fprintf (stderr, "d: %d\n", gcry_mpi_get_nbits(e.d));
-  fprintf (stderr, "p: %d\n", gcry_mpi_get_nbits(e.p));
-  fprintf (stderr, "q: %d\n", gcry_mpi_get_nbits(e.q));
-
   err = send_to_ssh_agent (&e, ssh_sock_fd, seconds, confirm, comment);
-  if (!err)
+  if (err)
     return 1;
   
   /*  fwrite (e.unwrapped_key, e.unwrapped_len, 1, stdout); */
