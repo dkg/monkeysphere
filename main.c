@@ -7,6 +7,12 @@
 #include <pwd.h>
 #include <gcrypt.h>
 #include <ctype.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <arpa/inet.h>
+#include <errno.h>
+
+#include "ssh-agent-proto.h"
 
 #define KEYGRIP_LENGTH 40
 #define KEYWRAP_ALGO GCRY_CIPHER_AES128
@@ -18,7 +24,7 @@ int custom_log (assuan_context_t ctx, void *hook, unsigned int cat, const char *
   return 1;
 }
 
-char* agent_sockname () {
+char* gpg_agent_sockname () {
   char *ret = NULL;
   char *ghome = getenv ("GNUPGHOME");
   int rc;
@@ -57,6 +63,7 @@ struct exporter {
   gcry_mpi_t d;
   gcry_mpi_t p;
   gcry_mpi_t q;
+  gcry_mpi_t iqmp;
 };
 
 gpg_error_t extend_wrapped_key (struct exporter *e, const void *data, size_t data_sz) {
@@ -115,7 +122,18 @@ gpg_error_t unwrap_key (struct exporter *e) {
   /* RSA has: n, e, d, p, q */
   ret = gcry_sexp_extract_param (e->sexp, "private-key!rsa", "nedpq",
                                  &e->n, &e->e, &e->d, &e->p, &e->q, NULL);
-  return ret;
+  if (ret)
+    return ret;
+
+  e->iqmp = gcry_mpi_new(0);
+  ret = gcry_mpi_invm (e->iqmp, e->q, e->p);
+
+  if (!ret) {
+    fprintf (stderr, "Could not calculate the (inverse of q) mod p\n");
+    return GPG_ERR_GENERAL;
+  } else {
+    return GPG_ERR_NO_ERROR;
+  }
 }
 
 gpg_error_t data_cb (void *arg, const void *data, size_t data_sz) {
@@ -177,6 +195,74 @@ gpg_error_t sendenv (struct exporter *e, const char *env, const char *val, const
   return ret;
 }
 
+size_t get_ssh_sz (gcry_mpi_t mpi) {
+  size_t wid;
+  gcry_mpi_print (GCRYMPI_FMT_SSH, NULL, 0, &wid, mpi);
+  return wid;
+}
+
+int send_to_ssh_agent(struct exporter *e, int fd, unsigned int seconds, int confirm, const char *comment) {
+  const char *key_type = "ssh-rsa";
+  int ret;
+  size_t len;
+  off_t offset;
+  unsigned char *msgbuf = NULL;
+  uint32_t tmp;
+  size_t slen;
+  ssize_t written;
+
+  len = 1 + /* request byte */
+    4 + strlen(key_type) + /* type of key */
+    get_ssh_sz (e->n) +
+    get_ssh_sz (e->e) +
+    get_ssh_sz (e->d) +
+    get_ssh_sz (e->iqmp) +
+    get_ssh_sz (e->p) +
+    get_ssh_sz (e->q) +
+    4 + (comment ? strlen (comment) : 0) +
+    (confirm ? 1 : 0) +
+    (seconds ? 5 : 0);
+
+  msgbuf = malloc (4 + len);
+  if (msgbuf == NULL) {
+    fprintf (stderr, "could not allocate %zu bytes for the message to ssh-agent\n", 4 + len);
+    return -1;
+  }
+
+#define w32(a) { tmp = htonl(a); memcpy(msgbuf + offset, &tmp, sizeof(tmp)); offset += sizeof(tmp); }
+#define wstr(a) { slen = (a ? strlen (a) : 0); w32 (slen); if (a) memcpy (msgbuf + offset, a, slen); offset += slen; }
+#define wbyte(x) { msgbuf[offset] = (x); offset += 1; }
+#define wmpi(n) { ret = gcry_mpi_print (GCRYMPI_FMT_SSH, msgbuf + offset, get_ssh_sz (n), &slen, n); \
+    if (ret) { fprintf (stderr, "failed writing ssh mpi " #n "\n"); free (msgbuf); return -1; }; offset += slen; }
+
+  offset = 0;
+  
+  w32 (len);
+  wbyte (seconds || confirm ? SSH2_AGENTC_ADD_ID_CONSTRAINED : SSH2_AGENTC_ADD_IDENTITY);
+  wstr (key_type);
+  wmpi (e->n);
+  wmpi (e->e);
+  wmpi (e->d);
+  wmpi (e->iqmp);
+  wmpi (e->p);
+  wmpi (e->q);
+  wstr (comment);
+  if (confirm)
+    wbyte (SSH_AGENT_CONSTRAIN_CONFIRM);
+  if (seconds) {
+    wbyte (SSH_AGENT_CONSTRAIN_LIFETIME);
+    w32 (seconds);
+  }
+  written = write (fd, msgbuf, 4+len);
+  if (written != 4 + len) {
+    fprintf (stderr, "failed writing message to ssh agent socket (%zd) (errno: %d)\n", written, errno);
+    free (msgbuf);
+    return -1;
+  }
+  free (msgbuf);
+  return 0;
+}
+
 void free_exporter (struct exporter *e) {
   assuan_release (e->ctx);
   if (e->wrap_cipher)
@@ -188,6 +274,7 @@ void free_exporter (struct exporter *e) {
   gcry_mpi_release(e->e);
   gcry_mpi_release(e->p);
   gcry_mpi_release(e->q);
+  gcry_mpi_release(e->iqmp);
   gcry_sexp_release (e->sexp);
 }
 
@@ -195,23 +282,52 @@ void usage (FILE *f) {
   fprintf (f, "Usage: agent-extraction KEYGRIP\n"
            "  KEYGRIP should be a GnuPG keygrip (try gpg --with-keygrip --list-keys)\n"
            "\n"
-           "Produces openssh-formatted secret key on stdout\n");
+           "Extracts a GnuPG secret key (by keygrip), and sends it to the running SSH agent.\n");
+}
+
+int get_ssh_auth_sock_fd() {
+  char *sock_name = getenv("SSH_AUTH_SOCK");
+  struct sockaddr_un sockaddr;
+  int ret = -1;
+  if (sock_name == NULL) {
+    fprintf (stderr, "SSH_AUTH_SOCK is not set, cannot talk to agent.\n");
+    return -1;
+  }
+  if (strlen(sock_name) + 1 > sizeof(sockaddr.sun_path)) {
+    fprintf (stderr, "SSH_AUTH_SOCK (%s) is larger than the maximum allowed socket path (%zu)\n",
+             sock_name, sizeof(sockaddr.sun_path));
+    return -1;
+  }
+  sockaddr.sun_family = AF_UNIX;
+  strncpy(sockaddr.sun_path, sock_name, sizeof(sockaddr.sun_path) - 1);
+  sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
+  ret = socket (AF_UNIX, SOCK_STREAM, 0);
+  if (ret == -1) {
+    fprintf (stderr, "Could not open a socket file descriptor\n");
+    return ret;
+  }
+  if (-1 == connect (ret, &sockaddr, sizeof(sockaddr))) {
+    fprintf (stderr, "Failed to connect to ssh agent socket %s\n", sock_name);
+    close (ret);
+    return -1;
+  }
+
+  return ret;
 }
 
 int main (int argc, const char* argv[]) {
   gpg_error_t err;
-  char *agent_socket = NULL;
+  char *gpg_agent_socket = NULL;
+  int ssh_sock_fd = 0;
   char *get_key = NULL;
   int idx = 0;
   struct exporter e = { .wrapped_key = NULL };
+  /* ssh agent constraints: */
+  int seconds = 0;
+  int confirm = 0;
+  const char *comment = "test key";
 
-  if (!gcry_check_version (GCRYPT_VERSION)) {
-    fprintf (stderr, "libgcrypt version mismatch\n");
-    return 1;
-  }
-  gcry_control (GCRYCTL_DISABLE_SECMEM, 0);
-  gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
-  
+  /* FIXME: choose seconds, confirm, and comment for real */
   if ((argc != 2) || (strlen(argv[1]) != KEYGRIP_LENGTH)) {
     usage (stderr);
     return 1;
@@ -227,7 +343,19 @@ int main (int argc, const char* argv[]) {
     fprintf (stderr, "failed to generate key export string\n");
     return 1;
   }
-    
+
+  ssh_sock_fd = get_ssh_auth_sock_fd();
+  if (ssh_sock_fd == -1)
+    return 1;
+  
+  if (!gcry_check_version (GCRYPT_VERSION)) {
+    fprintf (stderr, "libgcrypt version mismatch\n");
+    return 1;
+  }
+  gcry_control (GCRYCTL_DISABLE_SECMEM, 0);
+  gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
+  
+
   
   /* assuan_set_gpg_err_source (GPG_ERR_SOURCE_DEFAULT); */
   /*  assuan_set_log_cb (log, NULL); */
@@ -236,10 +364,10 @@ int main (int argc, const char* argv[]) {
     fprintf (stderr, "failed to create assuan context (%d) (%s)\n", err, gpg_strerror(err));
     return 1;
   }
-  agent_socket = agent_sockname();
+  gpg_agent_socket = gpg_agent_sockname();
   
   /* FIXME: launch gpg-agent if it is not already connected */
-  assuan_socket_connect (e.ctx, agent_socket, ASSUAN_INVALID_PID, ASSUAN_SOCKET_CONNECT_FDPASSING);
+  assuan_socket_connect (e.ctx, gpg_agent_socket, ASSUAN_INVALID_PID, ASSUAN_SOCKET_CONNECT_FDPASSING);
 
   /* FIXME: what do we do if "getinfo std_env_names includes something new? */
   struct { const char *env; const char *val; const char *opt; } vars[] = {
@@ -280,9 +408,14 @@ int main (int argc, const char* argv[]) {
   fprintf (stderr, "p: %d\n", gcry_mpi_get_nbits(e.p));
   fprintf (stderr, "q: %d\n", gcry_mpi_get_nbits(e.q));
 
-  /*  fwrite (e.unwrapped_key, e.unwrapped_len, 1, stdout); */
+  err = send_to_ssh_agent (&e, ssh_sock_fd, seconds, confirm, comment);
+  if (!err)
+    return 1;
   
-  free (agent_socket);
+  /*  fwrite (e.unwrapped_key, e.unwrapped_len, 1, stdout); */
+
+  close (ssh_sock_fd);
+  free (gpg_agent_socket);
   free (get_key);
   free_exporter (&e);
   return 0;
