@@ -1,4 +1,5 @@
-CFLAGS =  $(shell libassuan-config --cflags --libs)
+CFLAGS +=  $(shell libassuan-config --cflags --libs)
+CFLAGS +=  $(shell libgcrypt-config --cflags --libs)
 CFLAGS += --pedantic -Wall -Werror 
 
 all: agent-extraction
