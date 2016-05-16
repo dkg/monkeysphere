@@ -78,9 +78,9 @@ You might want to run 'monkeysphere gen-subkey'."
 
     for subkey in $authsubkeys; do
 	# test that the subkey has proper capability
-	capability=$(gpg_user --list-secret-keys --with-colons \
+	capability=$(gpg_user --list-keys --with-colons \
 	    --fingerprint --fingerprint "0x${subkey}!" \
-	    | egrep -B 1 "^fpr:::::::::${subkey}:$" | grep "^ssb:" | cut -d: -f12)
+	    | egrep -B 1 "^fpr:::::::::${subkey}:$" | grep "^sub:" | cut -d: -f12)
 	if ! check_capability "$capability" 'a' ; then
 	    log error "Did not find authentication-capable subkey with key ID '$subkey'."
 	    continue
