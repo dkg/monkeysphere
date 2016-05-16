@@ -106,7 +106,7 @@ You might want to run 'monkeysphere gen-subkey'."
 	else
 	    # we're adding the subkey:
 	    mkfifo "$workingdir/$kname"
-	    GPG=gpg1 gpg_user --batch --passphrase-fd 3 3<"$workingdir/passphrase" \
+	    gpg_user --batch --passphrase-fd 3 3<"$workingdir/passphrase" \
 		--export-options export-reset-subkey-passwd,export-minimal,no-export-attributes \
 		--export-secret-subkeys --no-armor "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname" &
 	    (cd "$workingdir" && DISPLAY=nosuchdisplay SSH_ASKPASS=/bin/false ssh-add "$@" "$kname" </dev/null )&
