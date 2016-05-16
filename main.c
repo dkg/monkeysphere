@@ -435,6 +435,13 @@ int main (int argc, const char* argv[]) {
   /* ssh agent constraints: */
   struct args args = { .keygrip = NULL };
   
+  if (!gcry_check_version (GCRYPT_VERSION)) {
+    fprintf (stderr, "libgcrypt version mismatch\n");
+    return 1;
+  }
+  gcry_control (GCRYCTL_DISABLE_SECMEM, 0);
+  gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
+  
   if (parse_args(argc, argv, &args)) {
     usage (stderr);
     return -1;
@@ -464,26 +471,37 @@ int main (int argc, const char* argv[]) {
   if (ssh_sock_fd == -1)
     return 1;
   
-  if (!gcry_check_version (GCRYPT_VERSION)) {
-    fprintf (stderr, "libgcrypt version mismatch\n");
-    return 1;
-  }
-  gcry_control (GCRYCTL_DISABLE_SECMEM, 0);
-  gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
-  
-
-  
-  /* assuan_set_gpg_err_source (GPG_ERR_SOURCE_DEFAULT); */
-  /*  assuan_set_log_cb (log, NULL); */
   err = assuan_new (&(e.ctx));
   if (err) {
-    fprintf (stderr, "failed to create assuan context (%d) (%s)\n", err, gpg_strerror(err));
+    fprintf (stderr, "failed to create assuan context (%d) (%s)\n", err, gpg_strerror (err));
     return 1;
   }
   gpg_agent_socket = gpg_agent_sockname();
   
-  /* FIXME: launch gpg-agent if it is not already connected */
-  assuan_socket_connect (e.ctx, gpg_agent_socket, ASSUAN_INVALID_PID, ASSUAN_SOCKET_CONNECT_FDPASSING);
+  /* launch gpg-agent if it is not already connected */
+  err = assuan_socket_connect (e.ctx, gpg_agent_socket,
+                               ASSUAN_INVALID_PID, ASSUAN_SOCKET_CONNECT_FDPASSING);
+  if (err) {
+    if (gpg_err_code (err) != GPG_ERR_ASS_CONNECT_FAILED) {
+      fprintf (stderr, "failed to connect to gpg-agent socket (%d) (%s)\n",
+               err, gpg_strerror (err));
+    } else {
+      fprintf (stderr, "could not find gpg-agent, trying to launch it...\n");
+      int r = system ("gpgconf --launch gpg-agent");
+      if (r) {
+        fprintf (stderr, "failed to launch gpg-agent\n");
+        return 1;
+      }
+      /* try to connect again: */
+      err = assuan_socket_connect (e.ctx, gpg_agent_socket,
+                               ASSUAN_INVALID_PID, ASSUAN_SOCKET_CONNECT_FDPASSING);
+      if (err) {
+        fprintf (stderr, "failed to connect to gpg-agent after launching (%d) (%s)\n",
+                 err, gpg_strerror (err));
+        return 1;
+      }
+    }
+  }
 
   /* FIXME: what do we do if "getinfo std_env_names includes something new? */
   struct { const char *env; const char *val; const char *opt; } vars[] = {
