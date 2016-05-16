@@ -429,8 +429,8 @@ int main (int argc, const char* argv[]) {
   gpg_error_t err;
   char *gpg_agent_socket = NULL;
   int ssh_sock_fd = 0;
-  char *get_key = NULL;
-  int idx = 0;
+  char *get_key = NULL, *desc_prompt = NULL;
+  int idx = 0, ret = 0;
   struct exporter e = { .wrapped_key = NULL };
   /* ssh agent constraints: */
   struct args args = { .keygrip = NULL };
@@ -445,8 +445,18 @@ int main (int argc, const char* argv[]) {
     return 0;
   }
 
-  if (asprintf (&get_key, "export_key %s", args.keygrip) < 0) {
+  if (asprintf (&get_key, "EXPORT_KEY %s", args.keygrip) < 0) {
     fprintf (stderr, "failed to generate key export string\n");
+    return 1;
+  }
+
+  /* FIXME: include "plus-percent-escaped" comment in this string, if comment exists */
+  ret = asprintf (&desc_prompt, "SETKEYDESC Sending+key+from+gpg-agent+to+ssh-agent...%%0a"
+                  "(keygrip:+%s)",
+                  args.keygrip);
+  
+  if (ret < 0) {
+    fprintf (stderr, "failed to generate prompt description\n");
     return 1;
   }
 
@@ -491,10 +501,14 @@ int main (int argc, const char* argv[]) {
                gpg_strerror(err));
     }
   }
-  /* FIXME: set up the agent prompt */
   err = transact (&e, "keywrap_key --export");
   if (err) {
     fprintf (stderr, "failed to export keywrap key (%d), %s\n", err, gpg_strerror(err));
+    return 1;
+  }
+  err = transact (&e, desc_prompt);
+  if (err) {
+    fprintf (stderr, "failed to set the description prompt (%d), %s\n", err, gpg_strerror(err));
     return 1;
   }
   err = transact (&e, get_key);
@@ -517,6 +531,7 @@ int main (int argc, const char* argv[]) {
   close (ssh_sock_fd);
   free (gpg_agent_socket);
   free (get_key);
+  free (desc_prompt);
   free_exporter (&e);
   return 0;
 }
