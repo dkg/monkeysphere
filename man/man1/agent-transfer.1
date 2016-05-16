@@ -1,0 +1,83 @@
+.TH AGENT-TRANSFER "1" "May 2016" "monkeysphere" "User Commands"
+
+.SH NAME
+
+agent-transfer - copy a secret key from gpg-agent to ssh-agent
+
+.SH SYNOPSIS
+
+.B agent-transfer [\fIoptions\fP] \fIKEYGRIP\fP [\fICOMMENT\fP]
+
+.SH DESCRIPTION
+
+\fBagent-transfer\fP extracts a secret key from a modern version of
+GnuPG agent and sends it to the running SSH agent.  This is useful for
+people whose keys are managed in the long-term by GnuPG's gpg-agent,
+but who prefer the semantics of OpenSSH's ssh-agent for regular use.
+
+\fBagent-transfer\fP was written as part of the monkeysphere project.
+
+The \fBKEYGRIP\fP should be specified as a sequence of 20 hexadecimal
+characters.  If you aren't sure of the keygrip, you can inspect the
+output of:
+
+        gpg \-\-with\-keygrip \-\-list\-secret\-keys
+
+The \fBCOMMENT\fP is optional, and will be stored alongside the key in
+ssh-agent.  It must not start with a \-, to avoid being mistaken for
+an option.
+
+.SH OPTIONS
+
+\fBagent-transfer\fP also accepts options that would normally be
+passed to \fBssh\-add\fP(1) to constrain the use of the transferred
+key:
+
+.TP
+\-c
+Indicates that added identities should be subject to confirmation
+before being used for authentication.
+
+.TP
+\-t SECONDS
+Indicates that the key should have a lifetime of SECONDS in the
+running ssh\-agent.
+
+.SH FILES
+
+.TP
+~/.gnupg/S.gpg\-agent
+The socket where gpg\-agent is listening.  This is the "standard
+socket" for modern GnuPG.
+
+.SH ENVIRONMENT VARIABLES
+
+.TP
+GNUPGHOME
+The GnuPG home directory, where the standard socket for gpg\-agent
+lives.  If this is not set, it is assumed to be ~/.gnupg.
+
+.TP
+SSH_AUTH_SOCK
+Specifies the location where the running ssh-agent is present.
+
+
+.P
+Several other environment variables are also passed in some form to
+the gpg\-agent to help it figure out how to run a sensible pinentry,
+including GPG_TTY, TERM, DISPLAY, XAUTHORITY, GTK_IM_MODULE,
+DBUS_SESSION_BUS_ADDRESS, and LANG.
+
+.SH AUTHOR
+
+Written by:
+Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+
+.SH SEE ALSO
+
+.BR monkeysphere (7),
+.BR ssh (1),
+.BR ssh\-add (1),
+.BR ssh\-agent (1),
+.BR gpg (1)
+.BR gpg\-agent (1),

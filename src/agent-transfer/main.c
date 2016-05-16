@@ -358,19 +358,19 @@ void free_exporter (struct exporter *e) {
 }
 
 void usage (FILE *f) {
-  fprintf (f, "Usage: agent-extraction [options] KEYGRIP [COMMENT]\n"
+  fprintf (f, "Usage: agent-transfer [options] KEYGRIP [COMMENT]\n"
            "\n"
            "Extracts a secret key from the GnuPG agent (by keygrip),\n"
            "and sends it to the running SSH agent.\n"
            "\n"
            "  KEYGRIP should be a GnuPG keygrip\n"
-           "    (e.g. try \"gpg --with-keygrip --list-keys\")\n"
+           "    (e.g. try \"gpg --with-keygrip --list-secret-keys\")\n"
            "  COMMENT (optional) can be any string\n"
            "    (must not start with a \"-\")\n"
            "\n"
            "Options:\n"
-           " -t SECONDS  lifetime (in seconds) for the key to live in the ssh-agent\n"
-           " -c          require confirmation when using the key\n"
+           " -t SECONDS  lifetime (in seconds) for the key to live in ssh-agent\n"
+           " -c          require confirmation when using the key in ssh-agent\n"
            " -h          print this help\n"
            );
 }
@@ -489,6 +489,7 @@ int main (int argc, const char* argv[]) {
   /* ssh agent constraints: */
   struct args args = { .keygrip = NULL };
   char *escaped_comment = NULL;
+  char *alt_comment = NULL;
   
   if (!gcry_check_version (GCRYPT_VERSION)) {
     fprintf (stderr, "libgcrypt version mismatch\n");
@@ -603,7 +604,11 @@ int main (int argc, const char* argv[]) {
     return 1;
   }
 
-  err = send_to_ssh_agent (&e, ssh_sock_fd, args.seconds, args.confirm, args.comment);
+  if (!args.comment)
+    asprintf (&alt_comment, "GnuPG keygrip %s", args.keygrip);
+  
+  err = send_to_ssh_agent (&e, ssh_sock_fd, args.seconds, args.confirm,
+                           args.comment ? args.comment : alt_comment);
   if (err)
     return 1;
   
@@ -613,6 +618,7 @@ int main (int argc, const char* argv[]) {
   free (gpg_agent_socket);
   free (get_key);
   free (desc_prompt);
+  free (alt_comment);
   free_exporter (&e);
   return 0;
 }
