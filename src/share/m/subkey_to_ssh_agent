@@ -104,15 +104,22 @@ You might want to run 'monkeysphere gen-subkey'."
 	    gpg_user --export --no-armor "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname"
 	    (cd "$workingdir" && ssh-add -d "$kname") || keysuccess="$?"
 	else
-	    # we're adding the subkey:
-	    mkfifo "$workingdir/$kname"
-	    gpg_user --batch --passphrase-fd 3 3<"$workingdir/passphrase" \
-		--export-options export-reset-subkey-passwd,export-minimal,no-export-attributes \
-		--export-secret-subkeys --no-armor "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname" &
-	    (cd "$workingdir" && DISPLAY=nosuchdisplay SSH_ASKPASS=/bin/false ssh-add "$@" "$kname" </dev/null )&
+            if is_gpg_version_greater_equal 2.1.0; then
+	        keygrip=$(gpg_user --list-keys --with-colons \
+	                           --with-keygrip --fingerprint --fingerprint "0x${subkey}!" \
+	                         | awk -F: '/^fpr:/{ fpr = $10 } /^grp:/{ if (fpr == "'"${subkey}"'") { print $10; } ; }')
+                agent-transfer "$@" "$keygrip" "$kname" || keysuccess="$?"
+            else
+	        # we're adding the subkey:
+	        mkfifo "$workingdir/$kname"
+	        gpg_user --batch --passphrase-fd 3 3<"$workingdir/passphrase" \
+		         --export-options export-reset-subkey-passwd,export-minimal,no-export-attributes \
+		         --export-secret-subkeys --no-armor "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname" &
+	        (cd "$workingdir" && DISPLAY=nosuchdisplay SSH_ASKPASS=/bin/false ssh-add "$@" "$kname" </dev/null )&
 
-	    passphrase_prompt "Enter passphrase for key $kname: " "$workingdir/passphrase"
-	    wait %2 || keysuccess="$?"
+	        passphrase_prompt "Enter passphrase for key $kname: " "$workingdir/passphrase"
+	        wait %2 || keysuccess="$?"
+            fi
 	fi
 
 	rm -f "$workingdir/$kname"
