@@ -305,10 +305,21 @@ void free_exporter (struct exporter *e) {
 }
 
 void usage (FILE *f) {
-  fprintf (f, "Usage: agent-extraction KEYGRIP\n"
-           "  KEYGRIP should be a GnuPG keygrip (try gpg --with-keygrip --list-keys)\n"
+  fprintf (f, "Usage: agent-extraction [options] KEYGRIP [COMMENT]\n"
            "\n"
-           "Extracts a GnuPG secret key (by keygrip), and sends it to the running SSH agent.\n");
+           "Extracts a secret key from the GnuPG agent (by keygrip),\n"
+           "and sends it to the running SSH agent.\n"
+           "\n"
+           "  KEYGRIP should be a GnuPG keygrip\n"
+           "    (e.g. try \"gpg --with-keygrip --list-keys\")\n"
+           "  COMMENT (optional) can be any string\n"
+           "    (must not start with a \"-\")\n"
+           "\n"
+           "Options:\n"
+           " -t SECONDS  lifetime (in seconds) for the key to live in the ssh-agent\n"
+           " -c          require confirmation when using the key\n"
+           " -h          print this help\n"
+           );
 }
 
 int get_ssh_auth_sock_fd() {
@@ -341,6 +352,80 @@ int get_ssh_auth_sock_fd() {
   return ret;
 }
 
+struct args {
+  int seconds;
+  int confirm;
+  const char *comment;
+  const char *keygrip;
+  int help;
+};
+
+int parse_args (int argc, const char **argv, struct args *args) {
+  int ptr = 1;
+  int idx = 0;
+
+  while (ptr < argc) {
+    if (argv[ptr][0] == '-') {
+      int looking_for_seconds = 0;
+      const char *x = argv[ptr] + 1;
+      while (*x != '\0') {
+        switch (*x) {
+        case 'c':
+          args->confirm = 1;
+          break;
+        case 't':
+          looking_for_seconds = 1;
+          break;
+        case 'h':
+          args->help = 1;
+          break;
+        default:
+          fprintf (stderr, "flag not recognized: %c\n", *x);
+          return 1;
+        }
+        x++;
+      }
+      if (looking_for_seconds) {
+        if (argc <= ptr + 1) {
+          fprintf (stderr, "lifetime (-t) needs an argument (number of seconds)\n");
+          return 1;
+        }
+        args->seconds = atoi (argv[ptr + 1]);
+        if (args->seconds <= 0) {
+          fprintf (stderr, "lifetime (seconds) must be > 0\n");
+          return 1;
+        }
+        ptr += 1;
+      }
+    } else {
+      if (args->keygrip == NULL) {
+        if (strlen (argv[ptr]) != KEYGRIP_LENGTH) {
+          fprintf (stderr, "keygrip must be 40 hexadecimal digits\n");
+          return 1;
+        }
+        
+        for (idx = 0; idx < KEYGRIP_LENGTH; idx++) {
+          if (!isxdigit(argv[ptr][idx])) {
+            fprintf (stderr, "keygrip must be 40 hexadecimal digits\n");
+            return 1;
+          }
+        }
+        args->keygrip = argv[ptr];
+      } else {
+        if (args->comment == NULL) {
+          args->comment = argv[ptr];
+        } else {
+          fprintf (stderr, "unrecognized argument %s\n", argv[ptr]);
+          return 1;
+        }
+      }
+    }
+    ptr += 1;
+  };
+  
+  return 0;
+}
+
 int main (int argc, const char* argv[]) {
   gpg_error_t err;
   char *gpg_agent_socket = NULL;
@@ -349,23 +434,19 @@ int main (int argc, const char* argv[]) {
   int idx = 0;
   struct exporter e = { .wrapped_key = NULL };
   /* ssh agent constraints: */
-  int seconds = 0;
-  int confirm = 0;
-  const char *comment = "test key";
-
-  /* FIXME: choose seconds, confirm, and comment for real */
-  if ((argc != 2) || (strlen(argv[1]) != KEYGRIP_LENGTH)) {
+  struct args args = { .keygrip = NULL };
+  
+  if (parse_args(argc, argv, &args)) {
     usage (stderr);
-    return 1;
-  }
-  for (idx = 0; idx < KEYGRIP_LENGTH; idx++) {
-    if (!isxdigit(argv[1][idx])) {
-      fprintf (stderr, "keygrips must be 40 hex digits\n");
-      return 1;
-    }
+    return -1;
   }
 
-  if (asprintf (&get_key, "export_key %s", argv[1]) < 0) {
+  if (args.help) {
+    usage (stdout);
+    return 0;
+  }
+
+  if (asprintf (&get_key, "export_key %s", args.keygrip) < 0) {
     fprintf (stderr, "failed to generate key export string\n");
     return 1;
   }
@@ -419,7 +500,7 @@ int main (int argc, const char* argv[]) {
   }
   err = transact (&e, get_key);
   if (err) {
-    fprintf (stderr, "failed to export secret key %s (%d), %s\n", argv[1], err, gpg_strerror(err));
+    fprintf (stderr, "failed to export secret key %s (%d), %s\n", args.keygrip, err, gpg_strerror(err));
     return 1;
   }
   err = unwrap_key (&e);
@@ -428,7 +509,7 @@ int main (int argc, const char* argv[]) {
     return 1;
   }
 
-  err = send_to_ssh_agent (&e, ssh_sock_fd, seconds, confirm, comment);
+  err = send_to_ssh_agent (&e, ssh_sock_fd, args.seconds, args.confirm, args.comment);
   if (err)
     return 1;
   
