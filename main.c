@@ -169,7 +169,6 @@ gpg_error_t status_cb (void *arg, const char *status) {
 }
 
 gpg_error_t transact (struct exporter *e, const char *command) {
-  fprintf (stderr, "transaction: %s\n", command);
   return assuan_transact (e->ctx, command, data_cb, e, inquire_cb, e, status_cb, e);
 }
 
