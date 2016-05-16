@@ -25,6 +25,7 @@ subkey_to_ssh_agent() {
     local subkey
     local publine
     local kname
+    local awk_pgrm
 
     # if there's no agent running, don't bother:
     if [ -z "$SSH_AUTH_SOCK" ] || ! type ssh-add >/dev/null ; then
@@ -55,11 +56,16 @@ subkey_to_ssh_agent() {
 	    failure "You have no secret keys in your keyring!
 You might want to run 'gpg --gen-key'."
 	fi
-    
-	authsubkeys=$(gpg_user --list-secret-keys --with-colons \
-	    --fingerprint --fingerprint $secretkeys | \
-	    cut -f1,5,10,12 -d: | grep -A1 '^ssb:[^:]*::[^:]*a[^:]*$' | \
-	    grep '^fpr::' | cut -f3 -d: | sort -u)
+
+        # $2 regex means "is some kind of valid, or at least not invalid"
+        # $12 ~ /a/ means "authentication-capable"
+        # $4 == 1 means "RSA"
+        awk_pgrm='
+/^sub:/{ if (($2 ~ /^[somfuq-]$/) && ($12 ~ /a/) && ($4 == 1)) { ok = 1 }; };
+/^fpr:/{ if (ok) { print $10 ; ok = 0; }; };'
+	authsubkeys=$(gpg_user --list-keys --with-colons \
+	                       --fingerprint --fingerprint $secretkeys | \
+                             awk -F: "$awk_pgrm" | sort -u)
 
 	if [ -z "$authsubkeys" ]; then
 	    failure "no authentication-capable subkeys available.
@@ -78,9 +84,12 @@ You might want to run 'monkeysphere gen-subkey'."
 
     for subkey in $authsubkeys; do
 	# test that the subkey has proper capability
-	capability=$(gpg_user --list-keys --with-colons \
-	    --fingerprint --fingerprint "0x${subkey}!" \
-	    | egrep -B 1 "^fpr:::::::::${subkey}:$" | grep "^sub:" | cut -d: -f12)
+        awk_pgrm='
+/^[ps]ub:/{ caps = $12 }
+/^fpr:/{ if ($10 == "'"${subkey}"'") { print caps }; }'
+	capability=$(gpg_user --with-colons --with-fingerprint --with-fingerprint \
+	    --list-keys "0x${subkey}!" \
+	    | awk -F: "$awk_pgrm")
 	if ! check_capability "$capability" 'a' ; then
 	    log error "Did not find authentication-capable subkey with key ID '$subkey'."
 	    continue
@@ -105,9 +114,12 @@ You might want to run 'monkeysphere gen-subkey'."
 	    (cd "$workingdir" && ssh-add -d "$kname") || keysuccess="$?"
 	else
             if is_gpg_version_greater_equal 2.1.0; then
-	        keygrip=$(gpg_user --list-keys --with-colons \
-	                           --with-keygrip --fingerprint --fingerprint "0x${subkey}!" \
-	                         | awk -F: '/^fpr:/{ fpr = $10 } /^grp:/{ if (fpr == "'"${subkey}"'") { print $10; } ; }')
+                awk_pgrm='
+/^fpr:/{ fpr = $10 }
+/^grp:/{ if (fpr == "'"${subkey}"'") { print $10; } }'
+	        keygrip=$(gpg_user --with-colons --with-keygrip --with-fingerprint \
+                                   --with-fingerprint --list-keys "0x${subkey}!" \
+	                         | awk -F: "$awk_pgrm")
                 agent-transfer "$@" "$keygrip" "$kname" || keysuccess="$?"
             else
 	        # we're adding the subkey:
