@@ -67,6 +67,60 @@ struct exporter {
   gcry_mpi_t iqmp;
 };
 
+/* percent_plus_escape is copyright Free Software Foundation */
+/* taken from common/percent.c in gnupg */
+/* Create a newly alloced string from STRING with all spaces and
+   control characters converted to plus signs or %xx sequences.  The
+   function returns the new string or NULL in case of a malloc
+   failure.
+
+   Note that we also escape the quote character to work around a bug
+   in the mingw32 runtime which does not correcty handle command line
+   quoting.  We correctly double the quote mark when calling a program
+   (i.e. gpg-protect-tool), but the pre-main code does not notice the
+   double quote as an escaped quote.  We do this also on POSIX systems
+   for consistency.  */
+char *
+percent_plus_escape (const char *string)
+{
+  char *buffer, *p;
+  const char *s;
+  size_t length;
+
+  for (length=1, s=string; *s; s++)
+    {
+      if (*s == '+' || *s == '\"' || *s == '%'
+          || *(const unsigned char *)s < 0x20)
+        length += 3;
+      else
+        length++;
+    }
+
+  buffer = p = malloc (length);
+  if (!buffer)
+    return NULL;
+
+  for (s=string; *s; s++)
+    {
+      if (*s == '+' || *s == '\"' || *s == '%'
+          || *(const unsigned char *)s < 0x20)
+        {
+          snprintf (p, 4, "%%%02X", *(unsigned char *)s);
+          p += 3;
+        }
+      else if (*s == ' ')
+        *p++ = '+';
+      else
+        *p++ = *s;
+    }
+  *p = 0;
+
+  return buffer;
+
+}
+
+
+
 gpg_error_t extend_wrapped_key (struct exporter *e, const void *data, size_t data_sz) {
   size_t newsz = e->wrapped_len + data_sz;
   unsigned char *wknew = realloc (e->wrapped_key, newsz);
@@ -434,6 +488,7 @@ int main (int argc, const char* argv[]) {
   struct exporter e = { .wrapped_key = NULL };
   /* ssh agent constraints: */
   struct args args = { .keygrip = NULL };
+  char *escaped_comment = NULL;
   
   if (!gcry_check_version (GCRYPT_VERSION)) {
     fprintf (stderr, "libgcrypt version mismatch\n");
@@ -457,10 +512,18 @@ int main (int argc, const char* argv[]) {
     return 1;
   }
 
-  /* FIXME: include "plus-percent-escaped" comment in this string, if comment exists */
-  ret = asprintf (&desc_prompt, "SETKEYDESC Sending+key+from+gpg-agent+to+ssh-agent...%%0a"
-                  "(keygrip:+%s)",
-                  args.keygrip);
+  if (args.comment &&
+      (escaped_comment = percent_plus_escape (args.comment), escaped_comment)) {
+    ret = asprintf (&desc_prompt,
+                    "SETKEYDESC Sending+key+for+'%s'+"
+                    "from+gpg-agent+to+ssh-agent...%%0a"
+                    "(keygrip:+%s)", escaped_comment, args.keygrip);
+    free (escaped_comment);
+  } else {
+    ret = asprintf (&desc_prompt,
+                    "SETKEYDESC Sending+key+from+gpg-agent+to+ssh-agent...%%0a"
+                    "(keygrip:+%s)", args.keygrip);
+  }
   
   if (ret < 0) {
     fprintf (stderr, "failed to generate prompt description\n");
@@ -503,7 +566,7 @@ int main (int argc, const char* argv[]) {
     }
   }
 
-  /* FIXME: what do we do if "getinfo std_env_names includes something new? */
+  /* FIXME: what do we do if "getinfo std_env_names" includes something new? */
   struct { const char *env; const char *val; const char *opt; } vars[] = {
     { .env = "GPG_TTY", .val = ttyname(0), .opt = "ttyname" },
     { .env = "TERM", .opt = "ttytype" },
