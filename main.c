@@ -444,7 +444,7 @@ int main (int argc, const char* argv[]) {
   
   if (parse_args(argc, argv, &args)) {
     usage (stderr);
-    return -1;
+    return 1;
   }
 
   if (args.help) {
