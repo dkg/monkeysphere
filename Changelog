@@ -1,3 +1,11 @@
+monkeysphere (0.38) unstable; urgency=medium
+
+  * make tests work with modern gpg (2.1.x and later) as /usr/bin/gpg
+  * this introduces a new binary, agent-transfer, to transfer secret keys
+    from gpg-agent to ssh-agent.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 17 May 2016 00:44:32 -0400
+
 monkeysphere (0.37) unstable; urgency=medium
 
   * Bugfix release with minor improvements and dependency accomodations.
