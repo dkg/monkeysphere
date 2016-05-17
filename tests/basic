@@ -223,6 +223,7 @@ cat <<EOF >> "$MONKEYSPHERE_HOME"/monkeysphere.conf
 KNOWN_HOSTS=$TESTHOME/.ssh/known_hosts
 EOF
 get_gpg_prng_arg >> "$GNUPGHOME"/gpg.conf
+echo pinentry-program "$TESTDIR"/phony-pinentry >> "$GNUPGHOME/gpg-agent.conf"
 
 echo
 echo "##################################################"
