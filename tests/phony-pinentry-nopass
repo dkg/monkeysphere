@@ -1,0 +1,17 @@
+#!/bin/bash
+
+printf "OK Pleased to meet you\n"
+
+while read command rest; do
+    case "${command,,}" in
+        bye)
+            exit 0
+            ;;
+        getpin)
+            printf "OK\n"
+            ;;
+        *)
+            printf >&2 "received %s %s\n" "$command" "$rest"
+            printf "OK\n"
+    esac
+done
