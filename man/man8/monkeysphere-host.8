@@ -189,8 +189,9 @@ ssh) or without seeing a nasty "security warning" in their browsers
 
 Note that \fBmonkeysphere\-host\fP currently caches a copy of all
 imported secret keys (stored in OpenPGP form for future manipulation)
-in __SYSDATADIR_PREFIX__/monkeysphere/host/secring.gpg.  Cleartext backups of this
-file could expose secret key material if not handled sensitively.
+in __SYSDATADIR_PREFIX__/monkeysphere/host/.  Cleartext backups of
+files in this directory could expose secret key material if not
+handled sensitively.
 
 .SH ENVIRONMENT
 
