@@ -10,7 +10,7 @@
 #   Jameson Rollins <jrollins@fifthhorseman.net>
 #   Micah Anderson <micah@riseup.net> 
 #
-# Copyright: © 2008-2010
+# Copyright: © 2008-2016
 # License: GPL v3 or later
 
 # these tests should all be able to run as a non-privileged user.
@@ -211,6 +211,7 @@ echo "### configuring testuser home..."
 # set up environment for testuser
 export TESTHOME="$TEMPDIR"/testuser
 export GNUPGHOME="$TESTHOME"/.gnupg
+mkdir -m 0700 -p "$GNUPGHOME"
 chmod 0700 "$GNUPGHOME"
 export SSH_ASKPASS="$TESTHOME"/.ssh/askpass
 export MONKEYSPHERE_HOME="$TESTHOME"/.monkeysphere
@@ -222,13 +223,23 @@ EOF
 cat <<EOF >> "$MONKEYSPHERE_HOME"/monkeysphere.conf
 KNOWN_HOSTS=$TESTHOME/.ssh/known_hosts
 EOF
+cat <<EOF > "$GNUPGHOME"/gpg.conf
+verify-options show-uid-validity
+list-options show-uid-validity
+EOF
 get_gpg_prng_arg >> "$GNUPGHOME"/gpg.conf
 echo pinentry-program "$TESTDIR"/phony-pinentry >> "$GNUPGHOME/gpg-agent.conf"
+gpg --import < "$TESTDIR"/home-setup/testuser/secret_keyring.keys
+gpg --import-options import-local --import < "$TESTDIR"/home-setup/testuser/public_keyring.keys
+gpg --import-ownertrust < "$TESTDIR"/home-setup/testuser/ownertrustdb.txt
 
 echo
 echo "##################################################"
 echo "### configuring admin home..."
-(cd "$TESTDIR"/home && find admin | cpio -pdu "$TEMPDIR")
+mkdir -m 0700 -p "$TEMPDIR"/admin/.gnupg
+gpgadmin --import < "$TESTDIR"/home-setup/admin/secret_keyring.keys
+gpgadmin --import-options import-local --import < "$TESTDIR"/home-setup/admin/public_keyring.keys
+gpgadmin --import-ownertrust < "$TESTDIR"/home-setup/admin/ownertrustdb.txt
 
 # set up sshd
 echo
@@ -307,7 +318,7 @@ get_gpg_prng_arg >> "$MONKEYSPHERE_SYSDATADIR"/authentication/sphere/gpg.conf
 echo
 echo "##################################################"
 echo "### adding admin as certifier..."
-monkeysphere-authentication add-id-certifier "$TEMPDIR"/admin/.gnupg/pubkey.gpg
+gpgadmin --export '<fakeadmin@example.net>' | monkeysphere-authentication add-id-certifier -
 
 echo
 echo "##################################################"
