@@ -38,7 +38,7 @@ On debian-derived systems, you can set this up with:
 ## the tests, not system-wide:
 
 mkdir -p "$TESTDIR"/tmp
-TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/monkeyspheretest.XXXXXXX")
+TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/ms.XXX")
 
 mkdir "$TEMPDIR"/bin
 ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/openpgp2ssh

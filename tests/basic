@@ -123,7 +123,7 @@ trap failed_cleanup EXIT
 # somewhere with tighter permissions.
 
 mkdir -p "$TESTDIR"/tmp
-TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/monkeyspheretest.XXXXXXX")
+TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/ms.XXX")
 
 # Use the local copy of executables first, instead of system ones.
 # This should help us test without installing.
