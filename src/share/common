@@ -951,12 +951,18 @@ process_authorized_user_ids() {
 # fingerprints, one per line:
 list_primary_fingerprints() {
     local fake=$(msmktempdir)
-    trap "rm -rf $fake" EXIT
+    cleanup() {
+        if type gpgconf &>/dev/null; then
+            GNUPGHOME="$fake" gpgconf --kill gpg-agent
+        fi
+        rm -rf "$fake"
+    }
+    trap cleanup EXIT
     GNUPGHOME="$fake" gpg --no-tty --quiet --import --ignore-time-conflict 2>/dev/null
     GNUPGHOME="$fake" gpg --with-colons --fingerprint --list-keys | \
 	awk -F: '/^fpr:/{ print $10 }'
     trap - EXIT
-    rm -rf "$fake"
+    cleanup
 }
 
 # takes an OpenPGP key or set of keys on stdin, a fingerprint or other
@@ -964,11 +970,17 @@ list_primary_fingerprints() {
 # the requested keys from the material on stdin
 get_cert_info() {
     local fake=$(msmktempdir)
-    trap "rm -rf $fake" EXIT
+    
+    cleanup() {
+        if type gpgconf &>/dev/null; then
+            GNUPGHOME="$fake" gpgconf --kill gpg-agent
+        fi
+        rm -rf "$fake"
+    }
     GNUPGHOME="$fake" gpg --no-tty --quiet --import --ignore-time-conflict 2>/dev/null
     GNUPGHOME="$fake" gpg --with-colons --fingerprint --fixed-list-mode --list-keys "$1"
     trap - EXIT
-    rm -rf "$fake"
+    cleanup
 }
 
 

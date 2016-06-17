@@ -287,8 +287,14 @@ show_key() {
     # tmp gpghome dir
     export GNUPGHOME=$(msmktempdir)
 
+    cleanup() {
+        if type gpgconf &>/dev/null; then
+            gpgconf --kill gpg-agent
+        fi
+        rm -rf "$GNUPGHOME"
+    }
     # trap to remove tmp dir if break
-    trap "rm -rf $GNUPGHOME" EXIT
+    trap cleanup EXIT
 
     # import the host key into the tmp dir
     gpg --quiet --import <"$HOST_KEY_FILE"
@@ -329,7 +335,7 @@ show_key() {
 
     # remove the tmp file
     trap - EXIT
-    rm -rf "$GNUPGHOME"
+    cleanup
 }
 
 ########################################################################

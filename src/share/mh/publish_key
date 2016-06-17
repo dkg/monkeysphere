@@ -35,8 +35,14 @@ export GNUPGHOME=$(msmktempdir)
 chmod 0700 "$GNUPGHOME"
 chown "$MONKEYSPHERE_USER":"$MONKEYSPHERE_GROUP" "$GNUPGHOME"
 
+cleanup() {
+    if type gpgconf &>/dev/null; then
+        gpgconf --kill gpg-agent
+    fi
+    rm -rf "$GNUPGHOME"
+}
 # trap to remove tmp dir if break
-trap "rm -rf $GNUPGHOME" EXIT
+trap cleanup EXIT
 
 # import the key into the tmp dir
 su_monkeysphere_user \
@@ -57,6 +63,6 @@ su_monkeysphere_user \
 
 # remove the tmp file
 trap - EXIT
-rm -rf "$GNUPGHOME"
+cleanup
 
 }
