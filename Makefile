@@ -17,7 +17,7 @@ LOCALSTATEDIR ?= /var/lib
 
 CFLAGS +=  $(shell libassuan-config --cflags --libs)
 CFLAGS +=  $(shell libgcrypt-config --cflags --libs)
-CFLAGS += --pedantic -Wall -Werror 
+CFLAGS += --pedantic -Wall -Werror -std=c99
 
 all: src/agent-transfer/agent-transfer
 
