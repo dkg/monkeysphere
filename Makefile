@@ -108,10 +108,12 @@ releasenote:
 
 test: test-keytrans test-basic
 
+check: test
+
 test-basic: src/agent-transfer/agent-transfer
 	MONKEYSPHERE_TEST_NO_EXAMINE=true ./tests/basic
 
 test-keytrans: src/agent-transfer/agent-transfer
 	MONKEYSPHERE_TEST_NO_EXAMINE=true ./tests/keytrans
 
-.PHONY: all tarball debian-package freebsd-distinfo clean install installman releasenote test
+.PHONY: all tarball debian-package freebsd-distinfo clean install installman releasenote test check
