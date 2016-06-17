@@ -306,7 +306,7 @@ show_key() {
     # FIXME: make no-show-keyring work so we don't have to do the grep'ing
     # FIXME: can we show uid validity somehow?
     gpg --list-keys --list-options show-unusable-uids "$fingerprint" 2>/dev/null \
-        | grep -v "^${GNUPGHOME}/pubring.gpg$" \
+        | egrep -v "^${GNUPGHOME}/pubring.(gpg|kbx)$" \
         | egrep -v '^-+$' \
         | grep -v '^$'
 
