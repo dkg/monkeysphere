@@ -25,29 +25,97 @@ int custom_log (assuan_context_t ctx, void *hook, unsigned int cat, const char *
   return 1;
 }
 
-char* gpg_agent_sockname () {
-  char *ret = NULL;
-  char *ghome = getenv ("GNUPGHOME");
-  int rc;
-  
-  if (ghome != NULL) {
-    rc = asprintf (&ret, "%s/S.gpg-agent", ghome);
-  } else {
-    char *home = getenv ("HOME");
-    if (home != NULL) {
-      rc = asprintf (&ret, "%s/.gnupg/S.gpg-agent", home);
-    } else {
-      struct passwd* p = getpwuid(geteuid());
-      if (p)
-        rc = asprintf (&ret, "%s/.gnupg/S.gpg-agent", p->pw_dir);
-      else
-        rc = -1;
+/* Count octets required after trimming whitespace off the end of
+   STRING and unescaping it.  Note that this will never be larger than
+   strlen (STRING).  This count does not include any trailing null
+   byte. */
+static size_t
+count_trimmed_unescaped (const char *string)
+{
+  size_t n = 0;
+  size_t last_non_whitespace = 0;
+
+  while (*string)
+    {
+      n++;
+      if (*string == '%' &&
+          string[1] && isxdigit(string[1]) &&
+          string[2] && isxdigit(string[2]))
+        {
+          string++;
+          string++;
+        }
+      else if (!isspace(*string))
+        {
+          last_non_whitespace = n;
+        }
+      string++;
     }
-  }
-  if (rc > 0)
-    return ret;
-  else
+
+  return last_non_whitespace;
+}
+
+#define xtoi_1(p)   (*(p) <= '9'? (*(p)- '0'): \
+                     *(p) <= 'F'? (*(p)-'A'+10):(*(p)-'a'+10))
+#define xtoi_2(p)   ((xtoi_1(p) * 16) + xtoi_1((p)+1))
+
+/* Trim whitespace off the right of STRING, unescape it, and return a
+   malloc'ed buffer of the correct size.  returns NULL on failure */
+static char *
+trim_and_unescape (const char *string)
+{
+  size_t sz = count_trimmed_unescaped (string);
+  char *p = malloc(sz+1);
+
+  if (!p)
     return NULL;
+    
+  p[sz] = '\0';
+
+  for (int i = 0; i < sz; i++)
+    {
+      if (*string == '%' &&
+          string[1] && isxdigit(string[1]) &&
+          string[2] && isxdigit(string[2]))
+        {
+          string++;
+          p[i] = xtoi_2 (string);
+          string++;
+        }
+      else
+        p[i] = *string;
+      string++;
+    }
+
+  return (p);
+}
+
+#ifdef PATH_MAX
+#define BUFSIZE PATHMAX
+#else
+#define BUFSIZE 4096
+#endif
+
+char* gpg_agent_sockname () {
+  FILE *f;
+  size_t bytecount, pos;
+  char buf[BUFSIZE];
+
+  f = popen("gpgconf --list-dirs | grep ^agent-socket: | cut -f2 -d:", "r");
+  if (!f)
+    return NULL;
+  pos = 0;
+  while (!feof(f))
+    {
+      bytecount = fread(buf + pos, 1, sizeof(buf) - pos, f);
+      if (ferror(f))
+        return NULL;
+      pos += bytecount;
+      if (pos >= sizeof(buf)) /* too much data! */
+        return NULL;
+    }
+  buf[pos] = '\0';
+  return trim_and_unescape(buf);
 }
 
 
