@@ -672,8 +672,13 @@ int main (int argc, const char* argv[]) {
     return 1;
   }
 
-  if (!args.comment)
-    asprintf (&alt_comment, "GnuPG keygrip %s", args.keygrip);
+  if (!args.comment) {
+    err = asprintf (&alt_comment, "GnuPG keygrip %s", args.keygrip);
+    if (err < 0) {
+      fprintf (stderr, "failed to generate key comment\n");
+      return 1;
+    }
+  }
   
   err = send_to_ssh_agent (&e, ssh_sock_fd, args.seconds, args.confirm,
                            args.comment ? args.comment : alt_comment);
