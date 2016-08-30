@@ -117,7 +117,7 @@ su_monkeysphere_user() {
          # if root, su command as monkeysphere user
 	'root')
             # requote arguments using bash builtin feature (see "help printf"):
-	    su "$MONKEYSPHERE_USER" -c "$(printf "%q " "$@")"
+	    su "$MONKEYSPHERE_USER" -s "$(which bash)" -c "$(printf "%q " "$@")"
 	    ;;
 
 	# otherwise, fail
