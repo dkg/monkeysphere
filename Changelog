@@ -1,3 +1,13 @@
+monkeysphere (0.39) unstable; urgency=medium
+
+  * avoid warning about unused asprintf return value
+  * avoid treating src/share/common as an executable
+  * ensure that this works even if SYSSHAREDIR has whitespace
+  * Include local build of agent-transfer in $PATH (Closes: #835719)
+  * force bash as the shell during su (Closes: #827660)
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 30 Aug 2016 03:10:53 -0400
+
 monkeysphere (0.38) unstable; urgency=medium
 
   * make tests work with modern gpg (2.1.x and later) as /usr/bin/gpg
