@@ -15,14 +15,17 @@ PREFIX ?= /usr
 MANPREFIX ?= $(PREFIX)/share/man
 LOCALSTATEDIR ?= /var/lib
 
-CFLAGS +=  $(shell libassuan-config --cflags --libs)
-CFLAGS +=  $(shell libgcrypt-config --cflags --libs)
+CFLAGS += $(shell libassuan-config --cflags)
+CFLAGS += $(shell libgcrypt-config --cflags)
 CFLAGS += --pedantic -Wall -Werror -std=c99
+LIBS += $(shell libassuan-config --libs)
+LIBS += $(shell libgcrypt-config --libs)
+
 
 all: src/agent-transfer/agent-transfer
 
 src/agent-transfer/agent-transfer: src/agent-transfer/main.c src/agent-transfer/ssh-agent-proto.h
-	gcc -o $@ $(CFLAGS) $(LDFLAGS) $<
+	gcc -o $@ $(CFLAGS) $(LDFLAGS) $< $(LIBS)
 
 debian-package:
 	git buildpackage -uc -us
