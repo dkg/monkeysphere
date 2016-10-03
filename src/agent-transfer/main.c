@@ -673,8 +673,10 @@ int main (int argc, const char* argv[]) {
   }
 
   if (!args.comment) {
-    err = asprintf (&alt_comment, "GnuPG keygrip %s", args.keygrip);
-    if (err < 0) {
+    int bytes_printed = asprintf (&alt_comment,
+                                  "GnuPG keygrip %s",
+                                  args.keygrip);
+    if (bytes_printed < 0) {
       fprintf (stderr, "failed to generate key comment\n");
       return 1;
     }
