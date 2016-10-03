@@ -464,7 +464,8 @@ int get_ssh_auth_sock_fd() {
     fprintf (stderr, "Could not open a socket file descriptor\n");
     return ret;
   }
-  if (-1 == connect (ret, &sockaddr, sizeof(sockaddr))) {
+  if (-1 == connect (ret, (const struct sockaddr*)(&sockaddr),
+                     sizeof(sockaddr))) {
     fprintf (stderr, "Failed to connect to ssh agent socket %s\n", sock_name);
     close (ret);
     return -1;
