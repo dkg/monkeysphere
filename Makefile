@@ -25,7 +25,9 @@ REPLACEMENTS = src/monkeysphere src/monkeysphere-host		\
 src/monkeysphere-authentication src/share/defaultenv $(wildcard	\
 src/transitions/*)
 
-all: src/agent-transfer/agent-transfer $(addprefix replaced/,$(REPLACEMENTS)) $(addprefix replaced/,$(wildcard man/*/*))
+REPLACED_COMPRESSED_MANPAGES = $(addsuffix .gz,$(addprefix replaced/,$(wildcard man/*/*)))
+
+all: src/agent-transfer/agent-transfer $(addprefix replaced/,$(REPLACEMENTS)) $(REPLACED_COMPRESSED_MANPAGES)
 
 src/agent-transfer/agent-transfer: src/agent-transfer/main.c src/agent-transfer/ssh-agent-proto.h
 	gcc -o $@ $(CFLAGS) $(LDFLAGS) $< $(LIBS)
@@ -53,6 +55,9 @@ replaced/%: %
 	-e 's:__SYSSHAREDIR_PREFIX__:$(PREFIX):' \
 	-e 's:__SYSCONFDIR_PREFIX__:$(ETCPREFIX):' \
 	-e 's:__SYSDATADIR_PREFIX__:$(LOCALSTATEDIR):'
+
+replaced/%.gz: replaced/%
+	gzip -n $<
 
 # this target is to be called from the tarball, not from the git
 # working dir!
@@ -87,9 +92,8 @@ install: all installman
 	install -m 0644 etc/monkeysphere-host.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/monkeysphere-host.conf$(ETCSUFFIX)
 	install -m 0644 etc/monkeysphere-authentication.conf $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere/monkeysphere-authentication.conf$(ETCSUFFIX)
 
-installman: $(addprefix replaced/,$(wildcard man/*/*))
+installman: $(REPLACED_COMPRESSED_MANPAGES)
 	mkdir -p $(DESTDIR)$(MANPREFIX)/man1 $(DESTDIR)$(MANPREFIX)/man7 $(DESTDIR)$(MANPREFIX)/man8
-	gzip -n replaced/man/*/*
 	install replaced/man/man1/* $(DESTDIR)$(MANPREFIX)/man1
 	install replaced/man/man7/* $(DESTDIR)$(MANPREFIX)/man7
 	install replaced/man/man8/* $(DESTDIR)$(MANPREFIX)/man8
