@@ -97,8 +97,8 @@ installman: $(REPLACED_COMPRESSED_MANPAGES)
 	install replaced/man/man1/* $(DESTDIR)$(MANPREFIX)/man1
 	install replaced/man/man7/* $(DESTDIR)$(MANPREFIX)/man7
 	install replaced/man/man8/* $(DESTDIR)$(MANPREFIX)/man8
-	ln -s openpgp2ssh.1.gz $(DESTDIR)$(MANPREFIX)/man1/openpgp2pem.1.gz
-	ln -s openpgp2ssh.1.gz $(DESTDIR)$(MANPREFIX)/man1/openpgp2spki.1.gz
+	ln -sf openpgp2ssh.1.gz $(DESTDIR)$(MANPREFIX)/man1/openpgp2pem.1.gz
+	ln -sf openpgp2ssh.1.gz $(DESTDIR)$(MANPREFIX)/man1/openpgp2spki.1.gz
 
 # this target depends on you having the monkeysphere-docs
 # repo checked out as a peer of your monkeysphere repo.
