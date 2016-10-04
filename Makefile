@@ -21,7 +21,11 @@ CFLAGS += --pedantic -Wall -Werror -std=c99
 LIBS += $(shell libassuan-config --libs)
 LIBS += $(shell libgcrypt-config --libs)
 
-all: src/agent-transfer/agent-transfer
+REPLACEMENTS = src/monkeysphere src/monkeysphere-host		\
+src/monkeysphere-authentication src/share/defaultenv $(wildcard	\
+src/transitions/*)
+
+all: src/agent-transfer/agent-transfer $(addprefix replaced/,$(REPLACEMENTS)) $(addprefix replaced/,$(wildcard man/*/*))
 
 src/agent-transfer/agent-transfer: src/agent-transfer/main.c src/agent-transfer/ssh-agent-proto.h
 	gcc -o $@ $(CFLAGS) $(LDFLAGS) $< $(LIBS)
@@ -43,10 +47,6 @@ clean:
 	# clean up old monkeysphere packages lying around as well.
 	rm -f monkeysphere_*
 
-REPLACEMENTS = src/monkeysphere src/monkeysphere-host		\
-src/monkeysphere-authentication src/share/defaultenv $(wildcard	\
-src/transitions/*)
-
 replaced/%: %
 	mkdir -p $(dir $@)
 	sed < $< > $@ \
@@ -56,7 +56,7 @@ replaced/%: %
 
 # this target is to be called from the tarball, not from the git
 # working dir!
-install: all installman $(addprefix replaced/,$(REPLACEMENTS))
+install: all installman
 	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/sbin
 	mkdir -p $(DESTDIR)$(PREFIX)/share/monkeysphere/m $(DESTDIR)$(PREFIX)/share/monkeysphere/mh $(DESTDIR)$(PREFIX)/share/monkeysphere/ma $(DESTDIR)$(PREFIX)/share/monkeysphere/transitions
 	mkdir -p $(DESTDIR)$(ETCPREFIX)/etc/monkeysphere
