@@ -91,7 +91,7 @@ trim_and_unescape (const char *string)
 }
 
 #ifdef PATH_MAX
-#define BUFSIZE PATHMAX
+#define BUFSIZE PATH_MAX
 #else
 #define BUFSIZE 4096
 #endif
