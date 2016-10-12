@@ -1,3 +1,11 @@
+monkeysphere (0.40) unstable; urgency=medium
+
+  * bugfix release:
+  * get tests to pass against GnuPG 2.1.15
+  * build more portably
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 12 Oct 2016 01:12:27 -0400
+
 monkeysphere (0.39) unstable; urgency=medium
 
   * avoid warning about unused asprintf return value
