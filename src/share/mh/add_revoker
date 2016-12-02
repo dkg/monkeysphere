@@ -77,7 +77,7 @@ else
     # get the full fingerprint of new revoker key
     log debug "getting fingerprint of revoker key..."
     fingerprint=$(su_monkeysphere_user "GNUPGHOME=$tmpDir" gpg --list-key --with-colons --with-fingerprint "${revokerKeyID}" \
-	| grep '^fpr:' | cut -d: -f10)
+	| awk -F: '/^fpr:/{ if (ok) { print $10 }; ok=0 } /^pub:/{ ok=1 }')
 
     # test that there is only a single fingerprint
     if (( $(echo "$fingerprint" | wc -l) != 1 )) ; then

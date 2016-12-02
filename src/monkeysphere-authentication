@@ -97,7 +97,7 @@ core_fingerprint() {
     log debug "determining core key fingerprint..."
     gpg_core --list-secret-key --with-colons \
         --with-fingerprint \
-	| grep ^fpr: | cut -d: -f10
+	| awk -F: '/^fpr:/{ if (ok) { print $10 } ; ok=0 } /^sec:/{ ok=1 }'
 }
 
 # export signatures from core to sphere

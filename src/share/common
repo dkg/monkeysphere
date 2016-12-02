@@ -959,7 +959,7 @@ list_primary_fingerprints() {
     trap cleanup EXIT
     GNUPGHOME="$fake" gpg --no-tty --quiet --import --ignore-time-conflict 2>/dev/null
     GNUPGHOME="$fake" gpg --with-colons --fingerprint --list-keys | \
-	awk -F: '/^fpr:/{ print $10 }'
+	awk -F: '/^fpr:/{ if (ok) { print $10 } ; ok=0 } /^pub:/{ ok=1 }'
     trap - EXIT
     cleanup
 }

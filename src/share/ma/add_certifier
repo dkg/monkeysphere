@@ -120,7 +120,7 @@ else
     # get the full fingerprint of new certifier key
     log debug "getting fingerprint of certifier key..."
     fingerprint=$(gpg_sphere --list-key --with-colons --with-fingerprint "0x${keyID}!" \
-	| grep '^fpr:' | cut -d: -f10)
+	| awk -F: '/^fpr:/{ if (ok) { print $10 } ; ok=0 } /^pub:/{ ok=1 }')
 
     # test that there is only a single fingerprint
     if (( $(echo "$fingerprint" | wc -l) != 1 )) ; then

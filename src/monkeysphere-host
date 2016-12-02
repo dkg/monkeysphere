@@ -95,7 +95,7 @@ gpg_host_edit() {
 update_pgp_pub_file() {
     log debug "updating openpgp public key file '$HOST_KEY_FILE'..."
     gpg_host --export --armor --export-options export-minimal \
-        $(gpg_host --list-secret-keys --with-colons --fingerprint | grep ^fpr | cut -f10 -d:) \
+        $(gpg_host --list-secret-keys --with-colons --fingerprint | awk -F: '/^fpr:/{ if (ok) { print $10 } ; ok=0 } /^sec:/{ ok=1 }') \
         > "$HOST_KEY_FILE"
 }
 
@@ -234,7 +234,7 @@ prompt_userid_exists() {
     local fingerprint
 
     if gpgOut=$(gpg_host_list_keys "=${userID}" 2>/dev/null) ; then
-	fingerprint=$(echo "$gpgOut" | grep '^fpr:' | cut -d: -f10)
+	fingerprint=$(echo "$gpgOut" | awk -F: '/^fpr:/{ if (ok) { print $10 } ; ok=0 } /^pub:/{ ok=1 }')
 	if [ "$PROMPT" != "false" ] ; then
 	    printf "Service name '%s' is already being used by key '%s'.\nAre you sure you want to use it again? (y/N) " "$userID" "$fingerprint" >&2
 	    read OK; OK=${OK:=N}
@@ -302,7 +302,7 @@ show_key() {
     # get the gpg fingerprint
     if gpg --quiet --list-keys \
 	--with-colons --with-fingerprint "$id" \
-	| grep '^fpr:' | cut -d: -f10 > "$GNUPGHOME"/fingerprint ; then
+	| awk -F: '/^fpr:/{ if (ok) { print $10 } ; ok=0 } /^pub:/{ ok=1 }' > "$GNUPGHOME"/fingerprint ; then
 	fingerprint=$(cat "$GNUPGHOME"/fingerprint)
     else
 	failure "ID '$id' not found."

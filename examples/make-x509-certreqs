@@ -92,6 +92,6 @@ export GNUPGHOME=/var/lib/monkeysphere/host
 # default to looking for https keys.
 proto="${1:-https}"
 
-for fpr in $(gpg --fixed-list-mode --with-colons --fingerprint --list-secret-keys "${proto}://" | grep '^fpr:' | cut -f10 -d:); do
+for fpr in $(gpg --fixed-list-mode --with-colons --fingerprint --list-secret-keys "${proto}://" | awk -F: '/^fpr:/{ if (ok) { print $10 } ; ok=0 } /^sec:/{ ok=1 }'); do
     gencertreq "$fpr"
 done

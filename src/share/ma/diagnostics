@@ -70,7 +70,7 @@ elif (( "$keysfound" > 1 )); then
 else
     create=$(echo "$seckey" | grep ^sec: | cut -f6 -d:)
     expire=$(echo "$seckey" | grep ^sec: | cut -f7 -d:)
-    fingerprint=$(echo "$seckey" | grep ^fpr: | head -n1 | cut -f10 -d:)
+    fingerprint=$(echo "$seckey" | awk -F: '/^fpr:/{ if (ok) { print $10 } ; ok=0 } /^pub:/{ ok=1 }')
     # check for key expiration:
     if [ "$expire" ]; then
 	if (( "$expire"  < "$curdate" )); then

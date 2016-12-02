@@ -50,7 +50,7 @@ subkey_to_ssh_agent() {
 	# (to work around bug https://bugs.g10code.com/gnupg/issue945):
 	secretkeys=$(gpg_user --list-secret-keys --with-colons \
 	    --fingerprint | \
-	    grep '^fpr:' | cut -f10 -d: | awk '{ print "0x" $1 "!" }')
+	    awk -F: '/^fpr:/{ if (ok) { print "0x" $10 "!" } ; ok=0 } /^sec:/{ ok=1 }')
 
 	if [ -z "$secretkeys" ]; then
 	    failure "You have no secret keys in your keyring!
