@@ -184,6 +184,7 @@ my $subpacket_types = { sig_creation_time => 2,
 			features => 30,
 			signature_target => 31,
 			embedded_signature => 32,
+			issuer_fpr => 33,
 		       };
 
 # bitstring (see RFC 4880 section 5.2.3.24)
@@ -580,10 +581,13 @@ sub gensig {
   if ($key_timestamp > $sig_timestamp) {
     die "key timestamp must not be later than signature timestamp\n";
   }
+  my $v4_fpr = fingerprint($rsa, $key_timestamp);
 
   my $creation_time_packet = pack('CCN', 5, $subpacket_types->{sig_creation_time}, $sig_timestamp);
 
-  my $hashed_subs = $creation_time_packet.$args->{hashed_subpackets};
+  my $issuer_fpr_packet = pack('CCCa20', 22, $subpacket_types->{issuer_fpr}, 4, $v4_fpr);
+
+  my $hashed_subs = $issuer_fpr_packet.$creation_time_packet.$args->{hashed_subpackets};
 
   my $subpacket_octets = pack('n', length($hashed_subs));
 
@@ -603,7 +607,7 @@ sub gensig {
   my $key_data = make_packet($packet_types->{pubkey}, $pubkey, {'packet_length'=>2});
 
   # take the last 8 bytes of the fingerprint as the keyid:
-  my $keyid = substr(fingerprint($rsa, $key_timestamp), 20 - 8, 8);
+  my $keyid = substr($v4_fpr, 20 - 8, 8);
 
   # the v4 signature trailer is:
 
