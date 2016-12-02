@@ -81,6 +81,8 @@ Key-Usage: sign
 Name-Real: testtest
 Expire-Date: 0
 
+%no-ask-passphrase
+%no-protection
 %commit
 %echo done
 EOF
