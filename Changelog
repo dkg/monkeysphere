@@ -1,3 +1,18 @@
+monkeysphere (0.41) unstable; urgency=medium
+
+  * pem2openpgp now includes issuer fingerprint subpacket
+    in hashed self-sig, more compatible with GnuPG 2.1.16
+    (Closes: #846554)
+  * avoid blocking for entropy during test suite
+    (Closes: #841208)
+  * augment test suite for id certifier with a subkey, for better realism
+  * ensure that attempts to fetch primary key fingerprint only fetch
+    primary key fingerprint even if subkey fprs are emitted
+    (Closes: #846554)
+  * include $CPPFLAGS in agent-transfer build
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 12 Oct 2016 01:12:27 -0400
+
 monkeysphere (0.40) unstable; urgency=medium
 
   * bugfix release:
