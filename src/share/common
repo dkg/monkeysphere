@@ -243,10 +243,15 @@ advance_date() {
 print_date_from_seconds_since_the_epoch() {
     local seconds="$1"
     local gnutry
-    
-    if ! date '+%F %T' -d @"${seconds}" 2>/dev/null ; then
-        # try it the BSD date way:
-        date -r "${seconds}" '+%F %T'
+
+    if [ -z "$seconds" ] || [[ "$seconds" =~ [^0-9] ]]; then
+        # not a decimal number, don't bother trying to pass it to date
+        printf "<unknown>\n"
+    else
+        if ! date '+%F %T' -d @"${seconds}" 2>/dev/null ; then
+            # try it the BSD date way:
+            date -r "${seconds}" '+%F %T'
+        fi
     fi
 }
 
