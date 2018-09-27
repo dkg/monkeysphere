@@ -178,7 +178,7 @@ diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons | grep -vE '^(tr
 echo "##################################################"
 echo "### test working with two primary keys ... "
 
-ssh-keygen -t rsa -b 1024 -N '' -f "$TEMPDIR"/newkey
+ssh-keygen -m PEM -t rsa -b 1024 -N '' -f "$TEMPDIR"/newkey
 
 PEM2OPENPGP_USAGE_FLAGS=authenticate,certify \
 PEM2OPENPGP_TIMESTAMP="$(( $timestamp + 1 ))" pem2openpgp fubar \

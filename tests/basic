@@ -268,7 +268,7 @@ fi
 echo
 echo "##################################################"
 echo "### import host key..."
-ssh-keygen -b 1024 -t rsa -N '' -f "$TEMPDIR"/ssh_host_rsa_key
+ssh-keygen -m PEM -b 1024 -t rsa -N '' -f "$TEMPDIR"/ssh_host_rsa_key
 monkeysphere-host import-key "$TEMPDIR"/ssh_host_rsa_key ssh://testhost.example
 
 echo
