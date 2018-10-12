@@ -63,7 +63,7 @@ ssh_test() {
 
     # start the ssh daemon on the socket
     echo "##### starting ssh server..."
-    socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -D -e" "UNIX-LISTEN:${SOCKET}" 2> "$TEMPDIR"/sshd.log &
+    socat EXEC:"/usr/sbin/sshd -f ${SSHD_CONFIG} -i -D -e" "UNIX-LISTEN:${SOCKET},unlink-early" 2> "$TEMPDIR"/sshd.log &
     SSHD_PID="$!"
 
     # wait until the socket is created before continuing
