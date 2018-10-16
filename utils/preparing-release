@@ -23,6 +23,6 @@
 
    (cd .. && dupload monkeysphere_$version-1_*.changes)
 
- * git push monkeysphere.info --follow-tags master --follow-tags debian
+ * git push monkeysphere.info --follow-tags master debian/master
 
  * cd ../monkeysphere-docs, inspect, and then push out those changes.
