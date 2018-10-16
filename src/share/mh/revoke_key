@@ -96,7 +96,7 @@ y
 	    local newhome=$(msmktempdir)
 	    GNUPGHOME="$newhome" gpg --no-tty --quiet --import < "$HOST_KEY_FILE"
 	    GNUPGHOME="$newhome" gpg --no-tty --quiet --import <<< "$revcert"
-	    GNUPGHOME="$newhome" gpg --keyserver "$KEYSERVER" --send "0x${keyID}!"
+	    GNUPGHOME="$newhome" gpg --keyserver "$KEYSERVER" --send-keys "0x${keyID}!"
 	    rm -rf "$newhome"
 	fi
     fi
