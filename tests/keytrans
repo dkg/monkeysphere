@@ -40,14 +40,18 @@ On debian-derived systems, you can set this up with:
 mkdir -p "$TESTDIR"/tmp
 TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/ms.XXX")
 
-mkdir "$TEMPDIR"/bin
-ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/openpgp2ssh
-ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/pem2openpgp
-ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/keytrans
+if [ -z "$MONKEYSPHERE_TEST_USE_SYSTEM" ] ; then
+    mkdir "$TEMPDIR"/bin
+    ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/openpgp2ssh
+    ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/pem2openpgp
+    ln -s "$TESTDIR"/../src/share/keytrans "$TEMPDIR"/bin/keytrans
 
-# Use the local copy of executables first, instead of system ones.
-# This should help us test without installing.
-export PATH="$TEMPDIR"/bin:"$PATH"
+    # Use the local copy of executables first, instead of system ones.
+    # This should help us test without installing.
+    export PATH="$TEMPDIR"/bin:"$PATH"
+else
+    export PATH=/usr/share/monkeysphere:"$PATH"
+fi
 
 ## setup trap
 trap failed_cleanup EXIT

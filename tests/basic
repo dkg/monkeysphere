@@ -125,13 +125,19 @@ trap failed_cleanup EXIT
 mkdir -p "$TESTDIR"/tmp
 TEMPDIR=$(mktemp -d "${TMPDIR:-$TESTDIR/tmp}/ms.XXX")
 
-# Use the local copy of executables first, instead of system ones.
-# This should help us test without installing.
-export PATH="$TESTDIR/../src:$TESTDIR/../src/agent-transfer:$PATH"
+if [ -z "$MONKEYSPHERE_TEST_USE_SYSTEM" ] ; then
+    # Use the local copy of executables first, instead of system ones.
+    # This should help us test without installing.
+    export PATH="$TESTDIR/../src:$TESTDIR/../src/agent-transfer:$PATH"
 
-export MONKEYSPHERE_SYSDATADIR="$TEMPDIR"
+    export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src/share
+else
+    if ! which monkeysphere-host; then
+        PATH=/usr/sbin:"$PATH"
+    fi
+fi
 export MONKEYSPHERE_SYSCONFIGDIR="$TEMPDIR"
-export MONKEYSPHERE_SYSSHAREDIR="$TESTDIR"/../src/share
+export MONKEYSPHERE_SYSDATADIR="$TEMPDIR"
 export MONKEYSPHERE_MONKEYSPHERE_USER=$(whoami)
 
 HOST_KEY_FILE="$MONKEYSPHERE_SYSCONFIGDIR"/host_keys.pub.pgp
