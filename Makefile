@@ -38,10 +38,10 @@ debian-package:
 # don't explicitly depend on the tarball, since our tarball
 # (re)generation is not idempotent even when no source changes.
 freebsd-distinfo: 
-	./utils/build-freebsd-distinfo
+	./util/build-freebsd-distinfo
 
 macports-portfile:
-	./utils/build-macports-portfile
+	./util/build-macports-portfile
 
 clean:
 	rm -f src/agent-transfer/agent-transfer
