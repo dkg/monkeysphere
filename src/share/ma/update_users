@@ -78,8 +78,9 @@ for uname in $unames ; do
 	    log verbose "processing authorized_user_ids..."
 
 	    # process authorized_user_ids file, as monkeysphere user
-	    su_monkeysphere_user \
-		/usr/bin/env "STRICT_MODES=$STRICT_MODES" bash -c "$(printf ". %q && process_authorized_user_ids -" "${SYSSHAREDIR}/common")"\
+	    run_as_monkeysphere_user \
+		/usr/bin/env STRICT_MODES="$STRICT_MODES" \
+		bash -c "$(printf ". %q && process_authorized_user_ids -" "${SYSSHAREDIR}/common")"\
 		< "$authorizedUserIDs" \
 		> "$tmpAuthorizedKeys"
 

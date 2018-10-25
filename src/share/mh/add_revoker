@@ -51,7 +51,7 @@ if [ -f "$revokerKeyID" -o "$revokerKeyID" = '-' ] ; then
 
     # check the key is ok as monkeysphere user before loading
     log debug "checking keys in file..."
-    fingerprint=$(su_monkeysphere_user \
+    fingerprint=$(run_as_monkeysphere_user \
 	bash -c "$(printf ". %q && list_primary_fingerprints" "${SYSSHAREDIR}/common")" < "$revokerKeyID")
 
     if [ $(printf "%s" "$fingerprint" | egrep -c '^[A-F0-9]{40}$') -ne 1 ] ; then
@@ -71,12 +71,12 @@ else
 
     # download the key from the keyserver as the monkeysphere user
     log verbose "searching keyserver $KEYSERVER for revoker keyID $revokerKeyID..."
-    su_monkeysphere_user "GNUPGHOME=$tmpDir" gpg --quiet --keyserver "$KEYSERVER" --recv-key "0x${revokerKeyID}!" \
+    run_as_monkeysphere_user /usr/bin/env GNUPGHOME="$tmpDir" gpg --quiet --keyserver "$KEYSERVER" --recv-key "0x${revokerKeyID}!" \
 	|| failure "Could not receive a key with this ID from keyserver '$KEYSERVER'."
 
     # get the full fingerprint of new revoker key
     log debug "getting fingerprint of revoker key..."
-    fingerprint=$(su_monkeysphere_user "GNUPGHOME=$tmpDir" gpg --list-key --with-colons --with-fingerprint "${revokerKeyID}" \
+    fingerprint=$(run_as_monkeysphere_user /usr/bin/env GNUPGHOME="$tmpDir" gpg --list-key --with-colons --with-fingerprint "${revokerKeyID}" \
 	| awk -F: '/^fpr:/{ if (ok) { print $10 }; ok=0 } /^pub:/{ ok=1 }')
 
     # test that there is only a single fingerprint
@@ -90,7 +90,7 @@ EOF
     fi
 
     log info "revoker key found:"
-    su_monkeysphere_user "GNUPGHOME=$tmpDir" gpg --fingerprint "0x${fingerprint}!"
+    run_as_monkeysphere_user /usr/bin/env GNUPGHOME="$tmpDir" gpg --fingerprint "0x${fingerprint}!"
 
     if [ "$PROMPT" = "true" ] ; then
 	printf "Are you sure you want to add the above key as a revoker\nof the key '$keyID'? (Y/n) " >&2
@@ -104,7 +104,7 @@ EOF
 
     # export the new key to the host keyring
     log debug "loading revoker key into host keyring..."
-    su_monkeysphere_user "GNUPGHOME=$tmpDir" gpg --quiet --export "0x${fingerprint}!" \
+    run_as_monkeysphere_user /usr/bin/env GNUPGHOME="$tmpDir" gpg --quiet --export "0x${fingerprint}!" \
 	| gpg_host --import
 fi
 
