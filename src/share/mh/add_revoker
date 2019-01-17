@@ -32,8 +32,14 @@ keyID=$(check_key_input "$@")
 
 # make a temporary directory for storing keys during import, and set
 # the trap to delete it on exit
+TMPDIR=$MHTMPDIR
 tmpDir=$(msmktempdir)
 trap "rm -rf $tmpDir" EXIT
+
+# fix permissions and ownership on temporary directory which will
+# be used by monkeysphere user
+chmod 0700 "$tmpDir"
+chown "$MONKEYSPHERE_USER":"$MONKEYSPHERE_GROUP" "$tmpDir"
 
 # if file is specified
 if [ -f "$revokerKeyID" -o "$revokerKeyID" = '-' ] ; then
@@ -51,7 +57,7 @@ if [ -f "$revokerKeyID" -o "$revokerKeyID" = '-' ] ; then
 
     # check the key is ok as monkeysphere user before loading
     log debug "checking keys in file..."
-    fingerprint=$(run_as_monkeysphere_user \
+    fingerprint=$(run_as_monkeysphere_user env TMPDIR=$tmpDir \
 	bash -c "$(printf ". %q && list_primary_fingerprints" "${SYSSHAREDIR}/common")" < "$revokerKeyID")
 
     if [ $(printf "%s" "$fingerprint" | egrep -c '^[A-F0-9]{40}$') -ne 1 ] ; then
@@ -64,11 +70,6 @@ if [ -f "$revokerKeyID" -o "$revokerKeyID" = '-' ] ; then
 
 # else, get the revoker key from the keyserver
 else
-    # fix permissions and ownership on temporary directory which will
-    # be used by monkeysphere user for storing the downloaded key
-    chmod 0700 "$tmpDir"
-    chown "$MONKEYSPHERE_USER":"$MONKEYSPHERE_GROUP" "$tmpDir"
-
     # download the key from the keyserver as the monkeysphere user
     log verbose "searching keyserver $KEYSERVER for revoker keyID $revokerKeyID..."
     run_as_monkeysphere_user env GNUPGHOME="$tmpDir" gpg --quiet --keyserver "$KEYSERVER" --recv-key "0x${revokerKeyID}!" \

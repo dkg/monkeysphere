@@ -30,6 +30,15 @@ MHSHAREDIR="${SYSSHAREDIR}/mh"
 # datadir for host functions
 MHDATADIR="${SYSDATADIR}/host"
 
+# temp directory to enable sharing a temporary directory between root and
+# monkeysphere users. This is needed so that on secure environments with
+# libpam-tmpdir, simply changing ownership/permissions on a directory is not
+# enough to share the directory. Parent directories such as /tmp/user/0 will be
+# inaccessible to monkeysphere user.
+#
+# XXX: Reusing monkeysphere-authentication's tmp directory.
+MHTMPDIR="${SYSDATADIR}/authentication/tmp"
+
 # host pub key files
 HOST_KEY_FILE="${SYSDATADIR}/host_keys.pub.pgp"
 

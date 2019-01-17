@@ -31,6 +31,7 @@ else
 fi
 
 # create a temporary gnupg directory from which to publish the key
+export TMPDIR=$MHTMPDIR
 export GNUPGHOME=$(msmktempdir)
 chmod 0700 "$GNUPGHOME"
 chown "$MONKEYSPHERE_USER":"$MONKEYSPHERE_GROUP" "$GNUPGHOME"
