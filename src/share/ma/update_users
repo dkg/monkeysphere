@@ -53,20 +53,20 @@ for uname in $unames ; do
     log verbose "----- user: $uname -----"
 
     # make temporary directory
-    TMPLOC=$(mktemp -d ${MATMPDIR}/tmp.XXXXXXXXXX) || failure "Could not create temporary directory!"
+    TMPLOC=$(mktemp -d -- "${MATMPDIR}/tmp.XXXXXXXXXX") || failure "Could not create temporary directory!"
 
     # trap to delete temporary directory on exit
-    trap "rm -rf $TMPLOC" EXIT
+    trap "$(printf 'rm -rf -- %q' "$TMPLOC")" EXIT
 
      # create temporary authorized_keys file
     tmpAuthorizedKeys="${TMPLOC}/authorized_keys"
-    touch "$tmpAuthorizedKeys"
+    touch -- "$tmpAuthorizedKeys"
 
     # set restrictive permissions on the temporary files
     # FIXME: is there a better way to do this?
-    chmod 0700 "$TMPLOC"
-    chmod 0600 "$tmpAuthorizedKeys"
-    chown -R "$MONKEYSPHERE_USER" "$TMPLOC"
+    chmod 0700 -- "$TMPLOC"
+    chmod 0600 -- "$tmpAuthorizedKeys"
+    chown -R "$MONKEYSPHERE_USER" -- "$TMPLOC"
 
     # process authorized_user_ids file
     log debug "checking for authorized_user_ids..."
@@ -125,30 +125,30 @@ for uname in $unames ; do
 
 	if [ "$OUTPUT_STDOUT" ] ; then
 	    log debug "outputting keys to stdout..."
-	    cat "$tmpAuthorizedKeys"
+	    cat -- "$tmpAuthorizedKeys"
 	else
 	    log debug "moving new file to ${authorizedKeysDir}/${uname}..."
 	    # FIXME: is there a better way to do this?
-	    chown $(whoami) "$tmpAuthorizedKeys" && \
-		chgrp $(id -g "$uname") "$tmpAuthorizedKeys" && \
-		chmod g+r "$tmpAuthorizedKeys" && \
-		mv -f "$tmpAuthorizedKeys" "${authorizedKeysDir}/${uname}" || \
+	    chown "$(whoami)" -- "$tmpAuthorizedKeys" && \
+		chgrp "$(id -g "$uname")" -- "$tmpAuthorizedKeys" && \
+		chmod g+r -- "$tmpAuthorizedKeys" && \
+		mv -f -- "$tmpAuthorizedKeys" "${authorizedKeysDir}/${uname}" || \
 		{
 		log error "Failed to install authorized_keys for '$uname'!"
-		rm -f "${authorizedKeysDir}/${uname}"
+		rm -f -- "${authorizedKeysDir}/${uname}"
 		# indicate that there has been a failure:
 		returnCode=1
 	    }
 	fi
     else
-	rm -f "${authorizedKeysDir}/${uname}"
+	rm -f -- "${authorizedKeysDir}/${uname}"
     fi
 
     # unset the trap
     trap - EXIT
 
     # destroy temporary directory
-    rm -rf "$TMPLOC"
+    rm -rf -- "$TMPLOC"
 done
 
 return $returnCode

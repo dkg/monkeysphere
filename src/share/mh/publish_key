@@ -34,7 +34,7 @@ fi
 export TMPDIR=$MHTMPDIR
 export GNUPGHOME=$(msmktempdir)
 chmod 0700 "$GNUPGHOME"
-chown "$MONKEYSPHERE_USER":"$MONKEYSPHERE_GROUP" "$GNUPGHOME"
+chown "$MONKEYSPHERE_USER":"$MONKEYSPHERE_GROUP" -- "$GNUPGHOME"
 
 cleanup() {
     if type gpgconf &>/dev/null; then
