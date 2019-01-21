@@ -52,9 +52,7 @@ fi
 # --export won't contain the secret key.  "keytrans revokeuserid"
 # needs access to both pieces, so we feed it both of them.
 
-if ( if is_gpg_version_greater_equal 2.1.0; \
-     then gpg_host --export-secret-keys "$keyID"; \
-     else cat "$GNUPGHOME_HOST/secring.gpg" && gpg_host --export "$keyID"; fi ) \
+if gpg_host --export-secret-keys "$keyID" \
     | "$SYSSHAREDIR/keytrans" revokeuserid "$keyID" "$serviceName" \
     | gpg_host --import ; then
 

@@ -211,6 +211,10 @@ if [ "$#" -eq 0 ] ; then
     failure "Please supply a subcommand."
 fi
 
+if ! is_gpg_version_greater_equal 2.1.11 ; then
+    failure "Monkeysphere needs GnuPG >= 2.1.11"
+fi
+
 # get subcommand
 COMMAND="$1"
 shift

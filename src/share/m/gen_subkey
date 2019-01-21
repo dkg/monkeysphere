@@ -44,23 +44,8 @@ Type '$PGRM help' for usage."
     # check that an authentication subkey does not already exist
     check_gpg_authentication_subkey "$keyID"
 
-    # determine which keyType to use from gpg version
-    keyType=7
-    case $(gpg --version | head -1 | awk '{ print $3 }' | cut -d. -f1) in
-	1)
-	    if is_gpg_version_greater_equal 1.4.10 ; then
-		keyType=8
-	    fi
-	    ;;
-	2)
-	    if is_gpg_version_greater_equal 2.0.13 ; then
-		keyType=8
-	    fi
-	    ;;
-	*)
-	    keyType=8
-	    ;;
-    esac
+    # since GnuPG 2.0.13, we use keyType = 8.
+    keyType=8
 
     # generate the list of commands that will be passed to edit-key
     editCommands="addkey

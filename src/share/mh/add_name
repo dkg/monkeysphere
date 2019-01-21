@@ -50,9 +50,7 @@ else
 fi
 
 # execute edit-key script
-if ( if is_gpg_version_greater_equal 2.1.0; \
-     then gpg_host --export-secret-keys "$keyID"; \
-     else cat "$GNUPGHOME_HOST/secring.gpg" ; fi ) | \
+if gpg_host --export-secret-keys "$keyID" | \
     PEM2OPENPGP_USAGE_FLAGS=authenticate \
     "$SYSSHAREDIR/keytrans" adduserid "$keyID" "$serviceName" \
     | gpg_host --import ; then
