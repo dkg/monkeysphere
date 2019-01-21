@@ -340,7 +340,7 @@ show_key() {
 
     # list the ssh fingerprint
     printf "ssh fingerprint: %s\n" \
-    "$(gpg --export --no-armor "$fingerprint" 2>/dev/null | "$SYSSHAREDIR/keytrans" openpgp2sshfpr "$fingerprint")"
+    "$(gpg --export-ssh-key "0x${fingerprint}!" 2>/dev/null | cut -f1,2 -d' ' | sed 's/$/ ./' | ssh-keygen -l -f -)"
 
     # remove the tmp file
     trap - EXIT

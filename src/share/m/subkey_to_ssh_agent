@@ -110,7 +110,7 @@ You might want to run 'monkeysphere gen-subkey'."
 
 	if [ "$1" = '-d' ]; then
 	    # we're removing the subkey:
-	    gpg_user --export --no-armor "0x${subkey}!" | openpgp2ssh "$subkey" > "$workingdir/$kname"
+	    gpg_user --export-ssh-key "0x${subkey}!" | cut -f1,2 -d' ' > "$workingdir/$kname"
 	    (cd "$workingdir" && ssh-add -d "$kname") || keysuccess="$?"
 	else
             if is_gpg_version_greater_equal 2.1.0; then

@@ -68,7 +68,7 @@ gpg_user() {
 # output the ssh fingerprint of a gpg key
 gpg_ssh_fingerprint() {
     keyid="$1"
-    gpg_user --export "$keyid" --no-armor | "$SYSSHAREDIR/keytrans" openpgp2sshfpr "$keyid"
+    gpg_user --export-ssh-key "0x${keyid}!" | cut -f1,2 -d' ' | sed 's/$/ ./' | ssh-keygen -l -f -
 }
 
 # take a secret key ID and check that only zero or one ID is provided,

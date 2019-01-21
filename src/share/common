@@ -489,7 +489,7 @@ gpg2ssh() {
     
     keyID="$1"
 
-    gpg --export --no-armor "$keyID" | openpgp2ssh "$keyID" 2>/dev/null
+    gpg --export-ssh-key "0x${keyID}!" 2>/dev/null | cut -f1,2 -d' '
 }
 
 # output known_hosts line from ssh key
