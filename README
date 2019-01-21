@@ -13,3 +13,14 @@ but to identify yourself and the servers you administer or connect to
 with your OpenPGP keys. OpenPGP keys are tracked via GnuPG, and
 monkeysphere manages the known_hosts and authorized_keys files used by
 OpenSSH for authentication, checking them for cryptographic validity.
+
+Dependencies
+------------
+
+Monkeysphere depends on:
+
+ * GnuPG
+ * Perl
+ * Perl's Crypt::OpenSSL::RSA module
+ * lockfile-progs or procmail's lockfile
+ * Bash
