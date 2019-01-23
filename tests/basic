@@ -339,8 +339,15 @@ monkeysphere-authentication list-certifiers
 # generate an auth subkey for the test user that expires in 2 days
 echo
 echo "##################################################"
-echo "### generating key for testuser..."
-monkeysphere gen-subkey
+if [ "$MONKEYSPHERE_TEST_USE_ED25519" = true ]; then
+    echo "### generating ed25519 key for testuser..."
+    # from the imported secret key
+    USER_FPR=8A4B353B4CBA6F30625498BAE00B5EEEBA79B482
+    gpg --quick-add-key "$USER_FPR" ed25519 auth 2d
+else
+    echo "### generating standard monkeysphere key for testuser..."
+    monkeysphere gen-subkey
+fi
 
 # add server key to testuser keychain
 echo

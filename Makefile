@@ -105,12 +105,15 @@ installman: $(REPLACED_COMPRESSED_MANPAGES)
 releasenote:
 	../monkeysphere-docs/utils/build-releasenote
 
-test: test-keytrans test-basic
+test: test-keytrans test-basic test-ed25519
 
 check: test
 
 test-basic: src/agent-transfer/agent-transfer
 	MONKEYSPHERE_TEST_NO_EXAMINE=true ./tests/basic
+
+test-ed25519: src/agent-transfer/agent-transfer
+	MONKEYSPHERE_TEST_NO_EXAMINE=true MONKEYSPHERE_TEST_USE_ED25519=true ./tests/basic
 
 test-keytrans: src/agent-transfer/agent-transfer
 	MONKEYSPHERE_TEST_NO_EXAMINE=true ./tests/keytrans
