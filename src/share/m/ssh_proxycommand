@@ -190,7 +190,7 @@ EOF
 
 }
 
-# "marginal case" ouput in the case that there is not a full
+# "marginal case" output in the case that there is not a full
 # validation path to the host
 output_no_valid_key() {
     local userID

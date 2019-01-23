@@ -23,7 +23,7 @@ infrastructure:
   - set up test user
   - test an ssh connection between test user and test server
   - modify server/user setup and rerun ssh_test to make sure it
-    suceeds/fails as expected
+    succeeds/fails as expected
 
 - there are various FIXMEs in the script that outline some of the
   further testing that should be undertaken.

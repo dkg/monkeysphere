@@ -57,11 +57,11 @@ monkeysphere (0.38) unstable; urgency=medium
 
 monkeysphere (0.37) unstable; urgency=medium
 
-  * Bugfix release with minor improvements and dependency accomodations.
+  * Bugfix release with minor improvements and dependency accommodations.
   * Test openpgp2ssh functionality (closes MS #6524)
   * use new GnuPG with-colons output
-  * accomodate changed behavior of ssh-keygen -F
-  * accomodate multiple AuthorizedKeysFile directives
+  * accommodate changed behavior of ssh-keygen -F
+  * accommodate multiple AuthorizedKeysFile directives
   * deal sanely with empty lines in authorized_user_ids (closes MS #6344)
   * treat non-standard ports properly (closes MS #3402)
 

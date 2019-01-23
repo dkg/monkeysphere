@@ -145,13 +145,13 @@ struct exporter {
 
 /* percent_plus_escape is copyright Free Software Foundation */
 /* taken from common/percent.c in gnupg */
-/* Create a newly alloced string from STRING with all spaces and
+/* Create a newly allocated string from STRING with all spaces and
    control characters converted to plus signs or %xx sequences.  The
    function returns the new string or NULL in case of a malloc
    failure.
 
    Note that we also escape the quote character to work around a bug
-   in the mingw32 runtime which does not correcty handle command line
+   in the mingw32 runtime which does not correctly handle command line
    quoting.  We correctly double the quote mark when calling a program
    (i.e. gpg-protect-tool), but the pre-main code does not notice the
    double quote as an escaped quote.  We do this also on POSIX systems

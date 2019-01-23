@@ -232,7 +232,7 @@ check_key_userid() {
     # match to only "unknown" user IDs (host has no need for ultimate trust)
     tmpuidMatch="uid:-:$(echo $userID | gpg_escape)"
 
-    # See whether the requsted user ID is present
+    # See whether the requested user ID is present
     gpg_host_list_keys "$keyID" | cut -f1,2,10 -d: | \
 	grep -q -x -F "$tmpuidMatch" 2>/dev/null
 }
