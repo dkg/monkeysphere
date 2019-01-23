@@ -24,4 +24,4 @@ Monkeysphere depends on:
  * Perl's Crypt::OpenSSL::RSA module
  * lockfile-progs or procmail's lockfile
  * Bash
- * OpenSSH's ssh-keygen utility
+ * OpenSSH's ssh-keygen utility (ideally >= 6.0)
