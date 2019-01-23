@@ -149,7 +149,7 @@ export MONKEYSPHERE_CHECK_KEYSERVER=false
 export MONKEYSPHERE_KEYSERVER=example.org
 
 export MONKEYSPHERE_LOG_LEVEL=DEBUG
-export MONKEYSPHERE_CORE_KEYLENGTH=1024
+export MONKEYSPHERE_CORE_KEYLENGTH=3072
 export MONKEYSPHERE_PROMPT=false
 
 # unset SUBKEYS_FOR_AGENT variable which, if set, would confuse the
@@ -274,7 +274,7 @@ fi
 echo
 echo "##################################################"
 echo "### import host key..."
-ssh-keygen -m PEM -b 1024 -t rsa -N '' -f "$TEMPDIR"/ssh_host_rsa_key
+ssh-keygen -m PEM -b 3072 -t rsa -N '' -f "$TEMPDIR"/ssh_host_rsa_key
 monkeysphere-host import-key "$TEMPDIR"/ssh_host_rsa_key ssh://testhost.example
 
 echo
@@ -615,7 +615,7 @@ echo
 echo "##################################################"
 echo "### Testing TLS setup..."
 
-openssl req -config "$TESTDIR"/openssl.cnf -x509 -newkey rsa:1024 -subj '/DC=example/DC=testhost/CN=testhost.example/' -days 3 -keyout "$TEMPDIR"/tls_key.pem -nodes >"$TEMPDIR"/tls_cert.pem
+openssl req -config "$TESTDIR"/openssl.cnf -x509 -newkey rsa:3072 -subj '/DC=example/DC=testhost/CN=testhost.example/' -days 3 -keyout "$TEMPDIR"/tls_key.pem -nodes >"$TEMPDIR"/tls_cert.pem
 monkeysphere-host import-key "$TEMPDIR"/tls_key.pem https://testhost.example
 
 # FIXME: how can we test this via an https client?  
