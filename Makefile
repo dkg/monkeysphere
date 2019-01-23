@@ -57,7 +57,7 @@ replaced/%: %
 	-e 's:__SYSDATADIR_PREFIX__:$(LOCALSTATEDIR):'
 
 replaced/%.gz: replaced/%
-	gzip -n $<
+	gzip -f -n $<
 
 # this target is to be called from the tarball, not from the git
 # working dir!
