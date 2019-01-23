@@ -119,7 +119,7 @@ for uname in $unames ; do
 
 	# but in general, we don't want the user tampering with this
 	# file directly, so we'll adopt this approach: Own the file by
-	# the monkeysphere-server invoker (usually root, but should be
+	# the monkeysphere-authentication invoker (usually root, but should be
 	# the same uid that sshd is launched as); change the group of
 	# the file so that members of the user's group can read it.
 
