@@ -59,9 +59,9 @@ You might want to run 'gpg --gen-key'."
 
         # $2 regex means "is some kind of valid, or at least not invalid"
         # $12 ~ /a/ means "authentication-capable"
-        # $4 == 1 means "RSA"
+        # $4 == 1 means "RSA", $4 == 22 means "EdDSA"
         awk_pgrm='
-/^sub:/{ if (($2 ~ /^[somfuq-]$/) && ($12 ~ /a/) && ($4 == 1)) { ok = 1 }; };
+/^sub:/{ if (($2 ~ /^[somfuq-]$/) && ($12 ~ /a/) && (($4 == 1) || ($4 == 22))) { ok = 1 }; };
 /^fpr:/{ if (ok) { print $10 ; ok = 0; }; };'
 	authsubkeys=$(gpg_user --list-keys --with-colons \
 	                       --fingerprint --fingerprint $secretkeys | \
