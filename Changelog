@@ -1,3 +1,20 @@
+monkeysphere (0.43) unstable; urgency=medium
+
+  * Depend on a modern version of GnuPG (>= 2.1.11) for --export-ssh-key
+  * Depend on OpenSSH's ssh-keygen directly for most SSH fingerprints
+  * Depend on OpenSSH >= 6.0 for ed25519 and "sshd -T"
+  * Use runuser instead of su
+  * Support Ed25519 authentication-capable subkeys for users
+  * Use https for all outbound links
+  * Clean up spelling
+  * Use 3072 bits for RSA keys everywhere by default
+  * Provide clearer error message for PEM2OPENPGP_NEWKEY
+    (Closes: #906755)
+  * Avoid locking out users unnecessarily
+    (Closes: #897366)
+
+  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 23 Jan 2019 17:42:19 -0500
+
 monkeysphere (0.42) unstable; urgency=medium
 
   * bugfix release:
