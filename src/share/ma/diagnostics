@@ -122,32 +122,25 @@ echo "Checking for Monkeysphere-enabled public-key authentication for users ..."
 # Ensure that User ID authentication is enabled:
 if echo "AuthorizedKeysFile foo bar" | /usr/sbin/sshd -t -f /dev/stdin; then
     # OpenSSH >= 6.0, multiple authorized_keys file supported
-    if ! grep -q "^AuthorizedKeysFile[[:space:]]\+.*[[:space:]]*${SYSDATADIR}/authorized_keys/%u$" "$sshd_config"; then
+    if ! /usr/sbin/sshd -T | grep "^authorizedkeysfile " | tr ' ' '\n' | tail +2 | grep -q --fixed-strings --line-regexp "${SYSDATADIR}/authorized_keys/%u" ; then
         echo "! $sshd_config does not point to monkeysphere authorized keys."
-        echo " - Recommendation: add a line to $sshd_config: 'AuthorizedKeysFile %h/.ssh/authorized_keys %h/.ssh/authorized_keys2 ${SYSDATADIR}/authorized_keys/%u'"
+        echo " - Recommendation: add a line to $sshd_config:"
+        echo "   'AuthorizedKeysFile %h/.ssh/authorized_keys %h/.ssh/authorized_keys2 ${SYSDATADIR}/authorized_keys/%u'"
         problemsfound=$(($problemsfound+1))
     fi
     if [ "$RAW_AUTHORIZED_KEYS" != none ]; then
-        if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' "$sshd_config" | grep -v "^AuthorizedKeysFile[[:space:]]\+${SYSDATADIR}/authorized_keys/%u$") ; then
+        if badauthorizedkeys=$(/usr/sbin/sshd -T | grep "^authorizedkeysfile " | tr ' ' '\n' | tail +2 | grep -v --fixed-strings --line-regexp "${SYSDATADIR}/authorized_keys/%u") ; then
             echo "! $sshd_config refers to non-monkeysphere authorized_keys files:"
             echo "$badauthorizedkeys"
-            echo " - Recommendation: disable authorized_keys import: 'echo RAW_AUTHORIZED_KEYS=none >> ${SYSCONFIGDIR}/monkeysphere-authentication.conf'"
+            echo " - Recommendation: disable raw authorized_keys import:"
+            echo "   'echo RAW_AUTHORIZED_KEYS=none >> ${SYSCONFIGDIR}/monkeysphere-authentication.conf'"
             problemsfound=$(($problemsfound+1))
         fi
     fi
 else
-    # OpenSSH < 6.0, single authorized_keys file
-    if ! grep -q "^AuthorizedKeysFile[[:space:]]\+${SYSDATADIR}/authorized_keys/%u$" "$sshd_config"; then
-        echo "! $sshd_config does not point to monkeysphere authorized keys."
-        echo " - Recommendation: add a line to $sshd_config: 'AuthorizedKeysFile ${SYSDATADIR}/authorized_keys/%u'"
-        problemsfound=$(($problemsfound+1))
-    fi
-    if badauthorizedkeys=$(grep -i '^AuthorizedKeysFile' "$sshd_config" | grep -v "^AuthorizedKeysFile[[:space:]]\+${SYSDATADIR}/authorized_keys/%u$") ; then
-        echo "! $sshd_config refers to non-monkeysphere authorized_keys files:"
-        echo "$badauthorizedkeys"
-        echo " - Recommendation: remove the above AuthorizedKeysFile lines from $sshd_config"
-        problemsfound=$(($problemsfound+1))
-    fi
+    echo "! /usr/bin/sshd does not appear to support multiple entries in AuthorizedKeysFile."
+    echo " - Recommendation: upgrade to OpenSSH 6.0 or later."
+    problemsfound=$(($problemsfound+1))
 fi
 
 if [ "$problemsfound" -gt 0 ]; then
