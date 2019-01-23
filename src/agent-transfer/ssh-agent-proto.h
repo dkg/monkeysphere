@@ -1,4 +1,4 @@
-/* see PROTOCOL.agent in openssh repo */
+/* see https://tools.ietf.org/html/draft-miller-ssh-agent */
 
 /* 3.2 Requests from client to agent for protocol 2 key operations */
 
@@ -54,6 +54,21 @@ RSA keys may be added with this request:
 	string			key_comment
 	constraint[]		key_constraints
 
+
+Ed25519 keys may be added with this request:
+
+       byte                    SSH_AGENTC_ADD_IDENTITY or
+                               SSH_AGENTC_ADD_ID_CONSTRAINED
+       string                  "ssh-ed25519"
+       string                  ENC(A)
+       string                  k || ENC(A)
+       string                  comment
+       constraint[]            constraints
+
+   The first value is the 32 byte Ed25519 public key "ENC(A)".  The
+   second value is a concatenation of the 32 byte private key "k" and 32
+   byte public "ENC(A)" key.  The contents and interpretation of the
+   "ENC(A)" and "k" values are defined by [I-D.irtf-cfrg-eddsa].
 
         */
 

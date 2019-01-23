@@ -119,6 +119,11 @@ char* gpg_agent_sockname () {
 }
 
 
+typedef enum { kt_unknown = 0,
+               kt_rsa,
+               kt_ed25519
+} key_type;
+
 struct exporter {
   assuan_context_t ctx;
   gcry_cipher_hd_t wrap_cipher;
@@ -126,6 +131,7 @@ struct exporter {
   size_t wrapped_len;
   unsigned char *unwrapped_key;
   size_t unwrapped_len;
+  key_type ktype;
   gcry_sexp_t sexp;
   gcry_mpi_t n;
   gcry_mpi_t e;
@@ -133,6 +139,8 @@ struct exporter {
   gcry_mpi_t p;
   gcry_mpi_t q;
   gcry_mpi_t iqmp;
+  gcry_mpi_t curve;
+  gcry_mpi_t flags;
 };
 
 /* percent_plus_escape is copyright Free Software Foundation */
@@ -200,6 +208,57 @@ gpg_error_t extend_wrapped_key (struct exporter *e, const void *data, size_t dat
   return GPG_ERR_NO_ERROR;
 }
 
+
+gpg_error_t unwrap_rsa_key (struct exporter *e) {
+  gpg_error_t ret;
+  e->iqmp = gcry_mpi_new(0);
+  ret = gcry_mpi_invm (e->iqmp, e->q, e->p);
+
+  if (!ret) {
+    fprintf (stderr, "Could not calculate the (inverse of q) mod p\n");
+    return GPG_ERR_GENERAL;
+  } else {
+    e->ktype = kt_rsa;
+    return GPG_ERR_NO_ERROR;
+  }
+}
+
+
+gpg_error_t unwrap_ed25519_key (struct exporter *e) {
+  unsigned int sz;
+  const char * data;
+
+#define opaque_compare(val, str, err)  {   \
+    data = gcry_mpi_get_opaque (val, &sz); \
+    if ((sz != strlen (str)*8) || !data || \
+        memcmp (data, str, strlen(str)))   \
+      return gpg_error (err); }
+  
+  /* verify that curve matches "Ed25519" */
+  opaque_compare (e->curve, "Ed25519", GPG_ERR_UNKNOWN_CURVE);
+
+  /* verify that flags contains "eddsa" */
+  /* FIXME: what if there are other flags besides eddsa? */
+  opaque_compare (e->flags, "eddsa", GPG_ERR_UNKNOWN_FLAG);
+  
+  /* verify that q starts with 0x40 and is 33 octets long */
+  data = gcry_mpi_get_opaque (e->q, &sz);
+  if (sz != 33*8 || !data || data[0] != 0x40)
+    return gpg_error (GPG_ERR_INV_CURVE);
+    /* verify that d is 32 octets long */
+  data = gcry_mpi_get_opaque (e->d, &sz);
+  if (sz < 32*8)
+    return gpg_error (GPG_ERR_TOO_SHORT);
+  if (sz > 32*8)
+    return gpg_error (GPG_ERR_TOO_LARGE);
+  if (!data)
+    return gpg_error (GPG_ERR_NO_OBJ);
+  
+  e->ktype = kt_ed25519;
+  return GPG_ERR_NO_ERROR;
+}
+
+
 gpg_error_t unwrap_key (struct exporter *e) {
   unsigned char *out = NULL;
   gpg_error_t ret;
@@ -241,22 +300,22 @@ gpg_error_t unwrap_key (struct exporter *e) {
   ret = gcry_sexp_new(&e->sexp, e->unwrapped_key, e->unwrapped_len, 0);
   if (ret)
     return ret;
-  
+
   /* RSA has: n, e, d, p, q */
   ret = gcry_sexp_extract_param (e->sexp, "private-key!rsa", "nedpq",
                                  &e->n, &e->e, &e->d, &e->p, &e->q, NULL);
-  if (ret)
-    return ret;
-
-  e->iqmp = gcry_mpi_new(0);
-  ret = gcry_mpi_invm (e->iqmp, e->q, e->p);
-
-  if (!ret) {
-    fprintf (stderr, "Could not calculate the (inverse of q) mod p\n");
-    return GPG_ERR_GENERAL;
-  } else {
-    return GPG_ERR_NO_ERROR;
+  if (!ret)
+    return unwrap_rsa_key (e);
+  
+  if (gpg_err_code (ret) == GPG_ERR_NOT_FOUND) {
+    /* check whether it's ed25519 */
+    /* EdDSA has: curve, flags, q, d */
+    ret = gcry_sexp_extract_param (e->sexp, "private-key!ecc", "/'curve''flags'qd",
+                                   &e->curve, &e->flags, &e->q, &e->d, NULL);
+    if (!ret)
+      return unwrap_ed25519_key (e);
   }
+  return ret;
 }
 
 gpg_error_t data_cb (void *arg, const void *data, size_t data_sz) {
@@ -324,24 +383,38 @@ size_t get_ssh_sz (gcry_mpi_t mpi) {
 }
 
 int send_to_ssh_agent(struct exporter *e, int fd, unsigned int seconds, int confirm, const char *comment) {
-  const char *key_type = "ssh-rsa";
+  const char *key_type;
   int ret;
-  size_t len;
+  size_t len, mpilen;
   off_t offset;
   unsigned char *msgbuf = NULL;
   uint32_t tmp;
   size_t slen;
   ssize_t written, bytesread;
   unsigned char resp;
-  
+
+  if (e->ktype != kt_rsa && e->ktype != kt_ed25519) {
+    fprintf (stderr, "key is neither RSA nor Ed25519, cannot handle it.\n");
+    return -1;
+  }
+
+  if (e->ktype == kt_rsa) {
+    key_type = "ssh-rsa";
+    mpilen = get_ssh_sz (e->n) +
+      get_ssh_sz (e->e) +
+      get_ssh_sz (e->d) +
+      get_ssh_sz (e->iqmp) +
+      get_ssh_sz (e->p) +
+      get_ssh_sz (e->q);
+  } else if (e->ktype == kt_ed25519) {
+    key_type = "ssh-ed25519";
+    mpilen = 4 + 32 + /* ENC(A) */
+      4 + 64; /* k || ENC(A) */
+  }
+
   len = 1 + /* request byte */
     4 + strlen(key_type) + /* type of key */
-    get_ssh_sz (e->n) +
-    get_ssh_sz (e->e) +
-    get_ssh_sz (e->d) +
-    get_ssh_sz (e->iqmp) +
-    get_ssh_sz (e->p) +
-    get_ssh_sz (e->q) +
+    mpilen +
     4 + (comment ? strlen (comment) : 0) +
     (confirm ? 1 : 0) +
     (seconds ? 5 : 0);
@@ -363,12 +436,33 @@ int send_to_ssh_agent(struct exporter *e, int fd, unsigned int seconds, int conf
   w32 (len);
   wbyte (seconds || confirm ? SSH2_AGENTC_ADD_ID_CONSTRAINED : SSH2_AGENTC_ADD_IDENTITY);
   wstr (key_type);
-  wmpi (e->n);
-  wmpi (e->e);
-  wmpi (e->d);
-  wmpi (e->iqmp);
-  wmpi (e->p);
-  wmpi (e->q);
+
+  if (e->ktype == kt_rsa) {
+    wmpi (e->n);
+    wmpi (e->e);
+    wmpi (e->d);
+    wmpi (e->iqmp);
+    wmpi (e->p);
+    wmpi (e->q);
+  } else if (e->ktype == kt_ed25519) {
+    unsigned int dsz, qsz;
+    const char *ddata, *qdata;
+    qdata = gcry_mpi_get_opaque (e->q, &qsz);
+    ddata = gcry_mpi_get_opaque (e->d, &dsz);
+    if (qsz != 33*8 || dsz != 32*8 || !qdata || !ddata) {
+      fprintf (stderr, "Ed25519 key did not have the expected components (q: %d %p, d: %d %p)\n",
+               qsz, qdata, dsz, ddata);
+      return -1;
+    }
+
+    /* ENC(A) (aka q)*/
+    w32 (32);
+    memcpy (msgbuf + offset, qdata+1, 32); offset += 32;
+    /* k || ENC(A) (aka d || q) */
+    w32 (64);
+    memcpy (msgbuf + offset, ddata, 32); offset += 32;
+    memcpy (msgbuf + offset, qdata+1, 32); offset += 32;
+  }
   wstr (comment);
   if (confirm)
     wbyte (SSH_AGENT_CONSTRAIN_CONFIRM);
@@ -422,6 +516,8 @@ void free_exporter (struct exporter *e) {
   gcry_mpi_release(e->p);
   gcry_mpi_release(e->q);
   gcry_mpi_release(e->iqmp);
+  gcry_mpi_release(e->curve);
+  gcry_mpi_release(e->flags);
   gcry_sexp_release (e->sexp);
 }
 
