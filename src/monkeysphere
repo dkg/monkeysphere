@@ -52,7 +52,7 @@ subcommands:
  keys-for-userid (u) USERID          output valid ssh keys for given user id
  sshfprs-for-userid USERID           output ssh fingerprints for given user id
  gen-subkey (g) [KEYID]              generate an authentication subkey
-   --length (-l) BITS                  key length in bits (2048)
+   --length (-l) BITS                  RSA key length in bits (3072)
 
  version (v)                         show version number
  help (h,?)                          this help
