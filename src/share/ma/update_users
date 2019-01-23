@@ -135,7 +135,7 @@ for uname in $unames ; do
 		mv -f -- "$tmpAuthorizedKeys" "${authorizedKeysDir}/${uname}" || \
 		{
 		log error "Failed to install authorized_keys for '$uname'!"
-		rm -f -- "${authorizedKeysDir}/${uname}"
+		rm -f -- "$tmpAuthorizedKeys"
 		# indicate that there has been a failure:
 		returnCode=1
 	    }
