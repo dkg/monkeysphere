@@ -1094,7 +1094,9 @@ for (basename($0)) {
     # hostname_long() from Sys::Hostname::Long ?
 
     if (defined $ENV{PEM2OPENPGP_NEWKEY}) {
-      $rsa = Crypt::OpenSSL::RSA->generate_key($ENV{PEM2OPENPGP_NEWKEY});
+      my $rsa_keysize = ($ENV{PEM2OPENPGP_NEWKEY} + 0);
+      $rsa_keysize >= 2048 or die "Generating new RSA key: PEM2OPENPGP_NEWKEY should be at least 2048\n";
+      $rsa = Crypt::OpenSSL::RSA->generate_key($rsa_keysize);
     } else {
       $stdin = do {
 	local $/; # slurp!
