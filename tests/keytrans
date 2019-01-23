@@ -150,7 +150,7 @@ diff -u "$TEMPDIR"/expectedout <(gpg --check-sigs --with-colons | grep -vE '^(tr
 
 echo "##################################################"
 echo "### sleeping to avoid test suite breakage on fast"
-echo "### processors (see http://bugs.debian.org/591118)"
+echo "### processors (see https://bugs.debian.org/591118)"
 
 sleep 2
 

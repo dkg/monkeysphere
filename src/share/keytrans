@@ -204,7 +204,7 @@ my $keyserver_prefs = { nomodify => 0x80
 ########### Math/Utility Functions ##############
 
 
-# see the bottom of page 44 of RFC 4880 (http://tools.ietf.org/html/rfc4880#page-44)
+# see the bottom of page 44 of RFC 4880 (https://tools.ietf.org/html/rfc4880#page-44)
 sub simple_checksum {
   my $bytes = shift;
 
@@ -232,7 +232,7 @@ sub sshfpr_sha256 {
 
 # calculate the multiplicative inverse of a mod b this is euclid's
 # extended algorithm.  For more information see:
-# http://en.wikipedia.org/wiki/Extended_Euclidean_algorithm the
+# https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm the
 # arguments here should be Crypt::OpenSSL::Bignum objects.  $a should
 # be the larger of the two values, and the two values should be
 # coprime.
@@ -346,7 +346,7 @@ sub mpi_pack {
 
 # takes a Crypt::OpenSSL::Bignum, returns an MPI packed in preparation
 # for an OpenSSH-style public key format.  see:
-# http://marc.info/?l=openssh-unix-dev&m=121866301718839&w=2
+# https://marc.info/?l=openssh-unix-dev&m=121866301718839&w=2
 sub openssh_mpi_pack {
   my $num = shift;
 
@@ -786,7 +786,7 @@ sub findkey {
   }
 
   # secret material is unencrypted
-  # see http://tools.ietf.org/html/rfc4880#section-5.5.3
+  # see https://tools.ietf.org/html/rfc4880#section-5.5.3
   my $d = read_mpi($instr, \$readbytes);
   my $p = read_mpi($instr, \$readbytes);
   my $q = read_mpi($instr, \$readbytes);

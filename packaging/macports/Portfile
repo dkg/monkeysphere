@@ -15,7 +15,7 @@ long_description    SSH key-based authentication is tried-and-true, \
                     used in both directions: for users to get \
                     validated host keys, and for hosts to authenticate \
                     users.
-homepage            http://web.monkeysphere.info/
+homepage            https://web.monkeysphere.info/
 platforms           darwin
 
 depends_run         bin:ssh:openssh \
@@ -24,7 +24,7 @@ depends_run         bin:ssh:openssh \
                     port:p5-digest-sha \
                     port:procmail
 
-master_sites        http://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
+master_sites        https://archive.monkeysphere.info/debian/pool/monkeysphere/m/monkeysphere/
 distname            ${name}_${version}
 extract.suffix      .orig.tar.gz
 worksrcdir          ${name}-${version}

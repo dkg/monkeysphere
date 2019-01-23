@@ -56,7 +56,7 @@ subjectAltName = $SUBJECTALTNAME
 PGPExtension = ASN1:SEQUENCE:pgp_sect
 
 [ pgp_sect ]
-# see http://www.alvestrand.no/objectid/submissions/1.3.6.1.4.1.3401.8.1.1.html
+# see https://www.alvestrand.no/objectid/1.3.6.1.4.1.3401.8.1.1.html
 # this is equivalent to:
 #   Version  ::=  INTEGER  {  v1(0) }
 version = INTEGER:0
