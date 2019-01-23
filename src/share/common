@@ -8,7 +8,7 @@
 # Jamie McClelland <jm@mayfirst.org>
 # Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 #
-# Copyright 2008-2009, released under the GPL, version 3 or later
+# Copyright 2008-2019, released under the GPL, version 3 or later
 
 # all-caps variables are meant to be user supplied (ie. from config
 # file) and are considered global

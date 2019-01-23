@@ -2,7 +2,7 @@
 
 # Makefile for monkeysphere
 
-# © 2008-2010 Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# © 2008-2019 Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Licensed under GPL v3 or later
 
 MONKEYSPHERE_VERSION = `head -n1 Changelog | sed 's/.*(\([^-]*\)).*/\1/'`

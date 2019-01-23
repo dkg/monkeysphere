@@ -10,7 +10,7 @@
 #   Jameson Rollins <jrollins@fifthhorseman.net>
 #   Micah Anderson <micah@riseup.net> 
 #
-# Copyright: © 2008-2016
+# Copyright: © 2008-2019
 # License: GPL v3 or later
 
 # these tests should all be able to run as a non-privileged user.
