@@ -13,7 +13,7 @@ monkeysphere (0.43) unstable; urgency=medium
   * Avoid locking out users unnecessarily
     (Closes: #897366)
 
-  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 23 Jan 2019 17:42:19 -0500
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Wed, 23 Jan 2019 17:42:19 -0500
 
 monkeysphere (0.42) unstable; urgency=medium
 
@@ -29,7 +29,7 @@ monkeysphere (0.42) unstable; urgency=medium
   * use generic compiler (closes: #883015)
   * make print_date_from_seconds_since_the_epoch deal better with bad input
 
-  -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 16 Oct 2018 11:38:39 -0400
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Tue, 16 Oct 2018 11:38:39 -0400
 
 monkeysphere (0.41) unstable; urgency=medium
 
