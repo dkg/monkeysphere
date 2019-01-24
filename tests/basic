@@ -87,6 +87,7 @@ ssh_test() {
 	return 0
     else
 	echo "##### ssh connection test FAILED. returned: $RETURN, expected: $CODE"
+        cat "$TEMPDIR/sshd.log"
 	return 1
     fi
 }
