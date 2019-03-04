@@ -1,4 +1,5 @@
 # example Monkeysphere cron job:
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Hourly: update the per-user authorized_keys in /var based on
 # ~/.monkeysphere/authorized_user_ids
