@@ -110,8 +110,12 @@ run_as_monkeysphere_user() {
 
          # if root, run command as monkeysphere user
 	'root')
+            local -a runuser_args=(--user "$MONKEYSPHERE_USER")
+            if runuser --help | grep -q -- --pty; then
+                runuser_args+=(--pty)
+            fi
             # requote arguments using bash builtin feature (see "help printf"):
-	    runuser -u "$MONKEYSPHERE_USER" -- "$@"
+	    runuser "${runuser_args[@]}" -- "$@"
 	    ;;
 
 	# otherwise, fail
